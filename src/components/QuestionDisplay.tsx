@@ -27,14 +27,22 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   userAnswer,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
 
   const handleAnswerChange = (answer: string) => {
-    onAnswer(answer);
-    setShowFeedback(true);
+    setSelectedAnswer(answer);
+  };
+
+  const handleConfirmAnswer = () => {
+    if (selectedAnswer) {
+      onAnswer(selectedAnswer);
+      setShowFeedback(true);
+    }
   };
 
   const handleNext = () => {
     setShowFeedback(false);
+    setSelectedAnswer('');
     onNext();
   };
 
@@ -57,7 +65,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-6 text-slate-800">{questionData.question}</h3>
         <div className="space-y-4">
-          <RadioGroup value={userAnswer} onValueChange={handleAnswerChange}>
+          <RadioGroup value={selectedAnswer} onValueChange={handleAnswerChange}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="A" id="A" />
               <Label htmlFor="A" className="flex items-center">
@@ -89,6 +97,16 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               </Label>
             </div>
           </RadioGroup>
+
+          <div className="mt-4">
+            <Button 
+              onClick={handleConfirmAnswer}
+              disabled={!selectedAnswer || showFeedback}
+              className="w-full"
+            >
+              Antwort bestätigen
+            </Button>
+          </div>
         </div>
 
         {showFeedback && userAnswer && (
