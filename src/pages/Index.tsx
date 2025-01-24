@@ -16,7 +16,7 @@ const Index = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
   const subjects = useMemo(() => {
     const uniqueSubjects = Array.from(new Set(questions.map(q => q.subject)));
@@ -24,7 +24,7 @@ const Index = () => {
   }, [questions]);
 
   const filteredQuestions = useMemo(() => {
-    if (!selectedSubject) return questions;
+    if (selectedSubject === 'all') return questions;
     return questions.filter(q => q.subject === selectedSubject);
   }, [questions, selectedSubject]);
 
@@ -33,7 +33,7 @@ const Index = () => {
     setUserAnswers(new Array(loadedQuestions.length).fill(''));
     setCurrentIndex(0);
     setShowResults(false);
-    setSelectedSubject('');
+    setSelectedSubject('all');
   };
 
   const handleAnswer = (answer: string) => {
@@ -59,7 +59,7 @@ const Index = () => {
     setUserAnswers([]);
     setCurrentIndex(0);
     setShowResults(false);
-    setSelectedSubject('');
+    setSelectedSubject('all');
   };
 
   if (questions.length === 0) {
@@ -90,7 +90,7 @@ const Index = () => {
             <SelectValue placeholder="Wähle ein Fach aus" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Alle Fächer</SelectItem>
+            <SelectItem value="all">Alle Fächer</SelectItem>
             {subjects.map((subject) => (
               <SelectItem key={subject} value={subject}>
                 {subject}
