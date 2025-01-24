@@ -11,11 +11,25 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      toast.error("Keine Datei ausgewählt");
+      return;
+    }
+
+    console.log('File selected:', file.name);
 
     Papa.parse(file, {
       complete: (results) => {
+        console.log('CSV parsing results:', results);
+        
+        if (!results.data || results.data.length < 2) {
+          toast.error("Die CSV-Datei ist leer oder ungültig");
+          return;
+        }
+
         const headers = results.data[0] as string[];
+        console.log('CSV headers:', headers);
+        
         const requiredColumns = ['Frage', 'A', 'B', 'C', 'D', 'E', 'Fach', 'Antwort', 'Kommentar'];
         
         const columnExists = requiredColumns.every(col => 
@@ -49,6 +63,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
             };
           });
 
+        console.log('Processed questions:', questions);
+
         if (questions.length === 0) {
           toast.error("Keine gültigen Fragen in der CSV-Datei gefunden");
           return;
@@ -59,6 +75,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       },
       header: true,
       skipEmptyLines: true,
+      error: (error) => {
+        console.error('CSV parsing error:', error);
+        toast.error("Fehler beim Lesen der CSV-Datei");
+      }
     });
   };
 
