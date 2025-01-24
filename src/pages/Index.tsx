@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import FileUpload from '@/components/FileUpload';
 import QuestionDisplay from '@/components/QuestionDisplay';
 import Results from '@/components/Results';
-
-interface Question {
-  question: string;
-  answer: string;
-}
+import { Question } from '@/types/Question';
 
 const Index = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -69,7 +65,7 @@ const Index = () => {
   return (
     <div className="min-h-screen p-6 bg-slate-50">
       <QuestionDisplay
-        question={questions[currentIndex].question}
+        questionData={questions[currentIndex]}
         totalQuestions={questions.length}
         currentIndex={currentIndex}
         onNext={handleNext}
