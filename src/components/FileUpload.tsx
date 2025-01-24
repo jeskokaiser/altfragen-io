@@ -27,41 +27,50 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           return;
         }
 
-        const headers = results.data[0] as string[];
+        // Ensure headers is an array and get the first row
+        const headers = Array.isArray(results.data[0]) ? results.data[0] : Object.keys(results.data[0]);
         console.log('CSV headers:', headers);
         
         const requiredColumns = ['Frage', 'A', 'B', 'C', 'D', 'E', 'Fach', 'Antwort', 'Kommentar'];
         
-        const columnExists = requiredColumns.every(col => 
-          headers.some(header => header === col)
-        );
-
-        if (!columnExists) {
-          toast.error("CSV muss die Spalten enthalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar");
+        // Check if all required columns exist in headers
+        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+        
+        if (missingColumns.length > 0) {
+          toast.error(`Fehlende Spalten: ${missingColumns.join(', ')}`);
           return;
         }
 
-        const questions = (results.data as string[][])
+        // Process the data rows
+        const questions = (results.data as any[])
           .slice(1) // Skip header row
-          .filter(row => row.length >= 9) // Ensure all columns are present
+          .filter(row => {
+            // Handle both array and object formats
+            const values = Array.isArray(row) ? row : Object.values(row);
+            return values.length >= requiredColumns.length;
+          })
           .map(row => {
-            const headerMap = headers.reduce((acc, header, index) => {
-              acc[header] = row[index];
-              return acc;
-            }, {} as Record<string, string>);
+            // Convert row to object if it's an array
+            const rowData = Array.isArray(row) 
+              ? headers.reduce((acc, header, index) => {
+                  acc[header] = row[index];
+                  return acc;
+                }, {} as Record<string, string>)
+              : row;
 
             return {
-              question: headerMap['Frage'],
-              optionA: headerMap['A'],
-              optionB: headerMap['B'],
-              optionC: headerMap['C'],
-              optionD: headerMap['D'],
-              optionE: headerMap['E'],
-              subject: headerMap['Fach'],
-              correctAnswer: headerMap['Antwort'],
-              comment: headerMap['Kommentar']
+              question: rowData['Frage'],
+              optionA: rowData['A'],
+              optionB: rowData['B'],
+              optionC: rowData['C'],
+              optionD: rowData['D'],
+              optionE: rowData['E'],
+              subject: rowData['Fach'],
+              correctAnswer: rowData['Antwort'],
+              comment: rowData['Kommentar']
             };
-          });
+          })
+          .filter(q => q.question && q.correctAnswer); // Filter out invalid questions
 
         console.log('Processed questions:', questions);
 
@@ -73,7 +82,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         onQuestionsLoaded(questions);
         toast.success(`${questions.length} Fragen geladen`);
       },
-      header: true,
+      header: false, // We'll handle headers manually
       skipEmptyLines: true,
       error: (error) => {
         console.error('CSV parsing error:', error);
