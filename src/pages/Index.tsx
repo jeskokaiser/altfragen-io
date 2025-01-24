@@ -1,12 +1,82 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React, { useState } from 'react';
+import FileUpload from '@/components/FileUpload';
+import QuestionDisplay from '@/components/QuestionDisplay';
+import Results from '@/components/Results';
+
+interface Question {
+  question: string;
+  answer: string;
+}
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<string[]>([]);
+  const [showResults, setShowResults] = useState(false);
+
+  const handleQuestionsLoaded = (loadedQuestions: Question[]) => {
+    setQuestions(loadedQuestions);
+    setUserAnswers(new Array(loadedQuestions.length).fill(''));
+    setCurrentIndex(0);
+    setShowResults(false);
+  };
+
+  const handleAnswer = (answer: string) => {
+    const newAnswers = [...userAnswers];
+    newAnswers[currentIndex] = answer;
+    setUserAnswers(newAnswers);
+  };
+
+  const handleNext = () => {
+    if (currentIndex === questions.length - 1) {
+      setShowResults(true);
+    } else {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentIndex(Math.max(0, currentIndex - 1));
+  };
+
+  const handleRestart = () => {
+    setQuestions([]);
+    setUserAnswers([]);
+    setCurrentIndex(0);
+    setShowResults(false);
+  };
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
       </div>
+    );
+  }
+
+  if (showResults) {
+    return (
+      <div className="min-h-screen p-6 bg-slate-50">
+        <Results
+          questions={questions}
+          userAnswers={userAnswers}
+          onRestart={handleRestart}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-6 bg-slate-50">
+      <QuestionDisplay
+        question={questions[currentIndex].question}
+        totalQuestions={questions.length}
+        currentIndex={currentIndex}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        onAnswer={handleAnswer}
+        userAnswer={userAnswers[currentIndex]}
+      />
     </div>
   );
 };
