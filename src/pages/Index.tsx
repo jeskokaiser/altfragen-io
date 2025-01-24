@@ -17,6 +17,7 @@ const Index = () => {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [questionCount, setQuestionCount] = useState<string>('all');
 
   const subjects = useMemo(() => {
     const uniqueSubjects = Array.from(new Set(questions.map(q => q.subject)));
@@ -24,9 +25,16 @@ const Index = () => {
   }, [questions]);
 
   const filteredQuestions = useMemo(() => {
-    if (selectedSubject === 'all') return questions;
-    return questions.filter(q => q.subject === selectedSubject);
-  }, [questions, selectedSubject]);
+    let filtered = selectedSubject === 'all' 
+      ? questions 
+      : questions.filter(q => q.subject === selectedSubject);
+    
+    if (questionCount !== 'all') {
+      filtered = filtered.slice(0, parseInt(questionCount));
+    }
+    
+    return filtered;
+  }, [questions, selectedSubject, questionCount]);
 
   const handleQuestionsLoaded = (loadedQuestions: Question[]) => {
     setQuestions(loadedQuestions);
@@ -34,6 +42,7 @@ const Index = () => {
     setCurrentIndex(0);
     setShowResults(false);
     setSelectedSubject('all');
+    setQuestionCount('all');
   };
 
   const handleAnswer = (answer: string) => {
@@ -60,6 +69,7 @@ const Index = () => {
     setCurrentIndex(0);
     setShowResults(false);
     setSelectedSubject('all');
+    setQuestionCount('all');
   };
 
   if (questions.length === 0) {
@@ -84,7 +94,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen p-6 bg-slate-50">
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="max-w-2xl mx-auto space-y-4">
         <Select value={selectedSubject} onValueChange={setSelectedSubject}>
           <SelectTrigger>
             <SelectValue placeholder="Wähle ein Fach aus" />
@@ -96,6 +106,19 @@ const Index = () => {
                 {subject}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={questionCount} onValueChange={setQuestionCount}>
+          <SelectTrigger>
+            <SelectValue placeholder="Anzahl der Fragen" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle Fragen</SelectItem>
+            <SelectItem value="5">5 Fragen</SelectItem>
+            <SelectItem value="10">10 Fragen</SelectItem>
+            <SelectItem value="15">15 Fragen</SelectItem>
+            <SelectItem value="20">20 Fragen</SelectItem>
           </SelectContent>
         </Select>
       </div>
