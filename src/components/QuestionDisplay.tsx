@@ -60,23 +60,33 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           <RadioGroup value={userAnswer} onValueChange={handleAnswerChange}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="A" id="A" />
-              <Label htmlFor="A">{questionData.optionA}</Label>
+              <Label htmlFor="A" className="flex items-center">
+                <span className="font-semibold mr-2">A)</span> {questionData.optionA}
+              </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="B" id="B" />
-              <Label htmlFor="B">{questionData.optionB}</Label>
+              <Label htmlFor="B" className="flex items-center">
+                <span className="font-semibold mr-2">B)</span> {questionData.optionB}
+              </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="C" id="C" />
-              <Label htmlFor="C">{questionData.optionC}</Label>
+              <Label htmlFor="C" className="flex items-center">
+                <span className="font-semibold mr-2">C)</span> {questionData.optionC}
+              </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="D" id="D" />
-              <Label htmlFor="D">{questionData.optionD}</Label>
+              <Label htmlFor="D" className="flex items-center">
+                <span className="font-semibold mr-2">D)</span> {questionData.optionD}
+              </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="E" id="E" />
-              <Label htmlFor="E">{questionData.optionE}</Label>
+              <Label htmlFor="E" className="flex items-center">
+                <span className="font-semibold mr-2">E)</span> {questionData.optionE}
+              </Label>
             </div>
           </RadioGroup>
         </div>
