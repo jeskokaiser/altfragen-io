@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Question } from '@/types/Question';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -24,6 +26,20 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onAnswer,
   userAnswer,
 }) => {
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  const handleAnswerChange = (answer: string) => {
+    onAnswer(answer);
+    setShowFeedback(true);
+  };
+
+  const handleNext = () => {
+    setShowFeedback(false);
+    onNext();
+  };
+
+  const isCorrect = userAnswer === questionData.correctAnswer;
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="mb-8">
@@ -41,7 +57,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-6 text-slate-800">{questionData.question}</h3>
         <div className="space-y-4">
-          <RadioGroup value={userAnswer} onValueChange={onAnswer}>
+          <RadioGroup value={userAnswer} onValueChange={handleAnswerChange}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="A" id="A" />
               <Label htmlFor="A">{questionData.optionA}</Label>
@@ -64,6 +80,26 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             </div>
           </RadioGroup>
         </div>
+
+        {showFeedback && userAnswer && (
+          <div className="mt-6 space-y-4">
+            <Alert variant={isCorrect ? "default" : "destructive"} className="flex items-center">
+              <div className="mr-2">
+                {isCorrect ? <CheckCircle2 className="text-green-500" /> : <XCircle className="text-red-500" />}
+              </div>
+              <AlertDescription>
+                {isCorrect ? "Richtig!" : "Falsch!"} Die korrekte Antwort ist: {questionData.correctAnswer}
+              </AlertDescription>
+            </Alert>
+            {questionData.comment && (
+              <Alert>
+                <AlertDescription>
+                  {questionData.comment}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
       </Card>
 
       <div className="flex justify-between mt-6">
@@ -75,7 +111,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           Zurück
         </Button>
         <Button
-          onClick={onNext}
+          onClick={handleNext}
+          disabled={!userAnswer}
         >
           {currentIndex === totalQuestions - 1 ? 'Fertig' : 'Weiter'}
         </Button>
