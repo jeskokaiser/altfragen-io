@@ -34,11 +34,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const { user } = useAuth();
 
   useEffect(() => {
     setSelectedAnswer('');
     setShowFeedback(false);
+    setCurrentQuestion(questionData);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
@@ -56,11 +58,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onNext();
   };
 
-  const handleQuestionUpdate = () => {
+  const handleQuestionUpdate = (updatedQuestion: Question) => {
+    setCurrentQuestion(updatedQuestion);
     setIsEditModalOpen(false);
   };
 
-  if (!questionData) {
+  if (!currentQuestion) {
     return <div>Loading question...</div>;
   }
 
@@ -74,13 +77,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
       <Card className="p-6">
         <DifficultyControls
-          questionId={questionData.id}
-          difficulty={questionData.difficulty || 3}
+          questionId={currentQuestion.id}
+          difficulty={currentQuestion.difficulty || 3}
           onEditClick={() => setIsEditModalOpen(true)}
         />
 
         <QuestionContent
-          questionData={questionData}
+          questionData={currentQuestion}
           selectedAnswer={selectedAnswer}
           onAnswerChange={handleAnswerChange}
           onConfirmAnswer={() => {}}
@@ -88,7 +91,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         />
 
         <AnswerSubmission
-          currentQuestion={questionData}
+          currentQuestion={currentQuestion}
           selectedAnswer={selectedAnswer}
           user={user}
           onAnswerSubmitted={handleAnswerSubmitted}
@@ -97,8 +100,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         <QuestionFeedback
           showFeedback={showFeedback}
           userAnswer={userAnswer}
-          correctAnswer={questionData.correctAnswer}
-          comment={questionData.comment}
+          correctAnswer={currentQuestion.correctAnswer}
+          comment={currentQuestion.comment}
         />
       </Card>
 
@@ -111,7 +114,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <EditQuestionModal
-        question={questionData}
+        question={currentQuestion}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onQuestionUpdated={handleQuestionUpdate}

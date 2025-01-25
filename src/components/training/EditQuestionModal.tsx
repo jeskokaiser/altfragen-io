@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           difficulty: parseInt(data.difficulty),
         })
         .eq('id', question.id)
-        .select()
+        .select('*')
         .single();
 
       if (error) throw error;
@@ -104,6 +105,9 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Frage bearbeiten</DialogTitle>
+          <DialogDescription>
+            Bearbeiten Sie die Frage und speichern Sie die Änderungen.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <QuestionField register={register} />
