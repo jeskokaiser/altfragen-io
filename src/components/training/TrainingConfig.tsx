@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from "@/hooks/use-toast";
 import SubjectSelect from './selects/SubjectSelect';
 import DifficultySelect from './selects/DifficultySelect';
 import QuestionCountSelect from './selects/QuestionCountSelect';
@@ -26,6 +27,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   });
 
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
@@ -41,6 +43,15 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     if (values.difficulty !== 'all') {
       const selectedDifficulty = parseInt(values.difficulty);
       filteredQuestions = filteredQuestions.filter(q => q.difficulty === selectedDifficulty);
+    }
+
+    if (filteredQuestions.length === 0) {
+      toast({
+        title: "Keine Fragen verfügbar",
+        description: "Mit den gewählten Filtereinstellungen sind keine Fragen verfügbar. Bitte passe deine Auswahl an.",
+        variant: "destructive",
+      });
+      return;
     }
     
     const questionCount = values.questionCount === 'all' 
