@@ -10,35 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FormData } from './types/FormData';
+import { QuestionField } from './edit-question/QuestionField';
+import { OptionsFields } from './edit-question/OptionsFields';
+import { SubjectField } from './edit-question/SubjectField';
+import { DifficultyField } from './edit-question/DifficultyField';
 
 interface EditQuestionModalProps {
   question: Question;
   isOpen: boolean;
   onClose: () => void;
   onQuestionUpdated: (updatedQuestion: Question) => void;
-}
-
-interface FormData {
-  question: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  optionE: string;
-  correctAnswer: string;
-  comment: string;
-  subject: string;
-  difficulty: string;
 }
 
 const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
@@ -48,24 +33,6 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   onQuestionUpdated,
 }) => {
   const { register, handleSubmit, formState: { isSubmitting }, reset, setValue } = useForm<FormData>();
-  const [subjects, setSubjects] = React.useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      const { data } = await supabase
-        .from('questions')
-        .select('subject')
-        .order('subject');
-      
-      if (data) {
-        const uniqueSubjects = Array.from(new Set(data.map(q => q.subject)))
-          .sort((a, b) => a.localeCompare(b, 'de'));
-        setSubjects(uniqueSubjects);
-      }
-    };
-
-    fetchSubjects();
-  }, []);
 
   useEffect(() => {
     if (question) {
@@ -83,10 +50,6 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       });
     }
   }, [question, reset]);
-
-  if (!question) {
-    return null;
-  }
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -143,70 +106,29 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           <DialogTitle>Frage bearbeiten</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="question">Frage</Label>
-            <Textarea id="question" {...register('question')} />
-          </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <Label htmlFor="optionA">Option A</Label>
-              <Input id="optionA" {...register('optionA')} />
-            </div>
-            <div>
-              <Label htmlFor="optionB">Option B</Label>
-              <Input id="optionB" {...register('optionB')} />
-            </div>
-            <div>
-              <Label htmlFor="optionC">Option C</Label>
-              <Input id="optionC" {...register('optionC')} />
-            </div>
-            <div>
-              <Label htmlFor="optionD">Option D</Label>
-              <Input id="optionD" {...register('optionD')} />
-            </div>
-            <div>
-              <Label htmlFor="optionE">Option E</Label>
-              <Input id="optionE" {...register('optionE')} />
-            </div>
-          </div>
+          <QuestionField register={register} />
+          <OptionsFields register={register} />
+          
           <div>
             <Label htmlFor="correctAnswer">Richtige Antwort</Label>
             <Input id="correctAnswer" {...register('correctAnswer')} />
           </div>
-          <div>
-            <Label htmlFor="difficulty">Schwierigkeitsgrad</Label>
-            <Select onValueChange={(value) => setValue('difficulty', value)} defaultValue={question.difficulty?.toString() || '3'}>
-              <SelectTrigger>
-                <SelectValue placeholder="Wähle einen Schwierigkeitsgrad" />
-              </SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <SelectItem key={level} value={level.toString()}>
-                    {level} {level === 1 ? '(Sehr leicht)' : level === 5 ? '(Sehr schwer)' : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
+          <DifficultyField 
+            defaultValue={question.difficulty?.toString() || '3'}
+            onValueChange={(value) => setValue('difficulty', value)}
+          />
+
           <div>
             <Label htmlFor="comment">Kommentar</Label>
             <Textarea id="comment" {...register('comment')} />
           </div>
-          <div>
-            <Label htmlFor="subject">Fach</Label>
-            <Select onValueChange={(value) => setValue('subject', value)} defaultValue={question.subject}>
-              <SelectTrigger>
-                <SelectValue placeholder="Wähle ein Fach" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjects.map((subject) => (
-                  <SelectItem key={subject} value={subject}>
-                    {subject}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
+          <SubjectField
+            defaultValue={question.subject}
+            onValueChange={(value) => setValue('subject', value)}
+          />
+
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Abbrechen
