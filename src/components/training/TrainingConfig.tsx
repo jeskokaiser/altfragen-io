@@ -34,7 +34,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   );
 
   const handleSubmit = async (values: FormValues) => {
-    let filteredQuestions = questions;
+    let filteredQuestions = [...questions];
     
     if (values.subject !== 'all') {
       filteredQuestions = filteredQuestions.filter(q => q.subject === values.subject);
@@ -42,11 +42,12 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     
     if (values.difficulty !== 'all') {
       const selectedDifficulty = parseInt(values.difficulty);
-      // Filter out questions where difficulty is null or doesn't match
       filteredQuestions = filteredQuestions.filter(q => 
-        q.difficulty !== null && q.difficulty === selectedDifficulty
+        q.difficulty === selectedDifficulty
       );
     }
+
+    console.log('Filtered questions:', filteredQuestions.length, 'Selected difficulty:', values.difficulty);
 
     if (filteredQuestions.length === 0) {
       toast({
