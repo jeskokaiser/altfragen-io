@@ -29,7 +29,9 @@ const DifficultyToggle: React.FC<DifficultyToggleProps> = ({ value, onValueChang
           key={level} 
           value={level.toString()}
           aria-label={`Schwierigkeitsgrad ${level}`}
-          className={`${getDifficultyColor(level)} hover:opacity-90 ${value === level.toString() ? 'border-2 border-gray-800' : ''}`}
+          className={`${getDifficultyColor(level)} hover:opacity-90 transition-all ${
+            value === level.toString() ? 'ring-2 ring-offset-2 ring-black' : ''
+          }`}
         >
           {level}
         </ToggleGroupItem>
