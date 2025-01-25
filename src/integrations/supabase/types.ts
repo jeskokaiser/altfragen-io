@@ -32,6 +32,7 @@ export type Database = {
           comment: string | null
           correct_answer: string
           created_at: string
+          difficulty: number | null
           filename: string
           id: string
           option_a: string
@@ -47,6 +48,7 @@ export type Database = {
           comment?: string | null
           correct_answer: string
           created_at?: string
+          difficulty?: number | null
           filename: string
           id?: string
           option_a: string
@@ -62,6 +64,7 @@ export type Database = {
           comment?: string | null
           correct_answer?: string
           created_at?: string
+          difficulty?: number | null
           filename?: string
           id?: string
           option_a?: string

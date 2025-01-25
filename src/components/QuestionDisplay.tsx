@@ -10,6 +10,7 @@ import FeedbackDisplay from './training/FeedbackDisplay';
 import NavigationButtons from './training/NavigationButtons';
 import EditQuestionModal from './training/EditQuestionModal';
 import AnswerSubmission from './training/AnswerSubmission';
+import { Badge } from '@/components/ui/badge';
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -61,6 +62,17 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setCurrentQuestion(updatedQuestion);
   };
 
+  const getDifficultyColor = (difficulty: number) => {
+    switch (difficulty) {
+      case 1: return 'bg-green-100 text-green-800';
+      case 2: return 'bg-blue-100 text-blue-800';
+      case 3: return 'bg-yellow-100 text-yellow-800';
+      case 4: return 'bg-orange-100 text-orange-800';
+      case 5: return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <QuestionHeader
@@ -70,7 +82,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <Card className="p-6">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-between items-center mb-4">
+          <Badge className={`${getDifficultyColor(currentQuestion.difficulty)}`}>
+            Schwierigkeit: {currentQuestion.difficulty}
+          </Badge>
           <Button
             variant="outline"
             size="sm"

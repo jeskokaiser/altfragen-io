@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -31,6 +38,7 @@ interface FormData {
   correctAnswer: string;
   comment: string;
   subject: string;
+  difficulty: string;
 }
 
 const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
@@ -39,7 +47,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   onClose,
   onQuestionUpdated,
 }) => {
-  const { register, handleSubmit, formState: { isSubmitting }, reset } = useForm<FormData>();
+  const { register, handleSubmit, formState: { isSubmitting }, reset, setValue } = useForm<FormData>();
 
   useEffect(() => {
     if (question) {
@@ -53,6 +61,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         correctAnswer: question.correctAnswer,
         comment: question.comment,
         subject: question.subject,
+        difficulty: question.difficulty?.toString() || '3',
       });
     }
   }, [question, reset]);
@@ -75,6 +84,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           correct_answer: data.correctAnswer,
           comment: data.comment,
           subject: data.subject,
+          difficulty: parseInt(data.difficulty),
         })
         .eq('id', question.id)
         .select()
@@ -95,6 +105,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           comment: updatedQuestion.comment,
           subject: updatedQuestion.subject,
           filename: updatedQuestion.filename,
+          difficulty: updatedQuestion.difficulty,
         };
         
         onQuestionUpdated(mappedQuestion);
@@ -143,6 +154,21 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           <div>
             <Label htmlFor="correctAnswer">Richtige Antwort</Label>
             <Input id="correctAnswer" {...register('correctAnswer')} />
+          </div>
+          <div>
+            <Label htmlFor="difficulty">Schwierigkeitsgrad</Label>
+            <Select onValueChange={(value) => setValue('difficulty', value)} defaultValue={question.difficulty?.toString() || '3'}>
+              <SelectTrigger>
+                <SelectValue placeholder="Wähle einen Schwierigkeitsgrad" />
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <SelectItem key={level} value={level.toString()}>
+                    {level} {level === 1 ? '(Sehr leicht)' : level === 5 ? '(Sehr schwer)' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="comment">Kommentar</Label>

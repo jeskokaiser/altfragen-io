@@ -27,6 +27,7 @@ interface TrainingConfigProps {
 interface FormValues {
   subject: string;
   questionCount: string;
+  difficulty: string;
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
@@ -37,10 +38,17 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const subjects = Array.from(new Set(questions.map(q => q.subject)));
 
   const handleSubmit = async (values: FormValues) => {
-    // If "all" is selected, use all questions, otherwise filter by subject
-    const filteredQuestions = values.subject === 'all' 
-      ? questions 
-      : questions.filter(q => q.subject === values.subject);
+    // Filter questions by subject and difficulty
+    let filteredQuestions = questions;
+    
+    if (values.subject !== 'all') {
+      filteredQuestions = filteredQuestions.filter(q => q.subject === values.subject);
+    }
+    
+    if (values.difficulty !== 'all') {
+      const selectedDifficulty = parseInt(values.difficulty);
+      filteredQuestions = filteredQuestions.filter(q => q.difficulty === selectedDifficulty);
+    }
     
     const questionCount = parseInt(values.questionCount);
     
@@ -114,6 +122,31 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
                     {subjects.map((subject) => (
                       <SelectItem key={subject} value={subject}>
                         {subject}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="difficulty"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Schwierigkeitsgrad</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wähle einen Schwierigkeitsgrad" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Schwierigkeitsgrade</SelectItem>
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <SelectItem key={level} value={level.toString()}>
+                        {level} {level === 1 ? '(Sehr leicht)' : level === 5 ? '(Sehr schwer)' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>

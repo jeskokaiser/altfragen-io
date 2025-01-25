@@ -11,4 +11,5 @@ export interface Question {
   comment: string;
   filename: string;
   created_at?: string;
+  difficulty: number;
 }
