@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Question } from '@/types/Question';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -29,20 +31,61 @@ interface FormValues {
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
   const form = useForm<FormValues>();
+  const { user } = useAuth();
 
   // Get unique subjects from questions
   const subjects = Array.from(new Set(questions.map(q => q.subject)));
 
-  const handleSubmit = (values: FormValues) => {
-    const filteredQuestions = questions
-      .filter(q => q.subject === values.subject)
-      .slice(0, parseInt(values.questionCount));
+  const handleSubmit = async (values: FormValues) => {
+    const filteredQuestions = questions.filter(q => q.subject === values.subject);
+    const questionCount = parseInt(values.questionCount);
     
-    // Shuffle the questions
-    const shuffledQuestions = [...filteredQuestions]
-      .sort(() => Math.random() - 0.5);
-    
-    onStart(shuffledQuestions);
+    // Get user's progress for these questions
+    const { data: userProgress } = await supabase
+      .from('user_progress')
+      .select('question_id, is_correct')
+      .eq('user_id', user?.id);
+
+    // Create a map of question results
+    const questionResults = new Map();
+    userProgress?.forEach(progress => {
+      questionResults.set(progress.question_id, progress.is_correct);
+    });
+
+    // Sort questions into three categories
+    const untrained: Question[] = [];
+    const wrongAnswered: Question[] = [];
+    const correctAnswered: Question[] = [];
+
+    filteredQuestions.forEach(question => {
+      const result = questionResults.get(question.id);
+      if (result === undefined) {
+        untrained.push(question);
+      } else if (result === false) {
+        wrongAnswered.push(question);
+      } else {
+        correctAnswered.push(question);
+      }
+    });
+
+    // Combine questions in priority order: untrained + wrong + correct
+    const prioritizedQuestions = [
+      ...shuffle(untrained),
+      ...shuffle(wrongAnswered),
+      ...shuffle(correctAnswered)
+    ].slice(0, questionCount);
+
+    onStart(prioritizedQuestions);
+  };
+
+  // Fisher-Yates shuffle algorithm
+  const shuffle = <T,>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
   };
 
   return (
