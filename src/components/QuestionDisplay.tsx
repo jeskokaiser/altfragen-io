@@ -4,10 +4,13 @@ import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Pencil } from 'lucide-react';
 import QuestionHeader from './training/QuestionHeader';
 import QuestionContent from './training/QuestionContent';
 import FeedbackDisplay from './training/FeedbackDisplay';
 import NavigationButtons from './training/NavigationButtons';
+import EditQuestionModal from './training/EditQuestionModal';
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -32,6 +35,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const { user } = useAuth();
 
   const handleAnswerChange = (answer: string) => {
@@ -46,9 +51,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       try {
         const { error } = await supabase.from('user_progress').insert({
           user_id: user?.id,
-          question_id: questionData.id,
+          question_id: currentQuestion.id,
           user_answer: selectedAnswer,
-          is_correct: selectedAnswer.toLowerCase() === questionData.correctAnswer.toLowerCase()
+          is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
         });
 
         if (error) throw error;
@@ -65,6 +70,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onNext();
   };
 
+  const handleQuestionUpdate = (updatedQuestion: Question) => {
+    setCurrentQuestion(updatedQuestion);
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <QuestionHeader
@@ -74,8 +83,20 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <Card className="p-6">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Pencil className="h-4 w-4" />
+            Bearbeiten
+          </Button>
+        </div>
+
         <QuestionContent
-          questionData={questionData}
+          questionData={currentQuestion}
           selectedAnswer={selectedAnswer}
           onAnswerChange={handleAnswerChange}
           onConfirmAnswer={handleConfirmAnswer}
@@ -84,9 +105,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
         {showFeedback && userAnswer && (
           <FeedbackDisplay 
-            isCorrect={userAnswer.toLowerCase() === questionData.correctAnswer.toLowerCase()}
-            correctAnswer={questionData.correctAnswer}
-            comment={questionData.comment}
+            isCorrect={userAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()}
+            correctAnswer={currentQuestion.correctAnswer}
+            comment={currentQuestion.comment}
           />
         )}
       </Card>
@@ -97,6 +118,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
         hasUserAnswer={!!userAnswer}
+      />
+
+      <EditQuestionModal
+        question={currentQuestion}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onQuestionUpdated={handleQuestionUpdate}
       />
     </div>
   );
