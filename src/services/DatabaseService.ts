@@ -2,30 +2,41 @@ import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
 export const saveQuestions = async (questions: Question[], userId: string) => {
-  const { error } = await supabase.from('questions').insert(
-    questions.map(q => ({
-      user_id: userId,
-      question: q.question,
-      option_a: q.optionA,
-      option_b: q.optionB,
-      option_c: q.optionC,
-      option_d: q.optionD,
-      option_e: q.optionE,
-      subject: q.subject,
-      correct_answer: q.correctAnswer,
-      comment: q.comment,
-      filename: q.filename
-    }))
-  );
+  // Insert questions in batches of 500 to avoid any potential limitations
+  const batchSize = 500;
+  const batches = [];
+  
+  for (let i = 0; i < questions.length; i += batchSize) {
+    const batch = questions.slice(i, i + batchSize);
+    batches.push(batch);
+  }
 
-  if (error) throw error;
+  for (const batch of batches) {
+    const { error } = await supabase.from('questions').insert(
+      batch.map(q => ({
+        user_id: userId,
+        question: q.question,
+        option_a: q.optionA,
+        option_b: q.optionB,
+        option_c: q.optionC,
+        option_d: q.optionD,
+        option_e: q.optionE,
+        subject: q.subject,
+        correct_answer: q.correctAnswer,
+        comment: q.comment,
+        filename: q.filename
+      }))
+    );
 
+    if (error) throw error;
+  }
+
+  // Fetch all inserted questions without limit
   const { data: insertedQuestions, error: fetchError } = await supabase
     .from('questions')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(questions.length);
+    .order('created_at', { ascending: false });
 
   if (fetchError) throw fetchError;
 
