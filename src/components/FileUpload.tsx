@@ -58,6 +58,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
               : row;
 
             return {
+              id: crypto.randomUUID(), // Generate a temporary ID for the frontend
               question: rowData['Frage'],
               optionA: rowData['A'],
               optionB: rowData['B'],
@@ -97,7 +98,31 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
           if (error) throw error;
 
-          onQuestionsLoaded(questions);
+          // Fetch the inserted questions to get their actual IDs
+          const { data: insertedQuestions, error: fetchError } = await supabase
+            .from('questions')
+            .select('*')
+            .eq('user_id', user?.id)
+            .order('created_at', { ascending: false })
+            .limit(questions.length);
+
+          if (fetchError) throw fetchError;
+
+          // Map the database questions to our Question type
+          const mappedQuestions = insertedQuestions.map(q => ({
+            id: q.id,
+            question: q.question,
+            optionA: q.option_a,
+            optionB: q.option_b,
+            optionC: q.option_c,
+            optionD: q.option_d,
+            optionE: q.option_e,
+            subject: q.subject,
+            correctAnswer: q.correct_answer,
+            comment: q.comment
+          }));
+
+          onQuestionsLoaded(mappedQuestions);
           toast.success(`${questions.length} Fragen geladen und gespeichert`);
         } catch (error: any) {
           console.error('Error saving questions:', error);
