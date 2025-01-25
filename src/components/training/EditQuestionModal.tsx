@@ -40,7 +40,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   onQuestionUpdated,
 }) => {
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: {
+    defaultValues: question ? {
       question: question.question,
       optionA: question.optionA,
       optionB: question.optionB,
@@ -50,8 +50,12 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       correctAnswer: question.correctAnswer,
       comment: question.comment,
       subject: question.subject,
-    },
+    } : undefined,
   });
+
+  if (!question) {
+    return null;
+  }
 
   const onSubmit = async (data: FormData) => {
     try {

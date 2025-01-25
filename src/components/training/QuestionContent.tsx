@@ -19,6 +19,10 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   onConfirmAnswer,
   showFeedback,
 }) => {
+  if (!questionData) {
+    return <div>Loading question...</div>;
+  }
+
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-semibold mb-6 text-slate-800">{questionData.question}</h3>
