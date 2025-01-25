@@ -20,9 +20,10 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
 
   // Get question IDs for this specific dataset
   const questionIds = questions.map(q => q.id);
+  const filename = questions[0]?.filename; // Use filename as part of cache key
 
   const { data: userProgress } = useQuery({
-    queryKey: ['user-progress', user?.id, questionIds], // Add questionIds to queryKey
+    queryKey: ['user-progress', user?.id, filename], // Use filename instead of questionIds for cache key
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_progress')
