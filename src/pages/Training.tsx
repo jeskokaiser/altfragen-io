@@ -55,6 +55,10 @@ const Training = () => {
     setConfigurationComplete(false);
   };
 
+  const handleQuit = () => {
+    navigate('/');
+  };
+
   if (allQuestions.length === 0) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -92,6 +96,7 @@ const Training = () => {
         onPrevious={handlePrevious}
         onAnswer={handleAnswer}
         userAnswer={userAnswers[currentQuestionIndex]}
+        onQuit={handleQuit}
       />
     </div>
   );

@@ -18,6 +18,7 @@ interface QuestionDisplayProps {
   onPrevious: () => void;
   onAnswer: (answer: string) => void;
   userAnswer: string;
+  onQuit: () => void;
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -28,6 +29,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onPrevious,
   onAnswer,
   userAnswer,
+  onQuit,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
@@ -66,7 +68,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <ProgressBar currentIndex={currentIndex} totalQuestions={totalQuestions} />
+      <div className="flex justify-between items-center mb-4">
+        <ProgressBar currentIndex={currentIndex} totalQuestions={totalQuestions} />
+        <Button variant="outline" onClick={onQuit} className="text-red-500 hover:text-red-600 hover:bg-red-50">
+          Training beenden
+        </Button>
+      </div>
 
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-6 text-slate-800">{questionData.question}</h3>
