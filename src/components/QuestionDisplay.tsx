@@ -44,23 +44,48 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   };
 
   const handleConfirmAnswer = async () => {
-    if (selectedAnswer) {
-      onAnswer(selectedAnswer);
-      setShowFeedback(true);
+    if (!selectedAnswer || !user) return;
 
-      try {
-        const { error } = await supabase.from('user_progress').insert({
-          user_id: user?.id,
-          question_id: currentQuestion.id,
-          user_answer: selectedAnswer,
-          is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
-        });
+    onAnswer(selectedAnswer);
+    setShowFeedback(true);
 
-        if (error) throw error;
-      } catch (error: any) {
-        console.error('Error saving progress:', error);
-        toast.error("Fehler beim Speichern des Fortschritts");
+    try {
+      // First try to update existing progress
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from('user_progress')
+        .select()
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id)
+        .single();
+
+      if (existingProgress) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('user_progress')
+          .update({
+            user_answer: selectedAnswer,
+            is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
+          })
+          .eq('user_id', user.id)
+          .eq('question_id', currentQuestion.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('user_progress')
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: selectedAnswer,
+            is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
+          });
+
+        if (insertError) throw insertError;
       }
+    } catch (error: any) {
+      console.error('Error saving progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
     }
   };
 
