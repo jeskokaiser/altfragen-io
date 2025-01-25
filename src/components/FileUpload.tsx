@@ -22,15 +22,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     setError(null);
 
     if (!file) {
-      setError("Bitte wählen Sie eine Datei aus");
+      setError("Bitte wähle eine Datei aus");
       toast.error("Keine Datei ausgewählt", {
-        description: "Bitte wählen Sie eine CSV-Datei aus"
+        description: "Bitte wähle eine CSV-Datei aus"
       });
       return;
     }
 
     if (!file.name.endsWith('.csv')) {
-      setError("Bitte wählen Sie eine CSV-Datei aus");
+      setError("Bitte wähle eine CSV-Datei aus");
       toast.error("Ungültiges Dateiformat", {
         description: "Es werden nur CSV-Dateien unterstützt"
       });
@@ -48,7 +48,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       if (questions.length === 0) {
         setError("Die CSV-Datei enthält keine gültigen Fragen");
         toast.error("Keine gültigen Fragen gefunden", {
-          description: "Überprüfen Sie das Format Ihrer CSV-Datei"
+          description: "Überprüfe das Format deiner CSV-Datei"
         });
         return;
       }
@@ -70,9 +70,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h2 className="text-2xl font-semibold text-slate-800">Laden Sie Ihre Fragen hoch</h2>
+      <h2 className="text-2xl font-semibold text-slate-800">Lade deine Fragen hoch</h2>
       <p className="text-slate-600 mb-4">
-        Bitte laden Sie eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeit
+        Bitte lade eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeit
       </p>
       
       {error && (
