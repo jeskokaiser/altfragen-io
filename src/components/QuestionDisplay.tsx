@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label"
 import { Question } from '@/types/Question';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -28,15 +31,30 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const { user } = useAuth();
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
-  const handleConfirmAnswer = () => {
+  const handleConfirmAnswer = async () => {
     if (selectedAnswer) {
       onAnswer(selectedAnswer);
       setShowFeedback(true);
+
+      try {
+        const { error } = await supabase.from('user_progress').insert({
+          user_id: user?.id,
+          question_id: questionData.id,
+          user_answer: selectedAnswer,
+          is_correct: selectedAnswer === questionData.correctAnswer
+        });
+
+        if (error) throw error;
+      } catch (error: any) {
+        console.error('Error saving progress:', error);
+        toast.error("Fehler beim Speichern des Fortschritts");
+      }
     }
   };
 

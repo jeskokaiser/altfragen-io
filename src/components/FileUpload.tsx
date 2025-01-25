@@ -3,13 +3,17 @@ import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Question } from '@/types/Question';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const { user } = useAuth();
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       toast.error("Keine Datei ausgewählt");
@@ -19,7 +23,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     console.log('File selected:', file.name);
 
     Papa.parse(file, {
-      complete: (results) => {
+      complete: async (results) => {
         console.log('CSV parsing results:', results);
         
         if (!results.data || results.data.length < 2) {
@@ -27,13 +31,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           return;
         }
 
-        // Ensure headers is an array and get the first row
         const headers = Array.isArray(results.data[0]) ? results.data[0] : Object.keys(results.data[0]);
         console.log('CSV headers:', headers);
         
         const requiredColumns = ['Frage', 'A', 'B', 'C', 'D', 'E', 'Fach', 'Antwort', 'Kommentar'];
         
-        // Check if all required columns exist in headers
         const missingColumns = requiredColumns.filter(col => !headers.includes(col));
         
         if (missingColumns.length > 0) {
@@ -41,16 +43,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           return;
         }
 
-        // Process the data rows
         const questions = (results.data as any[])
-          .slice(1) // Skip header row
+          .slice(1)
           .filter(row => {
-            // Handle both array and object formats
             const values = Array.isArray(row) ? row : Object.values(row);
             return values.length >= requiredColumns.length;
           })
           .map(row => {
-            // Convert row to object if it's an array
             const rowData = Array.isArray(row) 
               ? headers.reduce((acc, header, index) => {
                   acc[header] = row[index];
@@ -70,7 +69,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
               comment: rowData['Kommentar']
             };
           })
-          .filter(q => q.question && q.correctAnswer); // Filter out invalid questions
+          .filter(q => q.question && q.correctAnswer);
 
         console.log('Processed questions:', questions);
 
@@ -79,10 +78,33 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           return;
         }
 
-        onQuestionsLoaded(questions);
-        toast.success(`${questions.length} Fragen geladen`);
+        try {
+          // Save questions to Supabase
+          const { error } = await supabase.from('questions').insert(
+            questions.map(q => ({
+              user_id: user?.id,
+              question: q.question,
+              option_a: q.optionA,
+              option_b: q.optionB,
+              option_c: q.optionC,
+              option_d: q.optionD,
+              option_e: q.optionE,
+              subject: q.subject,
+              correct_answer: q.correctAnswer,
+              comment: q.comment
+            }))
+          );
+
+          if (error) throw error;
+
+          onQuestionsLoaded(questions);
+          toast.success(`${questions.length} Fragen geladen und gespeichert`);
+        } catch (error: any) {
+          console.error('Error saving questions:', error);
+          toast.error("Fehler beim Speichern der Fragen: " + error.message);
+        }
       },
-      header: false, // We'll handle headers manually
+      header: false,
       skipEmptyLines: true,
       error: (error) => {
         console.error('CSV parsing error:', error);
