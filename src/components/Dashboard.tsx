@@ -8,12 +8,15 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import DashboardHeader from './datasets/DashboardHeader';
 import DatasetList from './datasets/DatasetList';
+import ExamConfigModal from './exam/ExamConfigModal';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [editingFilename, setEditingFilename] = useState<string | null>(null);
   const [newFilename, setNewFilename] = useState('');
+  const [isExamModalOpen, setIsExamModalOpen] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -40,7 +43,8 @@ const Dashboard = () => {
         correctAnswer: q.correct_answer,
         comment: q.comment,
         filename: q.filename,
-        created_at: q.created_at
+        created_at: q.created_at,
+        difficulty: q.difficulty
       })) as Question[];
     },
     enabled: !!user
@@ -78,7 +82,6 @@ const Dashboard = () => {
     toast.success('Datensatz erfolgreich umbenannt');
   };
 
-  // Group questions by filename
   const groupedQuestions = React.useMemo(() => {
     if (!questions) return {};
     return questions.reduce((acc, question) => {
@@ -96,6 +99,16 @@ const Dashboard = () => {
 
   const handleStartTraining = (questions: Question[]) => {
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
+    navigate('/training');
+  };
+
+  const handleStartExam = (questions: Question[]) => {
+    setSelectedQuestions(questions);
+    setIsExamModalOpen(true);
+  };
+
+  const handleStartExamWithConfig = (selectedQuestions: Question[]) => {
+    localStorage.setItem('trainingQuestions', JSON.stringify(selectedQuestions));
     navigate('/training');
   };
 
@@ -122,6 +135,7 @@ const Dashboard = () => {
             onRename={handleRename}
             onSaveRename={handleSaveRename}
             onCancelRename={() => setEditingFilename(null)}
+            onStartExam={handleStartExam}
           />
         ) : (
           <div className="text-center py-8 text-slate-600">
@@ -129,6 +143,13 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      <ExamConfigModal
+        isOpen={isExamModalOpen}
+        onClose={() => setIsExamModalOpen(false)}
+        questions={selectedQuestions}
+        onStartExam={handleStartExamWithConfig}
+      />
     </div>
   );
 };
