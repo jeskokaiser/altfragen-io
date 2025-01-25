@@ -18,22 +18,23 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = React.useState(true);
 
-  // Get the question IDs for the current dataset
-  const currentQuestionIds = questions.map(q => q.id);
+  // Get question IDs for this specific dataset
+  const questionIds = questions.map(q => q.id);
+  const filename = questions[0]?.filename; // Use filename as part of cache key
 
   const { data: userProgress } = useQuery({
-    queryKey: ['user-progress', user?.id, currentQuestionIds],
+    queryKey: ['user-progress', user?.id, filename], // Use filename instead of questionIds for cache key
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_progress')
         .select('*')
         .eq('user_id', user?.id)
-        .in('question_id', currentQuestionIds);
+        .in('question_id', questionIds); // Only get progress for questions in this dataset
 
       if (error) throw error;
       return data;
     },
-    enabled: !!user && currentQuestionIds.length > 0
+    enabled: !!user && questionIds.length > 0
   });
 
   const totalQuestions = questions.length;
