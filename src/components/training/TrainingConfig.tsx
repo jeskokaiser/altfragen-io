@@ -37,7 +37,11 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const subjects = Array.from(new Set(questions.map(q => q.subject)));
 
   const handleSubmit = async (values: FormValues) => {
-    const filteredQuestions = questions.filter(q => q.subject === values.subject);
+    // If "all" is selected, use all questions, otherwise filter by subject
+    const filteredQuestions = values.subject === 'all' 
+      ? questions 
+      : questions.filter(q => q.subject === values.subject);
+    
     const questionCount = parseInt(values.questionCount);
     
     // Get user's progress for these questions
@@ -106,6 +110,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    <SelectItem value="all">Alle Fächer</SelectItem>
                     {subjects.map((subject) => (
                       <SelectItem key={subject} value={subject}>
                         {subject}
