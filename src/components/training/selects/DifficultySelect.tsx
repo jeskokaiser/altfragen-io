@@ -1,10 +1,17 @@
 import React from 'react';
 import {
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '../types/FormValues';
 
@@ -13,39 +20,28 @@ interface DifficultySelectProps {
 }
 
 const DifficultySelect: React.FC<DifficultySelectProps> = ({ form }) => {
-  const difficulties = [
-    { value: "all", label: "Alle" },
-    { value: "1", label: "Sehr leicht" },
-    { value: "2", label: "Leicht" },
-    { value: "3", label: "Mittel" },
-    { value: "4", label: "Schwer" },
-    { value: "5", label: "Sehr schwer" },
-  ];
-
   return (
     <FormField
       control={form.control}
       name="difficulty"
       render={({ field }) => (
-        <FormItem className="space-y-2">
+        <FormItem>
           <FormLabel>Schwierigkeitsgrad</FormLabel>
-          <ToggleGroup
-            type="single"
-            defaultValue={field.value}
-            onValueChange={field.onChange}
-            className="flex flex-wrap gap-2"
-          >
-            {difficulties.map((difficulty) => (
-              <ToggleGroupItem
-                key={difficulty.value}
-                value={difficulty.value}
-                aria-label={difficulty.label}
-                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-              >
-                {difficulty.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Wähle einen Schwierigkeitsgrad" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              <SelectItem value="all">Alle Schwierigkeitsgrade</SelectItem>
+              {[1, 2, 3, 4, 5].map((level) => (
+                <SelectItem key={level} value={level.toString()}>
+                  {level} {level === 1 ? '(Sehr leicht)' : level === 5 ? '(Sehr schwer)' : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </FormItem>
       )}
     />
