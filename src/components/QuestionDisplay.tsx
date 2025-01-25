@@ -11,6 +11,9 @@ import NavigationButtons from './training/NavigationButtons';
 import EditQuestionModal from './training/EditQuestionModal';
 import AnswerSubmission from './training/AnswerSubmission';
 import { Badge } from '@/components/ui/badge';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from "sonner";
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -62,6 +65,26 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setCurrentQuestion(updatedQuestion);
   };
 
+  const handleDifficultyChange = async (value: string) => {
+    const newDifficulty = parseInt(value);
+    if (isNaN(newDifficulty) || newDifficulty < 1 || newDifficulty > 5) return;
+
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ difficulty: newDifficulty })
+        .eq('id', currentQuestion.id);
+
+      if (error) throw error;
+
+      setCurrentQuestion({ ...currentQuestion, difficulty: newDifficulty });
+      toast.success("Schwierigkeitsgrad aktualisiert");
+    } catch (error) {
+      console.error('Error updating difficulty:', error);
+      toast.error("Fehler beim Aktualisieren des Schwierigkeitsgrads");
+    }
+  };
+
   const getDifficultyColor = (difficulty: number) => {
     switch (difficulty) {
       case 1: return 'bg-green-100 text-green-800';
@@ -70,6 +93,17 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       case 4: return 'bg-orange-100 text-orange-800';
       case 5: return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getDifficultyLabel = (difficulty: number) => {
+    switch (difficulty) {
+      case 1: return 'Sehr leicht';
+      case 2: return 'Leicht';
+      case 3: return 'Mittel';
+      case 4: return 'Schwer';
+      case 5: return 'Sehr schwer';
+      default: return 'Unbekannt';
     }
   };
 
@@ -82,19 +116,39 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <Card className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <Badge className={`${getDifficultyColor(currentQuestion.difficulty)}`}>
-            Schwierigkeit: {currentQuestion.difficulty}
-          </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditModalOpen(true)}
-            className="flex items-center gap-2"
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="flex justify-between items-center">
+            <Badge className={`${getDifficultyColor(currentQuestion.difficulty)}`}>
+              Schwierigkeit: {currentQuestion.difficulty}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Pencil className="h-4 w-4" />
+              Bearbeiten
+            </Button>
+          </div>
+          
+          <ToggleGroup 
+            type="single" 
+            value={currentQuestion.difficulty.toString()}
+            onValueChange={handleDifficultyChange}
+            className="justify-start"
           >
-            <Pencil className="h-4 w-4" />
-            Bearbeiten
-          </Button>
+            {[1, 2, 3, 4, 5].map((level) => (
+              <ToggleGroupItem 
+                key={level} 
+                value={level.toString()}
+                aria-label={`Schwierigkeitsgrad ${level}`}
+                className={`${getDifficultyColor(level)} hover:opacity-90`}
+              >
+                {level}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </div>
 
         <QuestionContent
