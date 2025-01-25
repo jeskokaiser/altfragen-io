@@ -49,7 +49,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           user_id: user?.id,
           question_id: questionData.id,
           user_answer: selectedAnswer,
-          is_correct: selectedAnswer === questionData.correctAnswer
+          is_correct: selectedAnswer.toLowerCase() === questionData.correctAnswer.toLowerCase()
         });
 
         if (error) throw error;
@@ -99,7 +99,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
         {showFeedback && userAnswer && (
           <FeedbackDisplay 
-            isCorrect={userAnswer === questionData.correctAnswer}
+            isCorrect={userAnswer.toLowerCase() === questionData.correctAnswer.toLowerCase()}
             correctAnswer={questionData.correctAnswer}
             comment={questionData.comment}
           />
