@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -13,11 +15,25 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user } = useAuth();
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    setError(null);
+
     if (!file) {
-      toast.error("Keine Datei ausgewählt");
+      setError("Bitte wählen Sie eine Datei aus");
+      toast.error("Keine Datei ausgewählt", {
+        description: "Bitte wählen Sie eine CSV-Datei aus"
+      });
+      return;
+    }
+
+    if (!file.name.endsWith('.csv')) {
+      setError("Bitte wählen Sie eine CSV-Datei aus");
+      toast.error("Ungültiges Dateiformat", {
+        description: "Es werden nur CSV-Dateien unterstützt"
+      });
       return;
     }
 
@@ -30,16 +46,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       console.log('Total valid questions:', questions.length);
 
       if (questions.length === 0) {
-        toast.error("Keine gültigen Fragen in der CSV-Datei gefunden");
+        setError("Die CSV-Datei enthält keine gültigen Fragen");
+        toast.error("Keine gültigen Fragen gefunden", {
+          description: "Überprüfen Sie das Format Ihrer CSV-Datei"
+        });
         return;
       }
 
       const savedQuestions = await saveQuestions(questions, user?.id || '');
       onQuestionsLoaded(savedQuestions);
-      toast.success(`${questions.length} Fragen aus "${file.name}" geladen und gespeichert`);
+      toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
+        description: "Die Fragen wurden erfolgreich gespeichert"
+      });
     } catch (error: any) {
       console.error('Error processing file:', error);
-      toast.error(error.message || "Ein Fehler ist aufgetreten");
+      const errorMessage = error.message || "Ein unerwarteter Fehler ist aufgetreten";
+      setError(errorMessage);
+      toast.error("Fehler beim Verarbeiten der Datei", {
+        description: errorMessage
+      });
     }
   };
 
@@ -49,6 +74,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       <p className="text-slate-600 mb-4">
         Bitte laden Sie eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeit
       </p>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <label htmlFor="csv-upload">
         <Button 
           variant="outline" 

@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import DashboardHeader from './datasets/DashboardHeader';
 import DatasetList from './datasets/DatasetList';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -17,7 +19,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: questions, isLoading, refetch } = useQuery({
+  const { data: questions, isLoading, error, refetch } = useQuery({
     queryKey: ['questions', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -26,7 +28,10 @@ const Dashboard = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching questions:', error);
+        throw new Error('Fehler beim Laden der Fragen');
+      }
       
       return data.map(q => ({
         id: q.id,
@@ -57,25 +62,31 @@ const Dashboard = () => {
 
   const handleSaveRename = async (oldFilename: string) => {
     if (!newFilename.trim()) {
-      toast.error('Der Dateiname darf nicht leer sein');
+      toast.error('Der Dateiname darf nicht leer sein', {
+        description: 'Bitte geben Sie einen gültigen Namen ein'
+      });
       return;
     }
 
-    const { error } = await supabase
-      .from('questions')
-      .update({ filename: newFilename.trim() })
-      .eq('user_id', user?.id)
-      .eq('filename', oldFilename);
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ filename: newFilename.trim() })
+        .eq('user_id', user?.id)
+        .eq('filename', oldFilename);
 
-    if (error) {
-      toast.error('Fehler beim Umbenennen des Datensatzes');
-      return;
+      if (error) throw error;
+
+      setEditingFilename(null);
+      setNewFilename('');
+      await queryClient.invalidateQueries({ queryKey: ['questions', user?.id] });
+      toast.success('Datensatz erfolgreich umbenannt');
+    } catch (error: any) {
+      console.error('Error renaming dataset:', error);
+      toast.error('Fehler beim Umbenennen', {
+        description: error.message || 'Ein unerwarteter Fehler ist aufgetreten'
+      });
     }
-
-    setEditingFilename(null);
-    setNewFilename('');
-    await queryClient.invalidateQueries({ queryKey: ['questions', user?.id] });
-    toast.success('Datensatz erfolgreich umbenannt');
   };
 
   // Group questions by filename
@@ -95,12 +106,35 @@ const Dashboard = () => {
   };
 
   const handleStartTraining = (questions: Question[]) => {
+    if (questions.length === 0) {
+      toast.error('Keine Fragen verfügbar', {
+        description: 'Bitte wählen Sie einen Datensatz mit Fragen aus'
+      });
+      return;
+    }
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     navigate('/training');
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">Lädt...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-pulse text-slate-600">Lädt Ihre Fragen...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Fehler beim Laden der Fragen. Bitte versuchen Sie es später erneut.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   return (
