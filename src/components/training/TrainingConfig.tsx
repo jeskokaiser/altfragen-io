@@ -42,7 +42,10 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     
     if (values.difficulty !== 'all') {
       const selectedDifficulty = parseInt(values.difficulty);
-      filteredQuestions = filteredQuestions.filter(q => q.difficulty === selectedDifficulty);
+      // Filter out questions where difficulty is null or doesn't match
+      filteredQuestions = filteredQuestions.filter(q => 
+        q.difficulty !== null && q.difficulty === selectedDifficulty
+      );
     }
 
     if (filteredQuestions.length === 0) {
