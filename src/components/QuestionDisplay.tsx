@@ -4,7 +4,6 @@ import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Question } from '@/types/Question';
-import { QuestionProgress } from '@/types/Progress';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -16,7 +15,6 @@ interface QuestionDisplayProps {
   onPrevious: () => void;
   onAnswer: (answer: string) => void;
   userAnswer: string;
-  progress?: QuestionProgress;
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -27,7 +25,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onPrevious,
   onAnswer,
   userAnswer,
-  progress,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
@@ -60,16 +57,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
           />
         </div>
-        <div className="flex justify-between items-center mt-2">
-          <p className="text-sm text-slate-600">
-            Frage {currentIndex + 1} von {totalQuestions}
-          </p>
-          {progress && (
-            <p className="text-sm text-slate-600">
-              Erfolgsquote: {Math.round((progress.correctAttempts / (progress.correctAttempts + progress.incorrectAttempts)) * 100)}%
-            </p>
-          )}
-        </div>
+        <p className="text-right text-sm text-slate-600 mt-2">
+          Frage {currentIndex + 1} von {totalQuestions}
+        </p>
       </div>
 
       <Card className="p-6">
@@ -77,31 +67,31 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         <div className="space-y-4">
           <RadioGroup value={selectedAnswer} onValueChange={handleAnswerChange}>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="A" id="A" disabled={showFeedback} />
+              <RadioGroupItem value="A" id="A" />
               <Label htmlFor="A" className="flex items-center">
                 <span className="font-semibold mr-2">A)</span> {questionData.optionA}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="B" id="B" disabled={showFeedback} />
+              <RadioGroupItem value="B" id="B" />
               <Label htmlFor="B" className="flex items-center">
                 <span className="font-semibold mr-2">B)</span> {questionData.optionB}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="C" id="C" disabled={showFeedback} />
+              <RadioGroupItem value="C" id="C" />
               <Label htmlFor="C" className="flex items-center">
                 <span className="font-semibold mr-2">C)</span> {questionData.optionC}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="D" id="D" disabled={showFeedback} />
+              <RadioGroupItem value="D" id="D" />
               <Label htmlFor="D" className="flex items-center">
                 <span className="font-semibold mr-2">D)</span> {questionData.optionD}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="E" id="E" disabled={showFeedback} />
+              <RadioGroupItem value="E" id="E" />
               <Label htmlFor="E" className="flex items-center">
                 <span className="font-semibold mr-2">E)</span> {questionData.optionE}
               </Label>
@@ -150,7 +140,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         </Button>
         <Button
           onClick={handleNext}
-          disabled={!showFeedback}
+          disabled={!userAnswer}
         >
           {currentIndex === totalQuestions - 1 ? 'Fertig' : 'Weiter'}
         </Button>
