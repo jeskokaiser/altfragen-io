@@ -10,6 +10,8 @@ import DashboardHeader from './datasets/DashboardHeader';
 import DatasetList from './datasets/DatasetList';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -89,7 +91,6 @@ const Dashboard = () => {
     }
   };
 
-  // Group questions by filename
   const groupedQuestions = React.useMemo(() => {
     if (!questions) return {};
     return questions.reduce((acc, question) => {
@@ -138,12 +139,26 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      <DashboardHeader />
-      <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
+    <div className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
+      <section className="space-y-6">
+        <DashboardHeader />
+        <Card className="bg-slate-50/50">
+          <CardContent className="pt-6">
+            <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
+          </CardContent>
+        </Card>
+      </section>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4 text-slate-800">Ihre Datensätze</h2>
+      <Separator className="my-8" />
+
+      <section className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold text-slate-800">Ihre Datensätze</h2>
+          <span className="text-sm text-muted-foreground">
+            {questions?.length || 0} Fragen insgesamt
+          </span>
+        </div>
+        
         {questions && questions.length > 0 ? (
           <DatasetList
             groupedQuestions={groupedQuestions}
@@ -158,11 +173,18 @@ const Dashboard = () => {
             onCancelRename={() => setEditingFilename(null)}
           />
         ) : (
-          <div className="text-center py-8 text-slate-600">
-            Noch keine Datensätze hochgeladen
-          </div>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-lg text-slate-600 mb-2">
+                Noch keine Datensätze hochgeladen
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Laden Sie eine CSV-Datei hoch, um mit dem Training zu beginnen
+              </p>
+            </CardContent>
+          </Card>
         )}
-      </div>
+      </section>
     </div>
   );
 };
