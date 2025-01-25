@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +17,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const { data: questions, isLoading, error, refetch } = useQuery({
     queryKey: ['questions', user?.id],
