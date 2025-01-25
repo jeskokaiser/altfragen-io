@@ -33,17 +33,23 @@ const AnswerSubmission = ({
 
       if (fetchError) throw fetchError;
 
+      const isCorrect = selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase();
+
       if (existingProgress) {
         const { error: updateError } = await supabase
           .from('user_progress')
           .update({
             user_answer: selectedAnswer,
-            is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
+            is_correct: isCorrect
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
 
         if (updateError) throw updateError;
+
+        if (isCorrect) {
+          toast.success('Richtige Antwort! Der Fortschritt wurde aktualisiert.');
+        }
       } else {
         const { error: insertError } = await supabase
           .from('user_progress')
@@ -51,7 +57,7 @@ const AnswerSubmission = ({
             user_id: user.id,
             question_id: currentQuestion.id,
             user_answer: selectedAnswer,
-            is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
+            is_correct: isCorrect
           });
 
         if (insertError) throw insertError;
