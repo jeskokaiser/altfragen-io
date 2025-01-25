@@ -61,30 +61,30 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-        <h3 className="text-lg font-semibold mb-2">Total Progress</h3>
+        <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
         <Progress value={answeredPercentage} className="h-2 mb-2" />
         <p className="text-sm text-muted-foreground">
-          {answeredQuestions} of {totalQuestions} questions answered
+          {answeredQuestions} von {totalQuestions} Fragen beantwortet
         </p>
       </div>
       
       <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-        <h3 className="text-lg font-semibold mb-2 text-green-600">Correct Answers</h3>
+        <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
         <Progress value={correctPercentage} className="h-2 mb-2 bg-green-100">
           <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentage}%` }} />
         </Progress>
         <p className="text-sm text-muted-foreground">
-          {correctAnswers} of {totalQuestions} questions correct
+          {correctAnswers} von {totalQuestions} Fragen richtig
         </p>
       </div>
       
       <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-        <h3 className="text-lg font-semibold mb-2 text-red-600">Wrong Answers</h3>
+        <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
         <Progress value={wrongPercentage} className="h-2 mb-2 bg-red-100">
           <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentage}%` }} />
         </Progress>
         <p className="text-sm text-muted-foreground">
-          {wrongAnswers} of {totalQuestions} questions wrong
+          {wrongAnswers} von {totalQuestions} Fragen falsch
         </p>
         {wrongAnswers > 0 && (
           <Button 
@@ -92,7 +92,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
             variant="destructive"
             className="mt-2 w-full"
           >
-            Train Wrong Questions
+            Falsche Fragen üben
           </Button>
         )}
       </div>

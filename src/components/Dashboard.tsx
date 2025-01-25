@@ -100,7 +100,7 @@ const Dashboard = () => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return <div className="flex justify-center items-center min-h-screen">Lädt...</div>;
   }
 
   return (

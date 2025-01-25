@@ -18,7 +18,7 @@ const Auth = () => {
       setLoading(true);
       
       if (!email || !password) {
-        toast.error('Please enter both email and password');
+        toast.error('Bitte geben Sie E-Mail und Passwort ein');
         return;
       }
 
@@ -40,10 +40,10 @@ const Auth = () => {
       }
       
       if (type === 'login') {
-        toast.success('Successfully logged in!');
+        toast.success('Erfolgreich eingeloggt!');
         navigate('/');
       } else {
-        toast.success('Check your email for the confirmation link!');
+        toast.success('Überprüfen Sie Ihre E-Mail für den Bestätigungslink!');
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -55,25 +55,25 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md p-6 space-y-6">
-        <h2 className="text-2xl font-semibold text-center text-slate-800">Welcome to CSV Query Pal</h2>
+        <h2 className="text-2xl font-semibold text-center text-slate-800">Willkommen bei Altfragen.io</h2>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">E-Mail</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="E-Mail-Adresse eingeben"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Passwort</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Passwort eingeben"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -85,7 +85,7 @@ const Auth = () => {
               onClick={() => handleAuth('login')}
               disabled={loading}
             >
-              {loading ? 'Loading...' : 'Sign In'}
+              {loading ? 'Lädt...' : 'Anmelden'}
             </Button>
             <Button 
               variant="outline" 
@@ -93,7 +93,7 @@ const Auth = () => {
               onClick={() => handleAuth('signup')}
               disabled={loading}
             >
-              Sign Up
+              Registrieren
             </Button>
           </div>
         </div>
