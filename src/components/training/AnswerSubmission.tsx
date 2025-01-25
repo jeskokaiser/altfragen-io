@@ -3,6 +3,7 @@ import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
+import { Button } from '@/components/ui/button';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
