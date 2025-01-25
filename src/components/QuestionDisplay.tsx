@@ -39,11 +39,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
-    setCurrentQuestion(questionData);
+    if (questionData) {
+      setCurrentQuestion(questionData);
+    }
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
@@ -66,6 +68,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   };
 
   const handleDifficultyChange = async (value: string) => {
+    if (!currentQuestion) return;
+    
     const newDifficulty = parseInt(value);
     if (isNaN(newDifficulty) || newDifficulty < 1 || newDifficulty > 5) return;
 
@@ -106,6 +110,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       default: return 'Unbekannt';
     }
   };
+
+  if (!currentQuestion) {
+    return <div>Loading question...</div>;
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
