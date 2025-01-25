@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import DifficultyBadge from './DifficultyBadge';
@@ -17,6 +17,11 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
   onEditClick,
 }) => {
   const [currentDifficulty, setCurrentDifficulty] = useState(difficulty);
+
+  // Update local state when the question (and its difficulty) changes
+  useEffect(() => {
+    setCurrentDifficulty(difficulty);
+  }, [difficulty, questionId]);
 
   const handleDifficultyChange = async (value: string) => {
     const newDifficulty = parseInt(value);
