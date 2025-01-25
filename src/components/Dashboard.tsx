@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
@@ -13,9 +13,16 @@ import {
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import FileUpload from './FileUpload';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
   const { data: questions, isLoading, refetch } = useQuery({
     queryKey: ['questions', user?.id],
@@ -62,6 +69,10 @@ const Dashboard = () => {
     }, {} as Record<string, Question[]>);
   }, [questions]);
 
+  const handleDatasetClick = (filename: string) => {
+    setSelectedFilename(selectedFilename === filename ? null : filename);
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -80,34 +91,65 @@ const Dashboard = () => {
         {questions && questions.length > 0 ? (
           <div className="space-y-6">
             {Object.entries(groupedQuestions).map(([filename, fileQuestions]) => (
-              <div key={filename} className="rounded-md border">
-                <div className="bg-slate-50 p-4 border-b">
-                  <h3 className="text-lg font-medium text-slate-800">
+              <Card 
+                key={filename} 
+                className={`cursor-pointer transition-all ${
+                  selectedFilename === filename ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => handleDatasetClick(filename)}
+              >
+                <CardHeader className="bg-slate-50">
+                  <CardTitle className="text-lg font-medium text-slate-800">
                     {filename} ({fileQuestions.length} Fragen)
-                  </h3>
+                  </CardTitle>
                   <p className="text-sm text-slate-600">
                     Hochgeladen am {new Date(fileQuestions[0].created_at!).toLocaleDateString()}
                   </p>
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fach</TableHead>
-                      <TableHead>Anzahl der Fragen</TableHead>
-                      <TableHead>Hochgeladen am</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>{fileQuestions[0].subject}</TableCell>
-                      <TableCell>{fileQuestions.length}</TableCell>
-                      <TableCell>
-                        {new Date(fileQuestions[0].created_at!).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fach</TableHead>
+                        <TableHead>Anzahl der Fragen</TableHead>
+                        <TableHead>Hochgeladen am</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>{fileQuestions[0].subject}</TableCell>
+                        <TableCell>{fileQuestions.length}</TableCell>
+                        <TableCell>
+                          {new Date(fileQuestions[0].created_at!).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+
+                  {selectedFilename === filename && (
+                    <div className="mt-4 space-y-4">
+                      <h3 className="font-semibold">Fragen:</h3>
+                      {fileQuestions.map((question, index) => (
+                        <div key={question.id} className="p-4 bg-slate-50 rounded-lg">
+                          <p className="font-medium">Frage {index + 1}:</p>
+                          <p className="mt-1">{question.question}</p>
+                          <div className="mt-2 space-y-1">
+                            <p>A: {question.optionA}</p>
+                            <p>B: {question.optionB}</p>
+                            <p>C: {question.optionC}</p>
+                            <p>D: {question.optionD}</p>
+                            {question.optionE && <p>E: {question.optionE}</p>}
+                          </div>
+                          <p className="mt-2 text-green-600">Richtige Antwort: {question.correctAnswer}</p>
+                          {question.comment && (
+                            <p className="mt-2 text-slate-600">Kommentar: {question.comment}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (
