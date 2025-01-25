@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import FileUpload from './FileUpload';
 import {
   Card,
@@ -20,10 +21,14 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Pencil } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
+  const [editingFilename, setEditingFilename] = useState<string | null>(null);
+  const [newFilename, setNewFilename] = useState('');
   const navigate = useNavigate();
 
   const { data: questions, isLoading, refetch } = useQuery({
@@ -59,6 +64,34 @@ const Dashboard = () => {
     refetch();
   };
 
+  const handleRename = async (oldFilename: string) => {
+    setEditingFilename(oldFilename);
+    setNewFilename(oldFilename);
+  };
+
+  const handleSaveRename = async (oldFilename: string) => {
+    if (!newFilename.trim()) {
+      toast.error('Der Dateiname darf nicht leer sein');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('questions')
+      .update({ filename: newFilename.trim() })
+      .eq('user_id', user?.id)
+      .eq('filename', oldFilename);
+
+    if (error) {
+      toast.error('Fehler beim Umbenennen des Datensatzes');
+      return;
+    }
+
+    setEditingFilename(null);
+    setNewFilename('');
+    refetch();
+    toast.success('Datensatz erfolgreich umbenannt');
+  };
+
   // Group questions by filename
   const groupedQuestions = React.useMemo(() => {
     if (!questions) return {};
@@ -76,7 +109,6 @@ const Dashboard = () => {
   };
 
   const handleStartTraining = (questions: Question[]) => {
-    // Store the questions in localStorage for the training component to use
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     navigate('/training');
   };
@@ -107,9 +139,45 @@ const Dashboard = () => {
               >
                 <CardHeader className="bg-slate-50">
                   <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg font-medium text-slate-800">
-                      {filename} ({fileQuestions.length} Fragen)
-                    </CardTitle>
+                    <div className="flex-1">
+                      {editingFilename === filename ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={newFilename}
+                            onChange={(e) => setNewFilename(e.target.value)}
+                            className="max-w-md"
+                            placeholder="Neuer Dateiname"
+                          />
+                          <Button 
+                            onClick={() => handleSaveRename(filename)}
+                            size="sm"
+                          >
+                            Speichern
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setEditingFilename(null)}
+                          >
+                            Abbrechen
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg font-medium text-slate-800">
+                            {filename} ({fileQuestions.length} Fragen)
+                          </CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRename(filename)}
+                            className="ml-2"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                     <Button onClick={() => handleStartTraining(fileQuestions)}>
                       Training starten
                     </Button>
