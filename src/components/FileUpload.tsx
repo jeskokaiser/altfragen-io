@@ -24,7 +24,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
     Papa.parse(file, {
       complete: async (results) => {
-        console.log('CSV parsing results:', results);
+        console.log('Total rows in CSV:', results.data.length);
         
         if (!results.data || results.data.length < 2) {
           toast.error("Die CSV-Datei ist leer oder ungültig");
@@ -43,37 +43,44 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           return;
         }
 
-        const questions = (results.data as any[])
-          .slice(1)
-          .filter(row => {
-            const values = Array.isArray(row) ? row : Object.values(row);
-            return values.length >= requiredColumns.length;
-          })
-          .map(row => {
+        let questions = (results.data as any[])
+          .slice(1) // Skip header row
+          .map((row, index) => {
             const rowData = Array.isArray(row) 
               ? headers.reduce((acc, header, index) => {
-                  acc[header] = row[index];
+                  acc[header] = row[index] || ''; // Use empty string for missing values
                   return acc;
                 }, {} as Record<string, string>)
               : row;
 
+            // Log any rows that might be filtered out
+            if (!rowData['Frage'] || !rowData['Antwort']) {
+              console.log(`Row ${index + 2} skipped - Missing question or answer:`, rowData);
+            }
+
             return {
               id: crypto.randomUUID(),
-              question: rowData['Frage'],
-              optionA: rowData['A'],
-              optionB: rowData['B'],
-              optionC: rowData['C'],
-              optionD: rowData['D'],
-              optionE: rowData['E'],
-              subject: rowData['Fach'],
-              correctAnswer: rowData['Antwort'],
-              comment: rowData['Kommentar'],
+              question: rowData['Frage'] || '',
+              optionA: rowData['A'] || '',
+              optionB: rowData['B'] || '',
+              optionC: rowData['C'] || '',
+              optionD: rowData['D'] || '',
+              optionE: rowData['E'] || '',
+              subject: rowData['Fach'] || '',
+              correctAnswer: rowData['Antwort'] || '',
+              comment: rowData['Kommentar'] || '',
               filename: file.name
             };
           })
-          .filter(q => q.question && q.correctAnswer);
+          .filter(q => {
+            const isValid = q.question.trim() !== '' && q.correctAnswer.trim() !== '';
+            if (!isValid) {
+              console.log('Filtered out invalid question:', q);
+            }
+            return isValid;
+          });
 
-        console.log('Processed questions:', questions);
+        console.log('Total valid questions:', questions.length);
 
         if (questions.length === 0) {
           toast.error("Keine gültigen Fragen in der CSV-Datei gefunden");
