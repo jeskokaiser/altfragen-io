@@ -16,7 +16,15 @@ interface TrainingConfigProps {
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
-  const form = useForm<FormValues>();
+  const form = useForm<FormValues>({
+    defaultValues: {
+      subject: '',
+      difficulty: '',
+      questionCount: '',
+    },
+    mode: 'onChange',
+  });
+
   const { user } = useAuth();
 
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
@@ -82,6 +90,11 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     return newArray;
   };
 
+  const isFormValid = form.watch('subject') && 
+                     form.watch('difficulty') && 
+                     (form.watch('questionCount') === 'all' || 
+                      parseInt(form.watch('questionCount')) > 0);
+
   return (
     <div className="max-w-md mx-auto p-6">
       <h2 className="text-2xl font-semibold mb-6">Training konfigurieren</h2>
@@ -90,7 +103,11 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           <SubjectSelect form={form} subjects={subjects} />
           <DifficultySelect form={form} />
           <QuestionCountSelect form={form} />
-          <Button type="submit" className="w-full">
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={!isFormValid}
+          >
             Training starten
           </Button>
         </form>
