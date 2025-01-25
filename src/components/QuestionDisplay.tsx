@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Question } from '@/types/Question';
+import { QuestionProgress } from '@/types/Progress';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, XCircle } from "lucide-react";
 
@@ -15,6 +16,7 @@ interface QuestionDisplayProps {
   onPrevious: () => void;
   onAnswer: (answer: string) => void;
   userAnswer: string;
+  progress?: QuestionProgress;
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -25,6 +27,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onPrevious,
   onAnswer,
   userAnswer,
+  progress,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
@@ -57,9 +60,16 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
           />
         </div>
-        <p className="text-right text-sm text-slate-600 mt-2">
-          Frage {currentIndex + 1} von {totalQuestions}
-        </p>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-sm text-slate-600">
+            Frage {currentIndex + 1} von {totalQuestions}
+          </p>
+          {progress && (
+            <p className="text-sm text-slate-600">
+              Erfolgsquote: {Math.round((progress.correctAttempts / (progress.correctAttempts + progress.incorrectAttempts)) * 100)}%
+            </p>
+          )}
+        </div>
       </div>
 
       <Card className="p-6">

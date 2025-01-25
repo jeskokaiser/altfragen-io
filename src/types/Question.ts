@@ -1,4 +1,5 @@
 export interface Question {
+  id: string;  // Unique identifier for the question
   question: string;  // Frage
   optionA: string;
   optionB: string;
