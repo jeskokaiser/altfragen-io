@@ -49,7 +49,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
             const values = Array.isArray(row) ? row : Object.values(row);
             return values.length >= requiredColumns.length;
           })
-          .map(row => {
+          .map((row, index) => {
             // Convert row to object if it's an array
             const rowData = Array.isArray(row) 
               ? headers.reduce((acc, header, index) => {
@@ -59,6 +59,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
               : row;
 
             return {
+              id: `q-${index}-${Date.now()}`, // Add unique ID here
               question: rowData['Frage'],
               optionA: rowData['A'],
               optionB: rowData['B'],
