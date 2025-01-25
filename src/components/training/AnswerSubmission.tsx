@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -19,8 +18,6 @@ const AnswerSubmission = ({
   user,
   onAnswerSubmitted,
 }: AnswerSubmissionProps) => {
-  const queryClient = useQueryClient();
-
   const handleConfirmAnswer = async () => {
     if (!selectedAnswer || !user) return;
 
@@ -59,9 +56,6 @@ const AnswerSubmission = ({
 
         if (insertError) throw insertError;
       }
-
-      // Invalidate the progress query to trigger a refetch
-      await queryClient.invalidateQueries({ queryKey: ['progress'] });
     } catch (error: any) {
       console.error('Error saving progress:', error);
       toast.error("Fehler beim Speichern des Fortschritts");
