@@ -1,19 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import DatasetStatistics from './DatasetStatistics';
-import DatasetQuestionList from './DatasetQuestionList';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface DatasetCardProps {
   filename: string;
@@ -42,43 +45,6 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
   newFilename,
   onNewFilenameChange,
 }) => {
-  const { user } = useAuth();
-  const questionIds = questions.map(q => q.id);
-
-  const { data: progressData } = useQuery({
-    queryKey: ['progress', filename],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user?.id)
-        .in('question_id', questionIds);
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user && questionIds.length > 0,
-  });
-
-  const getLatestAnswers = () => {
-    if (!progressData) return new Map();
-    
-    const latestAnswers = new Map();
-    progressData.forEach(progress => {
-      const existing = latestAnswers.get(progress.question_id);
-      if (!existing || new Date(progress.created_at) > new Date(existing.created_at)) {
-        latestAnswers.set(progress.question_id, progress);
-      }
-    });
-    return latestAnswers;
-  };
-
-  const latestAnswers = getLatestAnswers();
-  const totalQuestions = questions.length;
-  const answeredQuestions = latestAnswers.size;
-  const correctAnswers = Array.from(latestAnswers.values()).filter(p => p.is_correct).length;
-  const wrongAnswers = answeredQuestions - correctAnswers;
-
   return (
     <Card className={`${isSelected ? 'ring-2 ring-primary' : ''}`}>
       <CardHeader className="bg-slate-50">
@@ -132,16 +98,45 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="cursor-pointer" onClick={() => onDatasetClick(filename)}>
-          <DatasetStatistics
-            totalQuestions={totalQuestions}
-            answeredQuestions={answeredQuestions}
-            correctAnswers={correctAnswers}
-            wrongAnswers={wrongAnswers}
-          />
-          <DatasetQuestionList
-            questions={questions}
-            isSelected={isSelected}
-          />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Anzahl der Fragen</TableHead>
+                <TableHead>Hochgeladen am</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>{questions.length}</TableCell>
+                <TableCell>
+                  {new Date(questions[0].created_at!).toLocaleDateString()}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          {isSelected && (
+            <div className="mt-4 space-y-4">
+              <h3 className="font-semibold">Fragen:</h3>
+              {questions.map((question, index) => (
+                <div key={question.id} className="p-4 bg-slate-50 rounded-lg">
+                  <p className="font-medium">Frage {index + 1}:</p>
+                  <p className="mt-1">{question.question}</p>
+                  <div className="mt-2 space-y-1">
+                    <p>A: {question.optionA}</p>
+                    <p>B: {question.optionB}</p>
+                    <p>C: {question.optionC}</p>
+                    <p>D: {question.optionD}</p>
+                    {question.optionE && <p>E: {question.optionE}</p>}
+                  </div>
+                  <p className="mt-2 text-green-600">Richtige Antwort: {question.correctAnswer}</p>
+                  {question.comment && (
+                    <p className="mt-2 text-slate-600">Kommentar: {question.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
