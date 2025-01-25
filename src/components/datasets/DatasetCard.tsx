@@ -12,6 +12,8 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
+import DatasetStatistics from './DatasetStatistics';
+import DatasetQuestionList from './DatasetQuestionList';
 
 interface DatasetCardProps {
   filename: string;
@@ -58,11 +60,9 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
     enabled: !!user && questionIds.length > 0,
   });
 
-  // Calculate statistics based on the most recent answer for each question
   const getLatestAnswers = () => {
     if (!progressData) return new Map();
     
-    // Group answers by question_id and get the most recent one
     const latestAnswers = new Map();
     progressData.forEach(progress => {
       const existing = latestAnswers.get(progress.question_id);
@@ -78,7 +78,6 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
   const answeredQuestions = latestAnswers.size;
   const correctAnswers = Array.from(latestAnswers.values()).filter(p => p.is_correct).length;
   const wrongAnswers = answeredQuestions - correctAnswers;
-  const unansweredQuestions = totalQuestions - answeredQuestions;
 
   return (
     <Card className={`${isSelected ? 'ring-2 ring-primary' : ''}`}>
@@ -133,47 +132,16 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="cursor-pointer" onClick={() => onDatasetClick(filename)}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-slate-50 p-4 rounded-lg text-center">
-              <p className="text-2xl font-bold text-slate-800">{totalQuestions}</p>
-              <p className="text-sm text-slate-600">Gesamt Fragen</p>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-lg text-center">
-              <p className="text-2xl font-bold text-slate-800">{answeredQuestions}</p>
-              <p className="text-sm text-slate-600">Beantwortet</p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg text-center">
-              <p className="text-2xl font-bold text-green-600">{correctAnswers}</p>
-              <p className="text-sm text-green-600">Richtig</p>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg text-center">
-              <p className="text-2xl font-bold text-red-600">{wrongAnswers}</p>
-              <p className="text-sm text-red-600">Falsch</p>
-            </div>
-          </div>
-
-          {isSelected && (
-            <div className="mt-4 space-y-4">
-              <h3 className="font-semibold">Fragen:</h3>
-              {questions.map((question, index) => (
-                <div key={question.id} className="p-4 bg-slate-50 rounded-lg">
-                  <p className="font-medium">Frage {index + 1}:</p>
-                  <p className="mt-1">{question.question}</p>
-                  <div className="mt-2 space-y-1">
-                    <p>A: {question.optionA}</p>
-                    <p>B: {question.optionB}</p>
-                    <p>C: {question.optionC}</p>
-                    <p>D: {question.optionD}</p>
-                    {question.optionE && <p>E: {question.optionE}</p>}
-                  </div>
-                  <p className="mt-2 text-green-600">Richtige Antwort: {question.correctAnswer}</p>
-                  {question.comment && (
-                    <p className="mt-2 text-slate-600">Kommentar: {question.comment}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <DatasetStatistics
+            totalQuestions={totalQuestions}
+            answeredQuestions={answeredQuestions}
+            correctAnswers={correctAnswers}
+            wrongAnswers={wrongAnswers}
+          />
+          <DatasetQuestionList
+            questions={questions}
+            isSelected={isSelected}
+          />
         </div>
       </CardContent>
     </Card>
