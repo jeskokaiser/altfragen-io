@@ -36,11 +36,6 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
 
       setCurrentDifficulty(newDifficulty);
       toast.success("Schwierigkeitsgrad aktualisiert");
-      
-      // Reload the page after a short delay to show the toast
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     } catch (error) {
       console.error('Error updating difficulty:', error);
       toast.error("Fehler beim Aktualisieren des Schwierigkeitsgrads");
