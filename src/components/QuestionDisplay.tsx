@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 import QuestionHeader from './training/QuestionHeader';
@@ -11,6 +9,7 @@ import QuestionContent from './training/QuestionContent';
 import FeedbackDisplay from './training/FeedbackDisplay';
 import NavigationButtons from './training/NavigationButtons';
 import EditQuestionModal from './training/EditQuestionModal';
+import AnswerSubmission from './training/AnswerSubmission';
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -39,7 +38,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const { user } = useAuth();
 
-  // Update current question when questionData prop changes
   useEffect(() => {
     setCurrentQuestion(questionData);
   }, [questionData]);
@@ -48,52 +46,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setSelectedAnswer(answer);
   };
 
-  const handleConfirmAnswer = async () => {
-    if (!selectedAnswer || !user) return;
-
-    onAnswer(selectedAnswer);
+  const handleAnswerSubmitted = (answer: string) => {
+    onAnswer(answer);
     setShowFeedback(true);
-
-    try {
-      // First try to get existing progress
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from('user_progress')
-        .select()
-        .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      if (existingProgress) {
-        // Update existing record
-        const { error: updateError } = await supabase
-          .from('user_progress')
-          .update({
-            user_answer: selectedAnswer,
-            is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
-          })
-          .eq('user_id', user.id)
-          .eq('question_id', currentQuestion.id);
-
-        if (updateError) throw updateError;
-      } else {
-        // Insert new record
-        const { error: insertError } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
-            user_answer: selectedAnswer,
-            is_correct: selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()
-          });
-
-        if (insertError) throw insertError;
-      }
-    } catch (error: any) {
-      console.error('Error saving progress:', error);
-      toast.error("Fehler beim Speichern des Fortschritts");
-    }
   };
 
   const handleNext = () => {
@@ -131,8 +86,15 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           questionData={currentQuestion}
           selectedAnswer={selectedAnswer}
           onAnswerChange={handleAnswerChange}
-          onConfirmAnswer={handleConfirmAnswer}
+          onConfirmAnswer={() => {}}
           showFeedback={showFeedback}
+        />
+
+        <AnswerSubmission
+          currentQuestion={currentQuestion}
+          selectedAnswer={selectedAnswer}
+          user={user}
+          onAnswerSubmitted={handleAnswerSubmitted}
         />
 
         {showFeedback && userAnswer && (
