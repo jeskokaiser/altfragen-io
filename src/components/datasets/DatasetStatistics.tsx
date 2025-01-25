@@ -19,7 +19,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const [isOpen, setIsOpen] = React.useState(true);
 
   const { data: userProgress } = useQuery({
-    queryKey: ['user-progress', user?.id],
+    queryKey: ['user-progress', user?.id, questions[0]?.filename],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_progress')
@@ -32,9 +32,15 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     enabled: !!user
   });
 
+  // Filter progress data to only include questions from this dataset
+  const datasetQuestionIds = questions.map(q => q.id);
+  const filteredProgress = userProgress?.filter(progress => 
+    datasetQuestionIds.includes(progress.question_id)
+  );
+
   const totalQuestions = questions.length;
-  const answeredQuestions = userProgress?.length || 0;
-  const correctAnswers = userProgress?.filter(p => p.is_correct)?.length || 0;
+  const answeredQuestions = filteredProgress?.length || 0;
+  const correctAnswers = filteredProgress?.filter(p => p.is_correct)?.length || 0;
   const wrongAnswers = answeredQuestions - correctAnswers;
 
   const answeredPercentage = (answeredQuestions / totalQuestions) * 100;
@@ -54,7 +60,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     });
 
     // Add progress stats for each subject
-    userProgress?.forEach(progress => {
+    filteredProgress?.forEach(progress => {
       const question = questions.find(q => q.id === progress.question_id);
       if (question) {
         stats[question.subject].answered += 1;
@@ -71,11 +77,11 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         acc[subject] = stats;
         return acc;
       }, {} as Record<string, { total: number; answered: number; correct: number }>);
-  }, [questions, userProgress]);
+  }, [questions, filteredProgress]);
 
   const handleWrongQuestionsTraining = () => {
-    // Get the IDs of questions that were answered incorrectly
-    const wrongQuestionIds = userProgress
+    // Get the IDs of questions that were answered incorrectly from this dataset
+    const wrongQuestionIds = filteredProgress
       ?.filter(p => !p.is_correct)
       .map(p => p.question_id) || [];
 
