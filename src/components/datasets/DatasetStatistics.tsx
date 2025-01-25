@@ -18,23 +18,33 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = React.useState(true);
 
+  // Get all question IDs for this dataset
+  const datasetQuestionIds = questions.map(q => q.id);
+
   const { data: userProgress } = useQuery({
-    queryKey: ['user-progress', user?.id],
+    queryKey: ['user-progress', user?.id, questions[0].filename],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_progress')
         .select('*')
-        .eq('user_id', user?.id);
+        .eq('user_id', user?.id)
+        .in('question_id', datasetQuestionIds);
 
       if (error) throw error;
       return data;
     },
-    enabled: !!user
+    enabled: !!user && datasetQuestionIds.length > 0
   });
 
   const totalQuestions = questions.length;
-  const answeredQuestions = userProgress?.length || 0;
-  const correctAnswers = userProgress?.filter(p => p.is_correct)?.length || 0;
+  const answeredQuestions = userProgress?.filter(p => 
+    datasetQuestionIds.includes(p.question_id!)
+  ).length || 0;
+  
+  const correctAnswers = userProgress?.filter(p => 
+    datasetQuestionIds.includes(p.question_id!) && p.is_correct
+  ).length || 0;
+  
   const wrongAnswers = answeredQuestions - correctAnswers;
 
   const answeredPercentage = (answeredQuestions / totalQuestions) * 100;
@@ -55,16 +65,17 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
 
     // Add progress stats for each subject
     userProgress?.forEach(progress => {
-      const question = questions.find(q => q.id === progress.question_id);
-      if (question) {
-        stats[question.subject].answered += 1;
-        if (progress.is_correct) {
-          stats[question.subject].correct += 1;
+      if (datasetQuestionIds.includes(progress.question_id!)) {
+        const question = questions.find(q => q.id === progress.question_id);
+        if (question) {
+          stats[question.subject].answered += 1;
+          if (progress.is_correct) {
+            stats[question.subject].correct += 1;
+          }
         }
       }
     });
 
-    // Convert to array and sort by total questions descending
     return Object.entries(stats)
       .sort(([, a], [, b]) => b.total - a.total)
       .reduce((acc, [subject, stats]) => {
@@ -74,12 +85,12 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   }, [questions, userProgress]);
 
   const handleWrongQuestionsTraining = () => {
-    // Get the IDs of questions that were answered incorrectly
+    // Get the IDs of questions that were answered incorrectly in this dataset
     const wrongQuestionIds = userProgress
-      ?.filter(p => !p.is_correct)
+      ?.filter(p => datasetQuestionIds.includes(p.question_id!) && !p.is_correct)
       .map(p => p.question_id) || [];
 
-    // Filter the questions array to get only the wrong questions
+    // Filter the questions array to get only the wrong questions from this dataset
     const wrongQuestions = questions.filter(q => 
       wrongQuestionIds.includes(q.id)
     );
@@ -88,7 +99,6 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
       return;
     }
 
-    // Store the wrong questions in localStorage and navigate to training
     localStorage.setItem('trainingQuestions', JSON.stringify(wrongQuestions));
     navigate('/training');
   };
