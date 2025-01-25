@@ -1,10 +1,11 @@
 import React from 'react';
-import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Question } from '@/types/Question';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { parseCSV } from '@/utils/CSVParser';
+import { mapRowsToQuestions } from '@/utils/QuestionMapper';
+import { saveQuestions } from '@/services/DatabaseService';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -22,137 +23,32 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
     console.log('File selected:', file.name);
 
-    Papa.parse(file, {
-      complete: async (results) => {
-        console.log('Total rows in CSV:', results.data.length);
-        
-        if (!results.data || results.data.length < 2) {
-          toast.error("Die CSV-Datei ist leer oder ungültig");
-          return;
-        }
+    try {
+      const { headers, rows } = await parseCSV(file);
+      const questions = mapRowsToQuestions(rows, headers, file.name);
 
-        const headers = Array.isArray(results.data[0]) ? results.data[0] : Object.keys(results.data[0]);
-        console.log('CSV headers:', headers);
-        
-        const requiredColumns = ['Frage', 'A', 'B', 'C', 'D', 'E', 'Fach', 'Antwort', 'Kommentar'];
-        
-        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-        
-        if (missingColumns.length > 0) {
-          toast.error(`Fehlende Spalten: ${missingColumns.join(', ')}`);
-          return;
-        }
+      console.log('Total valid questions:', questions.length);
 
-        let questions = (results.data as any[])
-          .slice(1) // Skip header row
-          .map((row, index) => {
-            const rowData = Array.isArray(row) 
-              ? headers.reduce((acc, header, index) => {
-                  acc[header] = row[index] || ''; // Use empty string for missing values
-                  return acc;
-                }, {} as Record<string, string>)
-              : row;
-
-            // Log any rows that might be filtered out
-            if (!rowData['Frage'] || !rowData['Antwort']) {
-              console.log(`Row ${index + 2} skipped - Missing question or answer:`, rowData);
-            }
-
-            return {
-              id: crypto.randomUUID(),
-              question: rowData['Frage'] || '',
-              optionA: rowData['A'] || '',
-              optionB: rowData['B'] || '',
-              optionC: rowData['C'] || '',
-              optionD: rowData['D'] || '',
-              optionE: rowData['E'] || '',
-              subject: rowData['Fach'] || '',
-              correctAnswer: rowData['Antwort'] || '',
-              comment: rowData['Kommentar'] || '',
-              filename: file.name
-            };
-          })
-          .filter(q => {
-            const isValid = q.question.trim() !== '' && q.correctAnswer.trim() !== '';
-            if (!isValid) {
-              console.log('Filtered out invalid question:', q);
-            }
-            return isValid;
-          });
-
-        console.log('Total valid questions:', questions.length);
-
-        if (questions.length === 0) {
-          toast.error("Keine gültigen Fragen in der CSV-Datei gefunden");
-          return;
-        }
-
-        try {
-          // Save questions to Supabase
-          const { error } = await supabase.from('questions').insert(
-            questions.map(q => ({
-              user_id: user?.id,
-              question: q.question,
-              option_a: q.optionA,
-              option_b: q.optionB,
-              option_c: q.optionC,
-              option_d: q.optionD,
-              option_e: q.optionE,
-              subject: q.subject,
-              correct_answer: q.correctAnswer,
-              comment: q.comment,
-              filename: q.filename
-            }))
-          );
-
-          if (error) throw error;
-
-          // Fetch the inserted questions to get their actual IDs
-          const { data: insertedQuestions, error: fetchError } = await supabase
-            .from('questions')
-            .select('*')
-            .eq('user_id', user?.id)
-            .order('created_at', { ascending: false })
-            .limit(questions.length);
-
-          if (fetchError) throw fetchError;
-
-          // Map the database questions to our Question type
-          const mappedQuestions = insertedQuestions.map(q => ({
-            id: q.id,
-            question: q.question,
-            optionA: q.option_a,
-            optionB: q.option_b,
-            optionC: q.option_c,
-            optionD: q.option_d,
-            optionE: q.option_e,
-            subject: q.subject,
-            correctAnswer: q.correct_answer,
-            comment: q.comment,
-            filename: q.filename,
-            created_at: q.created_at
-          }));
-
-          onQuestionsLoaded(mappedQuestions);
-          toast.success(`${questions.length} Fragen aus "${file.name}" geladen und gespeichert`);
-        } catch (error: any) {
-          console.error('Error saving questions:', error);
-          toast.error("Fehler beim Speichern der Fragen: " + error.message);
-        }
-      },
-      header: false,
-      skipEmptyLines: true,
-      error: (error) => {
-        console.error('CSV parsing error:', error);
-        toast.error("Fehler beim Lesen der CSV-Datei");
+      if (questions.length === 0) {
+        toast.error("Keine gültigen Fragen in der CSV-Datei gefunden");
+        return;
       }
-    });
+
+      const savedQuestions = await saveQuestions(questions, user?.id || '');
+      onQuestionsLoaded(savedQuestions);
+      toast.success(`${questions.length} Fragen aus "${file.name}" geladen und gespeichert`);
+    } catch (error: any) {
+      console.error('Error processing file:', error);
+      toast.error(error.message || "Ein Fehler ist aufgetreten");
+    }
   };
 
   return (
     <div className="flex flex-col items-center gap-4">
       <h2 className="text-2xl font-semibold text-slate-800">Laden Sie Ihre Fragen hoch</h2>
-      <p className="text-slate-600 mb-4">Bitte laden Sie eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar</p>
+      <p className="text-slate-600 mb-4">
+        Bitte laden Sie eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar
+      </p>
       <label htmlFor="csv-upload">
         <Button 
           variant="outline" 
