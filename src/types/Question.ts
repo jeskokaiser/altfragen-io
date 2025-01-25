@@ -1,11 +1,12 @@
 export interface Question {
-  question: string;  // Frage
+  id: string;  // Added this field
+  question: string;
   optionA: string;
   optionB: string;
   optionC: string;
   optionD: string;
   optionE: string;
-  subject: string;  // Fach
-  correctAnswer: string;  // Antwort
-  comment: string;  // Kommentar
+  subject: string;
+  correctAnswer: string;
+  comment: string;
 }
