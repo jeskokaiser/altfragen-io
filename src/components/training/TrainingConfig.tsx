@@ -42,12 +42,16 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     
     if (values.difficulty !== 'all') {
       const selectedDifficulty = parseInt(values.difficulty);
-      filteredQuestions = filteredQuestions.filter(q => 
-        q.difficulty === selectedDifficulty
-      );
+      filteredQuestions = filteredQuestions.filter(q => {
+        // If difficulty is null, use default value of 3
+        const questionDifficulty = q.difficulty ?? 3;
+        return questionDifficulty === selectedDifficulty;
+      });
     }
 
+    console.log('Total questions:', questions.length);
     console.log('Filtered questions:', filteredQuestions.length, 'Selected difficulty:', values.difficulty);
+    console.log('Sample difficulties:', filteredQuestions.slice(0, 5).map(q => q.difficulty));
 
     if (filteredQuestions.length === 0) {
       toast({
