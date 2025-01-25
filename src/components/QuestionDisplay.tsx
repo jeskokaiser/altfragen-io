@@ -55,13 +55,15 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setShowFeedback(true);
 
     try {
-      // First try to update existing progress
+      // First try to get existing progress
       const { data: existingProgress, error: fetchError } = await supabase
         .from('user_progress')
         .select()
         .eq('user_id', user.id)
         .eq('question_id', currentQuestion.id)
-        .single();
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
 
       if (existingProgress) {
         // Update existing record
