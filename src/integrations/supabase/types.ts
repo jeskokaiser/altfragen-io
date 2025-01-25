@@ -32,6 +32,7 @@ export type Database = {
           comment: string | null
           correct_answer: string
           created_at: string
+          filename: string
           id: string
           option_a: string
           option_b: string
@@ -46,6 +47,7 @@ export type Database = {
           comment?: string | null
           correct_answer: string
           created_at?: string
+          filename: string
           id?: string
           option_a: string
           option_b: string
@@ -60,6 +62,7 @@ export type Database = {
           comment?: string | null
           correct_answer?: string
           created_at?: string
+          filename?: string
           id?: string
           option_a?: string
           option_b?: string

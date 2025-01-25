@@ -38,7 +38,9 @@ const Dashboard = () => {
         optionE: q.option_e,
         subject: q.subject,
         correctAnswer: q.correct_answer,
-        comment: q.comment
+        comment: q.comment,
+        filename: q.filename,
+        created_at: q.created_at
       })) as Question[];
     },
     enabled: !!user
@@ -47,6 +49,18 @@ const Dashboard = () => {
   const handleQuestionsLoaded = () => {
     refetch();
   };
+
+  // Group questions by filename
+  const groupedQuestions = React.useMemo(() => {
+    if (!questions) return {};
+    return questions.reduce((acc, question) => {
+      if (!acc[question.filename]) {
+        acc[question.filename] = [];
+      }
+      acc[question.filename].push(question);
+      return acc;
+    }, {} as Record<string, Question[]>);
+  }, [questions]);
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -62,35 +76,43 @@ const Dashboard = () => {
       <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
 
       <div className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4 text-slate-800">Ihre Fragen</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-slate-800">Ihre Datensätze</h2>
         {questions && questions.length > 0 ? (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Frage</TableHead>
-                  <TableHead>Fach</TableHead>
-                  <TableHead>Richtige Antwort</TableHead>
-                  <TableHead>Erstellt am</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {questions.map((question) => (
-                  <TableRow key={question.id}>
-                    <TableCell className="font-medium">{question.question}</TableCell>
-                    <TableCell>{question.subject}</TableCell>
-                    <TableCell>
-                      {question.correctAnswer}: {question[`option${question.correctAnswer}` as keyof Question]}
-                    </TableCell>
-                    <TableCell>{new Date(question.created_at).toLocaleDateString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="space-y-6">
+            {Object.entries(groupedQuestions).map(([filename, fileQuestions]) => (
+              <div key={filename} className="rounded-md border">
+                <div className="bg-slate-50 p-4 border-b">
+                  <h3 className="text-lg font-medium text-slate-800">
+                    {filename} ({fileQuestions.length} Fragen)
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Hochgeladen am {new Date(fileQuestions[0].created_at!).toLocaleDateString()}
+                  </p>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fach</TableHead>
+                      <TableHead>Anzahl der Fragen</TableHead>
+                      <TableHead>Hochgeladen am</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>{fileQuestions[0].subject}</TableCell>
+                      <TableCell>{fileQuestions.length}</TableCell>
+                      <TableCell>
+                        {new Date(fileQuestions[0].created_at!).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-8 text-slate-600">
-            Noch keine Fragen hochgeladen
+            Noch keine Datensätze hochgeladen
           </div>
         )}
       </div>

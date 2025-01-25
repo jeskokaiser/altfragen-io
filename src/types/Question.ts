@@ -9,5 +9,6 @@ export interface Question {
   subject: string;
   correctAnswer: string;
   comment: string;
+  filename: string;
   created_at?: string;
 }

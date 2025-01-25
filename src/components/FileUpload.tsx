@@ -58,7 +58,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
               : row;
 
             return {
-              id: crypto.randomUUID(), // Generate a temporary ID for the frontend
+              id: crypto.randomUUID(),
               question: rowData['Frage'],
               optionA: rowData['A'],
               optionB: rowData['B'],
@@ -67,7 +67,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
               optionE: rowData['E'],
               subject: rowData['Fach'],
               correctAnswer: rowData['Antwort'],
-              comment: rowData['Kommentar']
+              comment: rowData['Kommentar'],
+              filename: file.name
             };
           })
           .filter(q => q.question && q.correctAnswer);
@@ -92,7 +93,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
               option_e: q.optionE,
               subject: q.subject,
               correct_answer: q.correctAnswer,
-              comment: q.comment
+              comment: q.comment,
+              filename: q.filename
             }))
           );
 
@@ -119,11 +121,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
             optionE: q.option_e,
             subject: q.subject,
             correctAnswer: q.correct_answer,
-            comment: q.comment
+            comment: q.comment,
+            filename: q.filename,
+            created_at: q.created_at
           }));
 
           onQuestionsLoaded(mappedQuestions);
-          toast.success(`${questions.length} Fragen geladen und gespeichert`);
+          toast.success(`${questions.length} Fragen aus "${file.name}" geladen und gespeichert`);
         } catch (error: any) {
           console.error('Error saving questions:', error);
           toast.error("Fehler beim Speichern der Fragen: " + error.message);
