@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ interface TrainingConfigProps {
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
+  const [userQuestions, setUserQuestions] = useState<Question[]>([]);
   const form = useForm<FormValues>({
     defaultValues: {
       subject: '',
@@ -29,29 +30,59 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
+  useEffect(() => {
+    const fetchUserQuestions = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching questions:', error);
+        toast({
+          title: "Fehler beim Laden der Fragen",
+          description: "Bitte versuchen Sie es später erneut.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data) {
+        console.log('Fetched questions:', data.length);
+        setUserQuestions(data);
+      }
+    };
+
+    fetchUserQuestions();
+  }, [user, toast]);
+
+  const subjects = Array.from(new Set(userQuestions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
   );
 
   const handleSubmit = async (values: FormValues) => {
-    let filteredQuestions = [...questions];
+    console.log('Form values:', values);
+    console.log('Total user questions:', userQuestions.length);
+    
+    let filteredQuestions = [...userQuestions];
     
     if (values.subject !== 'all') {
       filteredQuestions = filteredQuestions.filter(q => q.subject === values.subject);
+      console.log('After subject filter:', filteredQuestions.length);
     }
     
     if (values.difficulty !== 'all') {
       const selectedDifficulty = parseInt(values.difficulty);
       filteredQuestions = filteredQuestions.filter(q => {
-        // If difficulty is null, use default value of 3
         const questionDifficulty = q.difficulty ?? 3;
-        return questionDifficulty === selectedDifficulty;
+        const matches = questionDifficulty === selectedDifficulty;
+        console.log('Question:', q.id, 'Difficulty:', questionDifficulty, 'Selected:', selectedDifficulty, 'Matches:', matches);
+        return matches;
       });
+      console.log('After difficulty filter:', filteredQuestions.length);
     }
-
-    console.log('Total questions:', questions.length);
-    console.log('Filtered questions:', filteredQuestions.length, 'Selected difficulty:', values.difficulty);
-    console.log('Sample difficulties:', filteredQuestions.slice(0, 5).map(q => q.difficulty));
 
     if (filteredQuestions.length === 0) {
       toast({
