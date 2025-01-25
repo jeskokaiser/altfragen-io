@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Question } from '@/types/Question';
 import QuestionDisplay from '@/components/QuestionDisplay';
 import Results from '@/components/Results';
@@ -7,6 +7,7 @@ import TrainingConfig from '@/components/training/TrainingConfig';
 
 const Training = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -15,13 +16,21 @@ const Training = () => {
   const [configurationComplete, setConfigurationComplete] = useState(false);
 
   useEffect(() => {
+    // Check if we're in exam mode (questions passed through state)
+    if (location.state?.examQuestions) {
+      setSelectedQuestions(location.state.examQuestions);
+      setConfigurationComplete(true);
+      return;
+    }
+
+    // Regular training mode
     const storedQuestions = localStorage.getItem('trainingQuestions');
     if (!storedQuestions) {
       navigate('/');
       return;
     }
     setAllQuestions(JSON.parse(storedQuestions));
-  }, [navigate]);
+  }, [navigate, location.state]);
 
   const handleStartTraining = (questions: Question[]) => {
     setSelectedQuestions(questions);
@@ -59,11 +68,11 @@ const Training = () => {
     navigate('/');
   };
 
-  if (allQuestions.length === 0) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
-  }
+  if (!configurationComplete && !location.state?.examQuestions) {
+    if (allQuestions.length === 0) {
+      return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    }
 
-  if (!configurationComplete) {
     return (
       <div className="container mx-auto py-8">
         <TrainingConfig 
@@ -84,6 +93,10 @@ const Training = () => {
         />
       </div>
     );
+  }
+
+  if (selectedQuestions.length === 0) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
 
   return (
