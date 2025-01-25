@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +38,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const { user } = useAuth();
+
+  // Update current question when questionData prop changes
+  useEffect(() => {
+    setCurrentQuestion(questionData);
+  }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
