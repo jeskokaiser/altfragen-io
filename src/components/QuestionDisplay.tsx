@@ -38,13 +38,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
-    if (questionData) {
-      setCurrentQuestion(questionData);
-    }
+    setSelectedAnswer('');
+    setShowFeedback(false);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
@@ -63,11 +61,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   };
 
   const handleQuestionUpdate = (updatedQuestion: Question) => {
-    setCurrentQuestion(updatedQuestion);
+    // Since we're not managing the question state here anymore,
+    // we'll just close the modal
+    setIsEditModalOpen(false);
   };
 
   const handleDifficultyChange = async (value: string) => {
-    if (!currentQuestion) return;
+    if (!questionData) return;
     
     const newDifficulty = parseInt(value);
     if (isNaN(newDifficulty) || newDifficulty < 1 || newDifficulty > 5) return;
@@ -76,11 +76,10 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       const { error } = await supabase
         .from('questions')
         .update({ difficulty: newDifficulty })
-        .eq('id', currentQuestion.id);
+        .eq('id', questionData.id);
 
       if (error) throw error;
 
-      setCurrentQuestion({ ...currentQuestion, difficulty: newDifficulty });
       toast.success("Schwierigkeitsgrad aktualisiert");
     } catch (error) {
       console.error('Error updating difficulty:', error);
@@ -88,11 +87,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     }
   };
 
-  if (!currentQuestion) {
+  if (!questionData) {
     return <div>Loading question...</div>;
   }
 
-  const difficultyValue = currentQuestion.difficulty?.toString() || '3';
+  const difficultyValue = questionData.difficulty?.toString() || '3';
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -105,7 +104,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       <Card className="p-6">
         <div className="flex flex-col gap-4 mb-4">
           <div className="flex justify-between items-center">
-            <DifficultyBadge difficulty={currentQuestion.difficulty || 3} />
+            <DifficultyBadge difficulty={questionData.difficulty || 3} />
             <EditButton onClick={() => setIsEditModalOpen(true)} />
           </div>
           
@@ -116,7 +115,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         </div>
 
         <QuestionContent
-          questionData={currentQuestion}
+          questionData={questionData}
           selectedAnswer={selectedAnswer}
           onAnswerChange={handleAnswerChange}
           onConfirmAnswer={() => {}}
@@ -124,7 +123,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         />
 
         <AnswerSubmission
-          currentQuestion={currentQuestion}
+          currentQuestion={questionData}
           selectedAnswer={selectedAnswer}
           user={user}
           onAnswerSubmitted={handleAnswerSubmitted}
@@ -132,9 +131,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
         {showFeedback && userAnswer && (
           <FeedbackDisplay 
-            isCorrect={userAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase()}
-            correctAnswer={currentQuestion.correctAnswer}
-            comment={currentQuestion.comment}
+            isCorrect={userAnswer.toLowerCase() === questionData.correctAnswer.toLowerCase()}
+            correctAnswer={questionData.correctAnswer}
+            comment={questionData.comment}
           />
         )}
       </Card>
@@ -148,7 +147,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <EditQuestionModal
-        question={currentQuestion}
+        question={questionData}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onQuestionUpdated={handleQuestionUpdate}
