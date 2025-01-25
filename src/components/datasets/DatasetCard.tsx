@@ -1,22 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 interface DatasetCardProps {
   filename: string;
@@ -45,6 +40,31 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
   newFilename,
   onNewFilenameChange,
 }) => {
+  const { user } = useAuth();
+  const questionIds = questions.map(q => q.id);
+
+  const { data: progressData } = useQuery({
+    queryKey: ['progress', filename],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', user?.id)
+        .in('question_id', questionIds);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && questionIds.length > 0,
+  });
+
+  // Calculate statistics
+  const totalQuestions = questions.length;
+  const answeredQuestions = progressData?.length || 0;
+  const correctAnswers = progressData?.filter(p => p.is_correct)?.length || 0;
+  const wrongAnswers = answeredQuestions - correctAnswers;
+  const unansweredQuestions = totalQuestions - answeredQuestions;
+
   return (
     <Card className={`${isSelected ? 'ring-2 ring-primary' : ''}`}>
       <CardHeader className="bg-slate-50">
@@ -98,22 +118,24 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="cursor-pointer" onClick={() => onDatasetClick(filename)}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Anzahl der Fragen</TableHead>
-                <TableHead>Hochgeladen am</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>{questions.length}</TableCell>
-                <TableCell>
-                  {new Date(questions[0].created_at!).toLocaleDateString()}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-slate-50 p-4 rounded-lg text-center">
+              <p className="text-2xl font-bold text-slate-800">{totalQuestions}</p>
+              <p className="text-sm text-slate-600">Gesamt Fragen</p>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-lg text-center">
+              <p className="text-2xl font-bold text-slate-800">{answeredQuestions}</p>
+              <p className="text-sm text-slate-600">Beantwortet</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg text-center">
+              <p className="text-2xl font-bold text-green-600">{correctAnswers}</p>
+              <p className="text-sm text-green-600">Richtig</p>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg text-center">
+              <p className="text-2xl font-bold text-red-600">{wrongAnswers}</p>
+              <p className="text-sm text-red-600">Falsch</p>
+            </div>
+          </div>
 
           {isSelected && (
             <div className="mt-4 space-y-4">
