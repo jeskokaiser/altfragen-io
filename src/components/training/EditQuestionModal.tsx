@@ -48,6 +48,24 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   onQuestionUpdated,
 }) => {
   const { register, handleSubmit, formState: { isSubmitting }, reset, setValue } = useForm<FormData>();
+  const [subjects, setSubjects] = React.useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const { data } = await supabase
+        .from('questions')
+        .select('subject')
+        .order('subject');
+      
+      if (data) {
+        const uniqueSubjects = Array.from(new Set(data.map(q => q.subject)))
+          .sort((a, b) => a.localeCompare(b, 'de'));
+        setSubjects(uniqueSubjects);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
 
   useEffect(() => {
     if (question) {
@@ -176,7 +194,18 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           </div>
           <div>
             <Label htmlFor="subject">Fach</Label>
-            <Input id="subject" {...register('subject')} />
+            <Select onValueChange={(value) => setValue('subject', value)} defaultValue={question.subject}>
+              <SelectTrigger>
+                <SelectValue placeholder="Wähle ein Fach" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject} value={subject}>
+                    {subject}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
