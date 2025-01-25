@@ -1,6 +1,5 @@
 import React from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
-import { Button } from '@/components/ui/button';
 import AnswerOption from './AnswerOption';
 import { Question } from '@/types/Question';
 
@@ -33,16 +32,6 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
         <AnswerOption value="D" text={questionData.optionD} />
         <AnswerOption value="E" text={questionData.optionE} />
       </RadioGroup>
-
-      <div className="mt-4">
-        <Button 
-          onClick={onConfirmAnswer}
-          disabled={!selectedAnswer || showFeedback}
-          className="w-full"
-        >
-          Antwort bestätigen
-        </Button>
-      </div>
     </div>
   );
 };
