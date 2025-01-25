@@ -24,18 +24,19 @@ const AnswerSubmission = ({
     onAnswerSubmitted(selectedAnswer);
 
     try {
+      const isCorrect = selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase();
+
+      // First, get all progress records for this question
       const { data: existingProgress, error: fetchError } = await supabase
         .from('user_progress')
         .select()
         .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id)
-        .maybeSingle();
+        .eq('question_id', currentQuestion.id);
 
       if (fetchError) throw fetchError;
 
-      const isCorrect = selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase();
-
-      if (existingProgress) {
+      if (existingProgress && existingProgress.length > 0) {
+        // Update all progress records for this question
         const { error: updateError } = await supabase
           .from('user_progress')
           .update({
@@ -51,6 +52,7 @@ const AnswerSubmission = ({
           toast.success('Richtige Antwort! Der Fortschritt wurde aktualisiert.');
         }
       } else {
+        // Insert new progress record
         const { error: insertError } = await supabase
           .from('user_progress')
           .insert({
