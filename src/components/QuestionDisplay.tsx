@@ -4,15 +4,11 @@ import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './training/QuestionHeader';
 import QuestionContent from './training/QuestionContent';
-import FeedbackDisplay from './training/FeedbackDisplay';
 import NavigationButtons from './training/NavigationButtons';
 import EditQuestionModal from './training/EditQuestionModal';
 import AnswerSubmission from './training/AnswerSubmission';
-import DifficultyBadge from './training/DifficultyBadge';
-import DifficultyToggle from './training/DifficultyToggle';
-import EditButton from './training/EditButton';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from "sonner";
+import DifficultyControls from './training/DifficultyControls';
+import QuestionFeedback from './training/QuestionFeedback';
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -60,38 +56,13 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onNext();
   };
 
-  const handleQuestionUpdate = (updatedQuestion: Question) => {
-    // Since we're not managing the question state here anymore,
-    // we'll just close the modal
+  const handleQuestionUpdate = () => {
     setIsEditModalOpen(false);
-  };
-
-  const handleDifficultyChange = async (value: string) => {
-    if (!questionData) return;
-    
-    const newDifficulty = parseInt(value);
-    if (isNaN(newDifficulty) || newDifficulty < 1 || newDifficulty > 5) return;
-
-    try {
-      const { error } = await supabase
-        .from('questions')
-        .update({ difficulty: newDifficulty })
-        .eq('id', questionData.id);
-
-      if (error) throw error;
-
-      toast.success("Schwierigkeitsgrad aktualisiert");
-    } catch (error) {
-      console.error('Error updating difficulty:', error);
-      toast.error("Fehler beim Aktualisieren des Schwierigkeitsgrads");
-    }
   };
 
   if (!questionData) {
     return <div>Loading question...</div>;
   }
-
-  const difficultyValue = questionData.difficulty?.toString() || '3';
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -102,17 +73,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <Card className="p-6">
-        <div className="flex flex-col gap-4 mb-4">
-          <div className="flex justify-between items-center">
-            <DifficultyBadge difficulty={questionData.difficulty || 3} />
-            <EditButton onClick={() => setIsEditModalOpen(true)} />
-          </div>
-          
-          <DifficultyToggle 
-            value={difficultyValue}
-            onValueChange={handleDifficultyChange}
-          />
-        </div>
+        <DifficultyControls
+          questionId={questionData.id}
+          difficulty={questionData.difficulty || 3}
+          onEditClick={() => setIsEditModalOpen(true)}
+        />
 
         <QuestionContent
           questionData={questionData}
@@ -129,13 +94,12 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           onAnswerSubmitted={handleAnswerSubmitted}
         />
 
-        {showFeedback && userAnswer && (
-          <FeedbackDisplay 
-            isCorrect={userAnswer.toLowerCase() === questionData.correctAnswer.toLowerCase()}
-            correctAnswer={questionData.correctAnswer}
-            comment={questionData.comment}
-          />
-        )}
+        <QuestionFeedback
+          showFeedback={showFeedback}
+          userAnswer={userAnswer}
+          correctAnswer={questionData.correctAnswer}
+          comment={questionData.comment}
+        />
       </Card>
 
       <NavigationButtons
