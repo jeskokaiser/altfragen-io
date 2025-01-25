@@ -38,6 +38,32 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const correctPercentage = (correctAnswers / totalQuestions) * 100;
   const wrongPercentage = (wrongAnswers / totalQuestions) * 100;
 
+  // Group questions by subject
+  const subjectStats = React.useMemo(() => {
+    const stats: Record<string, { total: number; answered: number; correct: number }> = {};
+    
+    // Initialize stats for each subject
+    questions.forEach(q => {
+      if (!stats[q.subject]) {
+        stats[q.subject] = { total: 0, answered: 0, correct: 0 };
+      }
+      stats[q.subject].total += 1;
+    });
+
+    // Add progress stats for each subject
+    userProgress?.forEach(progress => {
+      const question = questions.find(q => q.id === progress.question_id);
+      if (question) {
+        stats[question.subject].answered += 1;
+        if (progress.is_correct) {
+          stats[question.subject].correct += 1;
+        }
+      }
+    });
+
+    return stats;
+  }, [questions, userProgress]);
+
   const handleWrongQuestionsTraining = () => {
     // Get the IDs of questions that were answered incorrectly
     const wrongQuestionIds = userProgress
@@ -59,42 +85,71 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-        <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
-        <Progress value={answeredPercentage} className="h-2 mb-2" />
-        <p className="text-sm text-muted-foreground">
-          {answeredQuestions} von {totalQuestions} Fragen beantwortet
-        </p>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+          <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
+          <Progress value={answeredPercentage} className="h-2 mb-2" />
+          <p className="text-sm text-muted-foreground">
+            {answeredQuestions} von {totalQuestions} Fragen beantwortet
+          </p>
+        </div>
+        
+        <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+          <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
+          <Progress value={correctPercentage} className="h-2 mb-2 bg-green-100">
+            <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentage}%` }} />
+          </Progress>
+          <p className="text-sm text-muted-foreground">
+            {correctAnswers} von {totalQuestions} Fragen richtig
+          </p>
+        </div>
+        
+        <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+          <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
+          <Progress value={wrongPercentage} className="h-2 mb-2 bg-red-100">
+            <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentage}%` }} />
+          </Progress>
+          <p className="text-sm text-muted-foreground">
+            {wrongAnswers} von {totalQuestions} Fragen falsch
+          </p>
+          {wrongAnswers > 0 && (
+            <Button 
+              onClick={handleWrongQuestionsTraining}
+              variant="destructive"
+              className="mt-2 w-full"
+            >
+              Falsche Fragen üben
+            </Button>
+          )}
+        </div>
       </div>
-      
-      <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-        <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
-        <Progress value={correctPercentage} className="h-2 mb-2 bg-green-100">
-          <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentage}%` }} />
-        </Progress>
-        <p className="text-sm text-muted-foreground">
-          {correctAnswers} von {totalQuestions} Fragen richtig
-        </p>
-      </div>
-      
-      <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-        <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
-        <Progress value={wrongPercentage} className="h-2 mb-2 bg-red-100">
-          <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentage}%` }} />
-        </Progress>
-        <p className="text-sm text-muted-foreground">
-          {wrongAnswers} von {totalQuestions} Fragen falsch
-        </p>
-        {wrongAnswers > 0 && (
-          <Button 
-            onClick={handleWrongQuestionsTraining}
-            variant="destructive"
-            className="mt-2 w-full"
-          >
-            Falsche Fragen üben
-          </Button>
-        )}
+
+      <div className="border rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-4">Statistik nach Fächern</h3>
+        <div className="space-y-4">
+          {Object.entries(subjectStats).map(([subject, stats]) => (
+            <div key={subject} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">{subject}</span>
+                <span className="text-sm text-muted-foreground">
+                  {stats.answered} / {stats.total} beantwortet
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Progress 
+                  value={(stats.correct / stats.total) * 100} 
+                  className="flex-1 h-2 bg-green-100"
+                >
+                  <div className="h-full bg-green-600 transition-all" />
+                </Progress>
+                <span className="text-sm text-muted-foreground w-20 text-right">
+                  {stats.correct} richtig
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
