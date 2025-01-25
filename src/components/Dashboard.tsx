@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +30,7 @@ const Dashboard = () => {
   const [editingFilename, setEditingFilename] = useState<string | null>(null);
   const [newFilename, setNewFilename] = useState('');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: questions, isLoading, refetch } = useQuery({
     queryKey: ['questions', user?.id],
@@ -88,7 +89,8 @@ const Dashboard = () => {
 
     setEditingFilename(null);
     setNewFilename('');
-    refetch();
+    // Invalidate and refetch the questions query to show the updated filename
+    await queryClient.invalidateQueries({ queryKey: ['questions', user?.id] });
     toast.success('Datensatz erfolgreich umbenannt');
   };
 
