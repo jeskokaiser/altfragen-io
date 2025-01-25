@@ -115,6 +115,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     return <div>Loading question...</div>;
   }
 
+  const difficultyValue = currentQuestion.difficulty?.toString() || '3';
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <QuestionHeader
@@ -126,8 +128,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       <Card className="p-6">
         <div className="flex flex-col gap-4 mb-4">
           <div className="flex justify-between items-center">
-            <Badge className={`${getDifficultyColor(currentQuestion.difficulty)}`}>
-              Schwierigkeit: {currentQuestion.difficulty}
+            <Badge className={`${getDifficultyColor(currentQuestion.difficulty || 3)}`}>
+              Schwierigkeit: {currentQuestion.difficulty || 3}
             </Badge>
             <Button
               variant="outline"
@@ -142,7 +144,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           
           <ToggleGroup 
             type="single" 
-            value={currentQuestion.difficulty.toString()}
+            value={difficultyValue}
             onValueChange={handleDifficultyChange}
             className="justify-start"
           >
