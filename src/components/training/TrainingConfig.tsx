@@ -1,15 +1,11 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/hooks/use-toast";
-import SubjectSelect from './selects/SubjectSelect';
-import DifficultySelect from './selects/DifficultySelect';
-import QuestionCountSelect from './selects/QuestionCountSelect';
+import FilterForm from './FilterForm';
 import { FormValues } from './types/FormValues';
+import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -17,15 +13,6 @@ interface TrainingConfigProps {
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
-  const form = useForm<FormValues>({
-    defaultValues: {
-      subject: '',
-      difficulty: '',
-      questionCount: '',
-    },
-    mode: 'onChange',
-  });
-
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -37,23 +24,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     console.log('Form values:', values);
     console.log('Total questions:', questions.length);
     
-    let filteredQuestions = [...questions];
-    
-    if (values.subject !== 'all') {
-      filteredQuestions = filteredQuestions.filter(q => q.subject === values.subject);
-      console.log('After subject filter:', filteredQuestions.length);
-    }
-    
-    if (values.difficulty !== 'all') {
-      const selectedDifficulty = parseInt(values.difficulty);
-      filteredQuestions = filteredQuestions.filter(q => {
-        const questionDifficulty = q.difficulty ?? 3;
-        const matches = questionDifficulty === selectedDifficulty;
-        console.log('Question:', q.id, 'Difficulty:', questionDifficulty, 'Selected:', selectedDifficulty, 'Matches:', matches);
-        return matches;
-      });
-      console.log('After difficulty filter:', filteredQuestions.length);
-    }
+    const filteredQuestions = filterQuestions(questions, values);
 
     if (filteredQuestions.length === 0) {
       toast({
@@ -78,61 +49,22 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       questionResults.set(progress.question_id, progress.is_correct);
     });
 
-    const untrained: Question[] = [];
-    const wrongAnswered: Question[] = [];
-    const correctAnswered: Question[] = [];
-
-    filteredQuestions.forEach(question => {
-      const result = questionResults.get(question.id);
-      if (result === undefined) {
-        untrained.push(question);
-      } else if (result === false) {
-        wrongAnswered.push(question);
-      } else {
-        correctAnswered.push(question);
-      }
-    });
-
-    const prioritizedQuestions = [
-      ...shuffle(untrained),
-      ...shuffle(wrongAnswered),
-      ...shuffle(correctAnswered)
-    ].slice(0, questionCount);
+    const prioritizedQuestions = prioritizeQuestions(
+      filteredQuestions,
+      questionResults,
+      questionCount
+    );
 
     onStart(prioritizedQuestions);
   };
 
-  const shuffle = <T,>(array: T[]): T[] => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  };
-
-  const isFormValid = form.watch('subject') && 
-                     form.watch('difficulty') && 
-                     (form.watch('questionCount') === 'all' || 
-                      parseInt(form.watch('questionCount')) > 0);
-
   return (
     <div className="max-w-md mx-auto p-6">
       <h2 className="text-2xl font-semibold mb-6">Training konfigurieren</h2>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <SubjectSelect form={form} subjects={subjects} />
-          <DifficultySelect form={form} />
-          <QuestionCountSelect form={form} />
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={!isFormValid}
-          >
-            Training starten
-          </Button>
-        </form>
-      </Form>
+      <FilterForm 
+        subjects={subjects}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 };
