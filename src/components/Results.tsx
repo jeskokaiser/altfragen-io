@@ -21,7 +21,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-6 text-slate-800">Ihre Ergebnisse</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-slate-800">Deine Ergebnisse</h2>
       <div className="mb-6">
         <p className="text-lg">
           Gesamtpunktzahl: {calculateScore()} von {questions.length} ({Math.round((calculateScore() / questions.length) * 100)}%)
@@ -33,7 +33,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
             <h3 className="font-medium text-slate-800 mb-2">Frage {index + 1}: {q.question}</h3>
             <div className="grid gap-4">
               <div>
-                <p className="text-sm text-slate-600">Ihre Antwort:</p>
+                <p className="text-sm text-slate-600">Deine Antwort:</p>
                 <p className={`mt-1 ${userAnswers[index] === q.correctAnswer ? 'text-green-600' : 'text-red-600'}`}>
                   {userAnswers[index] ? `${userAnswers[index]}: ${q[`option${userAnswers[index]}` as keyof Question]}` : 'Keine Antwort'}
                 </p>

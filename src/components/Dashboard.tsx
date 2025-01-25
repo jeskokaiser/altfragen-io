@@ -120,7 +120,7 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-pulse text-slate-600">Lädt Ihre Fragen...</div>
+        <div className="animate-pulse text-slate-600">Lädt deine Fragen...</div>
       </div>
     );
   }
@@ -131,7 +131,7 @@ const Dashboard = () => {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Fehler beim Laden der Fragen. Bitte versuchen Sie es später erneut.
+            Fehler beim Laden der Fragen. Bitte versuche es später erneut.
           </AlertDescription>
         </Alert>
       </div>
@@ -153,7 +153,7 @@ const Dashboard = () => {
 
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-slate-800">Ihre Datensätze</h2>
+          <h2 className="text-2xl font-semibold text-slate-800">Deine Datensätze</h2>
           <span className="text-sm text-muted-foreground">
             {questions?.length || 0} Fragen insgesamt
           </span>
@@ -179,7 +179,7 @@ const Dashboard = () => {
                 Noch keine Datensätze hochgeladen
               </p>
               <p className="text-sm text-muted-foreground">
-                Laden Sie eine CSV-Datei hoch, um mit dem Training zu beginnen
+                Lade eine CSV-Datei hoch, um mit dem Training zu beginnen
               </p>
             </CardContent>
           </Card>
