@@ -13,7 +13,6 @@ interface DatasetListProps {
   onRename: (filename: string) => void;
   onSaveRename: (filename: string) => void;
   onCancelRename: () => void;
-  onStartExam?: (questions: Question[]) => void;
 }
 
 const DatasetList = ({
@@ -27,7 +26,6 @@ const DatasetList = ({
   onRename,
   onSaveRename,
   onCancelRename,
-  onStartExam,
 }: DatasetListProps) => {
   return (
     <div className="grid gap-4">
@@ -45,7 +43,6 @@ const DatasetList = ({
           onRename={onRename}
           onSaveRename={onSaveRename}
           onCancelRename={onCancelRename}
-          onStartExam={onStartExam}
         />
       ))}
     </div>

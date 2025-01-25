@@ -1,9 +1,14 @@
 import React from 'react';
 import { Question } from '@/types/Question';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Brain, Edit2, Save, X } from 'lucide-react';
+import { Pencil } from 'lucide-react';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 import DatasetStatistics from './DatasetStatistics';
 
 interface DatasetCardProps {
@@ -12,13 +17,12 @@ interface DatasetCardProps {
   isSelected: boolean;
   onDatasetClick: (filename: string) => void;
   onStartTraining: (questions: Question[]) => void;
+  onRename: (oldFilename: string) => void;
+  onSaveRename: (oldFilename: string, newFilename: string) => void;
+  onCancelRename: () => void;
   isEditing: boolean;
   newFilename: string;
   onNewFilenameChange: (value: string) => void;
-  onRename: (filename: string) => void;
-  onSaveRename: (filename: string) => void;
-  onCancelRename: () => void;
-  onStartExam?: (questions: Question[]) => void;
 }
 
 const DatasetCard: React.FC<DatasetCardProps> = ({
@@ -27,94 +31,92 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
   isSelected,
   onDatasetClick,
   onStartTraining,
-  isEditing,
-  newFilename,
-  onNewFilenameChange,
   onRename,
   onSaveRename,
   onCancelRename,
-  onStartExam,
+  isEditing,
+  newFilename,
+  onNewFilenameChange,
 }) => {
   return (
-    <Card 
-      className={`p-4 cursor-pointer transition-colors ${
-        isSelected ? 'bg-slate-50' : 'hover:bg-slate-50'
-      }`}
-      onClick={() => onDatasetClick(filename)}
-    >
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between items-start">
+    <Card className={`${isSelected ? 'ring-2 ring-primary' : ''}`}>
+      <CardHeader className="bg-slate-50">
+        <div className="flex justify-between items-center">
           <div className="flex-1">
             {isEditing ? (
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Input
                   value={newFilename}
                   onChange={(e) => onNewFilenameChange(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  autoFocus
+                  className="max-w-md"
+                  placeholder="Neuer Dateiname"
                 />
-                <Button
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveRename(filename);
-                  }}
+                <Button 
+                  onClick={() => onSaveRename(filename, newFilename)}
+                  size="sm"
                 >
-                  <Save className="h-4 w-4" />
+                  Speichern
                 </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCancelRename();
-                  }}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={onCancelRename}
                 >
-                  <X className="h-4 w-4" />
+                  Abbrechen
                 </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium">{filename}</h3>
+                <CardTitle className="text-lg font-medium text-slate-800">
+                  {filename} ({questions.length} Fragen)
+                </CardTitle>
                 <Button
-                  size="icon"
                   variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRename(filename);
-                  }}
+                  size="sm"
+                  onClick={() => onRename(filename)}
+                  className="ml-2"
                 >
-                  <Edit2 className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
               </div>
             )}
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                onStartTraining(questions);
-              }}
-            >
-              <Brain className="mr-2 h-4 w-4" />
-              Training starten
-            </Button>
-            {onStartExam && (
-              <Button
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStartExam(questions);
-                }}
-              >
-                <Brain className="mr-2 h-4 w-4" />
-                Prüfungssimulation
-              </Button>
-            )}
-          </div>
+          <Button onClick={() => onStartTraining(questions)}>
+            Training starten
+          </Button>
         </div>
-        <DatasetStatistics questions={questions} />
-      </div>
+        <p className="text-sm text-slate-600">
+          Hochgeladen am {new Date(questions[0].created_at!).toLocaleDateString()}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="cursor-pointer" onClick={() => onDatasetClick(filename)}>
+          <DatasetStatistics questions={questions} />
+
+          {isSelected && (
+            <div className="mt-4 space-y-4">
+              <h3 className="font-semibold">Fragen:</h3>
+              {questions.map((question, index) => (
+                <div key={question.id} className="p-4 bg-slate-50 rounded-lg">
+                  <p className="font-medium">Frage {index + 1}:</p>
+                  <p className="mt-1">{question.question}</p>
+                  <div className="mt-2 space-y-1">
+                    <p>A: {question.optionA}</p>
+                    <p>B: {question.optionB}</p>
+                    <p>C: {question.optionC}</p>
+                    <p>D: {question.optionD}</p>
+                    {question.optionE && <p>E: {question.optionE}</p>}
+                  </div>
+                  <p className="mt-2 text-green-600">Richtige Antwort: {question.correctAnswer}</p>
+                  {question.comment && (
+                    <p className="mt-2 text-slate-600">Kommentar: {question.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };
