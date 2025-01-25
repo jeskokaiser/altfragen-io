@@ -61,7 +61,13 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
       }
     });
 
-    return stats;
+    // Convert to array and sort by total questions descending
+    return Object.entries(stats)
+      .sort(([, a], [, b]) => b.total - a.total)
+      .reduce((acc, [subject, stats]) => {
+        acc[subject] = stats;
+        return acc;
+      }, {} as Record<string, { total: number; answered: number; correct: number }>);
   }, [questions, userProgress]);
 
   const handleWrongQuestionsTraining = () => {
