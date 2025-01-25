@@ -116,7 +116,7 @@ const Dashboard = () => {
 
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-slate-800">Deine Datensätze</h2>
+          <h2 className="text-2xl font-semibold text-slate-800">Hochgeladene Fragendatenbanken</h2>
           <span className="text-sm text-muted-foreground">
             {questions?.length || 0} Fragen insgesamt
           </span>
