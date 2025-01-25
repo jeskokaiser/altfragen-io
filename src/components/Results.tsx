@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
+import { useNavigate } from 'react-router-dom';
 
 interface ResultsProps {
   questions: Question[];
@@ -10,6 +11,8 @@ interface ResultsProps {
 }
 
 const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) => {
+  const navigate = useNavigate();
+
   const calculateScore = () => {
     return questions.reduce((score, question, index) => {
       return score + (question.correctAnswer === userAnswers[index] ? 1 : 0);
@@ -51,9 +54,14 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
           </Card>
         ))}
       </div>
-      <Button onClick={onRestart} className="mt-6">
-        Neuer Test
-      </Button>
+      <div className="mt-6 flex gap-4">
+        <Button onClick={onRestart}>
+          Neuer Test
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/')}>
+          Zurück zum Dashboard
+        </Button>
+      </div>
     </div>
   );
 };
