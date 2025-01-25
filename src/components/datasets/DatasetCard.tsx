@@ -58,10 +58,25 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
     enabled: !!user && questionIds.length > 0,
   });
 
-  // Calculate statistics
+  // Calculate statistics based on the most recent answer for each question
+  const getLatestAnswers = () => {
+    if (!progressData) return new Map();
+    
+    // Group answers by question_id and get the most recent one
+    const latestAnswers = new Map();
+    progressData.forEach(progress => {
+      const existing = latestAnswers.get(progress.question_id);
+      if (!existing || new Date(progress.created_at) > new Date(existing.created_at)) {
+        latestAnswers.set(progress.question_id, progress);
+      }
+    });
+    return latestAnswers;
+  };
+
+  const latestAnswers = getLatestAnswers();
   const totalQuestions = questions.length;
-  const answeredQuestions = progressData?.length || 0;
-  const correctAnswers = progressData?.filter(p => p.is_correct)?.length || 0;
+  const answeredQuestions = latestAnswers.size;
+  const correctAnswers = Array.from(latestAnswers.values()).filter(p => p.is_correct).length;
   const wrongAnswers = answeredQuestions - correctAnswers;
   const unansweredQuestions = totalQuestions - answeredQuestions;
 
