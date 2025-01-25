@@ -1,6 +1,7 @@
 import React from 'react';
 import { Question } from '@/types/Question';
 import DatasetCard from './DatasetCard';
+import DatasetStatistics from './DatasetStatistics';
 
 interface DatasetListProps {
   groupedQuestions: Record<string, Question[]>;
@@ -11,11 +12,11 @@ interface DatasetListProps {
   newFilename: string;
   onNewFilenameChange: (value: string) => void;
   onRename: (filename: string) => void;
-  onSaveRename: (oldFilename: string, newFilename: string) => void;
+  onSaveRename: (filename: string) => void;
   onCancelRename: () => void;
 }
 
-const DatasetList: React.FC<DatasetListProps> = ({
+const DatasetList = ({
   groupedQuestions,
   selectedFilename,
   onDatasetClick,
@@ -26,25 +27,30 @@ const DatasetList: React.FC<DatasetListProps> = ({
   onRename,
   onSaveRename,
   onCancelRename,
-}) => {
+}: DatasetListProps) => {
+  const allQuestions = Object.values(groupedQuestions).flat();
+
   return (
-    <div className="space-y-6">
-      {Object.entries(groupedQuestions).map(([filename, questions]) => (
-        <DatasetCard
-          key={filename}
-          filename={filename}
-          questions={questions}
-          isSelected={selectedFilename === filename}
-          onDatasetClick={onDatasetClick}
-          onStartTraining={onStartTraining}
-          isEditing={editingFilename === filename}
-          newFilename={newFilename}
-          onNewFilenameChange={onNewFilenameChange}
-          onRename={onRename}
-          onSaveRename={onSaveRename}
-          onCancelRename={onCancelRename}
-        />
-      ))}
+    <div>
+      <DatasetStatistics questions={allQuestions} />
+      <div className="grid gap-4">
+        {Object.entries(groupedQuestions).map(([filename, questions]) => (
+          <DatasetCard
+            key={filename}
+            filename={filename}
+            questions={questions}
+            isSelected={selectedFilename === filename}
+            onDatasetClick={onDatasetClick}
+            onStartTraining={onStartTraining}
+            isEditing={editingFilename === filename}
+            newFilename={newFilename}
+            onNewFilenameChange={onNewFilenameChange}
+            onRename={onRename}
+            onSaveRename={onSaveRename}
+            onCancelRename={onCancelRename}
+          />
+        ))}
+      </div>
     </div>
   );
 };
