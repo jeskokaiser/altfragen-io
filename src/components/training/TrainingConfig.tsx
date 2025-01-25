@@ -1,33 +1,18 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import SubjectSelect from './selects/SubjectSelect';
+import DifficultySelect from './selects/DifficultySelect';
+import QuestionCountSelect from './selects/QuestionCountSelect';
+import { FormValues } from './types/FormValues';
 
 interface TrainingConfigProps {
   questions: Question[];
   onStart: (selectedQuestions: Question[]) => void;
-}
-
-interface FormValues {
-  subject: string;
-  questionCount: string;
-  difficulty: string;
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
@@ -107,80 +92,9 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       <h2 className="text-2xl font-semibold mb-6">Training konfigurieren</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="subject"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fach auswählen</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wähle ein Fach" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Fächer</SelectItem>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {subject}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="difficulty"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Schwierigkeitsgrad</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wähle einen Schwierigkeitsgrad" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Schwierigkeitsgrade</SelectItem>
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <SelectItem key={level} value={level.toString()}>
-                        {level} {level === 1 ? '(Sehr leicht)' : level === 5 ? '(Sehr schwer)' : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="questionCount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Anzahl der Fragen</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wähle die Anzahl" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {[5, 10, 15, 20].map((count) => (
-                      <SelectItem key={count} value={count.toString()}>
-                        {count} Fragen
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-
+          <SubjectSelect form={form} subjects={subjects} />
+          <DifficultySelect form={form} />
+          <QuestionCountSelect form={form} />
           <Button type="submit" className="w-full">
             Training starten
           </Button>
