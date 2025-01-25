@@ -19,13 +19,11 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const form = useForm<FormValues>();
   const { user } = useAuth();
 
-  // Get unique subjects from questions and sort them alphabetically
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
-    a.localeCompare(b, 'de')  // Using German locale for proper sorting of umlauts
+    a.localeCompare(b, 'de')
   );
 
   const handleSubmit = async (values: FormValues) => {
-    // Filter questions by subject and difficulty
     let filteredQuestions = questions;
     
     if (values.subject !== 'all') {
@@ -37,21 +35,20 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       filteredQuestions = filteredQuestions.filter(q => q.difficulty === selectedDifficulty);
     }
     
-    const questionCount = parseInt(values.questionCount);
+    const questionCount = values.questionCount === 'all' 
+      ? filteredQuestions.length 
+      : parseInt(values.questionCount);
     
-    // Get user's progress for these questions
     const { data: userProgress } = await supabase
       .from('user_progress')
       .select('question_id, is_correct')
       .eq('user_id', user?.id);
 
-    // Create a map of question results
     const questionResults = new Map();
     userProgress?.forEach(progress => {
       questionResults.set(progress.question_id, progress.is_correct);
     });
 
-    // Sort questions into three categories
     const untrained: Question[] = [];
     const wrongAnswered: Question[] = [];
     const correctAnswered: Question[] = [];
@@ -67,7 +64,6 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       }
     });
 
-    // Combine questions in priority order: untrained + wrong + correct
     const prioritizedQuestions = [
       ...shuffle(untrained),
       ...shuffle(wrongAnswered),
@@ -77,7 +73,6 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     onStart(prioritizedQuestions);
   };
 
-  // Fisher-Yates shuffle algorithm
   const shuffle = <T,>(array: T[]): T[] => {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
