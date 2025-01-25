@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import DifficultyBadge from './DifficultyBadge';
@@ -16,6 +16,8 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
   difficulty,
   onEditClick,
 }) => {
+  const [currentDifficulty, setCurrentDifficulty] = useState(difficulty);
+
   const handleDifficultyChange = async (value: string) => {
     const newDifficulty = parseInt(value);
     if (isNaN(newDifficulty) || newDifficulty < 1 || newDifficulty > 5) return;
@@ -26,26 +28,34 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
         .update({ difficulty: newDifficulty })
         .eq('id', questionId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating difficulty:', error);
+        toast.error("Fehler beim Aktualisieren des Schwierigkeitsgrads");
+        return;
+      }
 
+      setCurrentDifficulty(newDifficulty);
       toast.success("Schwierigkeitsgrad aktualisiert");
+      
+      // Reload the page after a short delay to show the toast
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Error updating difficulty:', error);
       toast.error("Fehler beim Aktualisieren des Schwierigkeitsgrads");
     }
   };
 
-  const difficultyValue = difficulty?.toString() || '3';
-
   return (
     <div className="flex flex-col gap-4 mb-4">
       <div className="flex justify-between items-center">
-        <DifficultyBadge difficulty={difficulty || 3} />
+        <DifficultyBadge difficulty={currentDifficulty} />
         <EditButton onClick={onEditClick} />
       </div>
       
       <DifficultyToggle 
-        value={difficultyValue}
+        value={currentDifficulty.toString()}
         onValueChange={handleDifficultyChange}
       />
     </div>
