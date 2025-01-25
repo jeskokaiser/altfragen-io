@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import DashboardHeader from './datasets/DashboardHeader';
 import DatasetList from './datasets/DatasetList';
 import { useQuestions } from '@/hooks/useQuestions';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { user } = useAuth();

@@ -13,7 +13,20 @@ export const saveQuestions = async (questions: Question[], userId: string) => {
 
   if (fetchError) throw fetchError;
 
-  return insertedQuestions;
+  return insertedQuestions.map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    created_at: q.created_at
+  })) as Question[];
 };
 
 export const fetchUserQuestions = async (userId: string) => {
@@ -24,5 +37,19 @@ export const fetchUserQuestions = async (userId: string) => {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  
+  return data.map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    created_at: q.created_at
+  })) as Question[];
 };
