@@ -1,8 +1,7 @@
 import React from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Pencil, ChevronDown, ChevronUp, Play } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play } from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -19,12 +18,6 @@ interface DatasetCardProps {
   isSelected: boolean;
   onDatasetClick: (filename: string) => void;
   onStartTraining: (questions: Question[]) => void;
-  onRename: (oldFilename: string) => void;
-  onSaveRename: (oldFilename: string, newFilename: string) => void;
-  onCancelRename: () => void;
-  isEditing: boolean;
-  newFilename: string;
-  onNewFilenameChange: (value: string) => void;
 }
 
 const DatasetCard: React.FC<DatasetCardProps> = ({
@@ -33,55 +26,15 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
   isSelected,
   onDatasetClick,
   onStartTraining,
-  onRename,
-  onSaveRename,
-  onCancelRename,
-  isEditing,
-  newFilename,
-  onNewFilenameChange,
 }) => {
   return (
     <Card className={`transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
       <CardHeader className="bg-slate-50/50">
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1 space-y-2">
-            {isEditing ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={newFilename}
-                  onChange={(e) => onNewFilenameChange(e.target.value)}
-                  className="max-w-md"
-                  placeholder="Neuer Dateiname"
-                />
-                <Button 
-                  onClick={() => onSaveRename(filename, newFilename)}
-                  size="sm"
-                >
-                  Speichern
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={onCancelRename}
-                >
-                  Abbrechen
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-medium text-slate-800">
-                  {filename}
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRename(filename)}
-                  className="ml-2 h-8 w-8 p-0"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+            <CardTitle className="text-lg font-medium text-slate-800">
+              {filename}
+            </CardTitle>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>{questions.length} Fragen</span>
               <span>•</span>

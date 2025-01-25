@@ -16,8 +16,6 @@ import { Card, CardContent } from "@/components/ui/card";
 const Dashboard = () => {
   const { user } = useAuth();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
-  const [editingFilename, setEditingFilename] = useState<string | null>(null);
-  const [newFilename, setNewFilename] = useState('');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -55,40 +53,6 @@ const Dashboard = () => {
 
   const handleQuestionsLoaded = () => {
     refetch();
-  };
-
-  const handleRename = async (oldFilename: string) => {
-    setEditingFilename(oldFilename);
-    setNewFilename(oldFilename);
-  };
-
-  const handleSaveRename = async (oldFilename: string) => {
-    if (!newFilename.trim()) {
-      toast.error('Der Dateiname darf nicht leer sein', {
-        description: 'Bitte geben Sie einen gültigen Namen ein'
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('questions')
-        .update({ filename: newFilename.trim() })
-        .eq('user_id', user?.id)
-        .eq('filename', oldFilename);
-
-      if (error) throw error;
-
-      setEditingFilename(null);
-      setNewFilename('');
-      await queryClient.invalidateQueries({ queryKey: ['questions', user?.id] });
-      toast.success('Datensatz erfolgreich umbenannt');
-    } catch (error: any) {
-      console.error('Error renaming dataset:', error);
-      toast.error('Fehler beim Umbenennen', {
-        description: error.message || 'Ein unerwarteter Fehler ist aufgetreten'
-      });
-    }
   };
 
   const groupedQuestions = React.useMemo(() => {
@@ -165,12 +129,6 @@ const Dashboard = () => {
             selectedFilename={selectedFilename}
             onDatasetClick={handleDatasetClick}
             onStartTraining={handleStartTraining}
-            editingFilename={editingFilename}
-            newFilename={newFilename}
-            onNewFilenameChange={(value) => setNewFilename(value)}
-            onRename={handleRename}
-            onSaveRename={handleSaveRename}
-            onCancelRename={() => setEditingFilename(null)}
           />
         ) : (
           <Card>

@@ -7,12 +7,6 @@ interface DatasetListProps {
   selectedFilename: string | null;
   onDatasetClick: (filename: string) => void;
   onStartTraining: (questions: Question[]) => void;
-  editingFilename: string | null;
-  newFilename: string;
-  onNewFilenameChange: (value: string) => void;
-  onRename: (filename: string) => void;
-  onSaveRename: (filename: string) => void;
-  onCancelRename: () => void;
 }
 
 const DatasetList = ({
@@ -20,12 +14,6 @@ const DatasetList = ({
   selectedFilename,
   onDatasetClick,
   onStartTraining,
-  editingFilename,
-  newFilename,
-  onNewFilenameChange,
-  onRename,
-  onSaveRename,
-  onCancelRename,
 }: DatasetListProps) => {
   return (
     <div className="grid gap-4">
@@ -37,12 +25,6 @@ const DatasetList = ({
           isSelected={selectedFilename === filename}
           onDatasetClick={onDatasetClick}
           onStartTraining={onStartTraining}
-          isEditing={editingFilename === filename}
-          newFilename={newFilename}
-          onNewFilenameChange={onNewFilenameChange}
-          onRename={onRename}
-          onSaveRename={onSaveRename}
-          onCancelRename={onCancelRename}
         />
       ))}
     </div>
