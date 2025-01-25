@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 
 interface DatasetStatisticsProps {
   questions: Question[];
@@ -11,6 +13,7 @@ interface DatasetStatisticsProps {
 
 const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: userProgress } = useQuery({
     queryKey: ['user-progress', user?.id],
@@ -34,6 +37,26 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const answeredPercentage = (answeredQuestions / totalQuestions) * 100;
   const correctPercentage = (correctAnswers / totalQuestions) * 100;
   const wrongPercentage = (wrongAnswers / totalQuestions) * 100;
+
+  const handleWrongQuestionsTraining = () => {
+    // Get the IDs of questions that were answered incorrectly
+    const wrongQuestionIds = userProgress
+      ?.filter(p => !p.is_correct)
+      .map(p => p.question_id) || [];
+
+    // Filter the questions array to get only the wrong questions
+    const wrongQuestions = questions.filter(q => 
+      wrongQuestionIds.includes(q.id)
+    );
+
+    if (wrongQuestions.length === 0) {
+      return;
+    }
+
+    // Store the wrong questions in localStorage and navigate to training
+    localStorage.setItem('trainingQuestions', JSON.stringify(wrongQuestions));
+    navigate('/training');
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -63,6 +86,15 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         <p className="text-sm text-muted-foreground">
           {wrongAnswers} of {totalQuestions} questions wrong
         </p>
+        {wrongAnswers > 0 && (
+          <Button 
+            onClick={handleWrongQuestionsTraining}
+            variant="destructive"
+            className="mt-2 w-full"
+          >
+            Train Wrong Questions
+          </Button>
+        )}
       </div>
     </div>
   );
