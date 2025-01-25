@@ -35,7 +35,7 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
             </FormControl>
             <SelectContent>
               <SelectItem value="all">Alle Fragen</SelectItem>
-              {[5, 10, 15, 20].map((count) => (
+              {[5, 10, 20, 50].map((count) => (
                 <SelectItem key={count} value={count.toString()}>
                   {count} Fragen
                 </SelectItem>
