@@ -25,7 +25,8 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       subject: rowData['Fach'] || '',
       correctAnswer: rowData['Antwort'] || '',
       comment: rowData['Kommentar'] || '',
-      filename: filename
+      filename: filename,
+      difficulty: parseInt(rowData['Schwierigkeit']) || 3 // Default to 3 if not provided
     };
   });
 

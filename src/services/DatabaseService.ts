@@ -14,7 +14,8 @@ export const saveQuestions = async (questions: Question[], userId: string) => {
       subject: q.subject,
       correct_answer: q.correctAnswer,
       comment: q.comment,
-      filename: q.filename
+      filename: q.filename,
+      difficulty: q.difficulty
     }))
   );
 
@@ -41,6 +42,6 @@ export const saveQuestions = async (questions: Question[], userId: string) => {
     correctAnswer: q.correct_answer,
     comment: q.comment,
     filename: q.filename,
-    created_at: q.created_at
+    difficulty: q.difficulty,
   }));
 };
