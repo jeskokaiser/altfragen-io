@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
 import QuestionHeader from './training/QuestionHeader';
 import QuestionContent from './training/QuestionContent';
 import FeedbackDisplay from './training/FeedbackDisplay';
 import NavigationButtons from './training/NavigationButtons';
 import EditQuestionModal from './training/EditQuestionModal';
 import AnswerSubmission from './training/AnswerSubmission';
-import { Badge } from '@/components/ui/badge';
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import DifficultyBadge from './training/DifficultyBadge';
+import DifficultyToggle from './training/DifficultyToggle';
+import EditButton from './training/EditButton';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 
@@ -89,28 +88,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     }
   };
 
-  const getDifficultyColor = (difficulty: number) => {
-    switch (difficulty) {
-      case 1: return 'bg-green-100 text-green-800';
-      case 2: return 'bg-blue-100 text-blue-800';
-      case 3: return 'bg-yellow-100 text-yellow-800';
-      case 4: return 'bg-orange-100 text-orange-800';
-      case 5: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getDifficultyLabel = (difficulty: number) => {
-    switch (difficulty) {
-      case 1: return 'Sehr leicht';
-      case 2: return 'Leicht';
-      case 3: return 'Mittel';
-      case 4: return 'Schwer';
-      case 5: return 'Sehr schwer';
-      default: return 'Unbekannt';
-    }
-  };
-
   if (!currentQuestion) {
     return <div>Loading question...</div>;
   }
@@ -128,37 +105,14 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       <Card className="p-6">
         <div className="flex flex-col gap-4 mb-4">
           <div className="flex justify-between items-center">
-            <Badge className={`${getDifficultyColor(currentQuestion.difficulty || 3)}`}>
-              Schwierigkeit: {currentQuestion.difficulty || 3}
-            </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Pencil className="h-4 w-4" />
-              Bearbeiten
-            </Button>
+            <DifficultyBadge difficulty={currentQuestion.difficulty || 3} />
+            <EditButton onClick={() => setIsEditModalOpen(true)} />
           </div>
           
-          <ToggleGroup 
-            type="single" 
+          <DifficultyToggle 
             value={difficultyValue}
             onValueChange={handleDifficultyChange}
-            className="justify-start"
-          >
-            {[1, 2, 3, 4, 5].map((level) => (
-              <ToggleGroupItem 
-                key={level} 
-                value={level.toString()}
-                aria-label={`Schwierigkeitsgrad ${level}`}
-                className={`${getDifficultyColor(level)} hover:opacity-90`}
-              >
-                {level}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          />
         </div>
 
         <QuestionContent
