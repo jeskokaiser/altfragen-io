@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -39,19 +39,23 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   onClose,
   onQuestionUpdated,
 }) => {
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: question ? {
-      question: question.question,
-      optionA: question.optionA,
-      optionB: question.optionB,
-      optionC: question.optionC,
-      optionD: question.optionD,
-      optionE: question.optionE,
-      correctAnswer: question.correctAnswer,
-      comment: question.comment,
-      subject: question.subject,
-    } : undefined,
-  });
+  const { register, handleSubmit, formState: { isSubmitting }, reset } = useForm<FormData>();
+
+  useEffect(() => {
+    if (question) {
+      reset({
+        question: question.question,
+        optionA: question.optionA,
+        optionB: question.optionB,
+        optionC: question.optionC,
+        optionD: question.optionD,
+        optionE: question.optionE,
+        correctAnswer: question.correctAnswer,
+        comment: question.comment,
+        subject: question.subject,
+      });
+    }
+  }, [question, reset]);
 
   if (!question) {
     return null;
