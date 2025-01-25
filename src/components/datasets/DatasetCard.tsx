@@ -2,7 +2,7 @@ import React from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Pencil } from 'lucide-react';
+import { Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -90,32 +90,50 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
         </p>
       </CardHeader>
       <CardContent>
-        <div className="cursor-pointer" onClick={() => onDatasetClick(filename)}>
-          <DatasetStatistics questions={questions} />
+        <DatasetStatistics questions={questions} />
 
-          {isSelected && (
-            <div className="mt-4 space-y-4">
-              <h3 className="font-semibold">Fragen:</h3>
-              {questions.map((question, index) => (
-                <div key={question.id} className="p-4 bg-slate-50 rounded-lg">
-                  <p className="font-medium">Frage {index + 1}:</p>
-                  <p className="mt-1">{question.question}</p>
-                  <div className="mt-2 space-y-1">
-                    <p>A: {question.optionA}</p>
-                    <p>B: {question.optionB}</p>
-                    <p>C: {question.optionC}</p>
-                    <p>D: {question.optionD}</p>
-                    {question.optionE && <p>E: {question.optionE}</p>}
-                  </div>
-                  <p className="mt-2 text-green-600">Richtige Antwort: {question.correctAnswer}</p>
-                  {question.comment && (
-                    <p className="mt-2 text-slate-600">Kommentar: {question.comment}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="mt-4 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => onDatasetClick(filename)}
+            className="w-full"
+          >
+            {isSelected ? (
+              <>
+                <ChevronUp className="mr-2 h-4 w-4" />
+                Fragen ausblenden
+              </>
+            ) : (
+              <>
+                <ChevronDown className="mr-2 h-4 w-4" />
+                Fragen anzeigen
+              </>
+            )}
+          </Button>
         </div>
+
+        {isSelected && (
+          <div className="mt-4 space-y-4">
+            <h3 className="font-semibold">Fragen:</h3>
+            {questions.map((question, index) => (
+              <div key={question.id} className="p-4 bg-slate-50 rounded-lg">
+                <p className="font-medium">Frage {index + 1}:</p>
+                <p className="mt-1">{question.question}</p>
+                <div className="mt-2 space-y-1">
+                  <p>A: {question.optionA}</p>
+                  <p>B: {question.optionB}</p>
+                  <p>C: {question.optionC}</p>
+                  <p>D: {question.optionD}</p>
+                  {question.optionE && <p>E: {question.optionE}</p>}
+                </div>
+                <p className="mt-2 text-green-600">Richtige Antwort: {question.correctAnswer}</p>
+                {question.comment && (
+                  <p className="mt-2 text-slate-600">Kommentar: {question.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
