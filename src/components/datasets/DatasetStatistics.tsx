@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 interface DatasetStatisticsProps {
   questions: Question[];
@@ -14,6 +16,7 @@ interface DatasetStatisticsProps {
 const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = React.useState(true);
 
   const { data: userProgress } = useQuery({
     queryKey: ['user-progress', user?.id],
@@ -131,32 +134,41 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         </div>
       </div>
 
-      <div className="border rounded-lg p-4">
-        <h3 className="text-lg font-semibold mb-4">Statistik nach Fächern</h3>
-        <div className="space-y-4">
-          {Object.entries(subjectStats).map(([subject, stats]) => (
-            <div key={subject} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">{subject}</span>
-                <span className="text-sm text-muted-foreground">
-                  {stats.answered} / {stats.total} beantwortet
-                </span>
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="border rounded-lg"
+      >
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+          <h3 className="text-lg font-semibold">Statistik nach Fächern</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="px-4 pb-4">
+          <div className="space-y-4">
+            {Object.entries(subjectStats).map(([subject, stats]) => (
+              <div key={subject} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{subject}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {stats.answered} / {stats.total} beantwortet
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Progress 
+                    value={(stats.correct / stats.total) * 100} 
+                    className="flex-1 h-2 bg-green-100"
+                  >
+                    <div className="h-full bg-green-600 transition-all" />
+                  </Progress>
+                  <span className="text-sm text-muted-foreground w-20 text-right">
+                    {stats.correct} richtig
+                  </span>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Progress 
-                  value={(stats.correct / stats.total) * 100} 
-                  className="flex-1 h-2 bg-green-100"
-                >
-                  <div className="h-full bg-green-600 transition-all" />
-                </Progress>
-                <span className="text-sm text-muted-foreground w-20 text-right">
-                  {stats.correct} richtig
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
