@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +9,7 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import DatasetStatistics from './DatasetStatistics';
 
 interface DatasetCardProps {
   filename: string;
@@ -98,22 +91,7 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="cursor-pointer" onClick={() => onDatasetClick(filename)}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Anzahl der Fragen</TableHead>
-                <TableHead>Hochgeladen am</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>{questions.length}</TableCell>
-                <TableCell>
-                  {new Date(questions[0].created_at!).toLocaleDateString()}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <DatasetStatistics questions={questions} />
 
           {isSelected && (
             <div className="mt-4 space-y-4">
