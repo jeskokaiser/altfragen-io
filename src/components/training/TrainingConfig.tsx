@@ -34,8 +34,10 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const form = useForm<FormValues>();
   const { user } = useAuth();
 
-  // Get unique subjects from questions
-  const subjects = Array.from(new Set(questions.map(q => q.subject)));
+  // Get unique subjects from questions and sort them alphabetically
+  const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
+    a.localeCompare(b, 'de')  // Using German locale for proper sorting of umlauts
+  );
 
   const handleSubmit = async (values: FormValues) => {
     // Filter questions by subject and difficulty
