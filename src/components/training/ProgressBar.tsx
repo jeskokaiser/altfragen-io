@@ -7,7 +7,7 @@ interface ProgressBarProps {
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ currentIndex, totalQuestions }) => {
   return (
-    <div className="mb-8">
+    <div className="w-full">
       <div className="w-full bg-slate-200 h-2 rounded-full">
         <div
           className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
