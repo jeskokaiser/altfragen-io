@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -21,7 +21,7 @@ interface DatasetCardProps {
   onStartTraining: (questions: Question[]) => void;
 }
 
-const DatasetCard: React.FC<DatasetCardProps> = ({
+const DatasetCard: React.FC<DatasetCardProps> = memo(({
   filename,
   questions,
   isSelected,
@@ -68,6 +68,8 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
       <QuestionList questions={questions} isSelected={isSelected} />
     </Card>
   );
-};
+});
+
+DatasetCard.displayName = 'DatasetCard';
 
 export default DatasetCard;

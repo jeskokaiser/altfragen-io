@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
@@ -50,11 +50,7 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  const handleQuestionsLoaded = () => {
-    refetch();
-  };
-
-  const groupedQuestions = React.useMemo(() => {
+  const groupedQuestions = useMemo(() => {
     if (!questions) return {};
     return questions.reduce((acc, question) => {
       if (!acc[question.filename]) {
@@ -64,6 +60,10 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, Question[]>);
   }, [questions]);
+
+  const handleQuestionsLoaded = () => {
+    refetch();
+  };
 
   const handleDatasetClick = (filename: string) => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
