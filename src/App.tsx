@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Training from "./pages/Training";
+import Impressum from "./pages/Impressum";
+import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -28,23 +30,29 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            } />
-            <Route path="/training" element={
-              <ProtectedRoute>
-                <Training />
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </BrowserRouter>
+        <div className="min-h-screen flex flex-col">
+          <div className="flex-grow">
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/training" element={
+                  <ProtectedRoute>
+                    <Training />
+                  </ProtectedRoute>
+                } />
+                <Route path="/impressum" element={<Impressum />} />
+              </Routes>
+              <Footer />
+            </BrowserRouter>
+          </div>
+        </div>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
