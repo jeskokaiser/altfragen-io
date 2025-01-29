@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -28,6 +29,9 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   onDatasetClick,
   onStartTraining,
 }) => {
+  const navigate = useNavigate();
+  const unclearQuestionsCount = questions.filter(q => q.is_unclear).length;
+
   return (
     <Card className={`transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
       <CardHeader className="bg-slate-50/50">
@@ -40,7 +44,19 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
       </CardHeader>
 
       <CardContent className="pt-6">
-        <DatasetStatistics questions={questions} />
+        <div className="space-y-6">
+          <DatasetStatistics questions={questions} />
+          {unclearQuestionsCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/unclear-questions/${encodeURIComponent(filename)}`)}
+              className="w-full"
+            >
+              <AlertCircle className="mr-2 h-4 w-4" />
+              Unklare Fragen ({unclearQuestionsCount})
+            </Button>
+          )}
+        </div>
       </CardContent>
 
       <Separator />
