@@ -12,4 +12,6 @@ export interface Question {
   filename: string;
   created_at?: string;
   difficulty: number;
+  is_unclear?: boolean;
+  marked_unclear_at?: string;
 }
