@@ -25,7 +25,24 @@ const UnclearQuestions = () => {
         .order('marked_unclear_at', { ascending: false });
 
       if (error) throw error;
-      return data as Question[];
+      
+      return data.map(q => ({
+        id: q.id,
+        question: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        optionC: q.option_c,
+        optionD: q.option_d,
+        optionE: q.option_e,
+        subject: q.subject,
+        correctAnswer: q.correct_answer,
+        comment: q.comment,
+        filename: q.filename,
+        created_at: q.created_at,
+        difficulty: q.difficulty,
+        is_unclear: q.is_unclear,
+        marked_unclear_at: q.marked_unclear_at
+      })) as Question[];
     },
     enabled: !!user
   });
