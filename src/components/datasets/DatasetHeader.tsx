@@ -19,7 +19,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   createdAt,
 }) => {
   const navigate = useNavigate();
-  const unclearQuestions = questions.filter(q => q.is_unclear);
+  const unclearQuestions = questions.filter(q => q.is_unclear === true);
   const hasUnclearQuestions = unclearQuestions.length > 0;
 
   const handleUnclearClick = () => {
