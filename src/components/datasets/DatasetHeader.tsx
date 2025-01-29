@@ -1,8 +1,9 @@
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play } from 'lucide-react';
+import { Play, AlertCircle } from 'lucide-react';
 import { Question } from '@/types/Question';
+import { useNavigate } from 'react-router-dom';
 
 interface DatasetHeaderProps {
   filename: string;
@@ -17,6 +18,14 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   onStartTraining,
   createdAt,
 }) => {
+  const navigate = useNavigate();
+  const unclearQuestions = questions.filter(q => q.isUnclear);
+  const hasUnclearQuestions = unclearQuestions.length > 0;
+
+  const handleUnclearClick = () => {
+    navigate(`/unclear-questions/${encodeURIComponent(filename)}`);
+  };
+
   return (
     <div className="flex justify-between items-start gap-4">
       <div className="flex-1 space-y-2">
@@ -29,13 +38,25 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
           <span>Hochgeladen am {new Date(createdAt).toLocaleDateString()}</span>
         </div>
       </div>
-      <Button 
-        onClick={() => onStartTraining(questions)}
-        className="shrink-0"
-      >
-        <Play className="mr-2 h-4 w-4" />
-        Training starten
-      </Button>
+      <div className="flex gap-2">
+        {hasUnclearQuestions && (
+          <Button 
+            variant="outline"
+            onClick={handleUnclearClick}
+            className="shrink-0"
+          >
+            <AlertCircle className="mr-2 h-4 w-4" />
+            Unklare Fragen ({unclearQuestions.length})
+          </Button>
+        )}
+        <Button 
+          onClick={() => onStartTraining(questions)}
+          className="shrink-0"
+        >
+          <Play className="mr-2 h-4 w-4" />
+          Training starten
+        </Button>
+      </div>
     </div>
   );
 };
