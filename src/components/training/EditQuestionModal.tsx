@@ -7,7 +7,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,49 +102,46 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col gap-0">
-        <DialogHeader className="px-6 pt-6">
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
           <DialogTitle>Frage bearbeiten</DialogTitle>
           <DialogDescription>
             Bearbeiten Sie die Frage und speichern Sie die Änderungen.
           </DialogDescription>
         </DialogHeader>
-        
-        <ScrollArea className="flex-grow px-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <QuestionField register={register} />
-            <OptionsFields register={register} />
-            
-            <div>
-              <Label htmlFor="correctAnswer">Richtige Antwort</Label>
-              <Input id="correctAnswer" {...register('correctAnswer')} />
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <QuestionField register={register} />
+          <OptionsFields register={register} />
+          
+          <div>
+            <Label htmlFor="correctAnswer">Richtige Antwort</Label>
+            <Input id="correctAnswer" {...register('correctAnswer')} />
+          </div>
 
-            <DifficultyField 
-              defaultValue={question.difficulty?.toString() || '3'}
-              onValueChange={(value) => setValue('difficulty', value)}
-            />
+          <DifficultyField 
+            defaultValue={question.difficulty?.toString() || '3'}
+            onValueChange={(value) => setValue('difficulty', value)}
+          />
 
-            <div>
-              <Label htmlFor="comment">Kommentar</Label>
-              <Textarea id="comment" {...register('comment')} />
-            </div>
+          <div>
+            <Label htmlFor="comment">Kommentar</Label>
+            <Textarea id="comment" {...register('comment')} />
+          </div>
 
-            <SubjectField
-              defaultValue={question.subject}
-              onValueChange={(value) => setValue('subject', value)}
-            />
+          <SubjectField
+            defaultValue={question.subject}
+            onValueChange={(value) => setValue('subject', value)}
+          />
 
-            <div className="flex justify-end space-x-2 sticky bottom-0 py-4 bg-white">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Abbrechen
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                Speichern
-              </Button>
-            </div>
-          </form>
-        </ScrollArea>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              Speichern
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
