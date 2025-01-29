@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import EditQuestionModal from '@/components/training/EditQuestionModal';
 
 const UnclearQuestions = () => {
   const { filename } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ['unclear-questions', filename, user?.id],
@@ -65,6 +68,16 @@ const UnclearQuestions = () => {
     }
   };
 
+  const handleEditClick = (question: Question) => {
+    setSelectedQuestion(question);
+    setIsEditModalOpen(true);
+  };
+
+  const handleQuestionUpdated = (updatedQuestion: Question) => {
+    queryClient.invalidateQueries({ queryKey: ['unclear-questions'] });
+    queryClient.invalidateQueries({ queryKey: ['questions'] });
+  };
+
   if (isLoading) {
     return <div>Lädt...</div>;
   }
@@ -112,19 +125,35 @@ const UnclearQuestions = () => {
                   <p className="text-sm text-muted-foreground mt-2">
                     Als unklar markiert am: {new Date(question.marked_unclear_at!).toLocaleDateString()}
                   </p>
-                  <Button 
-                    variant="secondary"
-                    onClick={() => handleRemoveUnclear(question.id)}
-                    className="mt-4"
-                  >
-                    Entfernen
-                  </Button>
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      variant="secondary"
+                      onClick={() => handleRemoveUnclear(question.id)}
+                    >
+                      Entfernen
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleEditClick(question)}
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {selectedQuestion && (
+        <EditQuestionModal
+          question={selectedQuestion}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onQuestionUpdated={handleQuestionUpdated}
+        />
+      )}
     </div>
   );
 };
