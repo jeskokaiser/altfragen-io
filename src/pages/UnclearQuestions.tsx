@@ -1,17 +1,19 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 const UnclearQuestions = () => {
   const { filename } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ['unclear-questions', filename, user?.id],
@@ -44,6 +46,24 @@ const UnclearQuestions = () => {
     },
     enabled: !!user && !!filename
   });
+
+  const handleRemoveUnclear = async (questionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ is_unclear: false, marked_unclear_at: null })
+        .eq('id', questionId);
+
+      if (error) throw error;
+
+      toast.success('Frage wurde aus der Liste entfernt');
+      queryClient.invalidateQueries({ queryKey: ['unclear-questions'] });
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    } catch (error) {
+      console.error('Error removing unclear status:', error);
+      toast.error('Fehler beim Entfernen der Frage');
+    }
+  };
 
   if (isLoading) {
     return <div>Lädt...</div>;
@@ -92,6 +112,13 @@ const UnclearQuestions = () => {
                   <p className="text-sm text-muted-foreground mt-2">
                     Als unklar markiert am: {new Date(question.marked_unclear_at!).toLocaleDateString()}
                   </p>
+                  <Button 
+                    variant="secondary"
+                    onClick={() => handleRemoveUnclear(question.id)}
+                    className="mt-4"
+                  >
+                    Entfernen
+                  </Button>
                 </div>
               </div>
             </CardContent>
