@@ -19,8 +19,13 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   createdAt,
 }) => {
   const navigate = useNavigate();
+  console.log('Questions in DatasetHeader:', questions);
+  console.log('Questions with is_unclear:', questions.filter(q => q.is_unclear));
+  
   const unclearQuestions = questions.filter(q => q.is_unclear === true);
+  console.log('Filtered unclear questions:', unclearQuestions);
   const hasUnclearQuestions = unclearQuestions.length > 0;
+  console.log('Has unclear questions:', hasUnclearQuestions);
 
   const handleUnclearClick = () => {
     navigate(`/unclear-questions/${encodeURIComponent(filename)}`);

@@ -21,6 +21,7 @@ const Dashboard = () => {
   const { data: questions, isLoading, error, refetch } = useQuery({
     queryKey: ['questions', user?.id],
     queryFn: async () => {
+      console.log('Fetching questions for user:', user?.id);
       const { data, error } = await supabase
         .from('questions')
         .select('*')
@@ -32,6 +33,7 @@ const Dashboard = () => {
         throw new Error('Fehler beim Laden der Fragen');
       }
       
+      console.log('Raw questions data:', data);
       return data.map(q => ({
         id: q.id,
         question: q.question,
@@ -44,7 +46,9 @@ const Dashboard = () => {
         correctAnswer: q.correct_answer,
         comment: q.comment,
         filename: q.filename,
-        created_at: q.created_at
+        created_at: q.created_at,
+        is_unclear: q.is_unclear,
+        difficulty: q.difficulty
       })) as Question[];
     },
     enabled: !!user
