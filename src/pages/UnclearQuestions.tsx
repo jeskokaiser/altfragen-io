@@ -37,9 +37,9 @@ const UnclearQuestions = () => {
         correctAnswer: q.correct_answer,
         comment: q.comment,
         filename: q.filename,
-        isUnclear: q.is_unclear,
+        is_unclear: q.is_unclear,
         difficulty: q.difficulty,
-        markedUnclearAt: q.marked_unclear_at
+        marked_unclear_at: q.marked_unclear_at
       })) as Question[];
     },
     enabled: !!user && !!filename
@@ -90,7 +90,7 @@ const UnclearQuestions = () => {
                     <p className="mt-2"><strong>Kommentar:</strong> {question.comment}</p>
                   )}
                   <p className="text-sm text-muted-foreground mt-2">
-                    Als unklar markiert am: {new Date(question.markedUnclearAt!).toLocaleDateString()}
+                    Als unklar markiert am: {new Date(question.marked_unclear_at!).toLocaleDateString()}
                   </p>
                 </div>
               </div>
