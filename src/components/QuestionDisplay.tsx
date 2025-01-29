@@ -104,22 +104,27 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <Card className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <DifficultyControls
-            questionId={currentQuestion.id}
-            difficulty={currentQuestion.difficulty || 3}
-            onEditClick={() => setIsEditModalOpen(true)}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleMarkUnclear}
-            className="flex items-center gap-2 ml-2"
-            disabled={currentQuestion.is_unclear}
-          >
-            <AlertCircle className="h-4 w-4" />
-            ?!
-          </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+          <div className="flex-grow">
+            <DifficultyControls
+              questionId={currentQuestion.id}
+              difficulty={currentQuestion.difficulty || 3}
+              onEditClick={() => setIsEditModalOpen(true)}
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMarkUnclear}
+              className="flex items-center gap-2 hover:bg-gray-100"
+              disabled={currentQuestion.is_unclear}
+            >
+              <AlertCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Unklar</span>
+              <span className="sm:hidden">?!</span>
+            </Button>
+          </div>
         </div>
 
         <QuestionContent
