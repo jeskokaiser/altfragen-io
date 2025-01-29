@@ -35,6 +35,8 @@ export type Database = {
           difficulty: number | null
           filename: string
           id: string
+          is_unclear: boolean | null
+          marked_unclear_at: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -51,6 +53,8 @@ export type Database = {
           difficulty?: number | null
           filename: string
           id?: string
+          is_unclear?: boolean | null
+          marked_unclear_at?: string | null
           option_a: string
           option_b: string
           option_c: string
@@ -67,6 +71,8 @@ export type Database = {
           difficulty?: number | null
           filename?: string
           id?: string
+          is_unclear?: boolean | null
+          marked_unclear_at?: string | null
           option_a?: string
           option_b?: string
           option_c?: string

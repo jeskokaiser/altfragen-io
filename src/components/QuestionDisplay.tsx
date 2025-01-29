@@ -9,6 +9,10 @@ import EditQuestionModal from './training/EditQuestionModal';
 import AnswerSubmission from './training/AnswerSubmission';
 import DifficultyControls from './training/DifficultyControls';
 import QuestionFeedback from './training/QuestionFeedback';
+import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -63,6 +67,30 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setIsEditModalOpen(false);
   };
 
+  const handleMarkUnclear = async () => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({
+          is_unclear: true,
+          marked_unclear_at: new Date().toISOString(),
+        })
+        .eq('id', currentQuestion.id);
+
+      if (error) throw error;
+
+      toast.success('Frage als unklar markiert');
+      setCurrentQuestion({
+        ...currentQuestion,
+        is_unclear: true,
+        marked_unclear_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error marking question as unclear:', error);
+      toast.error('Fehler beim Markieren der Frage');
+    }
+  };
+
   if (!currentQuestion) {
     return <div>Loading question...</div>;
   }
@@ -76,11 +104,23 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <Card className="p-6">
-        <DifficultyControls
-          questionId={currentQuestion.id}
-          difficulty={currentQuestion.difficulty || 3}
-          onEditClick={() => setIsEditModalOpen(true)}
-        />
+        <div className="flex justify-between items-center mb-4">
+          <DifficultyControls
+            questionId={currentQuestion.id}
+            difficulty={currentQuestion.difficulty || 3}
+            onEditClick={() => setIsEditModalOpen(true)}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleMarkUnclear}
+            className="flex items-center gap-2 ml-2"
+            disabled={currentQuestion.is_unclear}
+          >
+            <AlertCircle className="h-4 w-4" />
+            ?!
+          </Button>
+        </div>
 
         <QuestionContent
           questionData={currentQuestion}
