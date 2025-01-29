@@ -104,7 +104,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       />
 
       <Card className="p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-stretch gap-4 mb-6">
           <div className="flex-grow">
             <DifficultyControls
               questionId={currentQuestion.id}
@@ -115,7 +115,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           <div className="flex justify-end">
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={handleMarkUnclear}
               className="flex items-center gap-2 hover:bg-gray-100"
               disabled={currentQuestion.is_unclear}
