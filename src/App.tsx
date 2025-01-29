@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Training from "./pages/Training";
 import Impressum from "./pages/Impressum";
+import UnclearQuestions from "./components/datasets/UnclearQuestions";
 import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,11 @@ const AppContent = () => {
           <Route path="/training" element={
             <ProtectedRoute>
               <Training />
+            </ProtectedRoute>
+          } />
+          <Route path="/unclear-questions" element={
+            <ProtectedRoute>
+              <UnclearQuestions />
             </ProtectedRoute>
           } />
           <Route path="/impressum" element={<Impressum />} />
