@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
@@ -6,10 +6,15 @@ import { X } from "lucide-react";
 interface AnswerOptionProps {
   value: string;
   text: string;
+  resetTrigger?: number;
 }
 
-const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text }) => {
+const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger }) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
+
+  useEffect(() => {
+    setIsStrikethrough(false);
+  }, [resetTrigger]);
 
   const handleStrikethrough = (e: React.MouseEvent) => {
     e.preventDefault();
