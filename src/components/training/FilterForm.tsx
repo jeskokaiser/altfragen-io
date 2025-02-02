@@ -15,9 +15,9 @@ interface FilterFormProps {
 const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
   const form = useForm<FormValues>({
     defaultValues: {
-      subject: '',
-      difficulty: '',
-      questionCount: '',
+      subject: 'all',
+      difficulty: 'all',
+      questionCount: 'all',
     },
     mode: 'onChange',
   });
