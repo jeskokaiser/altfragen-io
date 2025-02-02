@@ -23,6 +23,7 @@ interface QuestionDisplayProps {
   onAnswer: (answer: string) => void;
   userAnswer: string;
   onQuit: () => void;
+  onQuestionUpdate?: (updatedQuestion: Question) => void;
 }
 
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -34,6 +35,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onAnswer,
   userAnswer,
   onQuit,
+  onQuestionUpdate,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
@@ -65,6 +67,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const handleQuestionUpdate = (updatedQuestion: Question) => {
     setCurrentQuestion(updatedQuestion);
     setIsEditModalOpen(false);
+    if (onQuestionUpdate) {
+      onQuestionUpdate(updatedQuestion);
+    }
   };
 
   const handleMarkUnclear = async () => {

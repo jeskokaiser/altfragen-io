@@ -59,6 +59,13 @@ const Training = () => {
     navigate('/');
   };
 
+  const handleQuestionUpdate = (updatedQuestion: Question) => {
+    const updatedQuestions = selectedQuestions.map(q => 
+      q.id === updatedQuestion.id ? updatedQuestion : q
+    );
+    setSelectedQuestions(updatedQuestions);
+  };
+
   if (allQuestions.length === 0) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -97,6 +104,7 @@ const Training = () => {
         onAnswer={handleAnswer}
         userAnswer={userAnswers[currentQuestionIndex]}
         onQuit={handleQuit}
+        onQuestionUpdate={handleQuestionUpdate}
       />
     </div>
   );
