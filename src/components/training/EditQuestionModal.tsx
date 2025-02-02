@@ -70,10 +70,13 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           difficulty: parseInt(data.difficulty),
         })
         .eq('id', question.id)
-        .select('*')
+        .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating question:', error);
+        throw error;
+      }
 
       if (updatedQuestion) {
         const mappedQuestion: Question = {
