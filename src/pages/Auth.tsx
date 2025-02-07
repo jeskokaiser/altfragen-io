@@ -102,12 +102,12 @@ const Auth = () => {
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="space-y-2 text-center">
           <h2 className="text-2xl font-semibold text-slate-800">
-            Willkommen bei Altfragen.io
+            Willkommen bei Altfragen.io!
           </h2>
           <p className="text-sm text-slate-600">
             {isSignUp 
-              ? 'Erstellen Sie ein neues Konto' 
-              : 'Melden Sie sich mit Ihrem Konto an'}
+              ? 'Erstelle ein neues Konto' 
+              : 'Melde Dich mit deinem Konto an'}
           </p>
         </div>
 
