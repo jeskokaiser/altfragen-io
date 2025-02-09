@@ -1,7 +1,7 @@
 import Dashboard from '@/components/Dashboard';
 
-const Index = () => {
+const dash = () => {
   return <Dashboard />;
 };
 
-export default Index;
+export default dash;
