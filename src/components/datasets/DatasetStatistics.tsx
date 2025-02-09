@@ -117,10 +117,10 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
           <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100">
-            <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentage}%` }} />
+            <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentage.toFixed(0)}% der beantworteten Fragen)
+            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}%)<br />{correctPercentage.toFixed(0)}% der beantworteten Fragen
           </p>
         </div>
         
@@ -128,10 +128,10 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
           <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100">
-            <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentage}%` }} />
+            <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentage.toFixed(0)}% der beantworteten Fragen)
+            {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentageBar.toFixed(0)}%)<br />{wrongPercentage.toFixed(0)}% der beantworteten Fragen
           </p>
           {wrongAnswers > 0 && (
             <Button 
