@@ -17,7 +17,7 @@ const Training = () => {
   useEffect(() => {
     const storedQuestions = localStorage.getItem('trainingQuestions');
     if (!storedQuestions) {
-      navigate('/');
+      navigate('/dashboard');
       return;
     }
     setAllQuestions(JSON.parse(storedQuestions));
@@ -56,7 +56,7 @@ const Training = () => {
   };
 
   const handleQuit = () => {
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const handleQuestionUpdate = (updatedQuestion: Question) => {

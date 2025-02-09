@@ -12,6 +12,7 @@ import Impressum from "./pages/Impressum";
 import Terms from "./pages/Terms";
 import UnclearQuestions from "./pages/UnclearQuestions";
 import Footer from "./components/Footer";
+import Dashboard from "./components/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const AppContent = () => {
           } />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
         {showFooter && <Footer />}
       </div>
