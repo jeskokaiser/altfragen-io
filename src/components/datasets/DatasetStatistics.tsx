@@ -46,6 +46,8 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
   const correctPercentage = totalQuestions ? (correctAnswers / answeredQuestions) * 100 : 0;
   const wrongPercentage = totalQuestions ? (wrongAnswers / answeredQuestions) * 100 : 0;
+  const correctPercentageBar = totalQuestions ? (correctAnswers / totalQuestions) * 100 : 0;
+  const wrongPercentageBar = totalQuestions ? (wrongAnswers / totalQuestions) * 100 : 0;
 
   // Group questions by subject
   const subjectStats = React.useMemo(() => {
@@ -114,22 +116,22 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Richtige Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
-          <Progress value={correctPercentage} className="h-2 mb-2 bg-green-100">
+          <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100">
             <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentage}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentage.toFixed(0)}%)
+            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentage.toFixed(0)}% der beantworteten Fragen)
           </p>
         </div>
         
         {/* Falsche Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
-          <Progress value={wrongPercentage} className="h-2 mb-2 bg-red-100">
+          <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100">
             <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentage}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentage.toFixed(0)}%)
+            {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentage.toFixed(0)}% der beantworteten Fragen)
           </p>
           {wrongAnswers > 0 && (
             <Button 
