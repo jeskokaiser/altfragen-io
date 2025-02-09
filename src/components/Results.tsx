@@ -58,7 +58,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
         <Button onClick={onRestart}>
           Neuer Test
         </Button>
-        <Button variant="outline" onClick={() => navigate('/')}>
+        <Button variant="outline" onClick={() => navigate('/dashboard')}>
           Zurück zum Dashboard
         </Button>
       </div>

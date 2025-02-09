@@ -4,7 +4,7 @@ const Impressum = () => {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="container mx-auto max-w-4xl space-y-8">
-        {/* Impressum-Bereich */}
+        {/* Impressum */}
         <Card>
           <CardHeader>
             <CardTitle>Impressum</CardTitle>
@@ -32,7 +32,7 @@ const Impressum = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">1. Datenschutz auf einen Blick</h2>
               <p>
-                Diese Datenschutzerklärung informiert Sie darüber, wie wir Ihre personenbezogenen Daten im Einklang mit der DSGVO verarbeiten. Auf dieser Website werden – soweit Sie nicht ausdrücklich etwas anderes angeben – ausschließlich Ihre E-Mail-Adresse verarbeitet, wenn Sie uns kontaktieren.
+                Diese Datenschutzerklärung informiert Sie darüber, welche personenbezogenen Daten wir im Rahmen der Registrierung und Nutzung dieser Plattform erheben, verarbeiten und speichern.
               </p>
             </section>
 
@@ -46,27 +46,31 @@ const Impressum = () => {
               </p>
             </section>
 
-            {/* 3. Erhobene Daten und Tracking */}
+            {/* 3. Erhobene Daten */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">3. Erhobene Daten und Tracking</h2>
-              <p>
-                Es werden keine personenbezogenen Daten erhoben – mit Ausnahme der E-Mail-Adresse, die Sie uns freiwillig im Rahmen einer Kontaktanfrage mitteilen. Wir setzen keinerlei Cookies, Tracking-Tools oder Analyse-Software ein, die Ihr Nutzungsverhalten auf der Website verfolgen.
-              </p>
+              <h2 className="text-xl font-semibold">3. Erhobene Daten</h2>
+              <p>Bei der Erstellung eines Benutzerkontos speichern wir folgende personenbezogene Daten:</p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>E-Mail-Adresse</li>
+                <li>Passwort (verschlüsselt gespeichert, nicht im Klartext einsehbar)</li>
+              </ul>
+              <p>Diese Daten werden ausschließlich für die Bereitstellung der Plattformfunktionen genutzt.</p>
             </section>
 
             {/* 4. Zweck und Rechtsgrundlage */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">4. Zweck und Rechtsgrundlage der Verarbeitung</h2>
               <p>
-                Die Verarbeitung Ihrer E-Mail-Adresse erfolgt ausschließlich zum Zwecke der Beantwortung Ihrer Kontaktanfragen. Rechtsgrundlage hierfür ist Art. 6 Abs. 1 lit. f DSGVO, da wir ein berechtigtes Interesse an der zeitnahen Bearbeitung Ihrer Anfrage haben.
+                Die Verarbeitung Ihrer Daten erfolgt zum Zweck der Registrierung, Verwaltung und Bereitstellung eines Benutzerkontos. 
+                Rechtsgrundlage hierfür ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
               </p>
             </section>
 
-            {/* 5. Keine automatisierte Entscheidungsfindung */}
+            {/* 5. Keine Weitergabe von Daten */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">5. Keine automatisierte Entscheidungsfindung</h2>
+              <h2 className="text-xl font-semibold">5. Keine Weitergabe von Daten</h2>
               <p>
-                Es findet keine automatisierte Entscheidungsfindung oder Profiling statt.
+                Ihre Daten werden nicht an Dritte weitergegeben, es sei denn, dies ist gesetzlich vorgeschrieben oder zur Erfüllung rechtlicher Verpflichtungen erforderlich.
               </p>
             </section>
 
@@ -74,7 +78,7 @@ const Impressum = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">6. Datensicherheit</h2>
               <p>
-                Wir setzen technische und organisatorische Maßnahmen ein, um Ihre Daten gegen zufällige oder vorsätzliche Manipulation, Verlust, Zerstörung oder den Zugriff unbefugter Personen zu schützen.
+                Ihre Daten werden durch technische und organisatorische Maßnahmen geschützt, um sie vor unbefugtem Zugriff, Verlust oder Manipulation zu sichern. Insbesondere werden Passwörter verschlüsselt gespeichert.
               </p>
             </section>
 
@@ -82,7 +86,7 @@ const Impressum = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">7. Speicherdauer</h2>
               <p>
-                Ihre E-Mail-Adresse wird nur so lange gespeichert, wie es zur Bearbeitung Ihrer Kontaktanfrage erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen.
+                Ihre Daten werden so lange gespeichert, wie Ihr Benutzerkonto aktiv ist. Falls Sie Ihr Konto löschen, werden Ihre Daten innerhalb von 30 Tagen entfernt, sofern keine gesetzlichen Aufbewahrungspflichten bestehen.
               </p>
             </section>
 
@@ -90,7 +94,18 @@ const Impressum = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">8. Ihre Rechte</h2>
               <p>
-                Sie haben das Recht, Auskunft über die zu Ihrer Person gespeicherten Daten zu erhalten sowie das Recht auf Berichtigung, Löschung oder Einschränkung der Verarbeitung. Darüber hinaus können Sie der Verarbeitung widersprechen und die Datenübertragbarkeit verlangen. Sollte der Ansicht sein, dass die Verarbeitung Ihrer Daten gegen das Datenschutzrecht verstößt, können Sie sich bei der zuständigen Aufsichtsbehörde beschweren.
+                Sie haben das Recht:
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>Auskunft über Ihre gespeicherten personenbezogenen Daten zu erhalten</li>
+                <li>Die Berichtigung unrichtiger Daten zu verlangen</li>
+                <li>Die Löschung Ihres Benutzerkontos und aller gespeicherten Daten zu fordern</li>
+                <li>Die Einschränkung der Verarbeitung zu verlangen</li>
+                <li>Der Verarbeitung zu widersprechen</li>
+                <li>Die Übertragung Ihrer Daten zu einem anderen Anbieter zu verlangen</li>
+              </ul>
+              <p>
+                Zur Ausübung dieser Rechte können Sie sich jederzeit an uns wenden: info@jeskokaiser.de
               </p>
             </section>
 
@@ -98,7 +113,7 @@ const Impressum = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">9. Änderungen dieser Datenschutzerklärung</h2>
               <p>
-                Wir behalten uns vor, diese Datenschutzerklärung gelegentlich anzupassen, um sie stets den aktuellen rechtlichen Anforderungen oder Änderungen unserer Leistungen anzupassen.
+                Diese Datenschutzerklärung kann gelegentlich aktualisiert werden, um neuen gesetzlichen Anforderungen oder Änderungen an unseren Services Rechnung zu tragen.
               </p>
             </section>
 
@@ -106,7 +121,7 @@ const Impressum = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">10. Kontakt</h2>
               <p>
-                Bei Fragen zur Erhebung, Verarbeitung oder Nutzung Ihrer personenbezogenen Daten sowie zur Ausübung Ihrer Rechte wenden Sie sich bitte an:
+                Bei Fragen zur Verarbeitung Ihrer personenbezogenen Daten oder zur Wahrnehmung Ihrer Rechte wenden Sie sich bitte an:
               </p>
               <p>
                 Jesko Kaiser<br />
