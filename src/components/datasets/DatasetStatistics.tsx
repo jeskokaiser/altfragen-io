@@ -44,8 +44,8 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const wrongAnswers = answeredQuestions - correctAnswers;
 
   const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
-  const correctPercentage = totalQuestions ? (correctAnswers / totalQuestions) * 100 : 0;
-  const wrongPercentage = totalQuestions ? (wrongAnswers / totalQuestions) * 100 : 0;
+  const correctPercentage = totalQuestions ? (correctAnswers / answeredQuestions) * 100 : 0;
+  const wrongPercentage = totalQuestions ? (wrongAnswers / answeredQuestions) * 100 : 0;
 
   // Group questions by subject
   const subjectStats = React.useMemo(() => {
