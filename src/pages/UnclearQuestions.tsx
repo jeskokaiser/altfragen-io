@@ -87,7 +87,7 @@ const UnclearQuestions = () => {
       <div className="mb-6">
         <Button
           variant="outline"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/')}
           className="mb-4"
         >
           <ChevronLeft className="mr-2 h-4 w-4" />

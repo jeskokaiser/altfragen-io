@@ -87,7 +87,7 @@ const Auth = () => {
         }
 
         toast.success('Erfolgreich registriert und eingeloggt!');
-        navigate('/dashboard');
+        navigate('/');
         return;
       }
 
@@ -109,7 +109,7 @@ const Auth = () => {
       }
       
       toast.success('Erfolgreich eingeloggt!');
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
