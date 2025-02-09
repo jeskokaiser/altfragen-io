@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,40 +57,59 @@ const Auth = () => {
           toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
           return;
         }
+
+        // For signup, first create the account
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          },
+        });
+
+        if (signUpError) {
+          if (signUpError.message.includes('User already registered')) {
+            toast.error('Diese E-Mail-Adresse ist bereits registriert');
+          } else {
+            throw signUpError;
+          }
+          return;
+        }
+
+        // After successful signup, automatically log in
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          throw signInError;
+        }
+
+        toast.success('Erfolgreich registriert und eingeloggt!');
+        navigate('/');
+        return;
       }
 
-      const { error } = type === 'login'
-        ? await supabase.auth.signInWithPassword({
-            email,
-            password,
-          })
-        : await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: window.location.origin,
-            },
-          });
+      // Handle regular login
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
         if (error.message.includes('Email not confirmed')) {
           toast.error('Bitte bestätigen Sie Ihre E-Mail-Adresse');
         } else if (error.message.includes('Invalid login credentials')) {
           toast.error('Ungültige Anmeldedaten');
-        } else if (error.message.includes('User already registered')) {
-          toast.error('Diese E-Mail-Adresse ist bereits registriert');
         } else {
           throw error;
         }
         return;
       }
       
-      if (type === 'login') {
-        toast.success('Erfolgreich eingeloggt!');
-        navigate('/');
-      } else {
-        toast.success('Überprüfen Sie Ihre E-Mail für den Bestätigungslink!');
-      }
+      toast.success('Erfolgreich eingeloggt!');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
