@@ -22,12 +22,12 @@ const Terms = () => {
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">4. Pflichten der Nutzer</h2>
         <p className="mb-4">
-          Die Nutzer verpflichten sich, die Plattform nur für die vorgesehenen Zwecke zu nutzen und keine rechtswidrigen oder gegen diese Nutzungsbedingungen verstoßenden Handlungen vorzunehmen.
+        Die Nutzer verpflichten sich, die Plattform ausschließlich zu den vorgesehenen Zwecken zu nutzen und keine Handlungen vorzunehmen, die rechtswidrig sind oder gegen diese Nutzungsbedingungen verstoßen. Insbesondere haften die Nutzer für sämtliche urheberrechtlichen Ansprüche, die sich aus den von ihnen hochgeladenen Inhalten ergeben.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">5. Datenschutz</h2>
         <p className="mb-4">
-          Der Schutz Ihrer persönlichen Daten ist uns wichtig. Informationen zur Verarbeitung Ihrer Daten finden Sie in unserer Datenschutzerklärung.
+          Der Schutz Ihrer persönlichen Daten ist uns wichtig. Informationen zur Verarbeitung Ihrer Daten finden Sie in unserer Datenschutzerklärung im Impressum.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">6. Haftungsausschluss</h2>
