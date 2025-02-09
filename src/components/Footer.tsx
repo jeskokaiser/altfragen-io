@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -7,6 +8,9 @@ const Footer = () => {
         <div className="flex justify-center items-center space-x-4 text-sm text-muted-foreground">
           <Link to="/impressum" className="hover:text-foreground transition-colors">
             Impressum
+          </Link>
+          <Link to="/terms" className="hover:text-foreground transition-colors">
+            Nutzungsbedingungen
           </Link>
         </div>
       </div>

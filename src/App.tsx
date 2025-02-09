@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Training from "./pages/Training";
 import Impressum from "./pages/Impressum";
+import Terms from "./pages/Terms";
 import UnclearQuestions from "./pages/UnclearQuestions";
 import Footer from "./components/Footer";
 
@@ -51,6 +52,7 @@ const AppContent = () => {
             </ProtectedRoute>
           } />
           <Route path="/impressum" element={<Impressum />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
         {showFooter && <Footer />}
       </div>
