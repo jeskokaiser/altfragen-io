@@ -34,7 +34,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
 
   // Filter progress data to only include questions from this dataset
   const datasetQuestionIds = questions.map(q => q.id);
-  const filteredProgress = userProgress?.filter(progress => 
+  const filteredProgress = userProgress?.filter(progress =>
     datasetQuestionIds.includes(progress.question_id)
   );
 
@@ -43,14 +43,14 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const correctAnswers = filteredProgress?.filter(p => p.is_correct)?.length || 0;
   const wrongAnswers = answeredQuestions - correctAnswers;
 
-  const answeredPercentage = (answeredQuestions / totalQuestions) * 100;
-  const correctPercentage = (correctAnswers / totalQuestions) * 100;
-  const wrongPercentage = (wrongAnswers / totalQuestions) * 100;
+  const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
+  const correctPercentage = totalQuestions ? (correctAnswers / totalQuestions) * 100 : 0;
+  const wrongPercentage = totalQuestions ? (wrongAnswers / totalQuestions) * 100 : 0;
 
   // Group questions by subject
   const subjectStats = React.useMemo(() => {
     const stats: Record<string, { total: number; answered: number; correct: number }> = {};
-    
+
     // Initialize stats for each subject
     questions.forEach(q => {
       if (!stats[q.subject]) {
@@ -86,7 +86,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
       .map(p => p.question_id) || [];
 
     // Filter the questions array to get only the wrong questions
-    const wrongQuestions = questions.filter(q => 
+    const wrongQuestions = questions.filter(q =>
       wrongQuestionIds.includes(q.id)
     );
 
@@ -102,31 +102,34 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Gesamtfortschritt */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
           <Progress value={answeredPercentage} className="h-2 mb-2" />
           <p className="text-sm text-muted-foreground">
-            {answeredQuestions} von {totalQuestions} Fragen beantwortet
+            {answeredQuestions} von {totalQuestions} Fragen beantwortet ({answeredPercentage.toFixed(0)}%)
           </p>
         </div>
         
+        {/* Richtige Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
           <Progress value={correctPercentage} className="h-2 mb-2 bg-green-100">
             <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentage}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {correctAnswers} von {totalQuestions} Fragen richtig
+            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentage.toFixed(0)}%)
           </p>
         </div>
         
+        {/* Falsche Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
           <Progress value={wrongPercentage} className="h-2 mb-2 bg-red-100">
             <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentage}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {wrongAnswers} von {totalQuestions} Fragen falsch
+            {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentage.toFixed(0)}%)
           </p>
           {wrongAnswers > 0 && (
             <Button 
