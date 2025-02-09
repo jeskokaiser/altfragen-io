@@ -24,7 +24,7 @@ const Index = () => {
           Effizientes Lernen mit Altfragen
         </h1>
         <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-        Die intelligente Plattform für die Klausurvorbereitung mit Altfragen. Lade deine Altfragensammlung hoch und trainiere mit einer intuitiven Nutzeroberfläche. Kostenlos und ohne Werbung.
+          Die intelligente Plattform für die Klausurvorbereitung mit Altfragen. Lade deine Altfragensammlung hoch und trainiere mit einer intuitiven Nutzeroberfläche. Kostenlos und ohne Werbung.
         </p>
         <Button
           onClick={handleGetStarted}
@@ -37,10 +37,13 @@ const Index = () => {
 
       {/* Screenshot Section */}
       <section className="container mx-auto px-4 py-16">
-        <div className="bg-slate-200 rounded-xl aspect-video max-w-4xl mx-auto shadow-lg">
-          <div className="w-full h-full flex items-center justify-center text-slate-600">
-            <img src="public/Screenshot_1.png" alt="Screenshot des Dashboards" />
-          </div>
+        <div className="max-w-5xl mx-auto rounded-xl overflow-hidden shadow-lg">
+          <img 
+            src="/Screenshot_1.png" 
+            alt="Screenshot des Dashboards" 
+            className="w-full h-auto"
+            style={{ maxHeight: '600px', objectFit: 'contain' }}
+          />
         </div>
       </section>
 
@@ -99,10 +102,13 @@ const Index = () => {
 
       {/* Second Screenshot Section */}
       <section className="container mx-auto px-4 py-16">
-        <div className="bg-slate-200 rounded-xl aspect-video max-w-4xl mx-auto shadow-lg">
-          <div className="w-full h-full flex items-center justify-center text-slate-600">
-            <img src="public/Screenshot_2.png" alt="Screenshot des Traningsmoduls" />
-          </div>
+        <div className="max-w-5xl mx-auto rounded-xl overflow-hidden shadow-lg">
+          <img 
+            src="/Screenshot_2.png" 
+            alt="Screenshot des Traningsmoduls" 
+            className="w-full h-auto"
+            style={{ maxHeight: '600px', objectFit: 'contain' }}
+          />
         </div>
       </section>
 
