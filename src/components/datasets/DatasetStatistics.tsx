@@ -131,7 +131,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
             <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentageBar.toFixed(0)}%)<br />{wrongPercentage.toFixed(0)}% der beantworteten Fragen
+            {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentageBar.toFixed(0)}%)
           </p>
           {wrongAnswers > 0 && (
             <Button 
