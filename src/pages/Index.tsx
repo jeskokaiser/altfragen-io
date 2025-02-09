@@ -24,7 +24,7 @@ const Index = () => {
           Effizientes Lernen mit Altfragen
         </h1>
         <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-          Die intelligente Plattform für medizinische Altfragen. Optimiere deine Prüfungsvorbereitung mit personalisierten Lernpfaden und detailliertem Feedback.
+        Die intelligente Plattform für die Klausurvorbereitung mit Altfragen. Lade deine Altfragensammlung hoch und trainiere mit einer intuitiven Nutzeroberfläche. Kostenlos und ohne Werbung.
         </p>
         <Button
           onClick={handleGetStarted}
@@ -39,7 +39,7 @@ const Index = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="bg-slate-200 rounded-xl aspect-video max-w-4xl mx-auto shadow-lg">
           <div className="w-full h-full flex items-center justify-center text-slate-600">
-            Platzhalter für Dashboard-Screenshot
+            <img src="public/Screenshot_1.png" alt="Screenshot des Dashboards" />
           </div>
         </div>
       </section>
@@ -52,8 +52,8 @@ const Index = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           <FeatureCard
             icon={<GraduationCap className="w-8 h-8" />}
-            title="Umfangreiche Fragendatenbank"
-            description="Zugriff auf eine stetig wachsende Sammlung geprüfter medizinischer Altfragen"
+            title="Individuelle Fragendatenbank"
+            description="Lade Altfragen individuell für deine Prüfung hoch."
           />
           <FeatureCard
             icon={<CheckCircle2 className="w-8 h-8" />}
@@ -63,12 +63,12 @@ const Index = () => {
           <FeatureCard
             icon={<Rocket className="w-8 h-8" />}
             title="Effizientes Lernen"
-            description="Fokussiere dich auf die relevanten Themen durch adaptive Lernalgorithmen"
+            description="Fokussiere dich auf die relevanten Themen durch Filtern nach Fächern"
           />
           <FeatureCard
             icon={<Brain className="w-8 h-8" />}
             title="Aktives Lernen"
-            description="Verstehe komplexe Zusammenhänge durch praxisnahe Fragen und Erklärungen"
+            description="Übersichtliche Statistiken über deinen Lernfortschritt"
           />
         </div>
       </section>
@@ -86,8 +86,8 @@ const Index = () => {
           />
           <StepCard
             number="2"
-            title="Fragen auswählen"
-            description="Wähle aus verschiedenen Fachgebieten und Schwierigkeitsgraden"
+            title="Fragen hochladen"
+            description="Lade deine Altfragen als CSV Datei hoch"
           />
           <StepCard
             number="3"
@@ -101,7 +101,7 @@ const Index = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="bg-slate-200 rounded-xl aspect-video max-w-4xl mx-auto shadow-lg">
           <div className="w-full h-full flex items-center justify-center text-slate-600">
-            Platzhalter für Trainingsmodus-Screenshot
+            <img src="public/Screenshot_2.png" alt="Screenshot des Traningsmoduls" />
           </div>
         </div>
       </section>
