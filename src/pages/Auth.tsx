@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,13 +7,14 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Info, ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const navigate = useNavigate();
 
   const validatePassword = (password: string) => {
@@ -35,6 +35,37 @@ const Auth = () => {
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      setLoading(true);
+      
+      if (!email) {
+        toast.error('Bitte geben Sie Ihre E-Mail-Adresse ein');
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Eine E-Mail zum Zurücksetzen des Passworts wurde gesendet');
+      setIsForgotPassword(false);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAuth = async (type: 'login' | 'signup') => {
@@ -117,6 +148,52 @@ const Auth = () => {
     }
   };
 
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+        <Card className="w-full max-w-md p-6 space-y-6">
+          <div className="space-y-2 text-center">
+            <button
+              onClick={() => setIsForgotPassword(false)}
+              className="absolute left-6 top-6 text-slate-600 hover:text-slate-900"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h2 className="text-2xl font-semibold text-slate-800">
+              Passwort zurücksetzen
+            </h2>
+            <p className="text-sm text-slate-600">
+              Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">E-Mail</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="E-Mail-Adresse eingeben"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="w-full"
+              />
+            </div>
+
+            <Button 
+              className="w-full" 
+              onClick={handleResetPassword}
+              disabled={loading}
+            >
+              {loading ? 'Lädt...' : 'Passwort zurücksetzen'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md p-6 space-y-6">
@@ -177,7 +254,7 @@ const Auth = () => {
               {loading ? 'Lädt...' : (isSignUp ? 'Registrieren' : 'Anmelden')}
             </Button>
             
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
@@ -188,6 +265,19 @@ const Auth = () => {
                   ? 'Bereits registriert? Hier anmelden' 
                   : 'Noch kein Konto? Hier registrieren'}
               </button>
+
+              {!isSignUp && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-sm text-slate-600 hover:text-slate-900 underline"
+                    disabled={loading}
+                  >
+                    Passwort vergessen?
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
