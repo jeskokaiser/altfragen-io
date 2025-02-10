@@ -109,6 +109,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   const handleMoveToComment = () => {
     const currentComment = watch('comment') || '';
     setValue('comment', `${correctAnswer}\n${currentComment}`);
+    setValue('correctAnswer', '')
   };
 
   return (
