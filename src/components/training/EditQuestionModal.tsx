@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import {
@@ -34,7 +35,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   onClose,
   onQuestionUpdated,
 }) => {
-  const { register, handleSubmit, formState: { isSubmitting }, reset, setValue } = useForm<FormData>();
+  const { register, handleSubmit, formState: { isSubmitting }, reset, setValue, watch } = useForm<FormData>();
+  const correctAnswer = watch('correctAnswer');
 
   useEffect(() => {
     if (question) {
@@ -104,6 +106,11 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     }
   };
 
+  const handleMoveToComment = () => {
+    const currentComment = watch('comment') || '';
+    setValue('comment', `${correctAnswer}\n${currentComment}`);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
@@ -120,7 +127,18 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
             
             <div>
               <Label htmlFor="correctAnswer">Richtige Antwort</Label>
-              <Input id="correctAnswer" {...register('correctAnswer')} />
+              <div className="flex gap-2">
+                <Input id="correctAnswer" {...register('correctAnswer')} />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleMoveToComment}
+                  size="icon"
+                  title="Antwort in Kommentar übernehmen"
+                >
+                  ↓
+                </Button>
+              </div>
             </div>
 
             <DifficultyField 
