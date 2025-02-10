@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +25,8 @@ const AnswerSubmission = ({
     onAnswerSubmitted(selectedAnswer);
 
     try {
-      const isCorrect = selectedAnswer.toLowerCase() === currentQuestion.correctAnswer.toLowerCase();
+      // Compare only the first letter, ignoring case
+      const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
       // First, get all progress records for this question
       const { data: existingProgress, error: fetchError } = await supabase

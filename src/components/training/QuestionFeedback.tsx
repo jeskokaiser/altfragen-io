@@ -1,3 +1,4 @@
+
 import React from 'react';
 import FeedbackDisplay from './FeedbackDisplay';
 
@@ -16,9 +17,12 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
 }) => {
   if (!showFeedback || !userAnswer) return null;
 
+  // Compare only the first letter, ignoring case
+  const isCorrect = userAnswer.charAt(0).toLowerCase() === correctAnswer.charAt(0).toLowerCase();
+
   return (
     <FeedbackDisplay 
-      isCorrect={userAnswer.toLowerCase() === correctAnswer.toLowerCase()}
+      isCorrect={isCorrect}
       correctAnswer={correctAnswer}
       comment={comment}
     />
