@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,15 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+      setIsResetPassword(true);
+    }
+  }, []);
 
   const validatePassword = (password: string) => {
     const minLength = 8;
@@ -52,7 +60,7 @@ const Auth = () => {
       }
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/auth#recovery`,
       });
 
       if (error) {
@@ -61,6 +69,38 @@ const Auth = () => {
 
       toast.success('Eine E-Mail zum Zurücksetzen des Passworts wurde gesendet');
       setIsForgotPassword(false);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    try {
+      setLoading(true);
+
+      if (!password) {
+        toast.error('Bitte geben Sie ein neues Passwort ein');
+        return;
+      }
+
+      const passwordErrors = validatePassword(password);
+      if (passwordErrors.length > 0) {
+        toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Passwort erfolgreich aktualisiert');
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -89,7 +129,6 @@ const Auth = () => {
           return;
         }
 
-        // For signup, first create the account
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -107,7 +146,6 @@ const Auth = () => {
           return;
         }
 
-        // After successful signup, automatically log in
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -122,7 +160,6 @@ const Auth = () => {
         return;
       }
 
-      // Handle regular login
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -147,6 +184,54 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  if (isResetPassword) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+        <Card className="w-full max-w-md p-6 space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="text-2xl font-semibold text-slate-800">
+              Neues Passwort festlegen
+            </h2>
+            <p className="text-sm text-slate-600">
+              Bitte geben Sie Ihr neues Passwort ein
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Neues Passwort</Label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Neues Passwort eingeben"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="w-full"
+              />
+            </div>
+
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
+                einen Kleinbuchstaben und eine Zahl enthalten.
+              </AlertDescription>
+            </Alert>
+
+            <Button 
+              className="w-full" 
+              onClick={handleUpdatePassword}
+              disabled={loading}
+            >
+              {loading ? 'Lädt...' : 'Passwort aktualisieren'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   if (isForgotPassword) {
     return (
