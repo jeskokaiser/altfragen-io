@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,8 +20,11 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes('type=recovery')) {
+    // Check for recovery mode in URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get('type');
+    
+    if (type === 'recovery') {
       setIsResetPassword(true);
     }
   }, []);
@@ -60,7 +64,7 @@ const Auth = () => {
       }
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth#recovery`,
+        redirectTo: window.location.origin + '/auth?type=recovery',
       });
 
       if (error) {
