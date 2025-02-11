@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import ProgressBar from './ProgressBar';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuestionHeaderProps {
   currentIndex: number;
@@ -13,14 +15,17 @@ const QuestionHeader: React.FC<QuestionHeaderProps> = ({
   totalQuestions,
   onQuit,
 }) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex flex-col gap-4 mb-4">
+    <div className="flex flex-col gap-3 mb-4">
       <ProgressBar currentIndex={currentIndex} totalQuestions={totalQuestions} />
       <div className="flex justify-end">
         <Button 
           variant="outline" 
           onClick={onQuit} 
-          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+          className={`text-red-500 hover:text-red-600 hover:bg-red-50 ${isMobile ? 'text-sm' : ''}`}
+          size={isMobile ? "sm" : "default"}
         >
           Training beenden
         </Button>

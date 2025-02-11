@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuestionDisplayProps {
   questionData: Question;
@@ -42,6 +44,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setSelectedAnswer('');
@@ -101,15 +104,15 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'px-2' : ''}`}>
       <QuestionHeader
         currentIndex={currentIndex}
         totalQuestions={totalQuestions}
         onQuit={onQuit}
       />
 
-      <Card className="p-6">
-        <div className="flex flex-col sm:flex-row sm:items-stretch gap-4 mb-6">
+      <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
+        <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
           <div className="flex-grow">
             <DifficultyControls
               questionId={currentQuestion.id}
@@ -120,7 +123,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           <div className="flex justify-end">
             <Button
               variant="outline"
-              size="default"
+              size={isMobile ? "sm" : "default"}
               onClick={handleMarkUnclear}
               className="flex items-center gap-2 hover:bg-gray-100"
               disabled={currentQuestion.is_unclear}

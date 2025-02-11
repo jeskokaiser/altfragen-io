@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NavigationButtonsProps {
   onPrevious: () => void;
@@ -16,18 +18,22 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isLastQuestion,
   hasUserAnswer,
 }) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex justify-between mt-6">
+    <div className={`flex justify-between mt-4 ${isMobile ? 'flex-col gap-3' : ''}`}>
       <Button
         variant="outline"
         onClick={onPrevious}
         disabled={isFirstQuestion}
+        className={isMobile ? 'w-full' : ''}
       >
         Zurück
       </Button>
       <Button
         onClick={onNext}
         disabled={!hasUserAnswer}
+        className={isMobile ? 'w-full' : ''}
       >
         {isLastQuestion ? 'Fertig' : 'Weiter'}
       </Button>
