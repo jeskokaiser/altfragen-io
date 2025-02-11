@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DatasetStatisticsProps {
   questions: Question[];
@@ -19,7 +17,6 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = React.useState(true);
-  const isMobile = useIsMobile();
 
   const { data: userProgress } = useQuery({
     queryKey: ['user-progress', user?.id, questions[0]?.filename],
@@ -105,41 +102,34 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   };
 
   return (
-    <div className={`space-y-4 ${isMobile ? 'px-2' : ''}`}>
-      <div className={`grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-3 gap-4'} mb-6`}>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {/* Gesamtfortschritt */}
-        <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
-          <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold mb-2`}>Gesamtfortschritt</h3>
-          <div className="w-full">
-            <Progress value={answeredPercentage} className="h-2 mb-2" />
-          </div>
+        <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+          <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
+          <Progress value={answeredPercentage} className="h-2 mb-2" />
           <p className="text-sm text-muted-foreground">
             {answeredQuestions} von {totalQuestions} Fragen beantwortet ({answeredPercentage.toFixed(0)}%)
           </p>
         </div>
         
         {/* Richtige Antworten */}
-        <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
-          <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold mb-2 text-green-600`}>Richtige Antworten</h3>
-          <div className="w-full">
-            <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100">
-              <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentageBar}%` }} />
-            </Progress>
-          </div>
+        <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+          <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
+          <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100">
+            <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentageBar}%` }} />
+          </Progress>
           <p className="text-sm text-muted-foreground">
-            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}%)<br />
-            {correctPercentage.toFixed(0)}% der beantworteten Fragen
+            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}%)<br />{correctPercentage.toFixed(0)}% der beantworteten Fragen
           </p>
         </div>
         
         {/* Falsche Antworten */}
-        <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
-          <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold mb-2 text-red-600`}>Falsche Antworten</h3>
-          <div className="w-full">
-            <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100">
-              <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentageBar}%` }} />
-            </Progress>
-          </div>
+        <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+          <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
+          <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100">
+            <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentageBar}%` }} />
+          </Progress>
           <p className="text-sm text-muted-foreground">
             {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentageBar.toFixed(0)}%)
           </p>
@@ -148,7 +138,6 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
               onClick={handleWrongQuestionsTraining}
               variant="destructive"
               className="mt-2 w-full"
-              size={isMobile ? "sm" : "default"}
             >
               Falsche Fragen üben
             </Button>
@@ -161,30 +150,28 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         onOpenChange={setIsOpen}
         className="border rounded-lg"
       >
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors">
-          <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>Statistik nach Fächern</h3>
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+          <h3 className="text-lg font-semibold">Statistik nach Fächern</h3>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
         </CollapsibleTrigger>
-        <CollapsibleContent className="px-3 pb-3">
-          <div className="space-y-3">
+        <CollapsibleContent className="px-4 pb-4">
+          <div className="space-y-4">
             {Object.entries(subjectStats).map(([subject, stats]) => (
               <div key={subject} className="space-y-2">
-                <div className="flex justify-between items-center flex-wrap gap-1">
-                  <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>{subject}</span>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{subject}</span>
                   <span className="text-sm text-muted-foreground">
                     {stats.answered} / {stats.total} beantwortet
                   </span>
                 </div>
-                <div className="flex gap-2 items-center">
-                  <div className="flex-1 min-w-0">
-                    <Progress 
-                      value={(stats.correct / stats.total) * 100} 
-                      className="h-2 bg-green-100"
-                    >
-                      <div className="h-full bg-green-600 transition-all" />
-                    </Progress>
-                  </div>
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                <div className="flex gap-2">
+                  <Progress 
+                    value={(stats.correct / stats.total) * 100} 
+                    className="flex-1 h-2 bg-green-100"
+                  >
+                    <div className="h-full bg-green-600 transition-all" />
+                  </Progress>
+                  <span className="text-sm text-muted-foreground w-20 text-right">
                     {stats.correct} richtig
                   </span>
                 </div>
