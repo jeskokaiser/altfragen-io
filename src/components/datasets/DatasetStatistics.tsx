@@ -110,7 +110,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Gesamtfortschritt */}
         <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold mb-2`}>Gesamtfortschritt</h3>
-          <div className="w-full">
+          <div className="w-full max-w-[280px] mx-auto">
             <Progress value={answeredPercentage} className="h-2 mb-2" />
           </div>
           <p className="text-sm text-muted-foreground">
@@ -121,7 +121,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Richtige Antworten */}
         <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold mb-2 text-green-600`}>Richtige Antworten</h3>
-          <div className="w-full">
+          <div className="w-full max-w-[280px] mx-auto">
             <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100">
               <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentageBar}%` }} />
             </Progress>
@@ -135,7 +135,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Falsche Antworten */}
         <div className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold mb-2 text-red-600`}>Falsche Antworten</h3>
-          <div className="w-full">
+          <div className="w-full max-w-[280px] mx-auto">
             <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100">
               <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentageBar}%` }} />
             </Progress>
@@ -176,7 +176,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
                   </span>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 max-w-[280px]">
                     <Progress 
                       value={(stats.correct / stats.total) * 100} 
                       className="h-2 bg-green-100"
