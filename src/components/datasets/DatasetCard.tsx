@@ -50,7 +50,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
         <Button
           variant="outline"
           onClick={() => onDatasetClick(filename)}
-          className="w-full max-w-[400px] mx-auto"
+          className="w-full"
         >
           {isSelected ? (
             <>
