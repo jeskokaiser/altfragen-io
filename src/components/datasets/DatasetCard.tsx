@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   onStartTraining,
 }) => {
   return (
-    <Card className={`transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
+    <Card className={`max-w-[95vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-[65vw] mx-auto transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
       <CardHeader className="bg-slate-50/50">
         <DatasetHeader
           filename={filename}
