@@ -69,7 +69,7 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
             {showCustomInput && (
               <Input
                 type="text"
-                placeholder="Geben Sie die gewünschte Anzahl ein"
+                placeholder="Gewünschte Anzahl"
                 value={field.value}
                 onChange={handleCustomInputChange}
                 className="mt-2"

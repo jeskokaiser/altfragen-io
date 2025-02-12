@@ -47,7 +47,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
               </h3>
               <div className="grid gap-3">
                 <div>
-                  <p className="text-xs md:text-sm text-slate-600">Deine Antwort:</p>
+                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">Deine Antwort:</p>
                   <p
                     className={`mt-1 text-sm md:text-base ${
                       userAnswerLetter === correctAnswerLetter
