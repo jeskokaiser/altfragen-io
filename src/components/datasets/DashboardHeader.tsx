@@ -1,10 +1,14 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const DashboardHeader: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSignOutAndNavigate = async () => {
     const { error } = await supabase.auth.signOut();
@@ -17,8 +21,22 @@ const DashboardHeader: React.FC = () => {
 
   return (
     <div className="flex justify-between items-center">
-      <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
-      <Button onClick={handleSignOutAndNavigate}>Abmelden</Button>
+      <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Dashboard</h1>
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="icon"
+          onClick={toggleTheme}
+          className="h-10 w-10"
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
+        </Button>
+        <Button onClick={handleSignOutAndNavigate}>Abmelden</Button>
+      </div>
     </div>
   );
 };
