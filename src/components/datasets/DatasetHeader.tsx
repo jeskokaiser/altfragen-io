@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, AlertCircle } from 'lucide-react';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DatasetHeaderProps {
   filename: string;
@@ -19,20 +21,17 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   createdAt,
 }) => {
   const navigate = useNavigate();
-  console.log('Questions in DatasetHeader:', questions);
-  console.log('Questions with is_unclear:', questions.filter(q => q.is_unclear));
+  const isMobile = useIsMobile();
   
   const unclearQuestions = questions.filter(q => q.is_unclear === true);
-  console.log('Filtered unclear questions:', unclearQuestions);
   const hasUnclearQuestions = unclearQuestions.length > 0;
-  console.log('Has unclear questions:', hasUnclearQuestions);
 
   const handleUnclearClick = () => {
     navigate(`/unclear-questions/${encodeURIComponent(filename)}`);
   };
 
   return (
-    <div className="flex justify-between items-start gap-4">
+    <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
       <div className="flex-1 space-y-2">
         <CardTitle className="text-lg font-medium text-slate-800">
           {filename}
@@ -43,12 +42,13 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
           <span>Hochgeladen am {new Date(createdAt).toLocaleDateString()}</span>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         {hasUnclearQuestions && (
           <Button 
             variant="outline"
             onClick={handleUnclearClick}
-            className="shrink-0"
+            className="w-full sm:w-auto"
+            size={isMobile ? "sm" : "default"}
           >
             <AlertCircle className="mr-2 h-4 w-4" />
             Unklare Fragen ({unclearQuestions.length})
@@ -56,7 +56,8 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
         )}
         <Button 
           onClick={() => onStartTraining(questions)}
-          className="shrink-0"
+          className="w-full sm:w-auto"
+          size={isMobile ? "sm" : "default"}
         >
           <Play className="mr-2 h-4 w-4" />
           Training starten
