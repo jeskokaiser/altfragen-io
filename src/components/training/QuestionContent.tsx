@@ -30,7 +30,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold mb-6 text-slate-800">{questionData.question}</h3>
+      <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-white">{questionData.question}</h3>
       <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
         <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} />
         <AnswerOption value="B" text={questionData.optionB} resetTrigger={resetTrigger} />
