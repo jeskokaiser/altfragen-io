@@ -33,9 +33,9 @@ const DashboardHeader: React.FC = () => {
         </Button>
         <Button 
           variant="outline" 
-          size="icon"
+          
           onClick={toggleTheme}
-          className="h-10 w-10"
+          className="gap-2"
         >
           {theme === 'dark' ? (
             <Sun className="h-4 w-4" />
