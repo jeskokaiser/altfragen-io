@@ -21,19 +21,19 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <div className={`flex justify-between mt-4 ${isMobile ? 'flex-col gap-3' : ''}`}>
+    <div className="flex justify-between mt-4 gap-3">
       <Button
         variant="outline"
         onClick={onPrevious}
         disabled={isFirstQuestion}
-        className={isMobile ? 'w-full' : ''}
+        className={`flex-1 ${isMobile ? 'max-w-[160px]' : ''}`}
       >
         Zurück
       </Button>
       <Button
         onClick={onNext}
         disabled={!hasUserAnswer}
-        className={isMobile ? 'w-full' : ''}
+        className={`flex-1 ${isMobile ? 'max-w-[160px]' : ''}`}
       >
         {isLastQuestion ? 'Fertig' : 'Weiter'}
       </Button>
