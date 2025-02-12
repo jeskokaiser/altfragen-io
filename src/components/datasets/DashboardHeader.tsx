@@ -41,7 +41,7 @@ const DashboardHeader: React.FC = () => {
             <Sun className="h-4 w-4" />
           ) : (
             <Moon className="h-4 w-4" />
-          )}
+          )}Anzeigemodus
         </Button>
         <Button onClick={handleSignOutAndNavigate}>Abmelden</Button>
       </div>

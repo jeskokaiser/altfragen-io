@@ -26,56 +26,50 @@ const Tutorial = () => {
         <CardContent className="space-y-6">
           <section className="space-y-3">
             <h2 className="text-xl font-semibold">Datensätze hochladen</h2>
-            <p>Um mit dem Training zu beginnen, laden Sie eine CSV-Datei mit Ihren Fragen hoch. Die Datei sollte folgende Spalten enthalten:</p>
+            <p>Um mit dem Training zu beginnen, lade eine CSV-Datei mit den Fragen hoch. Die Datei sollte folgende Spalten enthalten:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Frage</li>
               <li>Antwortoptionen (A bis E)</li>
               <li>Korrekte Antwort</li>
-              <li>Kommentar (optional)</li>
+              <li>Kommentar</li>
               <li>Fach</li>
               <li>Schwierigkeitsgrad (1-5)</li>
             </ul>
+            <p>Der Name der Datei sollte auf die Klausur schließen lassen (z.B. A1_2021-2024), damit du sie im Dashboard richtig erkennen kannst.</p>
           </section>
 
           <Separator />
 
           <section className="space-y-3">
             <h2 className="text-xl font-semibold">Training starten</h2>
-            <p>Nach dem Hochladen können Sie:</p>
+            <p>Nach dem Hochladen kannst du</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Alle Fragen eines Datensatzes trainieren</li>
               <li>Eine bestimmte Anzahl von Fragen auswählen</li>
               <li>Nach Schwierigkeitsgrad filtern</li>
               <li>Nach Fach filtern</li>
             </ul>
+            <p>Bitte bachte, dass alle fragen standardmäßig den Schwierigkeitsgrad 3 haben, sofern er nicht in der csv-Datei festgelegt wurde oder beim trainieren geändert wurde.</p>
+            <p>Nach Ende der ausgewählten Anzahl der Fragen werden dir einmal alle beantworteten Fragen in der Übersicht angezeigt</p>
           </section>
 
           <Separator />
 
           <section className="space-y-3">
             <h2 className="text-xl font-semibold">Während des Trainings</h2>
-            <p>Im Trainingsmodus haben Sie folgende Möglichkeiten:</p>
+            <p>Im Trainingsmodus hast du folgende Möglichkeiten:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Wählen Sie eine der Antwortoptionen aus</li>
-              <li>Erhalten Sie sofortiges Feedback zur Ihrer Antwort</li>
-              <li>Sehen Sie den Kommentar zur Frage (falls vorhanden)</li>
-              <li>Navigieren Sie vor und zurück zwischen den Fragen</li>
-              <li>Markieren Sie unklare Fragen zur späteren Überprüfung</li>
+              <li>Wähle eine der Antwortoptionen aus</li>
+              <li>Erhalte sofortiges Feedback zur Antwort</li>
+              <li>Der Kommentar zur Frage (falls vorhanden) wird nach der Antwort</li>
+              <li>Markiere unklare Fragen zur späteren Überprüfung im Dashboard</li>
+  
             </ul>
+            <p>Falls eine Frage falsch dokumentiert oder die falsche Antwortmöglichkeit ausgefählt wurde, nutze den Bearbeiten Button. Im Bearbeitungsmenü kannst du den Pfeil neben der Antwortzeile nutzen, um die falsche Antwort automatisch in die Kommentarspalte zu verschieben</p>
+            <p>Eine Antwort kann nur als richtig erkannt werden, wenn das erste Zeichen in der Antwortzeile der richtige Buchstabe ist</p>
           </section>
 
-          <Separator />
-
-          <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Ergebnisse und Statistiken</h2>
-            <p>Nach Abschluss des Trainings:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Sehen Sie Ihre Gesamtpunktzahl</li>
-              <li>Erhalten Sie eine detaillierte Aufschlüsselung Ihrer Antworten</li>
-              <li>Können Sie die Statistiken pro Datensatz einsehen</li>
-              <li>Haben Sie Zugriff auf unklare Fragen zur Überarbeitung</li>
-            </ul>
-          </section>
+    
 
           <Separator />
 
@@ -83,9 +77,9 @@ const Tutorial = () => {
             <h2 className="text-xl font-semibold">Zusätzliche Funktionen</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>Dark Mode: Wechseln Sie zwischen hellem und dunklem Design</li>
-              <li>Responsive Design: Nutzen Sie die App auf allen Geräten</li>
+              <li>Responsives Design: Die Web-App kann auf allen Geräten (Computer, Tablet, Handy) genutzt werden</li>
               <li>Fortschrittsanzeige: Behalten Sie den Überblick über Ihren Trainingsfortschritt</li>
-              <li>Automatische Speicherung: Ihr Fortschritt wird automatisch gespeichert</li>
+              <li>Automatische Speicherung: Ihr Fortschritt wird immer automatisch gespeichert, solange eine Internetverbindung besteht</li>
             </ul>
           </section>
         </CardContent>
