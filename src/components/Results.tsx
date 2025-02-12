@@ -42,7 +42,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
 
           return (
             <Card key={index} className={`${isMobile ? 'p-3' : 'p-4'}`}>
-              <h3 className="font-medium text-slate-800 mb-2 text-sm md:text-base">
+              <h3 className="font-medium text-slate-800 mb-2 text-sm md:text-base dark:text-white">
                 Frage {index + 1}: {q.question}
               </h3>
               <div className="grid gap-3">
@@ -63,8 +63,8 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs md:text-sm text-slate-600">Richtige Antwort:</p>
-                  <p className="mt-1 text-sm md:text-base text-green-600">
+                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">Richtige Antwort:</p>
+                  <p className="mt-1 text-sm md:text-base text-green-600 dark:text-white">
                     {`${correctAnswerLetter}: ${q[
                       `option${correctAnswerLetter}` as keyof Question
                     ]}`}
