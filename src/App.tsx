@@ -12,6 +12,7 @@ import Training from "./pages/Training";
 import Impressum from "./pages/Impressum";
 import Terms from "./pages/Terms";
 import UnclearQuestions from "./pages/UnclearQuestions";
+import Tutorial from "./pages/Tutorial";
 import Footer from "./components/Footer";
 import Dashboard from "./components/Dashboard";
 
@@ -51,6 +52,11 @@ const AppContent = () => {
           <Route path="/unclear-questions/:filename" element={
             <ProtectedRoute>
               <UnclearQuestions />
+            </ProtectedRoute>
+          } />
+          <Route path="/tutorial" element={
+            <ProtectedRoute>
+              <Tutorial />
             </ProtectedRoute>
           } />
           <Route path="/impressum" element={<Impressum />} />
