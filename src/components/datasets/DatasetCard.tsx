@@ -31,7 +31,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
 }) => {
   return (
     <Card className={`w-full transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
-      <CardHeader className="bg-slate-50/50">
+      <CardHeader className="bg-slate-50/50 dark:bg-black/40">
         <DatasetHeader
           filename={filename}
           questions={questions}
