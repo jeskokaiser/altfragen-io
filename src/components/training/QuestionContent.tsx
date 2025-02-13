@@ -29,12 +29,12 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   }, [questionData]);
 
   const handleCopyToClipboard = async () => {
-    const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. 
+    const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. Die Frage stammt aus dem Gedächnisprotokoll anderer Studenten.
 Bitte erkläre mir:
 1. Was ist der Kerninhalt der Frage?
 2. Warum ist die richtige Antwort korrekt?
 3. Warum sind die anderen Antworten falsch?
-4. Welche wichtigen Konzepte sollte ich mir für diesen Themenkomplex merken?
+4. Ist die protokollierte lösung korrekt?
 
 Hier ist die Frage mit allen Antwortoptionen:
 
@@ -46,9 +46,9 @@ C: ${questionData.optionC}
 D: ${questionData.optionD}
 E: ${questionData.optionE}
 
-Die richtige Antwort ist: ${questionData.correctAnswer}
+Die richtige Antwort laut den Studenten ist: ${questionData.correctAnswer}
 
-Zusätzlicher Kommentar zur Frage: ${questionData.comment || "Kein Kommentar vorhanden"}`;
+Zusätzlicher Kommentar anderer Studenten zur Frage: ${questionData.comment || "Kein Kommentar vorhanden"}`;
 
     try {
       await navigator.clipboard.writeText(prompt);
@@ -73,7 +73,7 @@ Zusätzlicher Kommentar zur Frage: ${questionData.comment || "Kein Kommentar vor
           className="ml-2 flex items-center gap-2"
         >
           <Copy className="h-4 w-4" />
-          <span className="hidden sm:inline">Kopieren</span>
+          <span className="hidden sm:inline">KI-Kopieren</span>
         </Button>
       </div>
       <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
