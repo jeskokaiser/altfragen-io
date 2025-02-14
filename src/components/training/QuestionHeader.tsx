@@ -11,9 +11,14 @@ interface QuestionHeaderProps {
 
 const QuestionHeader: React.FC<QuestionHeaderProps> = ({ questionData }) => {
   const handleCopyToClipboard = async () => {
+    if (!questionData) return;
     const prompt = createQuestionPrompt(questionData);
     await copyToClipboard(prompt);
   };
+
+  if (!questionData) {
+    return null;
+  }
 
   return (
     <div className="flex justify-between items-start mb-4">
