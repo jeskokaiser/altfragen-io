@@ -58,6 +58,14 @@ Zusätzlicher Kommentar anderer Studenten zur Frage: ${questionData.comment || "
     }
   };
 
+  const highlightNicht = (text: string) => {
+    return text.split(/(nicht)/i).map((part, index) => 
+      part.toLowerCase() === 'nicht' ? 
+        <u key={index}>{part}</u> : 
+        part
+    );
+  };
+
   if (!questionData) {
     return <div>Loading question...</div>;
   }
@@ -65,7 +73,9 @@ Zusätzlicher Kommentar anderer Studenten zur Frage: ${questionData.comment || "
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white">{questionData.question}</h3>
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-white">
+          {highlightNicht(questionData.question)}
+        </h3>
         <Button
           variant="outline"
           size="sm"
