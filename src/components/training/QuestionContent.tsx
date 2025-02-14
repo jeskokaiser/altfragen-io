@@ -29,12 +29,12 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   }, [questionData]);
 
   const handleCopyToClipboard = async () => {
-    const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. Die Frage stammt aus dem Gedächnisprotokoll anderer Studenten.
+    const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. Die Frage stammt aus dem Gedächtnisprotokoll anderer Studierender.
 Bitte erkläre mir:
 1. Was ist der Kerninhalt der Frage?
 2. Warum ist die richtige Antwort korrekt?
 3. Warum sind die anderen Antworten falsch?
-4. Ist die protokollierte lösung korrekt?
+4. Ist die protokollierte Lösung korrekt?
 
 Hier ist die Frage mit allen Antwortoptionen:
 
@@ -46,9 +46,9 @@ C: ${questionData.optionC}
 D: ${questionData.optionD}
 E: ${questionData.optionE}
 
-Die richtige Antwort laut den Studenten ist: ${questionData.correctAnswer}
+Die richtige Antwort laut Protokoll ist: ${questionData.correctAnswer}
 
-Zusätzlicher Kommentar anderer Studenten zur Frage: ${questionData.comment || "Kein Kommentar vorhanden"}`;
+Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${questionData.comment || "Kein Kommentar vorhanden"}`;
 
     try {
       await navigator.clipboard.writeText(prompt);

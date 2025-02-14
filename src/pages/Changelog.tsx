@@ -14,6 +14,7 @@ const changelogData = [
       'Versionierung mit Changelog eingeführt',
       'Footer aktualisiert',
       'Jedes nicht in der Frage wird jetzt unterstrichen',
+      'Prompt aktualisiert',
     ],
   },
   {
