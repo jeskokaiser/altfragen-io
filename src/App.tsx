@@ -15,6 +15,7 @@ import UnclearQuestions from "./pages/UnclearQuestions";
 import Tutorial from "./pages/Tutorial";
 import Footer from "./components/Footer";
 import Dashboard from "./components/Dashboard";
+import Changelog from "./pages/Changelog";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const AppContent = () => {
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/changelog" element={<Changelog />} />
         </Routes>
         {showFooter && <Footer />}
       </div>
