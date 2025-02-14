@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
+import QuestionHeader from './training/QuestionHeader';
 import QuestionContent from './training/QuestionContent';
 import NavigationButtons from './training/NavigationButtons';
 import EditQuestionModal from './training/EditQuestionModal';
@@ -104,14 +105,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
   return (
     <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'px-2' : ''}`}>
-      <div className="flex justify-between items-center mb-4">
-        <div className="text-sm text-gray-500">
-          Frage {currentIndex + 1} von {totalQuestions}
-        </div>
-        <Button variant="outline" size="sm" onClick={onQuit}>
-          Beenden
-        </Button>
-      </div>
+      <QuestionHeader
+        currentIndex={currentIndex}
+        totalQuestions={totalQuestions}
+        onQuit={onQuit}
+      />
 
       <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
         <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
@@ -120,7 +118,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               questionId={currentQuestion.id}
               difficulty={currentQuestion.difficulty || 3}
               onEditClick={() => setIsEditModalOpen(true)}
-              questionData={currentQuestion}
             />
           </div>
           <div className="flex justify-end">
