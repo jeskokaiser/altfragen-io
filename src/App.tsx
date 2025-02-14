@@ -34,7 +34,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const location = useLocation();
-  const showFooter = location.pathname === '/auth' || location.pathname === '/';
+  const showFooter = location.pathname === '/auth' || 
+                    location.pathname === '/' || 
+                    location.pathname === '/dashboard';
 
   return (
     <div className="min-h-screen flex flex-col dark:bg-slate-900">
