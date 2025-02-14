@@ -49,7 +49,7 @@ const Tutorial = () => {
               <li>Nach Schwierigkeitsgrad filtern</li>
               <li>Nach Fach filtern</li>
             </ul>
-            <p>Bitte bachte, dass alle fragen standardmäßig den Schwierigkeitsgrad 3 haben, sofern er nicht in der csv-Datei festgelegt wurde oder beim trainieren geändert wurde.</p>
+            <p>Bitte bachte, dass alle Fragen standardmäßig den Schwierigkeitsgrad 3 haben, sofern er nicht in der csv-Datei festgelegt wurde oder beim trainieren geändert wurde.</p>
             <p>Nach Ende der ausgewählten Anzahl der Fragen werden dir einmal alle beantworteten Fragen in der Übersicht angezeigt</p>
           </section>
 
@@ -63,7 +63,7 @@ const Tutorial = () => {
               <li>Erhalte sofortiges Feedback zur Antwort</li>
               <li>Der Kommentar zur Frage (falls vorhanden) wird nach der Antwort</li>
               <li>Markiere unklare Fragen zur späteren Überprüfung im Dashboard</li>
-  
+              <li>Kopiere die Frage mitsamt Antwort und Kommentar zusammen mit einem Prompt, um sie in einer Chatbot-KI / LLM deiner Wahl erklären zu lassen</li>
             </ul>
             <p>Falls eine Frage falsch dokumentiert oder die falsche Antwortmöglichkeit ausgefählt wurde, nutze den Bearbeiten Button. Im Bearbeitungsmenü kannst du den Pfeil neben der Antwortzeile nutzen, um die falsche Antwort automatisch in die Kommentarspalte zu verschieben</p>
             <p>Eine Antwort kann nur als richtig erkannt werden, wenn das erste Zeichen in der Antwortzeile der richtige Buchstabe ist</p>
@@ -76,10 +76,10 @@ const Tutorial = () => {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold">Zusätzliche Funktionen</h2>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Dark Mode: Wechseln Sie zwischen hellem und dunklem Design</li>
+              <li>Dark Mode: Wechse zwischen hellem und dunklem Design (Beta)</li>
               <li>Responsives Design: Die Web-App kann auf allen Geräten (Computer, Tablet, Handy) genutzt werden</li>
-              <li>Fortschrittsanzeige: Behalten Sie den Überblick über Ihren Trainingsfortschritt</li>
-              <li>Automatische Speicherung: Ihr Fortschritt wird immer automatisch gespeichert, solange eine Internetverbindung besteht</li>
+              <li>Fortschrittsanzeige: Behalte den Überblick über deinen Trainingsfortschritt</li>
+              <li>Automatische Speicherung: Der Fortschritt wird immer automatisch gespeichert, solange eine Internetverbindung besteht</li>
             </ul>
           </section>
         </CardContent>

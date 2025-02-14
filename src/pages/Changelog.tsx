@@ -36,7 +36,6 @@ const Changelog = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Zurück zum Dashboard
         </Button>
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Tutorial</h1>
       </div>
       
       {/* Changelog Card */}
