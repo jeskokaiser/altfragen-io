@@ -1,39 +1,35 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
-import { createQuestionPrompt, copyToClipboard } from '@/utils/questionPrompt';
-import { Question } from '@/types/Question';
+import { Button } from '@/components/ui/button';
+import ProgressBar from './ProgressBar';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuestionHeaderProps {
-  questionData: Question;
+  currentIndex: number;
+  totalQuestions: number;
+  onQuit: () => void;
 }
 
-const QuestionHeader: React.FC<QuestionHeaderProps> = ({ questionData }) => {
-  const handleCopyToClipboard = async () => {
-    if (!questionData) return;
-    const prompt = createQuestionPrompt(questionData);
-    await copyToClipboard(prompt);
-  };
-
-  if (!questionData) {
-    return null;
-  }
+const QuestionHeader: React.FC<QuestionHeaderProps> = ({
+  currentIndex,
+  totalQuestions,
+  onQuit,
+}) => {
+  const isMobile = useIsMobile();
 
   return (
-    <div className="flex justify-between items-start mb-4">
-      <h3 className="text-xl font-semibold text-slate-800 dark:text-white">
-        {questionData.question}
-      </h3>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleCopyToClipboard}
-        className="ml-2 flex items-center gap-2"
-      >
-        <Copy className="h-4 w-4" />
-        <span className="hidden sm:inline">Kopieren</span>
-      </Button>
+    <div className="flex flex-col gap-3 mb-4">
+      <ProgressBar currentIndex={currentIndex} totalQuestions={totalQuestions} />
+      <div className="flex justify-end">
+        <Button 
+          variant="outline" 
+          onClick={onQuit} 
+          className={`text-red-500 hover:text-red-600 hover:bg-red-50 ${isMobile ? 'text-sm' : ''}`}
+          size={isMobile ? "sm" : "default"}
+        >
+          Training beenden
+        </Button>
+      </div>
     </div>
   );
 };
