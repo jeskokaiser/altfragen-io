@@ -11,15 +11,10 @@ const Footer = () => {
           </Link>
           <Link to="/terms" className="hover:text-foreground transition-colors">
             Nutzungsbedingungen
-          </Link>
-          <a 
-            href="https://github.com/lovable-inc/kreuzel/releases" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
+            </Link>
+          <Link to="/changelog" className="hover:text-foreground transition-colors">                   
             Changelog
-          </a>
+          </Link>
         </div>
       </div>
     </footer>
