@@ -29,12 +29,15 @@ const Changelog = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="p-4">
-      {/* Back Button */}
-      <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button>
+  
+      <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={() => navigate('/dashboard')}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Zurück zum Dashboard
+        </Button>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Tutorial</h1>
+      </div>
       
       {/* Changelog Card */}
       <Card>
