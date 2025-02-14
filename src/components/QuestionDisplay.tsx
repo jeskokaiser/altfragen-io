@@ -126,9 +126,9 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           <div className="flex justify-end">
             <Button
               variant="outline"
-              size={isMobile ? "sm" : "default"}
+              size="sm"
               onClick={handleMarkUnclear}
-              className="flex items-center gap-2 hover:bg-gray-100"
+              className="flex items-center gap-2"
               disabled={currentQuestion.is_unclear}
             >
               <AlertCircle className="h-4 w-4" />
