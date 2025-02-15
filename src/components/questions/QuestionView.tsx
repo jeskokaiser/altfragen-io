@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Question } from '@/types/Question';
+import { Question, QuestionViewProps } from '@/types/question';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './QuestionHeader';
 import QuestionContent from './QuestionContent';
@@ -15,18 +14,6 @@ import { AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-interface QuestionViewProps {
-  questionData: Question;
-  totalQuestions: number;
-  currentIndex: number;
-  onNext: () => void;
-  onPrevious: () => void;
-  onAnswer: (answer: string) => void;
-  userAnswer: string;
-  onQuit: () => void;
-  onQuestionUpdate?: (updatedQuestion: Question) => void;
-}
 
 const QuestionView: React.FC<QuestionViewProps> = ({
   questionData,

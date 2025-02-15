@@ -1,19 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from '../training/AnswerOption';
-import { Question } from '@/types/Question';
+import { Question, QuestionContentProps } from '@/types/question';
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
-
-interface QuestionContentProps {
-  questionData: Question;
-  selectedAnswer: string;
-  onAnswerChange: (answer: string) => void;
-  onConfirmAnswer: () => void;
-  showFeedback: boolean;
-}
 
 const QuestionContent: React.FC<QuestionContentProps> = ({
   questionData,
