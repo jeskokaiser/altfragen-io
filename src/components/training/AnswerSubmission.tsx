@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { Question } from '@/types/Question';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
+import { saveQuestionProgress, updateQuestionProgress } from '@/services/DatabaseService';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -28,43 +28,15 @@ const AnswerSubmission = ({
       // Compare only the first letter, ignoring case
       const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
-      // First, get all progress records for this question
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from('user_progress')
-        .select()
-        .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id);
+      // Save or update the progress
+      try {
+        await updateQuestionProgress(user.id, currentQuestion.id, selectedAnswer, isCorrect);
+      } catch {
+        await saveQuestionProgress(user.id, currentQuestion.id, selectedAnswer, isCorrect);
+      }
 
-      if (fetchError) throw fetchError;
-
-      if (existingProgress && existingProgress.length > 0) {
-        // Update all progress records for this question
-        const { error: updateError } = await supabase
-          .from('user_progress')
-          .update({
-            user_answer: selectedAnswer,
-            is_correct: isCorrect
-          })
-          .eq('user_id', user.id)
-          .eq('question_id', currentQuestion.id);
-
-        if (updateError) throw updateError;
-
-        if (isCorrect) {
-          toast.success('Richtige Antwort! Der Fortschritt wurde aktualisiert.');
-        }
-      } else {
-        // Insert new progress record
-        const { error: insertError } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
-            user_answer: selectedAnswer,
-            is_correct: isCorrect
-          });
-
-        if (insertError) throw insertError;
+      if (isCorrect) {
+        toast.success('Richtige Antwort! Der Fortschritt wurde aktualisiert.');
       }
     } catch (error: any) {
       console.error('Error saving progress:', error);

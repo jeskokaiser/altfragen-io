@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question, QuestionViewProps } from '@/types/question';
@@ -11,9 +12,9 @@ import DifficultyControls from '../training/DifficultyControls';
 import QuestionFeedback from '../training/QuestionFeedback';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { markQuestionUnclear } from '@/services/DatabaseService';
 
 const QuestionView: React.FC<QuestionViewProps> = ({
   questionData,
@@ -64,16 +65,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
 
   const handleMarkUnclear = async () => {
     try {
-      const { error } = await supabase
-        .from('questions')
-        .update({
-          is_unclear: true,
-          marked_unclear_at: new Date().toISOString(),
-        })
-        .eq('id', currentQuestion.id);
-
-      if (error) throw error;
-
+      await markQuestionUnclear(currentQuestion.id);
       toast.success('Frage als unklar markiert');
       setCurrentQuestion({
         ...currentQuestion,
