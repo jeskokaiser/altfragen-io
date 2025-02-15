@@ -58,11 +58,13 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${questionData.commen
     }
   };
 
-  const highlightNicht = (text: string) => {
-    return text.split(/(nicht)/i).map((part, index) => 
-      part.toLowerCase() === 'nicht' ? 
-        <u key={index}>{part}</u> : 
+   const highlightNicht = (text: string) => {
+    return text.split(/(nicht|falsch|kein|keine)/i).map((part, index) =>
+      ['nicht', 'falsch', 'kein', 'keine'].includes(part.toLowerCase()) ? (
+        <u key={index}>{part}</u>
+      ) : (
         part
+      )
     );
   };
 
