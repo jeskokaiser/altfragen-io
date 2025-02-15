@@ -1,8 +1,14 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import ProgressBar from '../training/ProgressBar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { QuestionHeaderProps } from '@/types/question';
+
+interface QuestionHeaderProps {
+  currentIndex: number;
+  totalQuestions: number;
+  onQuit: () => void;
+}
 
 const QuestionHeader: React.FC<QuestionHeaderProps> = ({
   currentIndex,
