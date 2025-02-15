@@ -58,8 +58,8 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${questionData.commen
     }
   };
 
-   const highlightNicht = (text: string) => {
-    return text.split(/(nicht|falsch|kein|keine)/i).map((part, index) =>
+  const highlightNicht = (text: string) => {
+    return text.split(/((?<=\s)falsch|nicht|kein|keine)/i).map((part, index) =>
       ['nicht', 'falsch', 'kein', 'keine'].includes(part.toLowerCase()) ? (
         <u key={index}>{part}</u>
       ) : (
@@ -67,6 +67,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${questionData.commen
       )
     );
   };
+  
 
   if (!questionData) {
     return <div>Loading question...</div>;
