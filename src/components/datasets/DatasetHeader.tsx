@@ -33,7 +33,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
       <div className="flex-1 space-y-2">
-        <CardTitle className="text-lg font-medium text-slate-800">
+        <CardTitle className="text-lg font-medium text-slate-800 dark:text-white">
           {filename}
         </CardTitle>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
