@@ -69,38 +69,52 @@ const AnswerSubmission = ({
         }
       } else {
         // This is a subsequent attempt
-        const { error } = await supabase
-          .from('user_progress')
-          .update({
-            user_answer: selectedAnswer,
-            attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: isCorrect // Set is_correct to current attempt result
-          })
-          .eq('user_id', user.id)
-          .eq('question_id', currentQuestion.id);
+        if (!isCorrect && !existingProgress.is_correct) {
+          // If the answer is wrong and it was wrong before, just increment attempts
+          const { error } = await supabase
+            .from('user_progress')
+            .update({
+              user_answer: selectedAnswer,
+              attempts_count: (existingProgress.attempts_count || 1) + 1,
+            })
+            .eq('user_id', user.id)
+            .eq('question_id', currentQuestion.id);
 
-        if (error) {
-          console.error('Error updating progress:', error);
-          toast.error("Fehler beim Speichern des Fortschritts");
-          return;
-        }
-
-        // Show appropriate toast messages for subsequent attempts
-        if (isCorrect) {
-          if (!existingProgress.is_correct) {
-            // Was wrong before, now correct
-            toast.success("Super! Die Frage ist jetzt als richtig markiert, aber die erste falsche Antwort bleibt für die Statistik erhalten.");
-          } else {
-            // Was already correct
-            toast.success("Diese Frage hattest du bereits richtig beantwortet!");
+          if (error) {
+            console.error('Error updating progress:', error);
+            toast.error("Fehler beim Speichern des Fortschritts");
+            return;
           }
+
+          // Toast for subsequent wrong answers
+          toast.error("Weiter üben! Du schaffst das!");
         } else {
-          if (existingProgress.is_correct) {
-            // Was correct before, now wrong
+          // For all other cases (getting it right, or getting it wrong after it was right)
+          const { error } = await supabase
+            .from('user_progress')
+            .update({
+              user_answer: selectedAnswer,
+              attempts_count: (existingProgress.attempts_count || 1) + 1,
+              is_correct: isCorrect
+            })
+            .eq('user_id', user.id)
+            .eq('question_id', currentQuestion.id);
+
+          if (error) {
+            console.error('Error updating progress:', error);
+            toast.error("Fehler beim Speichern des Fortschritts");
+            return;
+          }
+
+          // Show appropriate toast messages for other cases
+          if (isCorrect) {
+            if (!existingProgress.is_correct) {
+              toast.success("Super! Die Frage ist jetzt als richtig markiert, aber die erste falsche Antwort bleibt für die Statistik erhalten.");
+            } else {
+              toast.success("Diese Frage hattest du bereits richtig beantwortet!");
+            }
+          } else if (existingProgress.is_correct) {
             toast.error("Diese Frage hattest du bereits richtig beantwortet. Versuch es noch einmal!");
-          } else {
-            // Was wrong before, still wrong
-            toast.error("Weiter üben! Du schaffst das!");
           }
         }
       }
