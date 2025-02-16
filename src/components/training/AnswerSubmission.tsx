@@ -41,63 +41,56 @@ const AnswerSubmission = ({
     // Compare only the first letter, ignoring case
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
-    // If this attempt is wrong, add it to wrongAnswers
-    if (!isCorrect) {
-      setHasSubmittedWrong(true);
-      if (!wrongAnswers.includes(selectedAnswer)) {
-        setWrongAnswers(prev => [...prev, selectedAnswer]);
-      }
-    } else {
-      // Only save to database if the answer is correct
-      try {
-        const { error: insertError } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
-            user_answer: selectedAnswer,
-            is_correct: true
-          });
-
-        if (insertError) {
-          console.error('Error saving progress:', insertError);
-          toast.error("Fehler beim Speichern des Fortschritts");
-        }
-      } catch (error) {
-        console.error('Error saving progress:', error);
-      }
-    }
-
-    setLastSubmissionCorrect(isCorrect);
-    onAnswerSubmitted(selectedAnswer, isCorrect);
-  };
-
-  const handleShowSolution = async () => {
-    if (!user) return;
-
     try {
+      // First, get all progress records for this question
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from('user_progress')
+        .select()
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id);
+
+      if (fetchError) throw fetchError;
+
+      // Insert new progress record
       const { error: insertError } = await supabase
         .from('user_progress')
         .insert({
           user_id: user.id,
           question_id: currentQuestion.id,
-          user_answer: 'solution_viewed',
-          is_correct: false
+          user_answer: selectedAnswer,
+          is_correct: isCorrect
         });
 
       if (insertError) {
-        console.error('Error saving progress:', insertError);
+        toast.error("Fehler beim Speichern des Fortschritts");
+        throw insertError;
       }
-    } catch (error) {
-      console.error('Error saving progress:', error);
-    }
 
-    setShowSolution(true);
-    onAnswerSubmitted('solution_viewed', false);
+      // If this attempt is wrong, add it to wrongAnswers
+      if (!isCorrect) {
+        setHasSubmittedWrong(true);
+        if (!wrongAnswers.includes(selectedAnswer)) {
+          setWrongAnswers(prev => [...prev, selectedAnswer]);
+        }
+      }
+
+      setLastSubmissionCorrect(isCorrect);
+      onAnswerSubmitted(selectedAnswer, isCorrect);
+    } catch (error: any) {
+      console.error('Error saving progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
+    }
   };
 
-  // Hide the submission interface if all wrong answers have been tried or solution is shown
-  if (wrongAnswers.length >= 4 || showSolution) return null;
+  const handleShowSolution = async () => {
+    if (!user) return;
+        
+      setShowSolution(true);
+      
+  };
+
+  // Hide the submission interface if all wrong answers have been tried
+  if (wrongAnswers.length >= 4) return null;
 
   return (
     <div className="mt-4 space-y-4">

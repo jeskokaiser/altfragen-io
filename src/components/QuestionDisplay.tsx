@@ -1,15 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './training/QuestionHeader';
+import QuestionContent from './training/QuestionContent';
 import NavigationButtons from './training/NavigationButtons';
 import EditQuestionModal from './training/EditQuestionModal';
-import QuestionContent from './training/QuestionContent';
 import AnswerSubmission from './training/AnswerSubmission';
 import DifficultyControls from './training/DifficultyControls';
 import QuestionFeedback from './training/QuestionFeedback';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +48,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  React.useEffect(() => {
+  useEffect(() => {
     setSelectedAnswer('');
     setShowFeedback(false);
     setCurrentQuestion(questionData);
@@ -121,12 +121,6 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     return <div>Loading question...</div>;
   }
 
-  // Consider the question "answered" if either:
-  // 1. The user got it correct
-  // 2. The user clicked "show solution"
-  // 3. The user tried all wrong answers
-  const hasAnswered = userAnswer === 'solution_viewed' || isCorrect || wrongAnswers.length >= 4;
-
   return (
     <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'px-2' : ''}`}>
       <QuestionHeader
@@ -190,7 +184,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         onNext={handleNext}
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
-        hasUserAnswer={hasAnswered}
+        hasUserAnswer={!!userAnswer && isCorrect}
         wrongAttempts={wrongAnswers.length}
       />
 

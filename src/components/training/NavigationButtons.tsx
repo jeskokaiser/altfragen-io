@@ -22,7 +22,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Allow next if either answer is correct OR user has tried all wrong answers OR has viewed the solution
+  // Allow next if either answer is correct OR user has tried all wrong answers
   const canProceed = hasUserAnswer || wrongAttempts >= 4;
 
   return (
