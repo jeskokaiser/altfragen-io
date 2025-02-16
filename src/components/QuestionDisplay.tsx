@@ -43,6 +43,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
+  const [isCorrect, setIsCorrect] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -50,20 +51,29 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setSelectedAnswer('');
     setShowFeedback(false);
     setCurrentQuestion(questionData);
+    setIsCorrect(false);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
-  const handleAnswerSubmitted = (answer: string) => {
+  const handleAnswerSubmitted = (answer: string, correct: boolean) => {
     onAnswer(answer);
     setShowFeedback(true);
+    setIsCorrect(correct);
+    if (correct) {
+      // Only allow proceeding to next question when the answer is correct
+      setTimeout(() => {
+        handleNext();
+      }, 1500);
+    }
   };
 
   const handleNext = () => {
     setShowFeedback(false);
     setSelectedAnswer('');
+    setIsCorrect(false);
     onNext();
   };
 
@@ -155,6 +165,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           userAnswer={userAnswer}
           correctAnswer={currentQuestion.correctAnswer}
           comment={currentQuestion.comment}
+          isCorrect={isCorrect}
         />
       </Card>
 
@@ -163,7 +174,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         onNext={handleNext}
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
-        hasUserAnswer={!!userAnswer}
+        hasUserAnswer={!!userAnswer && isCorrect}
       />
 
       <EditQuestionModal

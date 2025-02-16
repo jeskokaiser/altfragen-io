@@ -7,6 +7,7 @@ interface QuestionFeedbackProps {
   userAnswer: string | undefined;
   correctAnswer: string;
   comment?: string;
+  isCorrect: boolean;
 }
 
 const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
@@ -14,11 +15,9 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   userAnswer,
   correctAnswer,
   comment,
+  isCorrect,
 }) => {
-  if (!showFeedback || !userAnswer) return null;
-
-  // Compare only the first letter, ignoring case
-  const isCorrect = userAnswer.charAt(0).toLowerCase() === correctAnswer.charAt(0).toLowerCase();
+  if (!showFeedback || !userAnswer || !isCorrect) return null;
 
   return (
     <FeedbackDisplay 

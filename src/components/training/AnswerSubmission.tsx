@@ -10,7 +10,7 @@ interface AnswerSubmissionProps {
   currentQuestion: Question;
   selectedAnswer: string;
   user: User | null;
-  onAnswerSubmitted: (answer: string) => void;
+  onAnswerSubmitted: (answer: string, isCorrect: boolean) => void;
 }
 
 const AnswerSubmission = ({
@@ -19,57 +19,71 @@ const AnswerSubmission = ({
   user,
   onAnswerSubmitted,
 }: AnswerSubmissionProps) => {
+  const [hasSubmittedWrong, setHasSubmittedWrong] = React.useState(false);
+
   const handleConfirmAnswer = async () => {
     if (!selectedAnswer || !user) return;
 
-    onAnswerSubmitted(selectedAnswer);
+    // Compare only the first letter, ignoring case
+    const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
-    try {
-      // Compare only the first letter, ignoring case
-      const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
-
-      // First, get all progress records for this question
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from('user_progress')
-        .select()
-        .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id);
-
-      if (fetchError) throw fetchError;
-
-      if (existingProgress && existingProgress.length > 0) {
-        // Update all progress records for this question
-        const { error: updateError } = await supabase
+    // Only save to database if this is the first attempt or if it's correct
+    if (!hasSubmittedWrong || isCorrect) {
+      try {
+        // First, get all progress records for this question
+        const { data: existingProgress, error: fetchError } = await supabase
           .from('user_progress')
-          .update({
-            user_answer: selectedAnswer,
-            is_correct: isCorrect
-          })
+          .select()
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
 
-        if (updateError) throw updateError;
+        if (fetchError) throw fetchError;
+
+        // If we've already submitted a wrong answer, don't update the database unless it's correct
+        if (hasSubmittedWrong && !isCorrect) {
+          onAnswerSubmitted(selectedAnswer, isCorrect);
+          return;
+        }
+
+        if (existingProgress && existingProgress.length > 0) {
+          // Update all progress records for this question
+          const { error: updateError } = await supabase
+            .from('user_progress')
+            .update({
+              user_answer: selectedAnswer,
+              is_correct: isCorrect
+            })
+            .eq('user_id', user.id)
+            .eq('question_id', currentQuestion.id);
+
+          if (updateError) throw updateError;
+        } else {
+          // Insert new progress record
+          const { error: insertError } = await supabase
+            .from('user_progress')
+            .insert({
+              user_id: user.id,
+              question_id: currentQuestion.id,
+              user_answer: selectedAnswer,
+              is_correct: isCorrect
+            });
+
+          if (insertError) throw insertError;
+        }
 
         if (isCorrect) {
-          toast.success('Richtige Antwort! Der Fortschritt wurde aktualisiert.');
+          toast.success('Richtige Antwort!');
+        } else {
+          toast.error('Falsche Antwort! Versuche es noch einmal.');
+          setHasSubmittedWrong(true);
         }
-      } else {
-        // Insert new progress record
-        const { error: insertError } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
-            user_answer: selectedAnswer,
-            is_correct: isCorrect
-          });
-
-        if (insertError) throw insertError;
+      } catch (error: any) {
+        console.error('Error saving progress:', error);
+        toast.error("Fehler beim Speichern des Fortschritts");
       }
-    } catch (error: any) {
-      console.error('Error saving progress:', error);
-      toast.error("Fehler beim Speichern des Fortschritts");
     }
+
+    onAnswerSubmitted(selectedAnswer, isCorrect);
   };
 
   return (
