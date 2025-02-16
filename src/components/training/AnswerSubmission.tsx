@@ -26,56 +26,53 @@ const AnswerSubmission = ({
   const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
   const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
   const [showSolution, setShowSolution] = React.useState(false);
-  const [hasRecordedAttempt, setHasRecordedAttempt] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     setHasSubmittedWrong(false);
     setLastSubmissionCorrect(null);
     setWrongAnswers([]);
     setShowSolution(false);
-    setHasRecordedAttempt(false);
   }, [currentQuestion]);
 
   const handleConfirmAnswer = async () => {
-    if (!selectedAnswer || !user) return;
+    if (!selectedAnswer || !user || isSubmitting) return;
 
+    setIsSubmitting(true);
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
-    // Only save to database if this is the first attempt for this question
-    if (!hasRecordedAttempt) {
-      try {
-        const { error: insertError } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
-            user_answer: selectedAnswer,
-            is_correct: isCorrect,
-            attempt_number: 1
-          });
+    try {
+      const { error } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          question_id: currentQuestion.id,
+          user_answer: selectedAnswer,
+          is_correct: isCorrect,
+          attempt_number: 1
+        });
 
-        if (insertError) {
-          console.error('Error saving progress:', insertError);
-          toast.error("Fehler beim Speichern des Fortschritts");
-        } else {
-          setHasRecordedAttempt(true);
-        }
-      } catch (error: any) {
+      if (error) {
         console.error('Error saving progress:', error);
         toast.error("Fehler beim Speichern des Fortschritts");
+        return;
       }
-    }
 
-    // Handle the answer result locally
-    if (!isCorrect) {
-      setHasSubmittedWrong(true);
-      if (!wrongAnswers.includes(selectedAnswer)) {
-        setWrongAnswers(prev => [...prev, selectedAnswer]);
+      if (!isCorrect) {
+        setHasSubmittedWrong(true);
+        if (!wrongAnswers.includes(selectedAnswer)) {
+          setWrongAnswers(prev => [...prev, selectedAnswer]);
+        }
       }
-    }
 
-    setLastSubmissionCorrect(isCorrect);
-    onAnswerSubmitted(selectedAnswer, isCorrect, showSolution);
+      setLastSubmissionCorrect(isCorrect);
+      onAnswerSubmitted(selectedAnswer, isCorrect, showSolution);
+    } catch (error: any) {
+      console.error('Error saving progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleShowSolution = () => {
@@ -91,10 +88,10 @@ const AnswerSubmission = ({
     <div className="mt-4 space-y-4">
       <Button 
         onClick={handleConfirmAnswer}
-        disabled={!selectedAnswer}
+        disabled={!selectedAnswer || isSubmitting}
         className="w-full"
       >
-        Antwort bestätigen
+        {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
       </Button>
       
       {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
