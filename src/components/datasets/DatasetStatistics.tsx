@@ -170,7 +170,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
                 <div className="flex gap-2">
                   <Progress 
                     value={(stats.correct / stats.total) * 100} 
-                    className="flex-1 h-2 bg-green-100 dark:bg-green-950/50"
+                    className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
                   >
                     <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
                   </Progress>
