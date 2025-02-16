@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import ProgressBar from './ProgressBar';
+import ProgressBar from '@/components/training/ProgressBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
