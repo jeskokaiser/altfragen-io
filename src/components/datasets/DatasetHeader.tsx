@@ -30,6 +30,12 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
     navigate(`/unclear-questions/${encodeURIComponent(filename)}`);
   };
 
+  const handleStartTraining = () => {
+    localStorage.setItem('trainingQuestions', JSON.stringify(questions));
+    onStartTraining(questions);
+    navigate('/training');
+  };
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
       <div className="flex-1 space-y-2">
@@ -55,7 +61,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
           </Button>
         )}
         <Button 
-          onClick={() => onStartTraining(questions)}
+          onClick={handleStartTraining}
           className="w-full sm:w-auto"
           size={isMobile ? "sm" : "default"}
         >
