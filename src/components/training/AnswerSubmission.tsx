@@ -87,7 +87,7 @@ const AnswerSubmission = ({
 
         // If they got it right now but had it wrong before, show the improvement toast
         if (isCorrect && !existingProgress.is_correct) {
-          toast.success("Super! Du hast die richtige Antwort gefunden! Die erste Antwort zählt jedoch als Ergebnis.");
+          toast.success("Super! Die Frage ist jetzt als richtig markiert, aber die erste falsche Antwort bleibt für die Statistik erhalten.");
         }
       }
 
