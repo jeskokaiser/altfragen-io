@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Question } from '@/types/Question';
 import { useQuery } from '@tanstack/react-query';
@@ -107,7 +108,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Gesamtfortschritt */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
-          <Progress value={answeredPercentage} className="h-2 mb-2" />
+          <Progress value={answeredPercentage} className="h-2 mb-2 dark:bg-zinc-800" />
           <p className="text-sm text-muted-foreground">
             {answeredQuestions} von {totalQuestions} Fragen beantwortet ({answeredPercentage.toFixed(0)}%)
           </p>
@@ -116,7 +117,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Richtige Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
-          <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100">
+          <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100 dark:bg-green-950/50">
             <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
@@ -127,7 +128,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Falsche Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
-          <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100">
+          <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100 dark:bg-red-950/50">
             <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
@@ -167,7 +168,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
                 <div className="flex gap-2">
                   <Progress 
                     value={(stats.correct / stats.total) * 100} 
-                    className="flex-1 h-2 bg-green-100"
+                    className="flex-1 h-2 bg-green-100 dark:bg-green-950/50"
                   >
                     <div className="h-full bg-green-600 transition-all" />
                   </Progress>
