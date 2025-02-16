@@ -43,6 +43,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -50,20 +52,36 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     setSelectedAnswer('');
     setShowFeedback(false);
     setCurrentQuestion(questionData);
+    setIsCorrect(false);
+    setWrongAnswers([]);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
-  const handleAnswerSubmitted = (answer: string) => {
+  const handleAnswerSubmitted = (answer: string, correct: boolean) => {
     onAnswer(answer);
     setShowFeedback(true);
+    setIsCorrect(correct);
+    
+    if (!correct) {
+      setWrongAnswers(prev => [...prev, answer]);
+    }
+    
+    if (correct) {
+      // Only allow proceeding to next question when the answer is correct
+      setTimeout(() => {
+        handleNext();
+      }, 1500);
+    }
   };
 
   const handleNext = () => {
     setShowFeedback(false);
     setSelectedAnswer('');
+    setIsCorrect(false);
+    setWrongAnswers([]);
     onNext();
   };
 
@@ -180,6 +198,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.com
           onAnswerChange={handleAnswerChange}
           onConfirmAnswer={() => {}}
           showFeedback={showFeedback}
+          wrongAnswers={wrongAnswers}
         />
 
         <AnswerSubmission
@@ -194,6 +213,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.com
           userAnswer={userAnswer}
           correctAnswer={currentQuestion.correctAnswer}
           comment={currentQuestion.comment}
+          isCorrect={isCorrect}
         />
       </Card>
 
@@ -202,7 +222,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.com
         onNext={handleNext}
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
-        hasUserAnswer={!!userAnswer}
+        hasUserAnswer={!!userAnswer && isCorrect}
       />
 
       <EditQuestionModal
