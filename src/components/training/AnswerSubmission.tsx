@@ -86,7 +86,7 @@ const AnswerSubmission = ({
   if (wrongAnswers.length >= 4) return null;
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-6 space-y-4">
       <Button 
         onClick={handleConfirmAnswer}
         disabled={!selectedAnswer}
