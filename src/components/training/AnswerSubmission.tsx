@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { XCircle } from 'lucide-react';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -30,69 +30,45 @@ const AnswerSubmission = ({
     // Compare only the first letter, ignoring case
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
-    // Only save to database if this is the first attempt or if it's correct
-    if (!hasSubmittedWrong || isCorrect) {
-      try {
-        // First, get all progress records for this question
-        const { data: existingProgress, error: fetchError } = await supabase
+    try {
+      // First, get all progress records for this question
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from('user_progress')
+        .select()
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id);
+
+      if (fetchError) throw fetchError;
+
+      // If there's no existing progress or we haven't submitted a wrong answer yet
+      if (!existingProgress?.length && !hasSubmittedWrong) {
+        // Insert new progress record
+        const { error: insertError } = await supabase
           .from('user_progress')
-          .select()
-          .eq('user_id', user.id)
-          .eq('question_id', currentQuestion.id);
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: selectedAnswer,
+            is_correct: isCorrect
+          });
 
-        if (fetchError) throw fetchError;
-
-        // If we've already submitted a wrong answer, don't update the database unless it's correct
-        if (hasSubmittedWrong && !isCorrect) {
-          onAnswerSubmitted(selectedAnswer, isCorrect);
-          setLastSubmissionCorrect(isCorrect);
-          return;
+        if (insertError) {
+          toast.error("Fehler beim Speichern des Fortschritts");
+          throw insertError;
         }
-
-        if (existingProgress && existingProgress.length > 0) {
-          // Update all progress records for this question
-          const { error: updateError } = await supabase
-            .from('user_progress')
-            .update({
-              user_answer: selectedAnswer,
-              is_correct: isCorrect
-            })
-            .eq('user_id', user.id)
-            .eq('question_id', currentQuestion.id);
-
-          if (updateError) {
-            toast.error("Fehler beim Speichern des Fortschritts");
-            throw updateError;
-          }
-        } else {
-          // Insert new progress record
-          const { error: insertError } = await supabase
-            .from('user_progress')
-            .insert({
-              user_id: user.id,
-              question_id: currentQuestion.id,
-              user_answer: selectedAnswer,
-              is_correct: isCorrect
-            });
-
-          if (insertError) {
-            toast.error("Fehler beim Speichern des Fortschritts");
-            throw insertError;
-          }
-        }
-
-        if (!isCorrect) {
-          setHasSubmittedWrong(true);
-        }
-
-        setLastSubmissionCorrect(isCorrect);
-      } catch (error: any) {
-        console.error('Error saving progress:', error);
-        toast.error("Fehler beim Speichern des Fortschritts");
       }
-    }
 
-    onAnswerSubmitted(selectedAnswer, isCorrect);
+      // If this attempt is wrong, mark it as having submitted wrong
+      if (!isCorrect) {
+        setHasSubmittedWrong(true);
+      }
+
+      setLastSubmissionCorrect(isCorrect);
+      onAnswerSubmitted(selectedAnswer, isCorrect);
+    } catch (error: any) {
+      console.error('Error saving progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
+    }
   };
 
   return (
