@@ -10,6 +10,7 @@ interface NavigationButtonsProps {
   isLastQuestion: boolean;
   hasUserAnswer: boolean;
   wrongAttempts: number;
+  showSolution?: boolean;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -19,11 +20,15 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isLastQuestion,
   hasUserAnswer,
   wrongAttempts,
+  showSolution = false,
 }) => {
   const isMobile = useIsMobile();
 
-  // Allow next if either answer is correct OR user has tried all wrong answers
-  const canProceed = hasUserAnswer || wrongAttempts >= 4;
+  // Allow next if either:
+  // 1. Answer is correct OR
+  // 2. User has tried all wrong answers OR
+  // 3. User has clicked "Lösung anzeigen"
+  const canProceed = hasUserAnswer || wrongAttempts >= 4 || showSolution;
 
   return (
     <div className="flex justify-between mt-4 gap-3">
