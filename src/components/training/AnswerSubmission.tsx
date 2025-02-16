@@ -84,30 +84,9 @@ const AnswerSubmission = ({
 
   const handleShowSolution = async () => {
     if (!user) return;
-
-    try {
-      // Insert a new progress record marking the question as viewed and incorrect
-      const { error: insertError } = await supabase
-        .from('user_progress')
-        .insert({
-          user_id: user.id,
-          question_id: currentQuestion.id,
-          user_answer: 'solution_viewed',
-          is_correct: false
-        });
-
-      if (insertError) {
-        toast.error("Fehler beim Speichern des Fortschritts");
-        throw insertError;
-      }
-
+        
       setShowSolution(true);
-      // Notify parent component that the solution was viewed (counts as incorrect)
-      onAnswerSubmitted('solution_viewed', false);
-    } catch (error: any) {
-      console.error('Error saving progress:', error);
-      toast.error("Fehler beim Speichern des Fortschritts");
-    }
+      
   };
 
   // Hide the submission interface if all wrong answers have been tried
