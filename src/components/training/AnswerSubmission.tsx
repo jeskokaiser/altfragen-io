@@ -25,6 +25,13 @@ const AnswerSubmission = ({
   const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
   const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
 
+  // Reset state when question changes
+  React.useEffect(() => {
+    setHasSubmittedWrong(false);
+    setLastSubmissionCorrect(null);
+    setWrongAnswers([]);
+  }, [currentQuestion]);
+
   const handleConfirmAnswer = async () => {
     if (!selectedAnswer || !user) return;
 
@@ -74,6 +81,9 @@ const AnswerSubmission = ({
       toast.error("Fehler beim Speichern des Fortschritts");
     }
   };
+
+  // Hide the submission interface if all wrong answers have been tried
+  if (wrongAnswers.length >= 4) return null;
 
   return (
     <div className="mt-4 space-y-4">

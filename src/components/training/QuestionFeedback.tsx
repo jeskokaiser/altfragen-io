@@ -21,8 +21,9 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
 }) => {
   if (!showFeedback || !userAnswer) return null;
 
-  // Only show feedback when answer is correct or when all wrong answers have been tried
-  if (!isCorrect && wrongAnswers.length < 4) return null;
+  // Show feedback when either answer is correct OR when all wrong answers have been tried
+  const shouldShowFeedback = isCorrect || wrongAnswers.length >= 4;
+  if (!shouldShowFeedback) return null;
 
   return (
     <FeedbackDisplay 
