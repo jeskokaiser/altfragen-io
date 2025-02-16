@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -206,6 +207,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.com
           correctAnswer={currentQuestion.correctAnswer}
           comment={currentQuestion.comment}
           isCorrect={isCorrect}
+          wrongAnswers={wrongAnswers}
         />
       </Card>
 
