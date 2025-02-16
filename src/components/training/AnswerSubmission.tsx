@@ -41,89 +41,59 @@ const AnswerSubmission = ({
     // Compare only the first letter, ignoring case
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
-    try {
-      // First, get all progress records for this question
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from('user_progress')
-        .select()
-        .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id)
-        .eq('user_answer', selectedAnswer);
-
-      if (fetchError) throw fetchError;
-
-      // Only insert if this exact answer hasn't been submitted before
-      if (!existingProgress || existingProgress.length === 0) {
+    // If this attempt is wrong, add it to wrongAnswers
+    if (!isCorrect) {
+      setHasSubmittedWrong(true);
+      if (!wrongAnswers.includes(selectedAnswer)) {
+        setWrongAnswers(prev => [...prev, selectedAnswer]);
+      }
+    } else {
+      // Only save to database if the answer is correct
+      try {
         const { error: insertError } = await supabase
           .from('user_progress')
           .insert({
             user_id: user.id,
             question_id: currentQuestion.id,
             user_answer: selectedAnswer,
-            is_correct: isCorrect
+            is_correct: true
           });
 
         if (insertError) {
+          console.error('Error saving progress:', insertError);
           toast.error("Fehler beim Speichern des Fortschritts");
-          throw insertError;
         }
+      } catch (error) {
+        console.error('Error saving progress:', error);
       }
-
-      // If this attempt is wrong, add it to wrongAnswers
-      if (!isCorrect) {
-        setHasSubmittedWrong(true);
-        if (!wrongAnswers.includes(selectedAnswer)) {
-          setWrongAnswers(prev => [...prev, selectedAnswer]);
-        }
-      }
-
-      setLastSubmissionCorrect(isCorrect);
-      onAnswerSubmitted(selectedAnswer, isCorrect);
-    } catch (error: any) {
-      console.error('Error saving progress:', error);
-      toast.error("Fehler beim Speichern des Fortschritts");
     }
+
+    setLastSubmissionCorrect(isCorrect);
+    onAnswerSubmitted(selectedAnswer, isCorrect);
   };
 
   const handleShowSolution = async () => {
     if (!user) return;
-    
+
     try {
-      // Check if solution has already been viewed
-      const { data: existingSolution, error: fetchError } = await supabase
+      const { error: insertError } = await supabase
         .from('user_progress')
-        .select()
-        .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id)
-        .eq('user_answer', 'solution_viewed');
+        .insert({
+          user_id: user.id,
+          question_id: currentQuestion.id,
+          user_answer: 'solution_viewed',
+          is_correct: false
+        });
 
-      if (fetchError) throw fetchError;
-
-      // Only insert if solution hasn't been viewed before
-      if (!existingSolution || existingSolution.length === 0) {
-        const { error: insertError } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
-            user_answer: 'solution_viewed',
-            is_correct: false
-          });
-
-        if (insertError) {
-          toast.error("Fehler beim Speichern des Fortschritts");
-          throw insertError;
-        }
+      if (insertError) {
+        console.error('Error saving progress:', insertError);
       }
-
-      setShowSolution(true);
-      // Notify parent component that solution was viewed
-      onAnswerSubmitted('solution_viewed', false);
-      
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving progress:', error);
-      toast.error("Fehler beim Speichern des Fortschritts");
     }
+
+    setShowSolution(true);
+    onAnswerSubmitted('solution_viewed', false);
   };
 
   // Hide the submission interface if all wrong answers have been tried or solution is shown
