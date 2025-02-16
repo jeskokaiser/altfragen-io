@@ -7,6 +7,7 @@ import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { XCircle, Eye } from 'lucide-react';
+import FeedbackDisplay from './FeedbackDisplay';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -81,6 +82,34 @@ const AnswerSubmission = ({
     }
   };
 
+  const handleShowSolution = async () => {
+    if (!user) return;
+
+    try {
+      // Insert a new progress record marking the question as viewed and incorrect
+      const { error: insertError } = await supabase
+        .from('user_progress')
+        .insert({
+          user_id: user.id,
+          question_id: currentQuestion.id,
+          user_answer: 'solution_viewed',
+          is_correct: false
+        });
+
+      if (insertError) {
+        toast.error("Fehler beim Speichern des Fortschritts");
+        throw insertError;
+      }
+
+      setShowSolution(true);
+      // Notify parent component that the solution was viewed (counts as incorrect)
+      onAnswerSubmitted('solution_viewed', false);
+    } catch (error: any) {
+      console.error('Error saving progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
+    }
+  };
+
   // Hide the submission interface if all wrong answers have been tried
   if (wrongAnswers.length >= 4) return null;
 
@@ -104,7 +133,7 @@ const AnswerSubmission = ({
           </Alert>
           
           <button
-            onClick={() => setShowSolution(true)}
+            onClick={handleShowSolution}
             className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors w-full"
           >
             <Eye className="h-4 w-4" />
@@ -114,11 +143,11 @@ const AnswerSubmission = ({
       )}
 
       {showSolution && (
-        <Alert>
-          <div className="flex items-center gap-2">
-            <span>Lösung: {currentQuestion.correctAnswer}</span>
-          </div>
-        </Alert>
+        <FeedbackDisplay
+          isCorrect={false}
+          correctAnswer={currentQuestion.correctAnswer}
+          comment={currentQuestion.comment}
+        />
       )}
     </div>
   );
