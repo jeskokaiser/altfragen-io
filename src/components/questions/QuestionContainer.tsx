@@ -18,7 +18,7 @@ interface QuestionContainerProps {
   isCorrect: boolean;
   wrongAnswers: string[];
   user: User | null;
-  onAnswerSubmitted: (answer: string, correct: boolean, showSolution?: boolean) => void;
+  onAnswerSubmitted: (answer: string, correct: boolean) => void;
   onEditClick: () => void;
   onMarkUnclear: () => void;
 }
@@ -37,11 +37,6 @@ const QuestionContainer: React.FC<QuestionContainerProps> = ({
   onMarkUnclear,
 }) => {
   const isMobile = useIsMobile();
-  const [showSolution, setShowSolution] = React.useState(false);
-
-  const handleAnswerSubmitted = (answer: string, correct: boolean) => {
-    onAnswerSubmitted(answer, correct, showSolution);
-  };
 
   return (
     <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
@@ -64,8 +59,7 @@ const QuestionContainer: React.FC<QuestionContainerProps> = ({
         currentQuestion={question}
         selectedAnswer={selectedAnswer}
         user={user}
-        onAnswerSubmitted={handleAnswerSubmitted}
-        setShowSolution={setShowSolution}
+        onAnswerSubmitted={onAnswerSubmitted}
       />
 
       <QuestionFeedback

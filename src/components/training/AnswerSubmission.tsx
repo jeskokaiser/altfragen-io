@@ -14,7 +14,6 @@ interface AnswerSubmissionProps {
   selectedAnswer: string;
   user: User | null;
   onAnswerSubmitted: (answer: string, isCorrect: boolean) => void;
-  setShowSolution: (show: boolean) => void;
 }
 
 const AnswerSubmission = ({
@@ -22,21 +21,19 @@ const AnswerSubmission = ({
   selectedAnswer,
   user,
   onAnswerSubmitted,
-  setShowSolution,
 }: AnswerSubmissionProps) => {
   const [hasSubmittedWrong, setHasSubmittedWrong] = React.useState(false);
   const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
   const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
-  const [showSolutionLocal, setShowSolutionLocal] = React.useState(false);
+  const [showSolution, setShowSolution] = React.useState(false);
 
   // Reset state when question changes
   React.useEffect(() => {
     setHasSubmittedWrong(false);
     setLastSubmissionCorrect(null);
     setWrongAnswers([]);
-    setShowSolutionLocal(false);
     setShowSolution(false);
-  }, [currentQuestion, setShowSolution]);
+  }, [currentQuestion]);
 
   const handleConfirmAnswer = async () => {
     if (!selectedAnswer || !user) return;
@@ -44,27 +41,56 @@ const AnswerSubmission = ({
     // Compare only the first letter, ignoring case
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
-    if (!isCorrect) {
-      setHasSubmittedWrong(true);
-      if (!wrongAnswers.includes(selectedAnswer)) {
-        setWrongAnswers(prev => [...prev, selectedAnswer]);
-      }
-    }
+    try {
+      // First, get all progress records for this question
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from('user_progress')
+        .select()
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id);
 
-    setLastSubmissionCorrect(isCorrect);
-    onAnswerSubmitted(selectedAnswer, isCorrect);
+      if (fetchError) throw fetchError;
+
+      // Insert new progress record
+      const { error: insertError } = await supabase
+        .from('user_progress')
+        .insert({
+          user_id: user.id,
+          question_id: currentQuestion.id,
+          user_answer: selectedAnswer,
+          is_correct: isCorrect
+        });
+
+      if (insertError) {
+        toast.error("Fehler beim Speichern des Fortschritts");
+        throw insertError;
+      }
+
+      // If this attempt is wrong, add it to wrongAnswers
+      if (!isCorrect) {
+        setHasSubmittedWrong(true);
+        if (!wrongAnswers.includes(selectedAnswer)) {
+          setWrongAnswers(prev => [...prev, selectedAnswer]);
+        }
+      }
+
+      setLastSubmissionCorrect(isCorrect);
+      onAnswerSubmitted(selectedAnswer, isCorrect);
+    } catch (error: any) {
+      console.error('Error saving progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
+    }
   };
 
-  const handleShowSolution = () => {
+  const handleShowSolution = async () => {
     if (!user) return;
-    
-    setShowSolutionLocal(true);
-    setShowSolution(true);
-    onAnswerSubmitted('solution_viewed', false);
+        
+      setShowSolution(true);
+      
   };
 
   // Hide the submission interface if all wrong answers have been tried
-  if (wrongAnswers.length >= 4 || showSolutionLocal) return null;
+  if (wrongAnswers.length >= 4) return null;
 
   return (
     <div className="mt-4 space-y-4">
@@ -95,7 +121,7 @@ const AnswerSubmission = ({
         </div>
       )}
 
-      {showSolutionLocal && (
+      {showSolution && (
         <FeedbackDisplay
           isCorrect={false}
           correctAnswer={currentQuestion.correctAnswer}
