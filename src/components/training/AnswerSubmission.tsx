@@ -47,23 +47,26 @@ const AnswerSubmission = ({
         .from('user_progress')
         .select()
         .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id);
+        .eq('question_id', currentQuestion.id)
+        .eq('user_answer', selectedAnswer);
 
       if (fetchError) throw fetchError;
 
-      // Insert new progress record
-      const { error: insertError } = await supabase
-        .from('user_progress')
-        .insert({
-          user_id: user.id,
-          question_id: currentQuestion.id,
-          user_answer: selectedAnswer,
-          is_correct: isCorrect
-        });
+      // Only insert if this exact answer hasn't been submitted before
+      if (!existingProgress || existingProgress.length === 0) {
+        const { error: insertError } = await supabase
+          .from('user_progress')
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: selectedAnswer,
+            is_correct: isCorrect
+          });
 
-      if (insertError) {
-        toast.error("Fehler beim Speichern des Fortschritts");
-        throw insertError;
+        if (insertError) {
+          toast.error("Fehler beim Speichern des Fortschritts");
+          throw insertError;
+        }
       }
 
       // If this attempt is wrong, add it to wrongAnswers
@@ -86,19 +89,31 @@ const AnswerSubmission = ({
     if (!user) return;
     
     try {
-      // Insert a new progress record marking the question as viewed
-      const { error: insertError } = await supabase
+      // Check if solution has already been viewed
+      const { data: existingSolution, error: fetchError } = await supabase
         .from('user_progress')
-        .insert({
-          user_id: user.id,
-          question_id: currentQuestion.id,
-          user_answer: 'solution_viewed',
-          is_correct: false
-        });
+        .select()
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id)
+        .eq('user_answer', 'solution_viewed');
 
-      if (insertError) {
-        toast.error("Fehler beim Speichern des Fortschritts");
-        throw insertError;
+      if (fetchError) throw fetchError;
+
+      // Only insert if solution hasn't been viewed before
+      if (!existingSolution || existingSolution.length === 0) {
+        const { error: insertError } = await supabase
+          .from('user_progress')
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: 'solution_viewed',
+            is_correct: false
+          });
+
+        if (insertError) {
+          toast.error("Fehler beim Speichern des Fortschritts");
+          throw insertError;
+        }
       }
 
       setShowSolution(true);
