@@ -175,6 +175,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           correctAnswer={currentQuestion.correctAnswer}
           comment={currentQuestion.comment}
           isCorrect={isCorrect}
+          wrongAnswers={wrongAnswers}
         />
       </Card>
 

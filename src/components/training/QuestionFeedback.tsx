@@ -8,6 +8,7 @@ interface QuestionFeedbackProps {
   correctAnswer: string;
   comment?: string;
   isCorrect: boolean;
+  wrongAnswers: string[];
 }
 
 const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
@@ -16,6 +17,7 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   correctAnswer,
   comment,
   isCorrect,
+  wrongAnswers,
 }) => {
   if (!showFeedback || !userAnswer) return null;
 
