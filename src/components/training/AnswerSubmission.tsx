@@ -2,10 +2,9 @@
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
-import { Alert } from '@/components/ui/alert';
-import { CheckCircle2, XCircle } from 'lucide-react';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -21,7 +20,6 @@ const AnswerSubmission = ({
   onAnswerSubmitted,
 }: AnswerSubmissionProps) => {
   const [hasSubmittedWrong, setHasSubmittedWrong] = React.useState(false);
-  const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
 
   const handleConfirmAnswer = async () => {
     if (!selectedAnswer || !user) return;
@@ -41,9 +39,15 @@ const AnswerSubmission = ({
 
         if (fetchError) throw fetchError;
 
+        // If we've already submitted a wrong answer, don't update the database unless it's correct
+        if (hasSubmittedWrong && !isCorrect) {
+          onAnswerSubmitted(selectedAnswer, isCorrect);
+          return;
+        }
+
         if (existingProgress && existingProgress.length > 0) {
           // Update all progress records for this question
-          await supabase
+          const { error: updateError } = await supabase
             .from('user_progress')
             .update({
               user_answer: selectedAnswer,
@@ -51,9 +55,11 @@ const AnswerSubmission = ({
             })
             .eq('user_id', user.id)
             .eq('question_id', currentQuestion.id);
+
+          if (updateError) throw updateError;
         } else {
           // Insert new progress record
-          await supabase
+          const { error: insertError } = await supabase
             .from('user_progress')
             .insert({
               user_id: user.id,
@@ -61,15 +67,19 @@ const AnswerSubmission = ({
               user_answer: selectedAnswer,
               is_correct: isCorrect
             });
+
+          if (insertError) throw insertError;
         }
 
-        if (!isCorrect) {
+        if (isCorrect) {
+          toast.success('Richtige Antwort!');
+        } else {
+          toast.error('Falsche Antwort! Versuche es noch einmal.');
           setHasSubmittedWrong(true);
         }
-        
-        setLastSubmissionCorrect(isCorrect);
       } catch (error: any) {
         console.error('Error saving progress:', error);
+        toast.error("Fehler beim Speichern des Fortschritts");
       }
     }
 
@@ -77,7 +87,7 @@ const AnswerSubmission = ({
   };
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-4">
       <Button 
         onClick={handleConfirmAnswer}
         disabled={!selectedAnswer}
@@ -85,24 +95,6 @@ const AnswerSubmission = ({
       >
         Antwort bestätigen
       </Button>
-      
-      {lastSubmissionCorrect !== null && (
-        <Alert variant={lastSubmissionCorrect ? "default" : "destructive"}>
-          <div className="flex items-center gap-2">
-            {lastSubmissionCorrect ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span>Richtige Antwort!</span>
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4 text-red-500" />
-                <span>Falsche Antwort! Versuche es noch einmal.</span>
-              </>
-            )}
-          </div>
-        </Alert>
-      )}
     </div>
   );
 };
