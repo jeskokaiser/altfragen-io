@@ -40,8 +40,8 @@ const AnswerSubmission = ({
 
       if (fetchError) throw fetchError;
 
-      // If there's no existing progress or we haven't submitted a wrong answer yet
-      if (!existingProgress?.length && !hasSubmittedWrong) {
+      // If there's no existing progress, save this attempt
+      if (!existingProgress?.length) {
         // Insert new progress record
         const { error: insertError } = await supabase
           .from('user_progress')
