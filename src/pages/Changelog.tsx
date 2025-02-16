@@ -8,12 +8,21 @@ import { Separator } from '@/components/ui/separator';
 const changelogData = [
  
   {
+    version: '0.0.3',
+    date: '2025-02-18',
+    changes: [
+      'Darkmode Farben angepasst',
+      'Passwort reset bugfix',      
+    ],
+  },
+
+  {
     version: '0.0.2',
     date: '2025-02-14',
     changes: [
       'Versionierung mit Changelog eingeführt',
       'Footer aktualisiert',
-      'Jedes nicht in der Frage wird jetzt unterstrichen',
+      'Jedes nicht, kein, falsch etc in der Frage wird jetzt unterstrichen',
       'Prompt aktualisiert',
     ],
   },
