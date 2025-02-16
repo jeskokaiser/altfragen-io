@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface ProgressBarProps {
@@ -8,9 +9,9 @@ interface ProgressBarProps {
 const ProgressBar: React.FC<ProgressBarProps> = ({ currentIndex, totalQuestions }) => {
   return (
     <div className="w-full">
-      <div className="w-full bg-slate-200 h-2 rounded-full">
+      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
         <div
-          className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+          className="bg-indigo-600 h-1.5 transition-all duration-300 ease-in-out"
           style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
         />
       </div>

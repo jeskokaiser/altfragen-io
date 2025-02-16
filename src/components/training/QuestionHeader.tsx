@@ -18,18 +18,19 @@ const QuestionHeader: React.FC<QuestionHeaderProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex flex-col gap-3 mb-4">
-      <ProgressBar currentIndex={currentIndex} totalQuestions={totalQuestions} />
-      <div className="flex justify-end">
+    <div className="bg-white rounded-lg p-4 mb-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-slate-800">Training</h2>
         <Button 
           variant="outline" 
           onClick={onQuit} 
-          className={`text-red-500 hover:text-red-600 hover:bg-red-50 ${isMobile ? 'text-sm' : ''}`}
+          className="text-red-500 hover:text-red-600 hover:bg-red-50"
           size={isMobile ? "sm" : "default"}
         >
           Training beenden
         </Button>
       </div>
+      <ProgressBar currentIndex={currentIndex} totalQuestions={totalQuestions} />
     </div>
   );
 };
