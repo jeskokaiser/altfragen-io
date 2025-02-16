@@ -44,13 +44,19 @@ const AnswerSubmission = ({
     try {
       const { error } = await supabase
         .from('user_progress')
-        .upsert({
-          user_id: user.id,
-          question_id: currentQuestion.id,
-          user_answer: selectedAnswer,
-          is_correct: isCorrect,
-          attempt_number: 1
-        });
+        .upsert(
+          {
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: selectedAnswer,
+            is_correct: isCorrect,
+            attempt_number: 1
+          },
+          {
+            onConflict: 'user_id,question_id',
+            ignoreDuplicates: false
+          }
+        );
 
       if (error) {
         console.error('Error saving progress:', error);
