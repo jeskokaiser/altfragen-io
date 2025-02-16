@@ -42,6 +42,15 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
+      // First, check if there's an existing incorrect answer
+      const { data: existingProgress } = await supabase
+        .from('user_progress')
+        .select('is_correct')
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id)
+        .single();
+
+      // Perform the upsert
       const { error } = await supabase
         .from('user_progress')
         .upsert(
@@ -62,6 +71,11 @@ const AnswerSubmission = ({
         console.error('Error saving progress:', error);
         toast.error("Fehler beim Speichern des Fortschritts");
         return;
+      }
+
+      // Show improvement toast if the answer is now correct but was previously wrong
+      if (isCorrect && existingProgress && !existingProgress.is_correct) {
+        toast.success("Super! Du hast die Frage jetzt richtig beantwortet! 🎉");
       }
 
       if (!isCorrect) {
