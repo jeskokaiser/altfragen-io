@@ -42,16 +42,16 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      // First, check if there's an existing attempt - using maybeSingle() instead of single()
+      // Check if there's an existing attempt
       const { data: existingProgress } = await supabase
         .from('user_progress')
-        .select('is_correct, attempt_number')
+        .select('is_correct, attempts_count')
         .eq('user_id', user.id)
         .eq('question_id', currentQuestion.id)
         .maybeSingle();
 
       if (!existingProgress) {
-        // First attempt - record the result as is
+        // First attempt - record the result
         const { error } = await supabase
           .from('user_progress')
           .insert({
@@ -59,7 +59,7 @@ const AnswerSubmission = ({
             question_id: currentQuestion.id,
             user_answer: selectedAnswer,
             is_correct: isCorrect,
-            attempt_number: 1
+            attempts_count: 1
           });
 
         if (error) {
@@ -68,21 +68,18 @@ const AnswerSubmission = ({
           return;
         }
       } else {
-        // This is a subsequent attempt
-        const nextAttemptNumber = (existingProgress.attempt_number || 1) + 1;
-        
+        // This is a subsequent attempt - update the existing record
         const { error } = await supabase
           .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
+          .update({
             user_answer: selectedAnswer,
-            is_correct: existingProgress.is_correct, // Keep the original correctness status
-            attempt_number: nextAttemptNumber
-          });
+            attempts_count: (existingProgress.attempts_count || 1) + 1
+          })
+          .eq('user_id', user.id)
+          .eq('question_id', currentQuestion.id);
 
         if (error) {
-          console.error('Error saving progress:', error);
+          console.error('Error updating progress:', error);
           toast.error("Fehler beim Speichern des Fortschritts");
           return;
         }
