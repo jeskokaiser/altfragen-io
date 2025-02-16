@@ -42,7 +42,7 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      // First, check if there's an existing incorrect answer
+      // First, check if there's an existing attempt
       const { data: existingProgress } = await supabase
         .from('user_progress')
         .select('is_correct')
@@ -50,33 +50,30 @@ const AnswerSubmission = ({
         .eq('question_id', currentQuestion.id)
         .single();
 
-      // Perform the upsert
-      const { error } = await supabase
-        .from('user_progress')
-        .upsert(
-          {
+      // If there's no existing attempt, or if this is the first correct answer
+      if (!existingProgress) {
+        // First attempt - record the result as is
+        const { error } = await supabase
+          .from('user_progress')
+          .insert({
             user_id: user.id,
             question_id: currentQuestion.id,
             user_answer: selectedAnswer,
             is_correct: isCorrect,
             attempt_number: 1
-          },
-          {
-            onConflict: 'user_id,question_id',
-            ignoreDuplicates: false
-          }
-        );
+          });
 
-      if (error) {
-        console.error('Error saving progress:', error);
-        toast.error("Fehler beim Speichern des Fortschritts");
-        return;
+        if (error) {
+          console.error('Error saving progress:', error);
+          toast.error("Fehler beim Speichern des Fortschritts");
+          return;
+        }
+      } else if (isCorrect && !existingProgress.is_correct) {
+        // If they got it right now but had it wrong before, show the improvement toast
+        // but don't update the is_correct status
+        toast.success("Super! Du hast die richtige Antwort gefunden! Die erste Antwort zählt jedoch als Ergebnis.");
       }
-
-      // Show improvement toast if the answer is now correct but was previously wrong
-      if (isCorrect && existingProgress && !existingProgress.is_correct) {
-        toast.success("Super! Du hast die Frage jetzt richtig beantwortet! 🎉");
-      }
+      // If they already have an attempt, don't update the database record
 
       if (!isCorrect) {
         setHasSubmittedWrong(true);
