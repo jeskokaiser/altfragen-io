@@ -111,7 +111,7 @@ const AnswerSubmission = ({
             {lastSubmissionCorrect ? (
               <>
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span>Richtige Antwort!</span>
+                <span>Die Antwort ist korrekt.</span>
               </>
             ) : (
               <>
