@@ -86,31 +86,31 @@ const AnswerSubmission = ({
 
   return (
     <div className="mt-4 space-y-4">
-      <div className="flex flex-col gap-4">
-        <Button 
-          onClick={handleConfirmAnswer}
-          disabled={!selectedAnswer}
-          className="w-full"
-        >
-          Antwort bestätigen
-        </Button>
-        
-        <button
-          onClick={() => setShowSolution(true)}
-          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors"
-        >
-          <Eye className="h-4 w-4" />
-          <span>Lösung anzeigen</span>
-        </button>
-      </div>
+      <Button 
+        onClick={handleConfirmAnswer}
+        disabled={!selectedAnswer}
+        className="w-full"
+      >
+        Antwort bestätigen
+      </Button>
       
       {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
-        <Alert variant="destructive">
-          <div className="flex items-center gap-2">
-            <XCircle className="text-red-500" />
-            <span className="dark:text-white">Falsche Antwort! Versuche es noch einmal.</span>
-          </div>
-        </Alert>
+        <div className="space-y-4">
+          <Alert variant="destructive">
+            <div className="flex items-center gap-2">
+              <XCircle className="text-red-500" />
+              <span className="dark:text-white">Falsche Antwort! Versuche es noch einmal.</span>
+            </div>
+          </Alert>
+          
+          <button
+            onClick={() => setShowSolution(true)}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors w-full"
+          >
+            <Eye className="h-4 w-4" />
+            <span>Lösung anzeigen</span>
+          </button>
+        </div>
       )}
 
       {showSolution && (
@@ -125,4 +125,3 @@ const AnswerSubmission = ({
 };
 
 export default AnswerSubmission;
-
