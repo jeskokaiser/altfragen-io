@@ -13,7 +13,7 @@ interface AnswerSubmissionProps {
   currentQuestion: Question;
   selectedAnswer: string;
   user: User | null;
-  onAnswerSubmitted: (answer: string, isCorrect: boolean) => void;
+  onAnswerSubmitted: (answer: string, isCorrect: boolean, showSolution?: boolean) => void;
 }
 
 const AnswerSubmission = ({
@@ -75,18 +75,18 @@ const AnswerSubmission = ({
       }
 
       setLastSubmissionCorrect(isCorrect);
-      onAnswerSubmitted(selectedAnswer, isCorrect);
+      onAnswerSubmitted(selectedAnswer, isCorrect, showSolution);
     } catch (error: any) {
       console.error('Error saving progress:', error);
       toast.error("Fehler beim Speichern des Fortschritts");
     }
   };
 
-  const handleShowSolution = async () => {
+  const handleShowSolution = () => {
     if (!user) return;
-        
-      setShowSolution(true);
-      
+    
+    setShowSolution(true);
+    onAnswerSubmitted('solution_viewed', false, true);
   };
 
   // Hide the submission interface if all wrong answers have been tried

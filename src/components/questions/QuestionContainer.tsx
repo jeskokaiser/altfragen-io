@@ -18,7 +18,7 @@ interface QuestionContainerProps {
   isCorrect: boolean;
   wrongAnswers: string[];
   user: User | null;
-  onAnswerSubmitted: (answer: string, correct: boolean) => void;
+  onAnswerSubmitted: (answer: string, correct: boolean, showSolution?: boolean) => void;
   onEditClick: () => void;
   onMarkUnclear: () => void;
 }
