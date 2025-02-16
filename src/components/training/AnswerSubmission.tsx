@@ -51,7 +51,7 @@ const AnswerSubmission = ({
         .maybeSingle();
 
       if (!existingProgress) {
-        // First attempt - record the result
+        // First attempt - record the result without toast
         const { error } = await supabase
           .from('user_progress')
           .insert({
@@ -68,13 +68,13 @@ const AnswerSubmission = ({
           return;
         }
       } else {
-        // This is a subsequent attempt - update the existing record
+        // This is a subsequent attempt
         const { error } = await supabase
           .from('user_progress')
           .update({
             user_answer: selectedAnswer,
             attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: isCorrect || existingProgress.is_correct // Update to correct if either current or previous attempt was correct
+            is_correct: isCorrect // Set is_correct to current attempt result
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
@@ -85,9 +85,23 @@ const AnswerSubmission = ({
           return;
         }
 
-        // If they got it right now but had it wrong before, show the improvement toast
-        if (isCorrect && !existingProgress.is_correct) {
-          toast.success("Super! Die Frage ist jetzt als richtig markiert, aber die erste falsche Antwort bleibt für die Statistik erhalten.");
+        // Show appropriate toast messages for subsequent attempts
+        if (isCorrect) {
+          if (!existingProgress.is_correct) {
+            // Was wrong before, now correct
+            toast.success("Super! Die Frage ist jetzt als richtig markiert, aber die erste falsche Antwort bleibt für die Statistik erhalten.");
+          } else {
+            // Was already correct
+            toast.success("Diese Frage hattest du bereits richtig beantwortet!");
+          }
+        } else {
+          if (existingProgress.is_correct) {
+            // Was correct before, now wrong
+            toast.error("Diese Frage hattest du bereits richtig beantwortet. Versuch es noch einmal!");
+          } else {
+            // Was wrong before, still wrong
+            toast.error("Weiter üben! Du schaffst das!");
+          }
         }
       }
 
