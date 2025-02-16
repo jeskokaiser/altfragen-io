@@ -40,7 +40,7 @@ const AppContent = () => {
                     location.pathname === '/dashboard';
 
   return (
-    <div className="min-h-screen flex flex-col dark:bg-slate-900">
+    <div className="min-h-screen flex flex-col dark:bg-zinc-950">
       <div className="flex-grow">
         <Toaster />
         <Sonner />
