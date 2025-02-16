@@ -20,14 +20,27 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for recovery mode in URL parameters
+    // Check for recovery mode and access token in URL parameters
     const params = new URLSearchParams(window.location.search);
     const type = params.get('type');
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
     
-    if (type === 'recovery') {
-      setIsResetPassword(true);
+    if (type === 'recovery' && (access_token || refresh_token)) {
+      // Set the session using the tokens
+      supabase.auth.setSession({
+        access_token: access_token || '',
+        refresh_token: refresh_token || ''
+      }).then(({ data, error }) => {
+        if (error) {
+          toast.error('Fehler beim Zurücksetzen des Passworts. Bitte versuchen Sie es erneut.');
+          navigate('/auth');
+        } else if (data.session) {
+          setIsResetPassword(true);
+        }
+      });
     }
-  }, []);
+  }, [navigate]);
 
   const validatePassword = (password: string) => {
     const minLength = 8;
@@ -104,7 +117,11 @@ const Auth = () => {
       }
 
       toast.success('Passwort erfolgreich aktualisiert');
-      navigate('/dashboard');
+      
+      // After successful password update, sign out the user and redirect to login
+      await supabase.auth.signOut();
+      setIsResetPassword(false);
+      navigate('/auth');
     } catch (error: any) {
       toast.error(error.message);
     } finally {
