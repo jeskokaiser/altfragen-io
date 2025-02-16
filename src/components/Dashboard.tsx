@@ -112,7 +112,7 @@ const Dashboard = () => {
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
       <section className="space-y-4">
         <DashboardHeader />
-        <Card className="bg-slate-50/50">
+        <Card className="bg-slate-50/50 dark:bg-zinc-900">
           <CardContent className={`${isMobile ? 'p-3' : 'pt-6'}`}>
             <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
           </CardContent>
@@ -123,7 +123,9 @@ const Dashboard = () => {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-800">Hochgeladene Fragendatenbanken</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50">
+            Hochgeladene Fragendatenbanken
+          </h2>
           <span className="text-sm text-muted-foreground">
             {questions?.length || 0} Fragen insgesamt
           </span>
@@ -139,7 +141,7 @@ const Dashboard = () => {
         ) : (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-lg text-slate-600 mb-2">
+              <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
                 Noch keine Datensätze hochgeladen
               </p>
               <p className="text-sm text-muted-foreground">
