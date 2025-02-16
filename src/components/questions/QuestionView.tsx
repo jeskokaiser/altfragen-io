@@ -11,7 +11,7 @@ import AnswerSubmission from '../training/AnswerSubmission';
 import DifficultyControls from '../training/DifficultyControls';
 import QuestionFeedback from '../training/QuestionFeedback';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -99,6 +99,36 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   };
 
+  const handleCopyToClipboard = async () => {
+    const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. Die Frage stammt aus dem Gedächtnisprotokoll anderer Studierender.
+Bitte erkläre mir:
+1. Was ist der Kerninhalt der Frage?
+2. Warum ist die richtige Antwort korrekt?
+3. Warum sind die anderen Antworten falsch?
+4. Ist die protokollierte Lösung korrekt?
+
+Hier ist die Frage mit allen Antwortoptionen:
+
+Frage: ${currentQuestion.question}
+
+A: ${currentQuestion.optionA}
+B: ${currentQuestion.optionB}
+C: ${currentQuestion.optionC}
+D: ${currentQuestion.optionD}
+E: ${currentQuestion.optionE}
+
+Die richtige Antwort laut Protokoll ist: ${currentQuestion.correctAnswer}
+
+Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.comment || "Kein Kommentar vorhanden"}`;
+
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success("Frage und Prompt in die Zwischenablage kopiert");
+    } catch (err) {
+      toast.error("Fehler beim Kopieren in die Zwischenablage");
+    }
+  };
+
   if (!currentQuestion) {
     return <div>Loading question...</div>;
   }
@@ -120,7 +150,16 @@ const QuestionView: React.FC<QuestionViewProps> = ({
               onEditClick={() => setIsEditModalOpen(true)}
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyToClipboard}
+              className="flex items-center gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              <span className="hidden sm:inline">KI-Kopieren</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
