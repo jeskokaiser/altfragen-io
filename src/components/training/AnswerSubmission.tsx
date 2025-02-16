@@ -98,7 +98,7 @@ const AnswerSubmission = ({
       {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
         <Alert variant="destructive">
           <div className="flex items-center gap-2">
-            <XCircle className="h-4 w-4 text-red-500" />
+            <XCircle className="text-red-500 dark:text-white" />
             <span>Falsche Antwort! Versuche es noch einmal.</span>
           </div>
         </Alert>
