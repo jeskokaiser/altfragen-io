@@ -74,55 +74,32 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${questionData.commen
 
   return (
     <div className="space-y-6 bg-white rounded-lg p-6">
-      <div className="flex justify-between items-start gap-4">
-        <h3 className="text-lg font-medium leading-relaxed text-slate-800 dark:text-white flex-grow">
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium leading-relaxed text-slate-800 dark:text-white">
           {highlightNicht(questionData.question)}
         </h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCopyToClipboard}
-          className="shrink-0 flex items-center gap-2 hover:bg-slate-100"
-        >
-          <Copy className="h-4 w-4" />
-          <span className="hidden sm:inline">KI-Kopieren</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyToClipboard}
+            className="flex items-center gap-2 hover:bg-slate-100"
+          >
+            <Copy className="h-4 w-4" />
+            <span className="hidden sm:inline">KI-Kopieren</span>
+          </Button>
+        </div>
       </div>
       <RadioGroup 
         value={selectedAnswer} 
         onValueChange={onAnswerChange}
         className="space-y-3"
       >
-        <AnswerOption 
-          value="A" 
-          text={questionData.optionA} 
-          resetTrigger={resetTrigger} 
-          className="hover:bg-slate-50"
-        />
-        <AnswerOption 
-          value="B" 
-          text={questionData.optionB} 
-          resetTrigger={resetTrigger} 
-          className="hover:bg-slate-50"
-        />
-        <AnswerOption 
-          value="C" 
-          text={questionData.optionC} 
-          resetTrigger={resetTrigger} 
-          className="hover:bg-slate-50"
-        />
-        <AnswerOption 
-          value="D" 
-          text={questionData.optionD} 
-          resetTrigger={resetTrigger} 
-          className="hover:bg-slate-50"
-        />
-        <AnswerOption 
-          value="E" 
-          text={questionData.optionE} 
-          resetTrigger={resetTrigger} 
-          className="hover:bg-slate-50"
-        />
+        <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} />
+        <AnswerOption value="B" text={questionData.optionB} resetTrigger={resetTrigger} />
+        <AnswerOption value="C" text={questionData.optionC} resetTrigger={resetTrigger} />
+        <AnswerOption value="D" text={questionData.optionD} resetTrigger={resetTrigger} />
+        <AnswerOption value="E" text={questionData.optionE} resetTrigger={resetTrigger} />
       </RadioGroup>
     </div>
   );
