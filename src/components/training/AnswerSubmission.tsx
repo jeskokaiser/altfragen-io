@@ -27,7 +27,6 @@ const AnswerSubmission = ({
   const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
   const [showSolution, setShowSolution] = React.useState(false);
 
-  // Reset state when question changes
   React.useEffect(() => {
     setHasSubmittedWrong(false);
     setLastSubmissionCorrect(null);
@@ -38,35 +37,28 @@ const AnswerSubmission = ({
   const handleConfirmAnswer = async () => {
     if (!selectedAnswer || !user) return;
 
-    // Compare only the first letter, ignoring case
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      // First, get all progress records for this question
-      const { data: existingProgress, error: fetchError } = await supabase
+      // First, try to update an existing record
+      const { data: existingProgress, error: updateError } = await supabase
         .from('user_progress')
-        .select()
-        .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id);
-
-      if (fetchError) throw fetchError;
-
-      // Insert new progress record
-      const { error: insertError } = await supabase
-        .from('user_progress')
-        .insert({
+        .upsert({
           user_id: user.id,
           question_id: currentQuestion.id,
           user_answer: selectedAnswer,
-          is_correct: isCorrect
+          is_correct: isCorrect,
+          attempt_number: wrongAnswers.length + 1
+        }, {
+          onConflict: 'user_id,question_id',
+          ignoreDuplicates: false
         });
 
-      if (insertError) {
+      if (updateError) {
         toast.error("Fehler beim Speichern des Fortschritts");
-        throw insertError;
+        throw updateError;
       }
 
-      // If this attempt is wrong, add it to wrongAnswers
       if (!isCorrect) {
         setHasSubmittedWrong(true);
         if (!wrongAnswers.includes(selectedAnswer)) {
@@ -89,7 +81,6 @@ const AnswerSubmission = ({
     onAnswerSubmitted('solution_viewed', false, true);
   };
 
-  // Hide the submission interface if all wrong answers have been tried
   if (wrongAnswers.length >= 4) return null;
 
   return (
