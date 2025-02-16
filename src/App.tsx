@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,43 +16,52 @@ import Tutorial from "./pages/Tutorial";
 import Footer from "./components/Footer";
 import Dashboard from "./components/Dashboard";
 import Changelog from "./pages/Changelog";
+
 const queryClient = new QueryClient();
-const ProtectedRoute = ({
-  children
-}: {
-  children: React.ReactNode;
-}) => {
-  const {
-    user,
-    loading
-  } = useAuth();
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+
   if (loading) {
     return <div>Loading...</div>;
   }
+
   if (!user) {
     return <Navigate to="/auth" />;
   }
+
   return <>{children}</>;
 };
+
 const AppContent = () => {
   const location = useLocation();
-  const showFooter = location.pathname === '/auth' || location.pathname === '/' || location.pathname === '/dashboard';
-  return <div className="min-h-screen flex flex-col dark:bg-slate-900">
-      <div className="flex-grow bg-zinc-950 hover:bg-zinc-800">
+  const showFooter = location.pathname === '/auth' || 
+                    location.pathname === '/' || 
+                    location.pathname === '/dashboard';
+
+  return (
+    <div className="min-h-screen flex flex-col dark:bg-slate-900">
+      <div className="flex-grow">
         <Toaster />
         <Sonner />
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Index />} />
-          <Route path="/training" element={<ProtectedRoute>
+          <Route path="/training" element={
+            <ProtectedRoute>
               <Training />
-            </ProtectedRoute>} />
-          <Route path="/unclear-questions/:filename" element={<ProtectedRoute>
+            </ProtectedRoute>
+          } />
+          <Route path="/unclear-questions/:filename" element={
+            <ProtectedRoute>
               <UnclearQuestions />
-            </ProtectedRoute>} />
-          <Route path="/tutorial" element={<ProtectedRoute>
+            </ProtectedRoute>
+          } />
+          <Route path="/tutorial" element={
+            <ProtectedRoute>
               <Tutorial />
-            </ProtectedRoute>} />
+            </ProtectedRoute>
+          } />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -59,9 +69,12 @@ const AppContent = () => {
         </Routes>
         {showFooter && <Footer />}
       </div>
-    </div>;
+    </div>
+  );
 };
-const App = () => <QueryClientProvider client={queryClient}>
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
@@ -71,5 +84,7 @@ const App = () => <QueryClientProvider client={queryClient}>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
-  </QueryClientProvider>;
+  </QueryClientProvider>
+);
+
 export default App;
