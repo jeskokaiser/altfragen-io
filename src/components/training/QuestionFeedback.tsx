@@ -17,7 +17,7 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   comment,
   isCorrect,
 }) => {
-  if (!showFeedback || !userAnswer || !isCorrect) return null;
+  if (!showFeedback || !userAnswer) return null;
 
   return (
     <FeedbackDisplay 
