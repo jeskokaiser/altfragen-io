@@ -8,11 +8,12 @@ import { Separator } from '@/components/ui/separator';
 const changelogData = [
  
   {
-    version: '0.0.3',
+    version: '0.1.0',
     date: '2025-02-18',
     changes: [
-      'Darkmode Farben angepasst',
-      'Passwort reset bugfix',      
+      'Darkmode uns Stat Farben angepasst',
+      'Passwort reset bugfix', 
+      'Bei falscher Antwort kann man es nun weiter versuchen wie bei Amboss'     
     ],
   },
 
