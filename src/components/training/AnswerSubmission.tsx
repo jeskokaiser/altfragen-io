@@ -84,13 +84,35 @@ const AnswerSubmission = ({
 
   const handleShowSolution = async () => {
     if (!user) return;
-        
+    
+    try {
+      // Insert a new progress record marking the question as viewed
+      const { error: insertError } = await supabase
+        .from('user_progress')
+        .insert({
+          user_id: user.id,
+          question_id: currentQuestion.id,
+          user_answer: 'solution_viewed',
+          is_correct: false
+        });
+
+      if (insertError) {
+        toast.error("Fehler beim Speichern des Fortschritts");
+        throw insertError;
+      }
+
       setShowSolution(true);
+      // Notify parent component that solution was viewed
+      onAnswerSubmitted('solution_viewed', false);
       
+    } catch (error: any) {
+      console.error('Error saving progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
+    }
   };
 
-  // Hide the submission interface if all wrong answers have been tried
-  if (wrongAnswers.length >= 4) return null;
+  // Hide the submission interface if all wrong answers have been tried or solution is shown
+  if (wrongAnswers.length >= 4 || showSolution) return null;
 
   return (
     <div className="mt-4 space-y-4">
