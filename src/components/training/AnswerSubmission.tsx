@@ -105,20 +105,11 @@ const AnswerSubmission = ({
         Antwort bestätigen
       </Button>
       
-      {lastSubmissionCorrect !== null && (
-        <Alert variant={lastSubmissionCorrect ? "default" : "destructive"}>
+      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
+        <Alert variant="destructive">
           <div className="flex items-center gap-2">
-            {lastSubmissionCorrect ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span>Die Antwort ist korrekt.</span>
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4 text-red-500" />
-                <span>Falsche Antwort! Versuche es noch einmal.</span>
-              </>
-            )}
+            <XCircle className="h-4 w-4 text-red-500" />
+            <span>Falsche Antwort! Versuche es noch einmal.</span>
           </div>
         </Alert>
       )}
