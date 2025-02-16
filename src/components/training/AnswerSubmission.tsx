@@ -42,13 +42,13 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      // First, check if there's an existing attempt
+      // First, check if there's an existing attempt - using maybeSingle() instead of single()
       const { data: existingProgress } = await supabase
         .from('user_progress')
         .select('is_correct')
         .eq('user_id', user.id)
         .eq('question_id', currentQuestion.id)
-        .single();
+        .maybeSingle();
 
       // If there's no existing attempt, or if this is the first correct answer
       if (!existingProgress) {
