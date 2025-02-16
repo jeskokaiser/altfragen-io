@@ -11,7 +11,7 @@ interface FeedbackDisplayProps {
 const FeedbackDisplay: React.FC<FeedbackDisplayProps> = ({ isCorrect, correctAnswer, comment }) => {
   return (
     <div className="mt-6 space-y-4">
-      <Alert variant={isCorrect ? "default" : "destructive"} className="flex items-center">
+      <Alert variant={isCorrect ? "default" : "destructive"} className="flex items-center gap-2">
         <div className="mr-2">
           {isCorrect ? <CheckCircle2 className="text-green-500" /> : <XCircle className="text-red-500" />}
         </div>
