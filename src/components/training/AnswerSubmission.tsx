@@ -73,7 +73,8 @@ const AnswerSubmission = ({
           .from('user_progress')
           .update({
             user_answer: selectedAnswer,
-            attempts_count: (existingProgress.attempts_count || 1) + 1
+            attempts_count: (existingProgress.attempts_count || 1) + 1,
+            is_correct: isCorrect || existingProgress.is_correct // Update to correct if either current or previous attempt was correct
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
