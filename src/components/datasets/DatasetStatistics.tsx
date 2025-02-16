@@ -108,7 +108,9 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Gesamtfortschritt */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
-          <Progress value={answeredPercentage} className="h-2 mb-2 dark:bg-zinc-800" />
+          <Progress value={answeredPercentage} className="h-2 mb-2 dark:bg-zinc-800">
+            <div className="h-full bg-primary transition-all dark:bg-zinc-400" style={{ width: `${answeredPercentage}%` }} />
+          </Progress>
           <p className="text-sm text-muted-foreground">
             {answeredQuestions} von {totalQuestions} Fragen beantwortet ({answeredPercentage.toFixed(0)}%)
           </p>
@@ -118,7 +120,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
           <Progress value={correctPercentageBar} className="h-2 mb-2 bg-green-100 dark:bg-green-950/50">
-            <div className="h-full bg-green-600 transition-all" style={{ width: `${correctPercentageBar}%` }} />
+            <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" style={{ width: `${correctPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
             {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}%)<br />{correctPercentage.toFixed(0)}% der beantworteten Fragen
@@ -129,7 +131,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
           <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-red-100 dark:bg-red-950/50">
-            <div className="h-full bg-red-600 transition-all" style={{ width: `${wrongPercentageBar}%` }} />
+            <div className="h-full bg-red-600 transition-all dark:bg-red-500/70" style={{ width: `${wrongPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
             {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentageBar.toFixed(0)}%)
@@ -170,7 +172,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
                     value={(stats.correct / stats.total) * 100} 
                     className="flex-1 h-2 bg-green-100 dark:bg-green-950/50"
                   >
-                    <div className="h-full bg-green-600 transition-all" />
+                    <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
                   </Progress>
                   <span className="text-sm text-muted-foreground w-20 text-right">
                     {stats.correct} richtig
