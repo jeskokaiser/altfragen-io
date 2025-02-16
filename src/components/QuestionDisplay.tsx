@@ -185,6 +185,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
         hasUserAnswer={!!userAnswer && isCorrect}
+        wrongAttempts={wrongAnswers.length}
       />
 
       <EditQuestionModal

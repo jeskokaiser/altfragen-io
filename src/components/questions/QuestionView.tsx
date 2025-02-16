@@ -1,16 +1,11 @@
+
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './QuestionHeader';
-import QuestionContent from './QuestionContent';
 import NavigationButtons from '../training/NavigationButtons';
 import EditQuestionModal from '../training/EditQuestionModal';
-import AnswerSubmission from '../training/AnswerSubmission';
-import DifficultyControls from '../training/DifficultyControls';
-import QuestionFeedback from '../training/QuestionFeedback';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, Copy } from 'lucide-react';
+import QuestionContainer from './QuestionContainer';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -109,36 +104,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   };
 
-  const handleCopyToClipboard = async () => {
-    const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. Die Frage stammt aus dem Gedächtnisprotokoll anderer Studierender.
-Bitte erkläre mir:
-1. Was ist der Kerninhalt der Frage?
-2. Warum ist die richtige Antwort korrekt?
-3. Warum sind die anderen Antworten falsch?
-4. Ist die protokollierte Lösung korrekt?
-
-Hier ist die Frage mit allen Antwortoptionen:
-
-Frage: ${currentQuestion.question}
-
-A: ${currentQuestion.optionA}
-B: ${currentQuestion.optionB}
-C: ${currentQuestion.optionC}
-D: ${currentQuestion.optionD}
-E: ${currentQuestion.optionE}
-
-Die richtige Antwort laut Protokoll ist: ${currentQuestion.correctAnswer}
-
-Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.comment || "Kein Kommentar vorhanden"}`;
-
-    try {
-      await navigator.clipboard.writeText(prompt);
-      toast.success("Frage und Prompt in die Zwischenablage kopiert");
-    } catch (err) {
-      toast.error("Fehler beim Kopieren in die Zwischenablage");
-    }
-  };
-
   if (!currentQuestion) {
     return <div>Loading question...</div>;
   }
@@ -151,64 +116,19 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.com
         onQuit={onQuit}
       />
 
-      <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
-        <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
-          <div className="flex-grow">
-            <DifficultyControls
-              questionId={currentQuestion.id}
-              difficulty={currentQuestion.difficulty || 3}
-              onEditClick={() => setIsEditModalOpen(true)}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopyToClipboard}
-              className="flex items-center gap-2"
-            >
-              <Copy className="h-4 w-4" />
-              <span className="hidden sm:inline">KI-Kopieren</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMarkUnclear}
-              className="flex items-center gap-2"
-              disabled={currentQuestion.is_unclear}
-            >
-              <AlertCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Unklar</span>
-              <span className="sm:hidden">?!</span>
-            </Button>
-          </div>
-        </div>
-
-        <QuestionContent
-          questionData={currentQuestion}
-          selectedAnswer={selectedAnswer}
-          onAnswerChange={handleAnswerChange}
-          onConfirmAnswer={() => {}}
-          showFeedback={showFeedback}
-          wrongAnswers={wrongAnswers}
-        />
-
-        <AnswerSubmission
-          currentQuestion={currentQuestion}
-          selectedAnswer={selectedAnswer}
-          user={user}
-          onAnswerSubmitted={handleAnswerSubmitted}
-        />
-
-        <QuestionFeedback
-          showFeedback={showFeedback}
-          userAnswer={userAnswer}
-          correctAnswer={currentQuestion.correctAnswer}
-          comment={currentQuestion.comment}
-          isCorrect={isCorrect}
-          wrongAnswers={wrongAnswers}
-        />
-      </Card>
+      <QuestionContainer
+        question={currentQuestion}
+        showFeedback={showFeedback}
+        selectedAnswer={selectedAnswer}
+        onAnswerChange={handleAnswerChange}
+        userAnswer={userAnswer}
+        isCorrect={isCorrect}
+        wrongAnswers={wrongAnswers}
+        user={user}
+        onAnswerSubmitted={handleAnswerSubmitted}
+        onEditClick={() => setIsEditModalOpen(true)}
+        onMarkUnclear={handleMarkUnclear}
+      />
 
       <NavigationButtons
         onPrevious={onPrevious}
