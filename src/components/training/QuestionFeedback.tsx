@@ -17,7 +17,10 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   comment,
   isCorrect,
 }) => {
-  if (!showFeedback || !userAnswer || !isCorrect) return null;
+  if (!showFeedback || !userAnswer) return null;
+
+  // Only show feedback when answer is correct or when all wrong answers have been tried
+  if (!isCorrect && wrongAnswers.length < 4) return null;
 
   return (
     <FeedbackDisplay 

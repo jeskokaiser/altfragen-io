@@ -23,6 +23,7 @@ const AnswerSubmission = ({
 }: AnswerSubmissionProps) => {
   const [hasSubmittedWrong, setHasSubmittedWrong] = React.useState(false);
   const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
+  const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
 
   const handleConfirmAnswer = async () => {
     if (!selectedAnswer || !user) return;
@@ -58,9 +59,12 @@ const AnswerSubmission = ({
         }
       }
 
-      // If this attempt is wrong, mark it as having submitted wrong
+      // If this attempt is wrong, add it to wrongAnswers
       if (!isCorrect) {
         setHasSubmittedWrong(true);
+        if (!wrongAnswers.includes(selectedAnswer)) {
+          setWrongAnswers(prev => [...prev, selectedAnswer]);
+        }
       }
 
       setLastSubmissionCorrect(isCorrect);
