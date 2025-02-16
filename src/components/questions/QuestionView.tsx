@@ -39,6 +39,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
+  const [showSolution, setShowSolution] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -48,16 +49,20 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     setCurrentQuestion(questionData);
     setIsCorrect(false);
     setWrongAnswers([]);
+    setShowSolution(false);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
-  const handleAnswerSubmitted = (answer: string, correct: boolean) => {
+  const handleAnswerSubmitted = (answer: string, correct: boolean, showSol?: boolean) => {
     onAnswer(answer);
     setShowFeedback(true);
     setIsCorrect(correct);
+    if (showSol !== undefined) {
+      setShowSolution(showSol);
+    }
     
     if (!correct) {
       setWrongAnswers(prev => [...prev, answer]);
@@ -69,6 +74,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     setSelectedAnswer('');
     setIsCorrect(false);
     setWrongAnswers([]);
+    setShowSolution(false);
     onNext();
   };
 
@@ -137,6 +143,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         isLastQuestion={currentIndex === totalQuestions - 1}
         hasUserAnswer={!!userAnswer && isCorrect}
         wrongAttempts={wrongAnswers.length}
+        showSolution={showSolution}
       />
 
       <EditQuestionModal
