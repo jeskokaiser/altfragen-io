@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
-import { XCircle } from 'lucide-react';
+import { XCircle, Eye } from 'lucide-react';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -24,12 +24,14 @@ const AnswerSubmission = ({
   const [hasSubmittedWrong, setHasSubmittedWrong] = React.useState(false);
   const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
   const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
+  const [showSolution, setShowSolution] = React.useState(false);
 
   // Reset state when question changes
   React.useEffect(() => {
     setHasSubmittedWrong(false);
     setLastSubmissionCorrect(null);
     setWrongAnswers([]);
+    setShowSolution(false);
   }, [currentQuestion]);
 
   const handleConfirmAnswer = async () => {
@@ -48,22 +50,19 @@ const AnswerSubmission = ({
 
       if (fetchError) throw fetchError;
 
-      // If there's no existing progress, save this attempt
-      if (!existingProgress?.length) {
-        // Insert new progress record
-        const { error: insertError } = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            question_id: currentQuestion.id,
-            user_answer: selectedAnswer,
-            is_correct: isCorrect
-          });
+      // Insert new progress record
+      const { error: insertError } = await supabase
+        .from('user_progress')
+        .insert({
+          user_id: user.id,
+          question_id: currentQuestion.id,
+          user_answer: selectedAnswer,
+          is_correct: isCorrect
+        });
 
-        if (insertError) {
-          toast.error("Fehler beim Speichern des Fortschritts");
-          throw insertError;
-        }
+      if (insertError) {
+        toast.error("Fehler beim Speichern des Fortschritts");
+        throw insertError;
       }
 
       // If this attempt is wrong, add it to wrongAnswers
@@ -87,13 +86,23 @@ const AnswerSubmission = ({
 
   return (
     <div className="mt-4 space-y-4">
-      <Button 
-        onClick={handleConfirmAnswer}
-        disabled={!selectedAnswer}
-        className="w-full"
-      >
-        Antwort bestätigen
-      </Button>
+      <div className="flex flex-col gap-4">
+        <Button 
+          onClick={handleConfirmAnswer}
+          disabled={!selectedAnswer}
+          className="w-full"
+        >
+          Antwort bestätigen
+        </Button>
+        
+        <button
+          onClick={() => setShowSolution(true)}
+          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors"
+        >
+          <Eye className="h-4 w-4" />
+          <span>Lösung anzeigen</span>
+        </button>
+      </div>
       
       {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
         <Alert variant="destructive">
@@ -103,8 +112,17 @@ const AnswerSubmission = ({
           </div>
         </Alert>
       )}
+
+      {showSolution && (
+        <Alert>
+          <div className="flex items-center gap-2">
+            <span>Lösung: {currentQuestion.correctAnswer}</span>
+          </div>
+        </Alert>
+      )}
     </div>
   );
 };
 
 export default AnswerSubmission;
+
