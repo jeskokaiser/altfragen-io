@@ -13,7 +13,7 @@ const FeedbackDisplay: React.FC<FeedbackDisplayProps> = ({ isCorrect, correctAns
     <div className="mt-6 space-y-4">
       <Alert variant={isCorrect ? "default" : "destructive"} className="flex items-center">
         <div className="mr-2">
-          {isCorrect ? <CheckCircle2 className="text-green-500 dark:text-white" /> : <XCircle className="text-red-500 dark:text-white" />}
+          {isCorrect ? <CheckCircle2 className="text-green-500" /> : <XCircle className="text-red-500" />}
         </div>
         <AlertDescription>
           {isCorrect ? "Richtig!" : "Falsch!"} Die korrekte Antwort ist: {correctAnswer}
