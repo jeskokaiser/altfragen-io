@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -67,13 +66,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     
     if (!correct) {
       setWrongAnswers(prev => [...prev, answer]);
-    }
-    
-    if (correct) {
-      // Only allow proceeding to next question when the answer is correct
-      setTimeout(() => {
-        handleNext();
-      }, 1500);
     }
   };
 
