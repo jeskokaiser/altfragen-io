@@ -44,13 +44,16 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const isMobile = useIsMobile();
 
   React.useEffect(() => {
-    setSelectedAnswer('');
-    setShowFeedback(false);
-    setCurrentQuestion(questionData);
-    setIsCorrect(false);
-    setWrongAnswers([]);
-    setShowSolution(false);
-  }, [questionData]);
+    // Only reset states when the question actually changes
+    if (currentQuestion.id !== questionData.id) {
+      setSelectedAnswer('');
+      setShowFeedback(false);
+      setCurrentQuestion(questionData);
+      setIsCorrect(false);
+      setWrongAnswers([]);
+      setShowSolution(false);
+    }
+  }, [questionData, currentQuestion.id]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
@@ -70,11 +73,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   };
 
   const handleNext = () => {
-    setShowFeedback(false);
-    setSelectedAnswer('');
-    setIsCorrect(false);
-    setWrongAnswers([]);
-    setShowSolution(false);
     onNext();
   };
 
