@@ -57,6 +57,26 @@ const Dashboard = () => {
     enabled: !!user
   });
 
+  // Query to get today's answered questions count
+  const { data: todayAnsweredCount } = useQuery({
+    queryKey: ['today-answers', user?.id],
+    queryFn: async () => {
+      // Get today's date at midnight in UTC
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+
+      const { count, error } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user?.id)
+        .gte('created_at', today.toISOString());
+
+      if (error) throw error;
+      return count;
+    },
+    enabled: !!user
+  });
+
   const groupedQuestions = useMemo(() => {
     if (!questions) return {};
     return questions.reduce((acc, question) => {
@@ -120,6 +140,15 @@ const Dashboard = () => {
       </section>
 
       <Separator className="my-6" />
+
+      <Card className="mb-6">
+        <CardContent className="py-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium">Heute beantwortet</h3>
+            <span className="text-2xl font-bold">{todayAnsweredCount || 0}</span>
+          </div>
+        </CardContent>
+      </Card>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
