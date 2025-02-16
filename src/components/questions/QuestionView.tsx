@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -217,6 +216,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${currentQuestion.com
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
         hasUserAnswer={!!userAnswer && isCorrect}
+        wrongAttempts={wrongAnswers.length}
       />
 
       <EditQuestionModal

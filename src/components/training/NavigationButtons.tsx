@@ -9,6 +9,7 @@ interface NavigationButtonsProps {
   isFirstQuestion: boolean;
   isLastQuestion: boolean;
   hasUserAnswer: boolean;
+  wrongAttempts: number;
 }
 
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
@@ -17,8 +18,12 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   isFirstQuestion,
   isLastQuestion,
   hasUserAnswer,
+  wrongAttempts,
 }) => {
   const isMobile = useIsMobile();
+
+  // Allow next if either answer is correct OR user has tried all wrong answers
+  const canProceed = hasUserAnswer || wrongAttempts >= 4;
 
   return (
     <div className="flex justify-between mt-4 gap-3">
@@ -32,7 +37,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       </Button>
       <Button
         onClick={onNext}
-        disabled={!hasUserAnswer}
+        disabled={!canProceed}
         className={`flex-1 ${isMobile ? 'max-w-[160px]' : ''}`}
       >
         {isLastQuestion ? 'Fertig' : 'Weiter'}
