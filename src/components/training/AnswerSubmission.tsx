@@ -45,12 +45,11 @@ const AnswerSubmission = ({
       // First, check if there's an existing attempt - using maybeSingle() instead of single()
       const { data: existingProgress } = await supabase
         .from('user_progress')
-        .select('is_correct')
+        .select('is_correct, attempt_number')
         .eq('user_id', user.id)
         .eq('question_id', currentQuestion.id)
         .maybeSingle();
 
-      // If there's no existing attempt, or if this is the first correct answer
       if (!existingProgress) {
         // First attempt - record the result as is
         const { error } = await supabase
@@ -68,12 +67,31 @@ const AnswerSubmission = ({
           toast.error("Fehler beim Speichern des Fortschritts");
           return;
         }
-      } else if (isCorrect && !existingProgress.is_correct) {
+      } else {
+        // This is a subsequent attempt
+        const nextAttemptNumber = (existingProgress.attempt_number || 1) + 1;
+        
+        const { error } = await supabase
+          .from('user_progress')
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: selectedAnswer,
+            is_correct: existingProgress.is_correct, // Keep the original correctness status
+            attempt_number: nextAttemptNumber
+          });
+
+        if (error) {
+          console.error('Error saving progress:', error);
+          toast.error("Fehler beim Speichern des Fortschritts");
+          return;
+        }
+
         // If they got it right now but had it wrong before, show the improvement toast
-        // but don't update the is_correct status
-        toast.success("Super! Du hast die richtige Antwort gefunden! Die erste Antwort zählt jedoch als Ergebnis.");
+        if (isCorrect && !existingProgress.is_correct) {
+          toast.success("Super! Du hast die richtige Antwort gefunden! Die erste Antwort zählt jedoch als Ergebnis.");
+        }
       }
-      // If they already have an attempt, don't update the database record
 
       if (!isCorrect) {
         setHasSubmittedWrong(true);
