@@ -10,6 +10,7 @@ interface QuestionContentProps {
   onAnswerChange: (answer: string) => void;
   onConfirmAnswer: () => void;
   showFeedback: boolean;
+  wrongAnswers?: string[];
 }
 
 const QuestionContent: React.FC<QuestionContentProps> = ({
@@ -18,6 +19,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   onAnswerChange,
   onConfirmAnswer,
   showFeedback,
+  wrongAnswers = [],
 }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
 
@@ -47,11 +49,11 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
         </h3>
       </div>
       <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
-        <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} />
-        <AnswerOption value="B" text={questionData.optionB} resetTrigger={resetTrigger} />
-        <AnswerOption value="C" text={questionData.optionC} resetTrigger={resetTrigger} />
-        <AnswerOption value="D" text={questionData.optionD} resetTrigger={resetTrigger} />
-        <AnswerOption value="E" text={questionData.optionE} resetTrigger={resetTrigger} />
+        <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('A')} />
+        <AnswerOption value="B" text={questionData.optionB} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('B')} />
+        <AnswerOption value="C" text={questionData.optionC} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('C')} />
+        <AnswerOption value="D" text={questionData.optionD} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('D')} />
+        <AnswerOption value="E" text={questionData.optionE} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('E')} />
       </RadioGroup>
     </div>
   );

@@ -44,6 +44,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
@@ -52,6 +53,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setShowFeedback(false);
     setCurrentQuestion(questionData);
     setIsCorrect(false);
+    setWrongAnswers([]);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
@@ -62,6 +64,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     onAnswer(answer);
     setShowFeedback(true);
     setIsCorrect(correct);
+    
+    if (!correct) {
+      setWrongAnswers(prev => [...prev, answer]);
+    }
+    
     if (correct) {
       // Only allow proceeding to next question when the answer is correct
       setTimeout(() => {
@@ -74,6 +81,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     setShowFeedback(false);
     setSelectedAnswer('');
     setIsCorrect(false);
+    setWrongAnswers([]);
     onNext();
   };
 
@@ -151,6 +159,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           onAnswerChange={handleAnswerChange}
           onConfirmAnswer={() => {}}
           showFeedback={showFeedback}
+          wrongAnswers={wrongAnswers}
         />
 
         <AnswerSubmission

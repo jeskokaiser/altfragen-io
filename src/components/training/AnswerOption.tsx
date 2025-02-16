@@ -9,9 +9,10 @@ interface AnswerOptionProps {
   value: string;
   text: string;
   resetTrigger?: number;
+  isWrong?: boolean;
 }
 
-const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger }) => {
+const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, isWrong }) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const isMobile = useIsMobile();
 
@@ -25,7 +26,9 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger }
   };
 
   return (
-    <div className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''}`}>
+    <div className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} ${
+      isWrong ? 'border border-[#ea384c] rounded-md p-2' : ''
+    }`}>
       <RadioGroupItem value={value} id={value} />
       <Label htmlFor={value} className="flex items-center flex-1">
         <span className="font-semibold mr-2">{value})</span>
