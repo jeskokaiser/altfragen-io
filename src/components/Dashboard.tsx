@@ -65,9 +65,9 @@ const Dashboard = () => {
       
       console.log('Fetching today answers, user:', user?.id, 'date:', today.toISOString());
       
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('user_progress')
-        .select('*', { count: 'exact' })
+        .select('id')
         .eq('user_id', user?.id)
         .gte('updated_at', today.toISOString());
 
@@ -76,8 +76,9 @@ const Dashboard = () => {
         throw error;
       }
       
+      const count = data?.length ?? 0;
       console.log('Today answered count:', count);
-      return count || 0;
+      return count;
     },
     enabled: !!user
   });
