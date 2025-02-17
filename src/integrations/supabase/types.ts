@@ -91,6 +91,7 @@ export type Database = {
           id: string
           is_correct: boolean | null
           question_id: string | null
+          updated_at: string | null
           user_answer: string | null
           user_id: string | null
         }
@@ -100,6 +101,7 @@ export type Database = {
           id?: string
           is_correct?: boolean | null
           question_id?: string | null
+          updated_at?: string | null
           user_answer?: string | null
           user_id?: string | null
         }
@@ -109,6 +111,7 @@ export type Database = {
           id?: string
           is_correct?: boolean | null
           question_id?: string | null
+          updated_at?: string | null
           user_answer?: string | null
           user_id?: string | null
         }
