@@ -35,7 +35,6 @@ const Dashboard = () => {
         console.error('Error fetching questions:', error);
         throw new Error('Fehler beim Laden der Fragen');
       }
-      console.log('Raw questions data:', data);
       return data.map(q => ({
         id: q.id,
         question: q.question,
@@ -63,14 +62,22 @@ const Dashboard = () => {
       // Get today's date at midnight in UTC
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
+      
+      console.log('Fetching today answers, user:', user?.id, 'date:', today.toISOString());
+      
       const { count, error } = await supabase
         .from('user_progress')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
         .eq('user_id', user?.id)
         .gte('updated_at', today.toISOString());
 
-      if (error) throw error;
-      return count;
+      if (error) {
+        console.error('Error fetching today count:', error);
+        throw error;
+      }
+      
+      console.log('Today answered count:', count);
+      return count || 0;
     },
     enabled: !!user
   });
@@ -79,13 +86,20 @@ const Dashboard = () => {
   const { data: totalAnsweredCount } = useQuery({
     queryKey: ['total-answers', user?.id],
     queryFn: async () => {
+      console.log('Fetching total answers, user:', user?.id);
+      
       const { count, error } = await supabase
         .from('user_progress')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
         .eq('user_id', user?.id);
 
-      if (error) throw error;
-      return count;
+      if (error) {
+        console.error('Error fetching total count:', error);
+        throw error;
+      }
+      
+      console.log('Total answered count:', count);
+      return count || 0;
     },
     enabled: !!user
   });
@@ -159,7 +173,7 @@ const Dashboard = () => {
           <CardContent className="py-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Heute beantwortet</h3>
-              <span className="text-2xl font-bold">{todayAnsweredCount || 0}</span>
+              <span className="text-2xl font-bold">{todayAnsweredCount ?? 0}</span>
             </div>
           </CardContent>
         </Card>
@@ -168,7 +182,7 @@ const Dashboard = () => {
           <CardContent className="py-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Insgesamt beantwortet</h3>
-              <span className="text-2xl font-bold">{totalAnsweredCount || 0}</span>
+              <span className="text-2xl font-bold">{totalAnsweredCount ?? 0}</span>
             </div>
           </CardContent>
         </Card>
