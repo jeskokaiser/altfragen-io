@@ -35,7 +35,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         .from('user_preferences')
         .select('immediate_feedback')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -43,9 +43,17 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         setPreferences({ immediateFeedback: data.immediate_feedback });
       } else {
         // Create default preferences for new users
-        await supabase
+        const { error: insertError } = await supabase
           .from('user_preferences')
-          .insert([{ user_id: user.id, immediate_feedback: false }]);
+          .insert([{ 
+            user_id: user.id, 
+            immediate_feedback: false 
+          }]);
+
+        if (insertError) throw insertError;
+        
+        // Set default preferences in state
+        setPreferences({ immediateFeedback: false });
       }
     } catch (error) {
       console.error('Error loading preferences:', error);

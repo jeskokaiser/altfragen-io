@@ -1,13 +1,9 @@
-
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Routes, Route } from 'react-router-dom';
 import Header from './Header/Header';
+import Settings from '@/pages/Settings';
 
-interface MainLayoutProps {
-  children: React.ReactNode;
-}
-
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout = () => {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/auth';
@@ -16,7 +12,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     <div className="min-h-screen flex flex-col">
       {!isLandingPage && !isAuthPage && <Header />}
       <main className="flex-1">
-        {children}
+        <Routes>
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
       </main>
     </div>
   );
