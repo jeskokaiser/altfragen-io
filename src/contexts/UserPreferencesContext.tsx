@@ -24,6 +24,9 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
   useEffect(() => {
     if (user) {
       loadUserPreferences();
+    } else {
+      setPreferences({ immediateFeedback: false });
+      setIsLoading(false);
     }
   }, [user]);
 
@@ -31,28 +34,27 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // First try to get existing preferences
+      const { data: existingPrefs, error: fetchError } = await supabase
         .from('user_preferences')
         .select('immediate_feedback')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      if (data) {
-        setPreferences({ immediateFeedback: data.immediate_feedback });
+      if (existingPrefs) {
+        setPreferences({ immediateFeedback: existingPrefs.immediate_feedback });
       } else {
-        // Create default preferences for new users using upsert
+        // If no preferences exist, create default ones
         const { error: upsertError } = await supabase
           .from('user_preferences')
-          .upsert({ 
-            user_id: user.id, 
-            immediate_feedback: false 
+          .upsert({
+            user_id: user.id,
+            immediate_feedback: false
           });
 
         if (upsertError) throw upsertError;
-        
-        // Set default preferences in state
         setPreferences({ immediateFeedback: false });
       }
     } catch (error) {
@@ -72,6 +74,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         .upsert({
           user_id: user.id,
           immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
+          updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
