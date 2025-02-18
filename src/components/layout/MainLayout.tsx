@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation, Routes, Route } from 'react-router-dom';
+import { useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './Header/Header';
 import Settings from '@/pages/Settings';
 import Training from '@/pages/Training';
@@ -31,6 +31,10 @@ const MainLayout = () => {
           <Route path="/tutorial" element={<Tutorial />} />
           <Route path="/unclear-questions" element={<UnclearQuestions />} />
           <Route path="/changelog" element={<Changelog />} />
+          {/* Redirect /dashboard to index page */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          {/* Catch all other routes and redirect to index */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
