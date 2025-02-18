@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,7 +54,6 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Query for today's first answers (created_at)
   const { data: todayNewCount } = useQuery({
     queryKey: ['today-new', user?.id],
     queryFn: async () => {
@@ -74,7 +72,6 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Query for today's practice sessions (updated_at)
   const { data: todayPracticeCount } = useQuery({
     queryKey: ['today-practice', user?.id],
     queryFn: async () => {
@@ -93,7 +90,6 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Query for total first answers (created_at)
   const { data: totalNewCount } = useQuery({
     queryKey: ['total-new', user?.id],
     queryFn: async () => {
@@ -108,25 +104,16 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Query for total attempts
-  const { data: totalAttemptsCount } = useQuery({
-    queryKey: ['total-attempts', user?.id],
+  const { data: totalPracticeCount } = useQuery({
+    queryKey: ['total-practice', user?.id],
     queryFn: async () => {
-      console.log('Fetching total attempts, user:', user?.id);
-      
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('user_progress')
-        .select('attempts_count')
+        .select('*', { count: 'exact' })
         .eq('user_id', user?.id);
 
-      if (error) {
-        console.error('Error fetching total attempts:', error);
-        throw error;
-      }
-      
-      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
-      console.log('Total attempts count:', totalAttempts);
-      return totalAttempts;
+      if (error) throw error;
+      return count ?? 0;
     },
     enabled: !!user
   });
@@ -193,16 +180,22 @@ const Dashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium">Heute</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Neu</span>
-              <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Wiederholt</span>
-              <p className="text-2xl font-bold">
-                {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
-              </p>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Neu</span>
+                <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Wiederholt</span>
+                <p className="text-2xl font-bold">
+                  {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Gesamt</span>
+                <p className="text-2xl font-bold">{todayPracticeCount ?? 0}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -213,12 +206,12 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Fragen</span>
+              <span className="text-sm text-muted-foreground">Neu</span>
               <p className="text-2xl font-bold">{totalNewCount ?? 0}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Versuche</span>
-              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Wiederholt</span>
+              <p className="text-2xl font-bold">{totalPracticeCount ?? 0}</p>
             </div>
           </CardContent>
         </Card>
