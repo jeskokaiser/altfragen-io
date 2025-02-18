@@ -203,13 +203,8 @@ const Dashboard = () => {
 
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
-      <section className="space-y-4">
+      <section>
         <DashboardHeader />
-        <Card className="bg-slate-50/50 dark:bg-zinc-900">
-          <CardContent className={`${isMobile ? 'p-3' : 'pt-6'}`}>
-            <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
-          </CardContent>
-        </Card>
       </section>
 
       <Separator className="my-6" />
@@ -277,6 +272,16 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         )}
+      </section>
+
+      <Separator className="my-6" />
+
+      <section className="space-y-4">
+        <Card className="bg-slate-50/50 dark:bg-zinc-900">
+          <CardContent className={`${isMobile ? 'p-3' : 'pt-6'}`}>
+            <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
+          </CardContent>
+        </Card>
       </section>
     </div>
   );
