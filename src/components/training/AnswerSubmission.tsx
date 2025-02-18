@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { XCircle, Eye } from 'lucide-react';
 import FeedbackDisplay from './FeedbackDisplay';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -27,6 +28,7 @@ const AnswerSubmission = ({
   const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
   const [showSolution, setShowSolution] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { preferences } = useUserPreferences();
 
   React.useEffect(() => {
     setHasSubmittedWrong(false);
@@ -42,7 +44,6 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      // Check if there's an existing attempt
       const { data: existingProgress } = await supabase
         .from('user_progress')
         .select('is_correct, attempts_count')
@@ -51,14 +52,13 @@ const AnswerSubmission = ({
         .maybeSingle();
 
       if (!existingProgress) {
-        // First attempt - record the result without toast
         const { error } = await supabase
           .from('user_progress')
           .insert({
             user_id: user.id,
             question_id: currentQuestion.id,
             user_answer: selectedAnswer,
-            is_correct: isCorrect && wrongAnswers.length === 0, // Only mark as correct if it's the first try
+            is_correct: isCorrect && wrongAnswers.length === 0,
             attempts_count: 1
           });
 
@@ -68,7 +68,6 @@ const AnswerSubmission = ({
           return;
         }
       } else {
-        // This is a subsequent attempt
         const hadPreviousWrongAttempts = wrongAnswers.length > 0;
         const shouldMarkCorrect = isCorrect && !hadPreviousWrongAttempts;
 
@@ -77,7 +76,7 @@ const AnswerSubmission = ({
           .update({
             user_answer: selectedAnswer,
             attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: shouldMarkCorrect ? true : existingProgress.is_correct // Only update to true if no wrong attempts in this session
+            is_correct: shouldMarkCorrect ? true : existingProgress.is_correct
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
@@ -88,7 +87,6 @@ const AnswerSubmission = ({
           return;
         }
 
-        // Show toast messages for subsequent attempts
         if (isCorrect) {
           if (hadPreviousWrongAttempts) {
             toast.success("Richtig! Aber da es nicht der erste Versuch war, bleibt die Frage als falsch markiert.");
@@ -111,10 +109,15 @@ const AnswerSubmission = ({
         if (!wrongAnswers.includes(selectedAnswer)) {
           setWrongAnswers(prev => [...prev, selectedAnswer]);
         }
+        
+        // If immediate feedback is enabled, show solution after first wrong attempt
+        if (preferences.immediateFeedback) {
+          setShowSolution(true);
+        }
       }
 
       setLastSubmissionCorrect(isCorrect);
-      onAnswerSubmitted(selectedAnswer, isCorrect, showSolution);
+      onAnswerSubmitted(selectedAnswer, isCorrect, preferences.immediateFeedback && !isCorrect);
     } catch (error: any) {
       console.error('Error saving progress:', error);
       toast.error("Fehler beim Speichern des Fortschritts");
@@ -130,7 +133,10 @@ const AnswerSubmission = ({
     onAnswerSubmitted('solution_viewed', false, true);
   };
 
-  if (wrongAnswers.length >= 4) return null;
+  // In immediate feedback mode, limit to 1 attempt
+  if (preferences.immediateFeedback && wrongAnswers.length >= 1) return null;
+  // In multiple tries mode, limit to 4 attempts
+  if (!preferences.immediateFeedback && wrongAnswers.length >= 4) return null;
 
   return (
     <div className="mt-4 space-y-4">
@@ -142,7 +148,7 @@ const AnswerSubmission = ({
         {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
       </Button>
       
-      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
+      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && !preferences.immediateFeedback && (
         <div className="space-y-4">
           <Alert variant="destructive">
             <div className="flex items-center gap-2">
