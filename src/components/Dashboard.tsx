@@ -55,13 +55,31 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  const { data: todayAnsweredCount } = useQuery({
-    queryKey: ['today-answers', user?.id],
+  // Query for today's first answers (created_at)
+  const { data: todayNewCount } = useQuery({
+    queryKey: ['today-new', user?.id],
     queryFn: async () => {
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
       
-      console.log('Fetching today answers, user:', user?.id, 'date:', today.toISOString());
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('id')
+        .eq('user_id', user?.id)
+        .gte('created_at', today.toISOString());
+
+      if (error) throw error;
+      return data?.length ?? 0;
+    },
+    enabled: !!user
+  });
+
+  // Query for today's practice sessions (updated_at)
+  const { data: todayPracticeCount } = useQuery({
+    queryKey: ['today-practice', user?.id],
+    queryFn: async () => {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
       
       const { data, error } = await supabase
         .from('user_progress')
@@ -69,83 +87,44 @@ const Dashboard = () => {
         .eq('user_id', user?.id)
         .gte('updated_at', today.toISOString());
 
-      if (error) {
-        console.error('Error fetching today count:', error);
-        throw error;
-      }
-      
-      const count = data?.length ?? 0;
-      console.log('Today answered count:', count);
-      return count;
+      if (error) throw error;
+      return data?.length ?? 0;
     },
     enabled: !!user
   });
 
-  const { data: todayAttemptsCount } = useQuery({
-    queryKey: ['today-attempts', user?.id],
+  // Query for total first answers (created_at)
+  const { data: totalNewCount } = useQuery({
+    queryKey: ['total-new', user?.id],
     queryFn: async () => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      
-      console.log('Fetching today attempts, user:', user?.id);
-      
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('attempts_count')
-        .eq('user_id', user?.id)
-        .gte('updated_at', today.toISOString());
-
-      if (error) {
-        console.error('Error fetching today attempts:', error);
-        throw error;
-      }
-      
-      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
-      console.log('Today attempts count:', totalAttempts);
-      return totalAttempts;
-    },
-    enabled: !!user
-  });
-
-  const { data: totalAnsweredCount } = useQuery({
-    queryKey: ['total-answers', user?.id],
-    queryFn: async () => {
-      console.log('Fetching total answers, user:', user?.id);
-      
       const { count, error } = await supabase
         .from('user_progress')
         .select('*', { count: 'exact' })
         .eq('user_id', user?.id);
 
-      if (error) {
-        console.error('Error fetching total count:', error);
-        throw error;
-      }
-      
-      console.log('Total answered count:', count);
-      return count || 0;
+      if (error) throw error;
+      return count ?? 0;
     },
     enabled: !!user
   });
 
-  const { data: totalAttemptsCount } = useQuery({
-    queryKey: ['total-attempts', user?.id],
+  // Query for total practice sessions (updated_at)
+  const { data: totalPracticeCount } = useQuery({
+    queryKey: ['total-practice', user?.id],
     queryFn: async () => {
-      console.log('Fetching total attempts, user:', user?.id);
-      
       const { data, error } = await supabase
         .from('user_progress')
-        .select('attempts_count')
+        .select('created_at, updated_at')
         .eq('user_id', user?.id);
 
-      if (error) {
-        console.error('Error fetching total attempts:', error);
-        throw error;
-      }
-      
-      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
-      console.log('Total attempts count:', totalAttempts);
-      return totalAttempts;
+      if (error) throw error;
+
+      // Count updates that happened after creation
+      const practiceCount = data?.filter(record => 
+        new Date(record.updated_at) > new Date(record.created_at)
+      ).length ?? 0;
+
+      return practiceCount;
     },
     enabled: !!user
   });
@@ -207,7 +186,6 @@ const Dashboard = () => {
         <DashboardHeader />
       </section>
 
-    
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="mb-6">
           <CardHeader className="pb-2">
@@ -215,12 +193,14 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Fragen</span>
-              <p className="text-2xl font-bold">{todayAnsweredCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Neu</span>
+              <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Versuche</span>
-              <p className="text-2xl font-bold">{todayAttemptsCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Wiederholt</span>
+              <p className="text-2xl font-bold">
+                {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -231,12 +211,12 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Fragen</span>
-              <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Neu</span>
+              <p className="text-2xl font-bold">{totalNewCount ?? 0}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Versuche</span>
-              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Wiederholt</span>
+              <p className="text-2xl font-bold">{totalPracticeCount ?? 0}</p>
             </div>
           </CardContent>
         </Card>
