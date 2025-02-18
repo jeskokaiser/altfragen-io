@@ -207,8 +207,7 @@ const Dashboard = () => {
         <DashboardHeader />
       </section>
 
-      <Separator className="my-6" />
-
+    
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="mb-6">
           <CardHeader className="pb-2">
@@ -216,7 +215,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Einzigartig</span>
+              <span className="text-sm text-muted-foreground">Fragen</span>
               <p className="text-2xl font-bold">{todayAnsweredCount ?? 0}</p>
             </div>
             <div className="space-y-1">
@@ -232,7 +231,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Einzigartig</span>
+              <span className="text-sm text-muted-foreground">Fragen</span>
               <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
             </div>
             <div className="space-y-1">
