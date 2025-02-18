@@ -34,27 +34,29 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (!user) return;
 
     try {
-      // First try to get existing preferences
       const { data: existingPrefs, error: fetchError } = await supabase
         .from('user_preferences')
-        .select('immediate_feedback')
+        .select()
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 means no data found, which is expected for new users
+        throw fetchError;
+      }
 
       if (existingPrefs) {
         setPreferences({ immediateFeedback: existingPrefs.immediate_feedback });
       } else {
-        // If no preferences exist, create default ones
-        const { error: upsertError } = await supabase
+        // For new users, insert default preferences
+        const { error: insertError } = await supabase
           .from('user_preferences')
-          .upsert({
+          .insert({
             user_id: user.id,
             immediate_feedback: false
           });
 
-        if (upsertError) throw upsertError;
+        if (insertError) throw insertError;
         setPreferences({ immediateFeedback: false });
       }
     } catch (error) {
@@ -71,11 +73,11 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     try {
       const { error } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user.id,
+        .update({
           immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
