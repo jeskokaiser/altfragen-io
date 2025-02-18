@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Settings, LogOut } from 'lucide-react';
+import { Search, Settings, LogOut, Moon, Sun, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -69,8 +69,26 @@ const Header = () => {
           </div>
         )}
 
-        {/* Right section - Profile Menu */}
-        <div className="flex items-center justify-end space-x-4">
+        {/* Right section - Action Buttons and Profile Menu */}
+        <div className="flex items-center justify-end space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/tutorial')} 
+            size={isMobile ? "sm" : "default"}
+            className="gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            {!isMobile && "Tutorial"}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={toggleTheme} 
+            size={isMobile ? "sm" : "default"}
+            className="gap-2"
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {!isMobile && "Anzeigemodus"}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
