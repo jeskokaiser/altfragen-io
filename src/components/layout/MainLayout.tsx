@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation, Routes, Route } from 'react-router-dom';
+import { useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './Header/Header';
 import Settings from '@/pages/Settings';
 import Training from '@/pages/Training';
