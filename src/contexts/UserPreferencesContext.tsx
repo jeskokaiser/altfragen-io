@@ -42,15 +42,15 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       if (data) {
         setPreferences({ immediateFeedback: data.immediate_feedback });
       } else {
-        // Create default preferences for new users
-        const { error: insertError } = await supabase
+        // Create default preferences for new users using upsert
+        const { error: upsertError } = await supabase
           .from('user_preferences')
-          .insert([{ 
+          .upsert({ 
             user_id: user.id, 
             immediate_feedback: false 
-          }]);
+          });
 
-        if (insertError) throw insertError;
+        if (upsertError) throw upsertError;
         
         // Set default preferences in state
         setPreferences({ immediateFeedback: false });
