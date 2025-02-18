@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,7 @@ import DatasetList from './datasets/DatasetList';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Dashboard = () => {
@@ -76,6 +77,32 @@ const Dashboard = () => {
       const count = data?.length ?? 0;
       console.log('Today answered count:', count);
       return count;
+    },
+    enabled: !!user
+  });
+
+  const { data: todayAttemptsCount } = useQuery({
+    queryKey: ['today-attempts', user?.id],
+    queryFn: async () => {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      
+      console.log('Fetching today attempts, user:', user?.id);
+      
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('attempts_count')
+        .eq('user_id', user?.id)
+        .gte('updated_at', today.toISOString());
+
+      if (error) {
+        console.error('Error fetching today attempts:', error);
+        throw error;
+      }
+      
+      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+      console.log('Today attempts count:', totalAttempts);
+      return totalAttempts;
     },
     enabled: !!user
   });
@@ -187,30 +214,35 @@ const Dashboard = () => {
 
       <Separator className="my-6" />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card className="mb-6">
-          <CardContent className="py-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Heute beantwortet</h3>
-              <span className="text-2xl font-bold">{todayAnsweredCount ?? 0}</span>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Heute</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <span className="text-sm text-muted-foreground">Einzigartig</span>
+              <p className="text-2xl font-bold">{todayAnsweredCount ?? 0}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-sm text-muted-foreground">Versuche</span>
+              <p className="text-2xl font-bold">{todayAttemptsCount ?? 0}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="mb-6">
-          <CardContent className="py-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Insgesamt beantwortet</h3>
-              <span className="text-2xl font-bold">{totalAnsweredCount ?? 0}</span>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Insgesamt</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <span className="text-sm text-muted-foreground">Einzigartig</span>
+              <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardContent className="py-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Gesamtversuche</h3>
-              <span className="text-2xl font-bold">{totalAttemptsCount ?? 0}</span>
+            <div className="space-y-1">
+              <span className="text-sm text-muted-foreground">Versuche</span>
+              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
             </div>
           </CardContent>
         </Card>
