@@ -10,10 +10,11 @@ interface MainLayoutProps {
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
+  const isAuthPage = location.pathname === '/auth';
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!isLandingPage && <Header />}
+      {!isLandingPage && !isAuthPage && <Header />}
       <main className="flex-1">
         {children}
       </main>
