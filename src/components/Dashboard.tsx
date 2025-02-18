@@ -90,30 +90,46 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  const { data: totalNewCount } = useQuery({
-    queryKey: ['total-new', user?.id],
+
+  const { data: totalAnsweredCount } = useQuery({
+    queryKey: ['total-answers', user?.id],
     queryFn: async () => {
+      console.log('Fetching total answers, user:', user?.id);
+      
       const { count, error } = await supabase
         .from('user_progress')
         .select('*', { count: 'exact' })
         .eq('user_id', user?.id);
 
-      if (error) throw error;
-      return count ?? 0;
+      if (error) {
+        console.error('Error fetching total count:', error);
+        throw error;
+      }
+      
+      console.log('Total answered count:', count);
+      return count || 0;
     },
     enabled: !!user
   });
 
-  const { data: totalPracticeCount } = useQuery({
-    queryKey: ['total-practice', user?.id],
+  const {data: totalAttemptsCount } = useQuery({
+    queryKey: ['total-attempts', user?.id],
     queryFn: async () => {
-      const { count, error } = await supabase
+      console.log('Fetching total attempts, user:', user?.id);
+      
+      const { data, error } = await supabase
         .from('user_progress')
-        .select('*', { count: 'exact' })
+        .select('attempts_count')
         .eq('user_id', user?.id);
 
-      if (error) throw error;
-      return count ?? 0;
+      if (error) {
+        console.error('Error fetching total attempts:', error);
+        throw error;
+      }
+      
+      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+      console.log('Total attempts count:', totalAttempts);
+      return totalAttempts;
     },
     enabled: !!user
   });
@@ -206,12 +222,12 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Neu</span>
-              <p className="text-2xl font-bold">{totalNewCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Fragen</span>
+              <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Wiederholt</span>
-              <p className="text-2xl font-bold">{totalPracticeCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Versuche</span>
+              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
             </div>
           </CardContent>
         </Card>
