@@ -108,28 +108,24 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Query for total practice sessions (updated_at)
-  const { data: todayAttemptsCount } = useQuery({
-    queryKey: ['today-attempts', user?.id],
+  // Query for total attempts
+  const { data: totalAttemptsCount } = useQuery({
+    queryKey: ['total-attempts', user?.id],
     queryFn: async () => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      
-      console.log('Fetching today attempts, user:', user?.id);
+      console.log('Fetching total attempts, user:', user?.id);
       
       const { data, error } = await supabase
         .from('user_progress')
         .select('attempts_count')
-        .eq('user_id', user?.id)
-        .gte('updated_at', today.toISOString());
+        .eq('user_id', user?.id);
 
       if (error) {
-        console.error('Error fetching today attempts:', error);
+        console.error('Error fetching total attempts:', error);
         throw error;
       }
       
       const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
-      console.log('Today attempts count:', totalAttempts);
+      console.log('Total attempts count:', totalAttempts);
       return totalAttempts;
     },
     enabled: !!user
@@ -222,7 +218,7 @@ const Dashboard = () => {
             </div>
             <div className="space-y-1">
               <span className="text-sm text-muted-foreground">Versuche</span>
-              <p className="text-2xl font-bold">{todayAttemptsCount ?? 0}</p>
+              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
             </div>
           </CardContent>
         </Card>
