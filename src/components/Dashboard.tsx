@@ -109,22 +109,28 @@ const Dashboard = () => {
   });
 
   // Query for total practice sessions (updated_at)
-  const { data: totalPracticeCount } = useQuery({
-    queryKey: ['total-practice', user?.id],
+  const { data: todayAttemptsCount } = useQuery({
+    queryKey: ['today-attempts', user?.id],
     queryFn: async () => {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      
+      console.log('Fetching today attempts, user:', user?.id);
+      
       const { data, error } = await supabase
         .from('user_progress')
-        .select('created_at, updated_at')
-        .eq('user_id', user?.id);
+        .select('attempts_count')
+        .eq('user_id', user?.id)
+        .gte('updated_at', today.toISOString());
 
-      if (error) throw error;
-
-      // Count updates that happened after creation
-      const practiceCount = data?.filter(record => 
-        new Date(record.updated_at) > new Date(record.created_at)
-      ).length ?? 0;
-
-      return practiceCount;
+      if (error) {
+        console.error('Error fetching today attempts:', error);
+        throw error;
+      }
+      
+      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+      console.log('Today attempts count:', totalAttempts);
+      return totalAttempts;
     },
     enabled: !!user
   });
@@ -211,12 +217,12 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Neu</span>
+              <span className="text-sm text-muted-foreground">Fragen</span>
               <p className="text-2xl font-bold">{totalNewCount ?? 0}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Wiederholt</span>
-              <p className="text-2xl font-bold">{totalPracticeCount ?? 0}</p>
+              <span className="text-sm text-muted-foreground">Versuche</span>
+              <p className="text-2xl font-bold">{todayAttemptsCount ?? 0}</p>
             </div>
           </CardContent>
         </Card>
