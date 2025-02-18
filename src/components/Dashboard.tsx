@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,11 +54,9 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Query to get today's answered questions count
   const { data: todayAnsweredCount } = useQuery({
     queryKey: ['today-answers', user?.id],
     queryFn: async () => {
-      // Get today's date at midnight in UTC
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
       
@@ -83,7 +80,6 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Query to get total answered questions count
   const { data: totalAnsweredCount } = useQuery({
     queryKey: ['total-answers', user?.id],
     queryFn: async () => {
@@ -101,6 +97,28 @@ const Dashboard = () => {
       
       console.log('Total answered count:', count);
       return count || 0;
+    },
+    enabled: !!user
+  });
+
+  const { data: totalAttemptsCount } = useQuery({
+    queryKey: ['total-attempts', user?.id],
+    queryFn: async () => {
+      console.log('Fetching total attempts, user:', user?.id);
+      
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('attempts_count')
+        .eq('user_id', user?.id);
+
+      if (error) {
+        console.error('Error fetching total attempts:', error);
+        throw error;
+      }
+      
+      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+      console.log('Total attempts count:', totalAttempts);
+      return totalAttempts;
     },
     enabled: !!user
   });
@@ -169,7 +187,7 @@ const Dashboard = () => {
 
       <Separator className="my-6" />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="mb-6">
           <CardContent className="py-6">
             <div className="flex items-center justify-between">
@@ -184,6 +202,15 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium">Insgesamt beantwortet</h3>
               <span className="text-2xl font-bold">{totalAnsweredCount ?? 0}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardContent className="py-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Gesamtversuche</h3>
+              <span className="text-2xl font-bold">{totalAttemptsCount ?? 0}</span>
             </div>
           </CardContent>
         </Card>
