@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from "@/hooks/use-toast";
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
@@ -28,15 +29,9 @@ const AnswerSubmission = ({
   const [showSolution, setShowSolution] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { preferences } = useUserPreferences();
+  const { toast } = useToast();
 
   React.useEffect(() => {
-    console.log('Preferences changed:', preferences);
-    console.log('Current mode:', preferences.immediateFeedback ? 'immediate' : 'multiple attempts');
-  }, [preferences]);
-
-  React.useEffect(() => {
-    console.log('Question changed, resetting states');
-    console.log('Previous wrong answers:', wrongAnswers);
     setHasSubmittedWrong(false);
     setLastSubmissionCorrect(null);
     setWrongAnswers([]);
@@ -48,13 +43,6 @@ const AnswerSubmission = ({
 
     setIsSubmitting(true);
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
-    
-    console.log('Starting answer submission:', {
-      isCorrect,
-      selectedAnswer,
-      mode: preferences.immediateFeedback ? 'immediate' : 'multiple attempts',
-      wrongAnswers: wrongAnswers.length
-    });
 
     try {
       const { data: existingProgress, error: fetchError } = await supabase
@@ -64,12 +52,9 @@ const AnswerSubmission = ({
         .eq('question_id', currentQuestion.id)
         .maybeSingle();
 
-      console.log('Existing progress:', existingProgress);
-
       if (fetchError) throw fetchError;
 
       if (!existingProgress) {
-        console.log('New question attempt');
         const { error: insertError } = await supabase
           .from('user_progress')
           .insert({
@@ -82,11 +67,6 @@ const AnswerSubmission = ({
 
         if (insertError) throw insertError;
       } else {
-        console.log('Existing question attempt:', {
-          previouslyCorrect: existingProgress.is_correct,
-          attemptsCount: existingProgress.attempts_count
-        });
-        
         const { error: updateError } = await supabase
           .from('user_progress')
           .update({
@@ -100,31 +80,38 @@ const AnswerSubmission = ({
         if (updateError) throw updateError;
 
         if (existingProgress.is_correct) {
-          console.log('Showing toast for previously correct question');
           if (isCorrect) {
-            toast.success("Diese Frage hattest du schon einmal richtig!");
+            toast({
+              title: "Diese Frage hattest du schon einmal richtig!",
+              variant: "default",
+            });
           } else {
-            toast.error("Schade, zuvor hattest du diese Frage richtig.");
+            toast({
+              title: "Schade, zuvor hattest du diese Frage richtig.",
+              variant: "destructive",
+            });
           }
         } else {
-          console.log('Showing toast for previously incorrect question');
           if (isCorrect) {
             if (preferences.immediateFeedback || wrongAnswers.length === 0) {
-              toast.success("Super! Die Frage ist jetzt als richtig markiert.");
+              toast({
+                title: "Super! Die Frage ist jetzt als richtig markiert.",
+                variant: "default",
+              });
             } else {
-              toast.success("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
+              toast({
+                title: "Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.",
+                variant: "default",
+              });
             }
           } else {
-            toast.error("Weiter üben! Du schaffst das!");
+            toast({
+              title: "Weiter üben! Du schaffst das!",
+              variant: "destructive",
+            });
           }
         }
       }
-
-      console.log('Updating local state:', {
-        isCorrect,
-        wrongAnswersCount: wrongAnswers.length,
-        showingSolution: preferences.immediateFeedback && !isCorrect
-      });
 
       if (!isCorrect && !preferences.immediateFeedback) {
         setHasSubmittedWrong(true);
@@ -142,7 +129,10 @@ const AnswerSubmission = ({
 
     } catch (error) {
       console.error('Error handling answer submission:', error);
-      toast.error("Fehler beim Speichern des Fortschritts");
+      toast({
+        title: "Fehler beim Speichern des Fortschritts",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -153,13 +143,6 @@ const AnswerSubmission = ({
     setShowSolution(true);
     onAnswerSubmitted('solution_viewed', false, true);
   };
-
-  console.log('Render state:', {
-    mode: preferences.immediateFeedback ? 'immediate' : 'multiple attempts',
-    wrongAnswers: wrongAnswers.length,
-    showingSolution: showSolution,
-    lastSubmissionCorrect
-  });
 
   if (preferences.immediateFeedback) {
     return (
@@ -185,10 +168,7 @@ const AnswerSubmission = ({
     );
   }
 
-  if (wrongAnswers.length >= 4) {
-    console.log('Maximum attempts reached');
-    return null;
-  }
+  if (wrongAnswers.length >= 4) return null;
 
   return (
     <div className="mt-4 space-y-4">
