@@ -58,7 +58,7 @@ const AnswerSubmission = ({
             user_id: user.id,
             question_id: currentQuestion.id,
             user_answer: selectedAnswer,
-            is_correct: isCorrect && wrongAnswers.length === 0,
+            is_correct: isCorrect,
             attempts_count: 1
           });
 
@@ -68,15 +68,12 @@ const AnswerSubmission = ({
           return;
         }
       } else {
-        const hadPreviousWrongAttempts = wrongAnswers.length > 0;
-        const shouldMarkCorrect = isCorrect && !hadPreviousWrongAttempts;
-
         const { error } = await supabase
           .from('user_progress')
           .update({
             user_answer: selectedAnswer,
             attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: shouldMarkCorrect ? true : existingProgress.is_correct
+            is_correct: isCorrect ? (preferences.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
@@ -86,38 +83,23 @@ const AnswerSubmission = ({
           toast.error("Fehler beim Speichern des Fortschritts");
           return;
         }
-
-        if (isCorrect) {
-          if (hadPreviousWrongAttempts) {
-            toast.success("Richtig! Aber da es nicht der erste Versuch war, bleibt die Frage als falsch markiert.");
-          } else if (!existingProgress.is_correct) {
-            toast.success("Super! Die Frage ist jetzt als richtig markiert.");
-          } else {
-            toast.success("Diese Frage hattest du bereits richtig beantwortet!");
-          }
-        } else {
-          if (existingProgress.is_correct) {
-            toast.error("Diese Frage hattest du bereits richtig beantwortet. Versuch es noch einmal!");
-          } else {
-            toast.error("Weiter üben! Du schaffst das!");
-          }
-        }
       }
 
-      if (!isCorrect) {
+      setLastSubmissionCorrect(isCorrect);
+
+      if (!isCorrect && !preferences.immediateFeedback) {
         setHasSubmittedWrong(true);
         if (!wrongAnswers.includes(selectedAnswer)) {
           setWrongAnswers(prev => [...prev, selectedAnswer]);
         }
-        
-        // If immediate feedback is enabled, show solution after first wrong attempt
-        if (preferences.immediateFeedback) {
-          setShowSolution(true);
-        }
       }
 
-      setLastSubmissionCorrect(isCorrect);
       onAnswerSubmitted(selectedAnswer, isCorrect, preferences.immediateFeedback && !isCorrect);
+
+      if (preferences.immediateFeedback) {
+        setShowSolution(true);
+      }
+
     } catch (error: any) {
       console.error('Error saving progress:', error);
       toast.error("Fehler beim Speichern des Fortschritts");
@@ -128,15 +110,37 @@ const AnswerSubmission = ({
 
   const handleShowSolution = () => {
     if (!user) return;
-    
     setShowSolution(true);
     onAnswerSubmitted('solution_viewed', false, true);
   };
 
-  // In immediate feedback mode, limit to 1 attempt
-  if (preferences.immediateFeedback && wrongAnswers.length >= 1) return null;
-  // In multiple tries mode, limit to 4 attempts
-  if (!preferences.immediateFeedback && wrongAnswers.length >= 4) return null;
+  // In immediate feedback mode, only show submit button and feedback
+  if (preferences.immediateFeedback) {
+    return (
+      <div className="mt-4 space-y-4">
+        {!showSolution && (
+          <Button 
+            onClick={handleConfirmAnswer}
+            disabled={!selectedAnswer || isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
+          </Button>
+        )}
+        
+        {showSolution && (
+          <FeedbackDisplay
+            isCorrect={lastSubmissionCorrect || false}
+            correctAnswer={currentQuestion.correctAnswer}
+            comment={currentQuestion.comment}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Multiple attempts mode (up to 4 tries)
+  if (wrongAnswers.length >= 4) return null;
 
   return (
     <div className="mt-4 space-y-4">
@@ -148,7 +152,7 @@ const AnswerSubmission = ({
         {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
       </Button>
       
-      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && !preferences.immediateFeedback && (
+      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
         <div className="space-y-4">
           <Alert variant="destructive">
             <div className="flex items-center gap-2">
