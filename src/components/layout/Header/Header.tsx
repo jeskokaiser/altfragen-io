@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Settings, LogOut, Moon, Sun, BookOpen } from 'lucide-react';
+import { Settings, LogOut, Moon, Sun, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,35 +44,36 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+      <div className="container flex h-14 items-center justify-between px-4 md:px-6">
         {/* Left section - Logo/Brand */}
-        <div className="mr-4 flex">
-          <Link to="/dashboard" className="flex items-center space-x-2">
-            <span className="font-semibold">Altfragen.io</span>
-          </Link>
-        </div>
+        <Link to="/dashboard" className="flex items-center space-x-2">
+          <span className="text-lg font-semibold tracking-tight hover:text-primary transition-colors">
+            Altfragen.io
+          </span>
+        </Link>
 
-        
         {/* Right section - Action Buttons and Profile Menu */}
-        <div className="flex items-center justify-end space-x-2">
+        <div className="flex items-center gap-2 md:gap-4">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             onClick={() => navigate('/tutorial')} 
-            size={isMobile ? "sm" : "default"}
-            className="gap-2"
+            size={isMobile ? "icon" : "default"}
+            className="hidden sm:flex items-center gap-2"
           >
             <BookOpen className="h-4 w-4" />
             {!isMobile && "Tutorial"}
           </Button>
+
           <Button 
-            variant="outline" 
+            variant="ghost" 
             onClick={toggleTheme} 
-            size={isMobile ? "sm" : "default"}
-            className="gap-2"
+            size={isMobile ? "icon" : "default"}
+            className="hidden sm:flex items-center gap-2"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             {!isMobile && "Anzeigemodus"}
           </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -104,6 +104,18 @@ const Header = () => {
                   <span>Einstellungen</span>
                 </Link>
               </DropdownMenuItem>
+              {isMobile && (
+                <>
+                  <DropdownMenuItem onClick={() => navigate('/tutorial')}>
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    <span>Tutorial</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={toggleTheme}>
+                    {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                    <span>Anzeigemodus</span>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuItem
                 className="cursor-pointer text-red-600 focus:text-red-600"
                 onClick={handleLogout}
