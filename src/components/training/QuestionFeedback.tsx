@@ -1,6 +1,7 @@
 
 import React from 'react';
 import FeedbackDisplay from './FeedbackDisplay';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface QuestionFeedbackProps {
   showFeedback: boolean;
@@ -19,7 +20,9 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   isCorrect,
   wrongAnswers,
 }) => {
-  if (!showFeedback || !userAnswer) return null;
+  const { preferences } = useUserPreferences();
+  
+  if (!showFeedback || !userAnswer || preferences.immediateFeedback) return null;
 
   // Show feedback when either answer is correct OR when all wrong answers have been tried
   const shouldShowFeedback = isCorrect || wrongAnswers.length >= 4;

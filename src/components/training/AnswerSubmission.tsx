@@ -168,8 +168,6 @@ const AnswerSubmission = ({
     );
   }
 
-  if (wrongAnswers.length >= 4) return null;
-
   return (
     <div className="mt-4 space-y-4">
       <Button 
@@ -180,7 +178,7 @@ const AnswerSubmission = ({
         {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
       </Button>
       
-      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && (
+      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && wrongAnswers.length < 4 && (
         <div className="space-y-4">
           <Alert variant="destructive">
             <div className="flex items-center gap-2">
