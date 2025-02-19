@@ -18,16 +18,16 @@ const Settings = () => {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <h1 className="text-3xl font-bold">Settings</h1>
+      <h1 className="text-3xl font-bold">einstellungen</h1>
       
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Quiz Preferences</h2>
+        <h2 className="text-xl font-semibold mb-4">Training Einstellungen</h2>
         
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <Label htmlFor="immediate-feedback">Immediate Feedback Mode</Label>
+            <Label htmlFor="immediate-feedback">Sofortige Rückmeldung</Label>
             <p className="text-sm text-muted-foreground">
-              When enabled, shows the correct answer immediately after a wrong attempt
+            Wenn aktiviert, wird die richtige Antwort sofort nach einem falschen Versuch angezeigt. 
             </p>
           </div>
           <Switch

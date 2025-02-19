@@ -49,26 +49,11 @@ const Header = () => {
         {/* Left section - Logo/Brand */}
         <div className="mr-4 flex">
           <Link to="/dashboard" className="flex items-center space-x-2">
-            <span className="font-semibold">QuizMe</span>
+            <span className="font-semibold">Altfragen.io</span>
           </Link>
         </div>
 
-        {/* Center section - Search Bar (hidden on mobile) */}
-        {!isMobile && (
-          <div className="flex flex-1 items-center justify-center px-4">
-            <div className="w-full max-w-sm">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search questions..."
-                  className="pl-8"
-                  type="search"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         {/* Right section - Action Buttons and Profile Menu */}
         <div className="flex items-center justify-end space-x-2">
           <Button 
@@ -116,7 +101,7 @@ const Header = () => {
                   className="flex w-full cursor-pointer items-center"
                 >
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>Einstellungen</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -124,7 +109,7 @@ const Header = () => {
                 onClick={handleLogout}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>Abmelden</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
