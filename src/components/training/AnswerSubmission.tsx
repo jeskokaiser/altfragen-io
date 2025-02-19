@@ -44,15 +44,19 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      const { data: existingProgress } = await supabase
+      // First, get the existing progress
+      const { data: existingProgress, error: fetchError } = await supabase
         .from('user_progress')
         .select('is_correct, attempts_count')
         .eq('user_id', user.id)
         .eq('question_id', currentQuestion.id)
         .maybeSingle();
 
+      if (fetchError) throw fetchError;
+
       if (!existingProgress) {
-        const { error } = await supabase
+        // For new questions, insert progress without showing a toast
+        const { error: insertError } = await supabase
           .from('user_progress')
           .insert({
             user_id: user.id,
@@ -62,13 +66,10 @@ const AnswerSubmission = ({
             attempts_count: 1
           });
 
-        if (error) {
-          console.error('Error saving progress:', error);
-          toast.error("Fehler beim Speichern des Fortschritts");
-          return;
-        }
+        if (insertError) throw insertError;
       } else {
-        const { error } = await supabase
+        // For existing questions, update progress
+        const { error: updateError } = await supabase
           .from('user_progress')
           .update({
             user_answer: selectedAnswer,
@@ -78,13 +79,9 @@ const AnswerSubmission = ({
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
 
-        if (error) {
-          console.error('Error updating progress:', error);
-          toast.error("Fehler beim Speichern des Fortschritts");
-          return;
-        }
+        if (updateError) throw updateError;
 
-        // Show appropriate toast messages for previously answered questions
+        // Show toast messages for previously answered questions
         if (existingProgress.is_correct) {
           // Previously correct questions
           if (isCorrect) {
@@ -106,8 +103,7 @@ const AnswerSubmission = ({
         }
       }
 
-      setLastSubmissionCorrect(isCorrect);
-
+      // Update local state after successful database operation
       if (!isCorrect && !preferences.immediateFeedback) {
         setHasSubmittedWrong(true);
         if (!wrongAnswers.includes(selectedAnswer)) {
@@ -115,14 +111,15 @@ const AnswerSubmission = ({
         }
       }
 
+      setLastSubmissionCorrect(isCorrect);
       onAnswerSubmitted(selectedAnswer, isCorrect, preferences.immediateFeedback && !isCorrect);
 
       if (preferences.immediateFeedback) {
         setShowSolution(true);
       }
 
-    } catch (error: any) {
-      console.error('Error saving progress:', error);
+    } catch (error) {
+      console.error('Error handling answer submission:', error);
       toast.error("Fehler beim Speichern des Fortschritts");
     } finally {
       setIsSubmitting(false);
