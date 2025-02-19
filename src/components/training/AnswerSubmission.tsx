@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +30,13 @@ const AnswerSubmission = ({
   const { preferences } = useUserPreferences();
 
   React.useEffect(() => {
+    console.log('Preferences changed:', preferences);
+    console.log('Current mode:', preferences.immediateFeedback ? 'immediate' : 'multiple attempts');
+  }, [preferences]);
+
+  React.useEffect(() => {
+    console.log('Question changed, resetting states');
+    console.log('Previous wrong answers:', wrongAnswers);
     setHasSubmittedWrong(false);
     setLastSubmissionCorrect(null);
     setWrongAnswers([]);
@@ -42,9 +48,15 @@ const AnswerSubmission = ({
 
     setIsSubmitting(true);
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
+    
+    console.log('Starting answer submission:', {
+      isCorrect,
+      selectedAnswer,
+      mode: preferences.immediateFeedback ? 'immediate' : 'multiple attempts',
+      wrongAnswers: wrongAnswers.length
+    });
 
     try {
-      // First, get the existing progress
       const { data: existingProgress, error: fetchError } = await supabase
         .from('user_progress')
         .select('is_correct, attempts_count')
@@ -52,10 +64,12 @@ const AnswerSubmission = ({
         .eq('question_id', currentQuestion.id)
         .maybeSingle();
 
+      console.log('Existing progress:', existingProgress);
+
       if (fetchError) throw fetchError;
 
       if (!existingProgress) {
-        // For new questions, insert progress without showing a toast
+        console.log('New question attempt');
         const { error: insertError } = await supabase
           .from('user_progress')
           .insert({
@@ -68,7 +82,11 @@ const AnswerSubmission = ({
 
         if (insertError) throw insertError;
       } else {
-        // For existing questions, update progress
+        console.log('Existing question attempt:', {
+          previouslyCorrect: existingProgress.is_correct,
+          attemptsCount: existingProgress.attempts_count
+        });
+        
         const { error: updateError } = await supabase
           .from('user_progress')
           .update({
@@ -81,16 +99,15 @@ const AnswerSubmission = ({
 
         if (updateError) throw updateError;
 
-        // Show toast messages for previously answered questions
         if (existingProgress.is_correct) {
-          // Previously correct questions
+          console.log('Showing toast for previously correct question');
           if (isCorrect) {
             toast.success("Diese Frage hattest du schon einmal richtig!");
           } else {
             toast.error("Schade, zuvor hattest du diese Frage richtig.");
           }
         } else {
-          // Previously wrong questions
+          console.log('Showing toast for previously incorrect question');
           if (isCorrect) {
             if (preferences.immediateFeedback || wrongAnswers.length === 0) {
               toast.success("Super! Die Frage ist jetzt als richtig markiert.");
@@ -103,7 +120,12 @@ const AnswerSubmission = ({
         }
       }
 
-      // Update local state after successful database operation
+      console.log('Updating local state:', {
+        isCorrect,
+        wrongAnswersCount: wrongAnswers.length,
+        showingSolution: preferences.immediateFeedback && !isCorrect
+      });
+
       if (!isCorrect && !preferences.immediateFeedback) {
         setHasSubmittedWrong(true);
         if (!wrongAnswers.includes(selectedAnswer)) {
@@ -132,7 +154,13 @@ const AnswerSubmission = ({
     onAnswerSubmitted('solution_viewed', false, true);
   };
 
-  // In immediate feedback mode, only show submit button and feedback
+  console.log('Render state:', {
+    mode: preferences.immediateFeedback ? 'immediate' : 'multiple attempts',
+    wrongAnswers: wrongAnswers.length,
+    showingSolution: showSolution,
+    lastSubmissionCorrect
+  });
+
   if (preferences.immediateFeedback) {
     return (
       <div className="mt-4 space-y-4">
@@ -157,8 +185,10 @@ const AnswerSubmission = ({
     );
   }
 
-  // Multiple attempts mode (up to 4 tries)
-  if (wrongAnswers.length >= 4) return null;
+  if (wrongAnswers.length >= 4) {
+    console.log('Maximum attempts reached');
+    return null;
+  }
 
   return (
     <div className="mt-4 space-y-4">
