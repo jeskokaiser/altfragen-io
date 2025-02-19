@@ -12,11 +12,14 @@ import Tutorial from '@/pages/Tutorial';
 import UnclearQuestions from '@/pages/UnclearQuestions';
 import Changelog from '@/pages/Changelog';
 import Dashboard from '@/components/Dashboard';
+import Footer from '@/components/Footer';
 
 const MainLayout = () => {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/auth';
+  const isTrainingPage = location.pathname === '/training';
+  const shouldShowFooter = !isTrainingPage && !location.pathname.includes('/results');
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -37,6 +40,7 @@ const MainLayout = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      {shouldShowFooter && <Footer />}
     </div>
   );
 };
