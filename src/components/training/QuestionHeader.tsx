@@ -24,19 +24,7 @@ const QuestionHeader: React.FC<QuestionHeaderProps> = ({
     <div className="flex flex-col gap-3 mb-4">
       <ProgressBar currentIndex={currentIndex} totalQuestions={totalQuestions} />
       <div className="flex justify-end gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          className="h-9 w-9 dark:text-white"
-        >
-          {theme === 'dark' ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-        </Button>
-        <Button 
+                <Button 
           variant="outline" 
           onClick={onQuit} 
           className={`text-red-500 hover:text-red-600 hover:bg-red-50 ${isMobile ? 'text-sm' : ''}`}
