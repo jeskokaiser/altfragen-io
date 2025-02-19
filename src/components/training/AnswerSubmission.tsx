@@ -83,6 +83,27 @@ const AnswerSubmission = ({
           toast.error("Fehler beim Speichern des Fortschritts");
           return;
         }
+
+        // Show appropriate toast messages for previously answered questions
+        if (existingProgress.is_correct) {
+          // Previously correct questions
+          if (isCorrect) {
+            toast.success("Diese Frage hattest du schon einmal richtig!");
+          } else {
+            toast.error("Schade, zuvor hattest du diese Frage richtig.");
+          }
+        } else {
+          // Previously wrong questions
+          if (isCorrect) {
+            if (preferences.immediateFeedback || wrongAnswers.length === 0) {
+              toast.success("Super! Die Frage ist jetzt als richtig markiert.");
+            } else {
+              toast.success("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
+            }
+          } else {
+            toast.error("Weiter üben! Du schaffst das!");
+          }
+        }
       }
 
       setLastSubmissionCorrect(isCorrect);
