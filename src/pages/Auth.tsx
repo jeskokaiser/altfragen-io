@@ -197,7 +197,7 @@ const Auth = () => {
         return;
       }
       
-      toast.success('Erfolgreich eingeloggt!');
+      toast.info('Erfolgreich eingeloggt!');
       navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message);

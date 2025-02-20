@@ -95,7 +95,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
 
       if (error) throw error;
 
-      toast.success('Frage als unklar markiert');
+      toast.info('Frage als unklar markiert');
       setCurrentQuestion({
         ...currentQuestion,
         is_unclear: true,

@@ -90,7 +90,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           difficulty: updatedQuestion.difficulty
         };
         onQuestionUpdated(mappedQuestion);
-        toast.success('Frage erfolgreich aktualisiert');
+        toast.info('Frage erfolgreich aktualisiert');
         onClose();
       }
     } catch (error: any) {

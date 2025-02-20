@@ -105,7 +105,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
       if (error) throw error;
 
-      toast.success('Frage als unklar markiert');
+      toast.info('Frage als unklar markiert');
       setCurrentQuestion({
         ...currentQuestion,
         is_unclear: true,
