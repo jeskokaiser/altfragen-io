@@ -2,13 +2,13 @@
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { XCircle, Eye } from 'lucide-react';
 import FeedbackDisplay from './FeedbackDisplay';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { showToast } from '@/utils/toast';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -29,7 +29,6 @@ const AnswerSubmission = ({
   const [showSolution, setShowSolution] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { preferences } = useUserPreferences();
-  const { toast } = useToast();
 
   React.useEffect(() => {
     setHasSubmittedWrong(false);
@@ -81,34 +80,19 @@ const AnswerSubmission = ({
 
         if (existingProgress.is_correct) {
           if (isCorrect) {
-            toast({
-              title: "Diese Frage hattest du schon einmal richtig!",
-              variant: "default",
-            });
+            showToast.info("Diese Frage hattest du schon einmal richtig!");
           } else {
-            toast({
-              title: "Schade, zuvor hattest du diese Frage richtig.",
-              variant: "destructive",
-            });
+            showToast.warning("Schade, zuvor hattest du diese Frage richtig.");
           }
         } else {
           if (isCorrect) {
             if (preferences.immediateFeedback || wrongAnswers.length === 0) {
-              toast({
-                title: "Super! Die Frage ist jetzt als richtig markiert.",
-                variant: "default",
-              });
+              showToast.success("Super! Die Frage ist jetzt als richtig markiert.");
             } else {
-              toast({
-                title: "Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.",
-                variant: "default",
-              });
+              showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
             }
           } else {
-            toast({
-              title: "Weiter üben! Du schaffst das!",
-              variant: "destructive",
-            });
+            showToast.warning("Weiter üben! Du schaffst das!");
           }
         }
       }
@@ -129,10 +113,7 @@ const AnswerSubmission = ({
 
     } catch (error) {
       console.error('Error handling answer submission:', error);
-      toast({
-        title: "Fehler beim Speichern des Fortschritts",
-        variant: "destructive",
-      });
+      showToast.error("Fehler beim Speichern des Fortschritts");
     } finally {
       setIsSubmitting(false);
     }

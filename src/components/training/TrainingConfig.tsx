@@ -3,10 +3,10 @@ import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from "@/hooks/use-toast";
 import FilterForm from './FilterForm';
 import { FormValues } from './types/FormValues';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
+import { showToast } from '@/utils/toast';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -15,7 +15,6 @@ interface TrainingConfigProps {
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
@@ -28,10 +27,8 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     const filteredQuestions = filterQuestions(questions, values);
 
     if (filteredQuestions.length === 0) {
-      toast({
-        title: "Keine Fragen verfügbar",
-        description: "Mit den gewählten Filtereinstellungen sind keine Fragen verfügbar. Bitte passe deine Auswahl an.",
-        variant: "destructive",
+      showToast.error("Keine Fragen verfügbar", {
+        description: "Mit den gewählten Filtereinstellungen sind keine Fragen verfügbar. Bitte passe deine Auswahl an."
       });
       return;
     }
