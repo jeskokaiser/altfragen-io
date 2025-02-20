@@ -60,7 +60,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Bei zufälliger Auswahl werden die Filter für Fach und Schwierigkeitsgrad ignoriert</p>
+                  <p>Wenn deaktiviert, werden zuvor falsch beantwortete Fragen zuerst gestellt</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
