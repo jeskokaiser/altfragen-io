@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question } from '@/types/Question';
+import { AnswerState } from '@/types/Answer';
 import QuestionView from '@/components/questions/QuestionView';
 import Results from '@/components/Results';
 import TrainingConfig from '@/components/training/TrainingConfig';
@@ -11,7 +12,7 @@ const Training = () => {
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<string[]>([]);
+  const [userAnswers, setUserAnswers] = useState<AnswerState[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [configurationComplete, setConfigurationComplete] = useState(false);
 
@@ -29,9 +30,15 @@ const Training = () => {
     setConfigurationComplete(true);
   };
 
-  const handleAnswer = (answer: string) => {
+  const handleAnswer = (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
     const newAnswers = [...userAnswers];
-    newAnswers[currentQuestionIndex] = answer;
+    // If there's already an answer for this question, preserve the first attempt status
+    const existingAnswer = newAnswers[currentQuestionIndex];
+    newAnswers[currentQuestionIndex] = {
+      value: answer,
+      isFirstAttempt: existingAnswer ? existingAnswer.isFirstAttempt : isFirstAttempt,
+      viewedSolution: viewedSolution || (existingAnswer?.viewedSolution || false)
+    };
     setUserAnswers(newAnswers);
   };
 
