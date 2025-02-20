@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question } from '@/types/Question';
@@ -35,21 +34,29 @@ const Training = () => {
     const currentAnswer = newAnswers[currentQuestionIndex];
     
     if (viewedSolution) {
-      // If viewing solution, preserve the original answer
+      // If viewing solution, preserve the first answer ever made
       newAnswers[currentQuestionIndex] = {
         value: answer,
-        isFirstAttempt: currentAnswer?.isFirstAttempt ?? isFirstAttempt,
+        // Keep existing isFirstAttempt or determine based on attempts
+        isFirstAttempt: currentAnswer?.isFirstAttempt ?? currentAnswer?.attempts?.length === 0 ?? true,
         viewedSolution: true,
+        // Keep existing attempts or initialize
         attempts: currentAnswer?.attempts ?? [],
-        originalAnswer: currentAnswer?.value || answer
+        // Preserve the very first answer or use the current value if no previous answer exists
+        originalAnswer: currentAnswer?.originalAnswer || currentAnswer?.value || answer
       };
     } else {
       // Regular answer submission
+      const attempts = currentAnswer?.attempts ?? [];
+      const isActualFirstAttempt = attempts.length === 0;
+      
       newAnswers[currentQuestionIndex] = {
         value: answer,
-        isFirstAttempt: currentAnswer ? currentAnswer.isFirstAttempt : isFirstAttempt,
+        // isFirstAttempt is now determined by the attempts array
+        isFirstAttempt: isActualFirstAttempt,
         viewedSolution: currentAnswer?.viewedSolution ?? false,
-        attempts: currentAnswer ? [...currentAnswer.attempts, answer] : [answer],
+        attempts: [...attempts, answer],
+        // Preserve existing originalAnswer if it exists
         originalAnswer: currentAnswer?.originalAnswer
       };
     }
