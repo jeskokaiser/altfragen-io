@@ -81,7 +81,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Sortiert Fragen nach Anzahl der Versuche (aufsteigend)</p>
+                  <p>Am häufigsten Falsch beantwortete Fragen zuerst)</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
