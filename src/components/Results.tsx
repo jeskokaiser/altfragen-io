@@ -31,23 +31,27 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   const getAnswerStatusColor = (answer: AnswerState | undefined, correctLetter: string) => {
     if (!answer) return 'text-slate-600';
     
-    const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
+    const userAnswerLetter = (answer.originalAnswer || answer.value).trim()[0]?.toUpperCase();
     const isCorrectAnswer = userAnswerLetter === correctLetter;
 
     if (answer.viewedSolution) return 'text-slate-600';
-    if (!answer.isFirstAttempt) return 'text-red-600'; // Always red if not first attempt
+    if (!answer.isFirstAttempt) return 'text-red-600';
     return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
   };
 
   const renderUserAnswer = (answer: AnswerState | undefined, question: Question) => {
     if (!answer) return 'Keine Antwort';
     
-    const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
+    // Use originalAnswer if available (for viewed solutions), otherwise use current value
+    const answerToShow = answer.originalAnswer || answer.value;
+    const userAnswerLetter = answerToShow.trim()[0]?.toUpperCase();
+    
     if (!userAnswerLetter || !question[`option${userAnswerLetter}` as keyof Question]) {
       return 'Ungültige Antwort';
     }
 
     const answerText = `${userAnswerLetter}: ${question[`option${userAnswerLetter}` as keyof Question]}`;
+    
     if (answer.viewedSolution) {
       return `${answerText} (Lösung angezeigt)`;
     }

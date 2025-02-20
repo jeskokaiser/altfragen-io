@@ -32,13 +32,28 @@ const Training = () => {
 
   const handleAnswer = (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
     const newAnswers = [...userAnswers];
-    // If there's already an answer for this question, preserve the first attempt status
-    const existingAnswer = newAnswers[currentQuestionIndex];
-    newAnswers[currentQuestionIndex] = {
-      value: answer,
-      isFirstAttempt: existingAnswer ? existingAnswer.isFirstAttempt : isFirstAttempt,
-      viewedSolution: viewedSolution || (existingAnswer?.viewedSolution || false)
-    };
+    const currentAnswer = newAnswers[currentQuestionIndex];
+    
+    if (viewedSolution) {
+      // If viewing solution, preserve the original answer
+      newAnswers[currentQuestionIndex] = {
+        value: answer,
+        isFirstAttempt: currentAnswer?.isFirstAttempt ?? isFirstAttempt,
+        viewedSolution: true,
+        attempts: currentAnswer?.attempts ?? [],
+        originalAnswer: currentAnswer?.value || answer
+      };
+    } else {
+      // Regular answer submission
+      newAnswers[currentQuestionIndex] = {
+        value: answer,
+        isFirstAttempt: currentAnswer ? currentAnswer.isFirstAttempt : isFirstAttempt,
+        viewedSolution: currentAnswer?.viewedSolution ?? false,
+        attempts: currentAnswer ? [...currentAnswer.attempts, answer] : [answer],
+        originalAnswer: currentAnswer?.originalAnswer
+      };
+    }
+    
     setUserAnswers(newAnswers);
   };
 
