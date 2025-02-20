@@ -19,10 +19,23 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   const calculateScore = () => {
     return questions.reduce((score, question, index) => {
       const userAnswer = userAnswers[index] || "";
+      if (userAnswer === 'solution_viewed') return score;
       const userAnswerLetter = userAnswer.trim()[0]?.toUpperCase();
       const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
       return score + (userAnswerLetter === correctAnswerLetter ? 1 : 0);
     }, 0);
+  };
+
+  const renderUserAnswer = (userAnswer: string, question: Question) => {
+    if (!userAnswer) return 'Keine Antwort';
+    if (userAnswer === 'solution_viewed') return 'Lösung angezeigt';
+
+    const userAnswerLetter = userAnswer.trim()[0]?.toUpperCase();
+    if (!userAnswerLetter || !question[`option${userAnswerLetter}` as keyof Question]) {
+      return 'Ungültige Antwort';
+    }
+
+    return `${userAnswerLetter}: ${question[`option${userAnswerLetter}` as keyof Question]}`;
   };
 
   return (
@@ -37,8 +50,9 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
       <div className="space-y-3">
         {questions.map((q, index) => {
           const userAnswer = userAnswers[index] || "";
-          const userAnswerLetter = userAnswer.trim()[0]?.toUpperCase();
+          const userAnswerLetter = userAnswer === 'solution_viewed' ? null : userAnswer.trim()[0]?.toUpperCase();
           const correctAnswerLetter = q.correctAnswer.trim()[0]?.toUpperCase();
+          const isCorrect = userAnswerLetter === correctAnswerLetter;
 
           return (
             <Card key={index} className={`${isMobile ? 'p-3' : 'p-4'}`}>
@@ -50,16 +64,14 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
                   <p className="text-xs md:text-sm text-slate-600 dark:text-white">Deine Antwort:</p>
                   <p
                     className={`mt-1 text-sm md:text-base ${
-                      userAnswerLetter === correctAnswerLetter
+                      userAnswer === 'solution_viewed'
+                        ? 'text-slate-600'
+                        : isCorrect
                         ? 'text-green-600'
                         : 'text-red-600'
                     }`}
                   >
-                    {userAnswerLetter
-                      ? `${userAnswerLetter}: ${q[
-                          `option${userAnswerLetter}` as keyof Question
-                        ]}`
-                      : 'Keine Antwort'}
+                    {renderUserAnswer(userAnswer, q)}
                   </p>
                 </div>
                 <div>
