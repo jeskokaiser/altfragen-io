@@ -42,12 +42,12 @@ export const prioritizeQuestions = (
     return shuffle(filteredQuestions).slice(0, questionCount);
   }
 
-  // If sort by attempts is enabled, sort questions by attempts count
+  // If sort by attempts is enabled, sort questions by attempts count (descending)
   if (sortByAttempts) {
     return [...filteredQuestions].sort((a, b) => {
       const attemptsA = attemptsCount.get(a.id) || 0;
       const attemptsB = attemptsCount.get(b.id) || 0;
-      return attemptsA - attemptsB;
+      return attemptsB - attemptsA; // Changed to sort in descending order
     }).slice(0, questionCount);
   }
 
