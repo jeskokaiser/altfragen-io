@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Copy } from 'lucide-react';
 import DifficultyControls from '../training/DifficultyControls';
-import { toast } from 'sonner';
+import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Question } from '@/types/Question';
 
@@ -19,6 +19,7 @@ const QuestionControls: React.FC<QuestionControlsProps> = ({
   onMarkUnclear,
 }) => {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   const handleCopyToClipboard = async () => {
     const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. Die Frage stammt aus dem Gedächtnisprotokoll anderer Studierender.
@@ -44,9 +45,15 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
 
     try {
       await navigator.clipboard.writeText(prompt);
-      toast.success("Frage und Prompt in die Zwischenablage kopiert");
+      toast({
+        title: "Frage und Prompt in die Zwischenablage kopiert",
+        variant: "default",
+      });
     } catch (err) {
-      toast.error("Fehler beim Kopieren in die Zwischenablage");
+      toast({
+        title: "Fehler beim Kopieren in die Zwischenablage",
+        variant: "destructive",
+      });
     }
   };
 
