@@ -20,12 +20,23 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   const calculateScore = () => {
     return questions.reduce((score, question, index) => {
       const answer = userAnswers[index];
-      if (!answer || answer.viewedSolution || !answer.isFirstAttempt) return score;
+      if (!answer || !answer.isFirstAttempt || answer.viewedSolution) return score;
       
       const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
       const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
       return score + (userAnswerLetter === correctAnswerLetter ? 1 : 0);
     }, 0);
+  };
+
+  const getAnswerStatusColor = (answer: AnswerState | undefined, correctLetter: string) => {
+    if (!answer) return 'text-slate-600';
+    
+    const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
+    const isCorrectAnswer = userAnswerLetter === correctLetter;
+
+    if (answer.viewedSolution) return 'text-slate-600';
+    if (!answer.isFirstAttempt) return 'text-red-600'; // Always red if not first attempt
+    return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
   };
 
   const renderUserAnswer = (answer: AnswerState | undefined, question: Question) => {
@@ -39,6 +50,9 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     const answerText = `${userAnswerLetter}: ${question[`option${userAnswerLetter}` as keyof Question]}`;
     if (answer.viewedSolution) {
       return `${answerText} (Lösung angezeigt)`;
+    }
+    if (!answer.isFirstAttempt) {
+      return `${answerText} (Nicht der erste Versuch)`;
     }
     return answerText;
   };
@@ -55,9 +69,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
       <div className="space-y-3">
         {questions.map((q, index) => {
           const answer = userAnswers[index];
-          const userAnswerLetter = answer?.value.trim()[0]?.toUpperCase();
           const correctAnswerLetter = q.correctAnswer.trim()[0]?.toUpperCase();
-          const isCorrect = userAnswerLetter === correctAnswerLetter;
 
           return (
             <Card key={index} className={`${isMobile ? 'p-3' : 'p-4'}`}>
@@ -67,17 +79,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
               <div className="grid gap-3">
                 <div>
                   <p className="text-xs md:text-sm text-slate-600 dark:text-white">Deine Antwort:</p>
-                  <p
-                    className={`mt-1 text-sm md:text-base ${
-                      !answer
-                        ? 'text-slate-600'
-                        : answer.viewedSolution
-                        ? 'text-slate-600'
-                        : isCorrect
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}
-                  >
+                  <p className={`mt-1 text-sm md:text-base ${getAnswerStatusColor(answer, correctAnswerLetter)}`}>
                     {renderUserAnswer(answer, q)}
                   </p>
                 </div>
