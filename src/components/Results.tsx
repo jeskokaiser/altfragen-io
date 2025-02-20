@@ -33,12 +33,12 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   };
 
   const getAnswerStatusColor = (answer: AnswerState | undefined, correctLetter: string) => {
-    if (!answer) return 'text-slate-600';
+    if (!answer) return 'text-red-600';
     
     const userAnswerLetter = (answer.originalAnswer || answer.value).trim()[0]?.toUpperCase();
     const isCorrectAnswer = userAnswerLetter === correctLetter;
 
-    if (answer.viewedSolution) return 'text-slate-600';
+    if (answer.viewedSolution) return 'text-red-600';
     if (!answer.isFirstAttempt) return 'text-red-600';
     return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
   };
