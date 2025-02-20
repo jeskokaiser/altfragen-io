@@ -45,7 +45,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
 
     try {
       await navigator.clipboard.writeText(prompt);
-      showToast.success("Frage und Prompt in die Zwischenablage kopiert");
+      showToast.info("Frage und Prompt in die Zwischenablage kopiert");
     } catch (err) {
       showToast.error("Fehler beim Kopieren in die Zwischenablage");
     }

@@ -92,7 +92,7 @@ const AnswerSubmission = ({
               showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
             }
           } else {
-            showToast.warning("Weiter üben! Du schaffst das!");
+            showToast.info("Weiter üben! Du schaffst das!");
           }
         }
       }
