@@ -58,7 +58,8 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       questionCount,
       values.isRandomSelection,
       values.sortByAttempts,
-      attemptsCount
+      attemptsCount,
+      values.sortDirection
     );
 
     onStart(prioritizedQuestions);

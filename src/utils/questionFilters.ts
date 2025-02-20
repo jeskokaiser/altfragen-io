@@ -35,19 +35,20 @@ export const prioritizeQuestions = (
   questionCount: number,
   isRandomSelection: boolean,
   sortByAttempts: boolean,
-  attemptsCount: Map<string, number>
+  attemptsCount: Map<string, number>,
+  sortDirection: 'asc' | 'desc' = 'desc'
 ): Question[] => {
   // If random selection is enabled, simply shuffle all questions
   if (isRandomSelection) {
     return shuffle(filteredQuestions).slice(0, questionCount);
   }
 
-  // If sort by attempts is enabled, sort questions by attempts count (descending)
+  // If sort by attempts is enabled, sort questions by attempts count
   if (sortByAttempts) {
     return [...filteredQuestions].sort((a, b) => {
       const attemptsA = attemptsCount.get(a.id) || 0;
       const attemptsB = attemptsCount.get(b.id) || 0;
-      return attemptsB - attemptsA; // Changed to sort in descending order
+      return sortDirection === 'desc' ? attemptsB - attemptsA : attemptsA - attemptsB;
     }).slice(0, questionCount);
   }
 

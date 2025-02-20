@@ -5,4 +5,5 @@ export interface FormValues {
   difficulty: string;
   isRandomSelection: boolean;
   sortByAttempts: boolean;
+  sortDirection: 'asc' | 'desc';
 }

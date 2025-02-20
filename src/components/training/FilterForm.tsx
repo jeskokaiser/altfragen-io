@@ -5,6 +5,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SubjectSelect from './selects/SubjectSelect';
 import DifficultySelect from './selects/DifficultySelect';
@@ -24,11 +25,13 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
       questionCount: 'all',
       isRandomSelection: false,
       sortByAttempts: false,
+      sortDirection: 'desc',
     },
     mode: 'onChange',
   });
 
   const isRandomMode = form.watch('isRandomSelection');
+  const isSortingEnabled = form.watch('sortByAttempts');
 
   const isFormValid = form.watch('subject') && 
                      form.watch('difficulty') && 
@@ -60,31 +63,53 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Wenn deaktiviert, werden zuvor falsch beantwortete Fragen zuerst gestellt</p>
+                  <p>Bei zufälliger Auswahl werden die Filter für Fach und Schwierigkeitsgrad ignoriert</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={isSortingEnabled}
+                        onCheckedChange={(checked) => form.setValue('sortByAttempts', checked)}
+                        id="sort-by-attempts"
+                        disabled={isRandomMode}
+                      />
+                      <Label htmlFor="sort-by-attempts">Nach Versuchen sortieren</Label>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Sortiert Fragen nach Anzahl der Versuche</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {isSortingEnabled && !isRandomMode && (
+              <div className="ml-8">
+                <RadioGroup
+                  defaultValue="desc"
+                  value={form.watch('sortDirection')}
+                  onValueChange={(value: 'asc' | 'desc') => form.setValue('sortDirection', value)}
+                  className="flex flex-col space-y-1"
+                >
                   <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={form.watch('sortByAttempts')}
-                      onCheckedChange={(checked) => form.setValue('sortByAttempts', checked)}
-                      id="sort-by-attempts"
-                      disabled={isRandomMode}
-                    />
-                    <Label htmlFor="sort-by-attempts">Nach Versuchen sortieren</Label>
+                    <RadioGroupItem value="desc" id="sort-desc" />
+                    <Label htmlFor="sort-desc">Meiste Versuche zuerst</Label>
                   </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Am häufigsten Falsch beantwortete Fragen zuerst)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="asc" id="sort-asc" />
+                    <Label htmlFor="sort-asc">Wenigste Versuche zuerst</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
           </div>
         </div>
 
