@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question } from '@/types/Question';
@@ -86,7 +87,7 @@ const Training = () => {
   };
 
   const handleQuit = () => {
-    navigate('/dashboard');
+    setShowResults(true);  // Show results instead of navigating away
   };
 
   const handleQuestionUpdate = (updatedQuestion: Question) => {
