@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Question } from '@/types/Question';
+import { AnswerState } from '@/types/Answer';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './QuestionHeader';
 import NavigationButtons from '../training/NavigationButtons';
@@ -16,8 +17,8 @@ interface QuestionViewProps {
   currentIndex: number;
   onNext: () => void;
   onPrevious: () => void;
-  onAnswer: (answer: string) => void;
-  userAnswer: string;
+  onAnswer: (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => void;
+  userAnswer: AnswerState;
   onQuit: () => void;
   onQuestionUpdate?: (updatedQuestion: Question) => void;
 }
@@ -57,7 +58,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   };
 
   const handleAnswerSubmitted = (answer: string, correct: boolean, showSol?: boolean) => {
-    onAnswer(answer);
+    onAnswer(answer, wrongAnswers.length === 0, showSol || false);
     setShowFeedback(true);
     setIsCorrect(correct);
     
@@ -123,7 +124,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         showFeedback={showFeedback}
         selectedAnswer={selectedAnswer}
         onAnswerChange={handleAnswerChange}
-        userAnswer={userAnswer}
+        userAnswer={userAnswer?.value}
         isCorrect={isCorrect}
         wrongAnswers={wrongAnswers}
         user={user}
