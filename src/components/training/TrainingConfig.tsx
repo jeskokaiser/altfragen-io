@@ -42,19 +42,23 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     
     const { data: userProgress } = await supabase
       .from('user_progress')
-      .select('question_id, is_correct')
+      .select('question_id, is_correct, attempts_count')
       .eq('user_id', user?.id);
 
     const questionResults = new Map();
+    const attemptsCount = new Map();
     userProgress?.forEach(progress => {
       questionResults.set(progress.question_id, progress.is_correct);
+      attemptsCount.set(progress.question_id, progress.attempts_count || 0);
     });
 
     const prioritizedQuestions = prioritizeQuestions(
       filteredQuestions,
       questionResults,
       questionCount,
-      values.isRandomSelection
+      values.isRandomSelection,
+      values.sortByAttempts,
+      attemptsCount
     );
 
     onStart(prioritizedQuestions);

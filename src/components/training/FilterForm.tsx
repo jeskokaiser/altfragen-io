@@ -23,6 +23,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
       difficulty: 'all',
       questionCount: 'all',
       isRandomSelection: false,
+      sortByAttempts: false,
     },
     mode: 'onChange',
   });
@@ -44,24 +45,47 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
         
         <QuestionCountSelect form={form} />
         
-        <div className="flex items-center space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={isRandomMode}
-                    onCheckedChange={(checked) => form.setValue('isRandomSelection', checked)}
-                    id="random-mode"
-                  />
-                  <Label htmlFor="random-mode">Zufällige Auswahl</Label>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Bei zufälliger Auswahl werden die Filter für Fach und Schwierigkeitsgrad ignoriert</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={isRandomMode}
+                      onCheckedChange={(checked) => form.setValue('isRandomSelection', checked)}
+                      id="random-mode"
+                    />
+                    <Label htmlFor="random-mode">Zufällige Auswahl</Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Bei zufälliger Auswahl werden die Filter für Fach und Schwierigkeitsgrad ignoriert</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={form.watch('sortByAttempts')}
+                      onCheckedChange={(checked) => form.setValue('sortByAttempts', checked)}
+                      id="sort-by-attempts"
+                      disabled={isRandomMode}
+                    />
+                    <Label htmlFor="sort-by-attempts">Nach Versuchen sortieren</Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Sortiert Fragen nach Anzahl der Versuche (aufsteigend)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
 
         <Button 

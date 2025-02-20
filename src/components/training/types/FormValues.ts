@@ -4,4 +4,5 @@ export interface FormValues {
   questionCount: string;
   difficulty: string;
   isRandomSelection: boolean;
+  sortByAttempts: boolean;
 }
