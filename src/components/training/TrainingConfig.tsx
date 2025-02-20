@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +53,8 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     const prioritizedQuestions = prioritizeQuestions(
       filteredQuestions,
       questionResults,
-      questionCount
+      questionCount,
+      values.isRandomSelection
     );
 
     onStart(prioritizedQuestions);

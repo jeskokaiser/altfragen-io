@@ -1,7 +1,11 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SubjectSelect from './selects/SubjectSelect';
 import DifficultySelect from './selects/DifficultySelect';
 import QuestionCountSelect from './selects/QuestionCountSelect';
@@ -18,9 +22,12 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
       subject: 'all',
       difficulty: 'all',
       questionCount: 'all',
+      isRandomSelection: false,
     },
     mode: 'onChange',
   });
+
+  const isRandomMode = form.watch('isRandomSelection');
 
   const isFormValid = form.watch('subject') && 
                      form.watch('difficulty') && 
@@ -30,9 +37,33 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <SubjectSelect form={form} subjects={subjects} />
-        <DifficultySelect form={form} />
+        <div className={`space-y-6 ${isRandomMode ? 'opacity-50 pointer-events-none' : ''}`}>
+          <SubjectSelect form={form} subjects={subjects} />
+          <DifficultySelect form={form} />
+        </div>
+        
         <QuestionCountSelect form={form} />
+        
+        <div className="flex items-center space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={isRandomMode}
+                    onCheckedChange={(checked) => form.setValue('isRandomSelection', checked)}
+                    id="random-mode"
+                  />
+                  <Label htmlFor="random-mode">Zufällige Auswahl</Label>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Bei zufälliger Auswahl werden die Filter für Fach und Schwierigkeitsgrad ignoriert</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
         <Button 
           type="submit" 
           className="w-full"

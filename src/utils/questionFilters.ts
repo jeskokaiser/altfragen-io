@@ -1,7 +1,13 @@
+
 import { Question } from '@/types/Question';
 import { FormValues } from '@/components/training/types/FormValues';
 
 export const filterQuestions = (questions: Question[], values: FormValues): Question[] => {
+  // If random selection is enabled, skip filtering by subject and difficulty
+  if (values.isRandomSelection) {
+    return [...questions];
+  }
+  
   let filteredQuestions = [...questions];
   
   if (values.subject !== 'all') {
@@ -26,8 +32,14 @@ export const filterQuestions = (questions: Question[], values: FormValues): Ques
 export const prioritizeQuestions = (
   filteredQuestions: Question[],
   questionResults: Map<string, boolean>,
-  questionCount: number
+  questionCount: number,
+  isRandomSelection: boolean
 ): Question[] => {
+  // If random selection is enabled, simply shuffle all questions
+  if (isRandomSelection) {
+    return shuffle(filteredQuestions).slice(0, questionCount);
+  }
+
   const untrained: Question[] = [];
   const wrongAnswered: Question[] = [];
   const correctAnswered: Question[] = [];
