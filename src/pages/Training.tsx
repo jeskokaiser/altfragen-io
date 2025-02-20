@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question } from '@/types/Question';
@@ -5,6 +6,7 @@ import { AnswerState } from '@/types/Answer';
 import QuestionView from '@/components/questions/QuestionView';
 import Results from '@/components/Results';
 import TrainingConfig from '@/components/training/TrainingConfig';
+import { Toaster } from "@/components/ui/toaster";
 
 const Training = () => {
   const navigate = useNavigate();
@@ -97,46 +99,60 @@ const Training = () => {
   };
 
   if (allQuestions.length === 0) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return (
+      <>
+        <div className="flex justify-center items-center min-h-screen">Loading...</div>
+        <Toaster />
+      </>
+    );
   }
 
   if (!configurationComplete) {
     return (
-      <div className="container mx-auto py-8">
-        <TrainingConfig 
-          questions={allQuestions}
-          onStart={handleStartTraining}
-        />
-      </div>
+      <>
+        <div className="container mx-auto py-8">
+          <TrainingConfig 
+            questions={allQuestions}
+            onStart={handleStartTraining}
+          />
+        </div>
+        <Toaster />
+      </>
     );
   }
 
   if (showResults) {
     return (
-      <div className="container mx-auto py-8">
-        <Results
-          questions={selectedQuestions}
-          userAnswers={userAnswers}
-          onRestart={handleRestart}
-        />
-      </div>
+      <>
+        <div className="container mx-auto py-8">
+          <Results
+            questions={selectedQuestions}
+            userAnswers={userAnswers}
+            onRestart={handleRestart}
+          />
+        </div>
+        <Toaster />
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <QuestionView
-        questionData={selectedQuestions[currentQuestionIndex]}
-        totalQuestions={selectedQuestions.length}
-        currentIndex={currentQuestionIndex}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
-        onAnswer={handleAnswer}
-        userAnswer={userAnswers[currentQuestionIndex]}
-        onQuit={handleQuit}
-        onQuestionUpdate={handleQuestionUpdate}
-      />
-    </div>
+    <>
+      <div className="container mx-auto py-8">
+        <QuestionView
+          questionData={selectedQuestions[currentQuestionIndex]}
+          totalQuestions={selectedQuestions.length}
+          currentIndex={currentQuestionIndex}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          onAnswer={handleAnswer}
+          userAnswer={userAnswers[currentQuestionIndex]}
+          onQuit={handleQuit}
+          onQuestionUpdate={handleQuestionUpdate}
+        />
+      </div>
+      <Toaster />
+    </>
   );
 };
 
