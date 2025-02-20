@@ -1,10 +1,12 @@
+
 import { Badge } from '@/components/ui/badge';
 
 interface DifficultyBadgeProps {
   difficulty: number;
+  attemptsCount?: number;
 }
 
-const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty }) => {
+const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty, attemptsCount = 0 }) => {
   const getDifficultyColor = (level: number) => {
     switch (level) {
       case 1: return 'bg-green-100 text-green-800';
@@ -18,7 +20,7 @@ const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty }) => {
 
   return (
     <Badge className={`${getDifficultyColor(difficulty)}`}>
-      Schwierigkeit: {difficulty}
+      Versuche: {attemptsCount}
     </Badge>
   );
 };
