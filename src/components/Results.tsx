@@ -17,9 +17,13 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Filter to only show answered questions
+  const answeredQuestions = questions.filter((_, index) => userAnswers[index]?.value);
+  const answeredUserAnswers = userAnswers.filter(answer => answer?.value);
+
   const calculateScore = () => {
-    return questions.reduce((score, question, index) => {
-      const answer = userAnswers[index];
+    return answeredQuestions.reduce((score, question, index) => {
+      const answer = answeredUserAnswers[index];
       if (!answer || !answer.isFirstAttempt || answer.viewedSolution) return score;
       
       const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
@@ -42,7 +46,6 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   const renderUserAnswer = (answer: AnswerState | undefined, question: Question) => {
     if (!answer) return 'Keine Antwort';
     
-    // Use originalAnswer if available (for viewed solutions), otherwise use current value
     const answerToShow = answer.originalAnswer || answer.value;
     const userAnswerLetter = answerToShow.trim()[0]?.toUpperCase();
     
@@ -66,13 +69,13 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
       <h2 className="text-xl md:text-2xl font-semibold mb-4 text-slate-800">Deine Ergebnisse</h2>
       <div className="mb-4">
         <p className="text-base md:text-lg">
-          Gesamtpunktzahl: {calculateScore()} von {questions.length} (
-          {Math.round((calculateScore() / questions.length) * 100)}%)
+          Gesamtpunktzahl: {calculateScore()} von {answeredQuestions.length} (
+          {answeredQuestions.length > 0 ? Math.round((calculateScore() / answeredQuestions.length) * 100) : 0}%)
         </p>
       </div>
       <div className="space-y-3">
-        {questions.map((q, index) => {
-          const answer = userAnswers[index];
+        {answeredQuestions.map((q, index) => {
+          const answer = answeredUserAnswers[index];
           const correctAnswerLetter = q.correctAnswer.trim()[0]?.toUpperCase();
 
           return (
