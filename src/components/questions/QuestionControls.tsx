@@ -22,14 +22,15 @@ const QuestionControls: React.FC<QuestionControlsProps> = ({
   const { toast } = useToast();
 
   const handleCopyToClipboard = async () => {
-    const prompt = `Ich habe hier eine Multiple-Choice-Frage aus einer medizinischen Prüfung, bei der ich deine Hilfe brauche. Die Frage stammt aus dem Gedächtnisprotokoll anderer Studierender.
-Bitte erkläre mir:
-1. Was ist der Kerninhalt der Frage?
-2. Warum ist die richtige Antwort korrekt?
-3. Warum sind die anderen Antworten falsch?
-4. Ist die protokollierte Lösung korrekt?
+    const prompt = `Du unterstützt mich als Experte mit 20+ Jahren Erfahrung in medizinischen Prüfungen als Tutor bei der Lösung einer Multiple-Choice-Frage aus einer medizinischen Prüfung, die aus den Gedächtnisprotokollen anderer Studierender stammt. Analysiere die Frage und beantworte folgende Punkte:
 
-Hier ist die Frage mit allen Antwortoptionen:
+1. Was ist der Kerninhalt der Frage? Gib eine kurze, auf den Punkt gebrachte thematische Übersicht.
+2. Ist die protokollierte Lösung korrekt? Analysiere kritisch und wähle im Zweifel eine andere Antwort, wenn diese deutlich besser passt.
+3. Warum ist die richtige Antwort korrekt?
+4. Warum sind die anderen Antworten falsch?
+
+
+Hier ist die Frage mit allen Antwortoptionen. Nur eine dieser Optionen kann richtig sein:
 
 Frage: ${question.question}
 
