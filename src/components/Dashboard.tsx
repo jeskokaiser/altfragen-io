@@ -16,7 +16,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { preferences } = useUserPreferences();
+  const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
   const { data: questions } = useQuery({
@@ -52,8 +52,8 @@ const Dashboard = () => {
 
   const unarchivedQuestions = useMemo(() => {
     if (!questions) return [];
-    return questions.filter(q => !preferences.archivedDatasets.includes(q.filename));
-  }, [questions, preferences.archivedDatasets]);
+    return questions.filter(q => !isDatasetArchived(q.filename));
+  }, [questions, isDatasetArchived]);
 
   const groupedQuestions = useMemo(() => {
     return unarchivedQuestions.reduce((acc, question) => {
