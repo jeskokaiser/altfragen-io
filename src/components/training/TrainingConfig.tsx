@@ -91,10 +91,18 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           Du kannst die Auswahl anpassen durch:
         </p>
         <ul className="list-disc ml-4 space-y-1">
-          <li>Filtern nach Fach und Schwierigkeitsgrad</li>
-          <li>Nur falsch beantwortete Fragen anzeigen</li>
-          <li>Nach Anzahl der Versuche sortieren</li>
-          <li>Zufällige Auswahl aktivieren</li>
+         <li>Filtern nach Fach und Schwierigkeitsgrad</li>
+          <li>Nur falsch beantwortete Fragen</li>
+         <li>Nach Anzahl der Versuche sortieren
+            <ul>
+            <li>Jede Antwort zählt als ein Versuch (auch mehrere Versuche pro Frage)</li>
+            </ul>
+         </li>
+          <li>Zufällige Auswahl aktivieren 
+         <ul>
+         <li>Ideal für Probeklausuren in Kombination mit benutzerdefinierter Anzahl</li>
+          </ul>
+          </li>
         </ul>
       </div>
     </div>
