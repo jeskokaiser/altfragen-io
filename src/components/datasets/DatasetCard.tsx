@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Archive } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -40,25 +40,13 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   return (
     <Card className={`w-full transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
       <CardHeader className="bg-slate-50/50 dark:bg-black/40">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <DatasetHeader
-              filename={filename}
-              questions={questions}
-              onStartTraining={onStartTraining}
-              createdAt={questions[0].created_at!}
-            />
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleArchive}
-            className="ml-2"
-            title="Archivieren"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-        </div>
+        <DatasetHeader
+          filename={filename}
+          questions={questions}
+          onStartTraining={onStartTraining}
+          createdAt={questions[0].created_at!}
+          onArchive={handleArchive}
+        />
       </CardHeader>
 
       <CardContent className="pt-6">
@@ -95,4 +83,3 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
 DatasetCard.displayName = 'DatasetCard';
 
 export default DatasetCard;
-

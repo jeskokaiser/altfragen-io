@@ -2,7 +2,7 @@
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, AlertCircle } from 'lucide-react';
+import { Play, AlertCircle, Archive } from 'lucide-react';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,6 +12,7 @@ interface DatasetHeaderProps {
   questions: Question[];
   onStartTraining: (questions: Question[]) => void;
   createdAt: string;
+  onArchive: (e: React.MouseEvent) => void;
 }
 
 const DatasetHeader: React.FC<DatasetHeaderProps> = ({
@@ -19,6 +20,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   questions,
   onStartTraining,
   createdAt,
+  onArchive,
 }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -39,9 +41,20 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
       <div className="flex-1 space-y-2">
-        <CardTitle className="text-lg font-medium text-slate-800 dark:text-white">
-          {filename}
-        </CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-lg font-medium text-slate-800 dark:text-white">
+            {filename}
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onArchive}
+            className="h-8 w-8"
+            title="Archivieren"
+          >
+            <Archive className="h-4 w-4" />
+          </Button>
+        </div>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>{questions.length} Fragen</span>
           <span>•</span>
