@@ -6,4 +6,5 @@ export interface FormValues {
   isRandomSelection: boolean;
   sortByAttempts: boolean;
   sortDirection: 'asc' | 'desc';
+  wrongQuestionsOnly: boolean;
 }

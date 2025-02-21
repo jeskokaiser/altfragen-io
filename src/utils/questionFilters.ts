@@ -2,7 +2,11 @@
 import { Question } from '@/types/Question';
 import { FormValues } from '@/components/training/types/FormValues';
 
-export const filterQuestions = (questions: Question[], values: FormValues): Question[] => {
+export const filterQuestions = (
+  questions: Question[],
+  values: FormValues,
+  questionResults?: Map<string, boolean>
+): Question[] => {
   // If random selection is enabled, skip filtering by subject and difficulty
   if (values.isRandomSelection) {
     return [...questions];
@@ -24,6 +28,15 @@ export const filterQuestions = (questions: Question[], values: FormValues): Ques
       return matches;
     });
     console.log('After difficulty filter:', filteredQuestions.length);
+  }
+
+  // Filter wrong questions if the option is enabled and we have results
+  if (values.wrongQuestionsOnly && questionResults) {
+    filteredQuestions = filteredQuestions.filter(q => {
+      const result = questionResults.get(q.id);
+      return result === false; // Only include questions that were answered incorrectly
+    });
+    console.log('After wrong questions filter:', filteredQuestions.length);
   }
 
   return filteredQuestions;

@@ -5,8 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 
@@ -16,7 +14,6 @@ interface DatasetStatisticsProps {
 
 const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = React.useState(() => {
     const saved = localStorage.getItem('statsCollapsibleState');
     return saved ? JSON.parse(saved) : true;
@@ -90,26 +87,6 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
       }, {} as Record<string, { total: number; answered: number; correct: number }>);
   }, [questions, filteredProgress]);
 
-  const handleWrongQuestionsTraining = () => {
-    // Get the IDs of questions that were answered incorrectly from this dataset
-    const wrongQuestionIds = filteredProgress
-      ?.filter(p => !p.is_correct)
-      .map(p => p.question_id) || [];
-
-    // Filter the questions array to get only the wrong questions
-    const wrongQuestions = questions.filter(q =>
-      wrongQuestionIds.includes(q.id)
-    );
-
-    if (wrongQuestions.length === 0) {
-      return;
-    }
-
-    // Store the wrong questions in localStorage and navigate to training
-    localStorage.setItem('trainingQuestions', JSON.stringify(wrongQuestions));
-    navigate('/training');
-  };
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -127,32 +104,24 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         {/* Richtige Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
-          <Progress value={correctPercentageBar} className="h-2 mb-2 bg-zinc-100 dark:dark:bg-zinc-800">
+          <Progress value={correctPercentageBar} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
             <div className="h-full bg-zinc-100 transition-all dark:bg-zinc-800" style={{ width: `${correctPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}%)<br />{correctPercentage.toFixed(0)}% der beantworteten Fragen
+            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}%)<br />
+            {correctPercentage.toFixed(0)}% der beantworteten Fragen
           </p>
         </div>
         
         {/* Falsche Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
-          <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-zinc-100 dark:dark:bg-zinc-800">
+          <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
             <div className="h-full bg-zinc-100 transition-all dark:bg-zinc-800" style={{ width: `${wrongPercentageBar}%` }} />
           </Progress>
           <p className="text-sm text-muted-foreground">
             {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentageBar.toFixed(0)}%)
           </p>
-          {wrongAnswers > 0 && (
-            <Button 
-              onClick={handleWrongQuestionsTraining}
-              variant="destructive"
-              className="mt-2 w-full"
-            >
-              Falsche Fragen üben
-            </Button>
-          )}
         </div>
       </div>
 

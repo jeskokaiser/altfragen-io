@@ -26,6 +26,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
       isRandomSelection: false,
       sortByAttempts: false,
       sortDirection: 'desc',
+      wrongQuestionsOnly: false,
     },
     mode: 'onChange',
   });
@@ -64,6 +65,27 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Bei zufälliger Auswahl werden die Filter für Fach und Schwierigkeitsgrad ignoriert</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={form.watch('wrongQuestionsOnly')}
+                      onCheckedChange={(checked) => form.setValue('wrongQuestionsOnly', checked)}
+                      id="wrong-questions"
+                      disabled={isRandomMode}
+                    />
+                    <Label htmlFor="wrong-questions">Nur falsche Fragen</Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Nur Fragen auswählen, die bisher falsch beantwortet wurden</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
