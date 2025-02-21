@@ -6,18 +6,25 @@ import { toast } from 'sonner';
 
 interface UserPreferences {
   immediateFeedback: boolean;
+  archivedDatasets: string[];
 }
 
 interface UserPreferencesContextType {
   preferences: UserPreferences;
   isLoading: boolean;
   updatePreferences: (newPreferences: Partial<UserPreferences>) => Promise<void>;
+  archiveDataset: (filename: string) => Promise<void>;
+  restoreDataset: (filename: string) => Promise<void>;
+  isDatasetArchived: (filename: string) => boolean;
 }
 
 const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
 
 export function UserPreferencesProvider({ children }: { children: React.ReactNode }) {
-  const [preferences, setPreferences] = useState<UserPreferences>({ immediateFeedback: false });
+  const [preferences, setPreferences] = useState<UserPreferences>({ 
+    immediateFeedback: false,
+    archivedDatasets: []
+  });
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -25,7 +32,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (user) {
       loadUserPreferences();
     } else {
-      setPreferences({ immediateFeedback: false });
+      setPreferences({ immediateFeedback: false, archivedDatasets: [] });
       setIsLoading(false);
     }
   }, [user]);
@@ -41,23 +48,25 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 means no data found, which is expected for new users
         throw fetchError;
       }
 
       if (existingPrefs) {
-        setPreferences({ immediateFeedback: existingPrefs.immediate_feedback });
+        setPreferences({ 
+          immediateFeedback: existingPrefs.immediate_feedback,
+          archivedDatasets: existingPrefs.archived_datasets || []
+        });
       } else {
-        // For new users, insert default preferences
         const { error: insertError } = await supabase
           .from('user_preferences')
           .insert({
             user_id: user.id,
-            immediate_feedback: false
+            immediate_feedback: false,
+            archived_datasets: []
           });
 
         if (insertError) throw insertError;
-        setPreferences({ immediateFeedback: false });
+        setPreferences({ immediateFeedback: false, archivedDatasets: [] });
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -75,6 +84,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         .from('user_preferences')
         .update({
           immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
+          archived_datasets: newPreferences.archivedDatasets ?? preferences.archivedDatasets,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -89,8 +99,35 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     }
   };
 
+  const archiveDataset = async (filename: string) => {
+    if (!user || preferences.archivedDatasets.includes(filename)) return;
+    
+    const newArchivedDatasets = [...preferences.archivedDatasets, filename];
+    await updatePreferences({ archivedDatasets: newArchivedDatasets });
+    toast.success('Dataset archived successfully');
+  };
+
+  const restoreDataset = async (filename: string) => {
+    if (!user) return;
+    
+    const newArchivedDatasets = preferences.archivedDatasets.filter(f => f !== filename);
+    await updatePreferences({ archivedDatasets: newArchivedDatasets });
+    toast.success('Dataset restored successfully');
+  };
+
+  const isDatasetArchived = (filename: string): boolean => {
+    return preferences.archivedDatasets.includes(filename);
+  };
+
   return (
-    <UserPreferencesContext.Provider value={{ preferences, isLoading, updatePreferences }}>
+    <UserPreferencesContext.Provider value={{ 
+      preferences, 
+      isLoading, 
+      updatePreferences,
+      archiveDataset,
+      restoreDataset,
+      isDatasetArchived
+    }}>
       {children}
     </UserPreferencesContext.Provider>
   );
@@ -103,3 +140,4 @@ export const useUserPreferences = () => {
   }
   return context;
 };
+

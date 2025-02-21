@@ -86,6 +86,7 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          archived_datasets: string[] | null
           created_at: string | null
           id: string
           immediate_feedback: boolean | null
@@ -93,6 +94,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived_datasets?: string[] | null
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
@@ -100,6 +102,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived_datasets?: string[] | null
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null

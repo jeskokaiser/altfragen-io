@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,18 +13,18 @@ import { AlertCircle } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserPreferences } from '@/hooks/use-user-preferences';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(() => {
-    // Initialize from localStorage when component mounts
     const saved = localStorage.getItem('selectedDataset');
     return saved ? JSON.parse(saved) : null;
   });
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { isDatasetArchived } = useUserPreferences();
 
-  // Save to localStorage whenever selectedFilename changes
   useEffect(() => {
     localStorage.setItem('selectedDataset', JSON.stringify(selectedFilename));
   }, [selectedFilename]);
@@ -100,7 +99,6 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-
   const { data: totalAnsweredCount } = useQuery({
     queryKey: ['total-answers', user?.id],
     queryFn: async () => {
@@ -144,16 +142,20 @@ const Dashboard = () => {
     enabled: !!user
   });
 
+  const activeQuestions = useMemo(() => {
+    if (!questions) return [];
+    return questions.filter(q => !isDatasetArchived(q.filename));
+  }, [questions, isDatasetArchived]);
+
   const groupedQuestions = useMemo(() => {
-    if (!questions) return {};
-    return questions.reduce((acc, question) => {
+    return activeQuestions.reduce((acc, question) => {
       if (!acc[question.filename]) {
         acc[question.filename] = [];
       }
       acc[question.filename].push(question);
       return acc;
     }, {} as Record<string, Question[]>);
-  }, [questions]);
+  }, [activeQuestions]);
 
   const handleQuestionsLoaded = () => {
     refetch();
@@ -249,11 +251,11 @@ const Dashboard = () => {
             Hochgeladene Fragendatenbanken
           </h2>
           <span className="text-sm text-muted-foreground">
-            {questions?.length || 0} Fragen insgesamt
+            {activeQuestions?.length || 0} Fragen insgesamt
           </span>
         </div>
         
-        {questions && questions.length > 0 ? (
+        {activeQuestions && activeQuestions.length > 0 ? (
           <DatasetList
             groupedQuestions={groupedQuestions}
             selectedFilename={selectedFilename}
