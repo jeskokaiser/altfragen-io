@@ -77,6 +77,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
         subjects={subjects}
         onSubmit={handleSubmit}
       />
+      <br />
       <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
         <p className="mb-2">
           Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:

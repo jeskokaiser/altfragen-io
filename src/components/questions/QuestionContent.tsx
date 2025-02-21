@@ -28,8 +28,8 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   }, [questionData]);
 
   const highlightNicht = (text: string) => {
-    return text.split(/(nicht|falsch|keiner|keine|kein|wenigsten)/i).map((part, index) =>
-      ['nicht', 'falsch', 'keiner', 'keine', 'kein', 'wenigsten'].includes(part.toLowerCase()) ? (
+    return text.split(/(nicht|falsch|keiner|keinen|keine|kein|wenigsten)/i).map((part, index) =>
+      ['nicht', 'falsch', 'keiner','keinen', 'keine', 'kein', 'wenigsten'].includes(part.toLowerCase()) ? (
         <u key={index}>{part}</u>
       ) : (
         part
