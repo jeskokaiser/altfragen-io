@@ -2,7 +2,7 @@
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, AlertCircle, Archive } from 'lucide-react';
+import { Play, AlertCircle, Archive, RotateCcw } from 'lucide-react';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -23,7 +23,9 @@ interface DatasetHeaderProps {
   questions: Question[];
   onStartTraining: (questions: Question[]) => void;
   createdAt: string;
-  onArchive: (e: React.MouseEvent) => void;
+  onArchive?: (e: React.MouseEvent) => void;
+  onRestore?: (e: React.MouseEvent) => void;
+  isArchived?: boolean;
 }
 
 const DatasetHeader: React.FC<DatasetHeaderProps> = ({
@@ -32,6 +34,8 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   onStartTraining,
   createdAt,
   onArchive,
+  onRestore,
+  isArchived = false,
 }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -62,23 +66,31 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                title="Archivieren"
+                title={isArchived ? "Wiederherstellen" : "Archivieren"}
               >
-                <Archive className="h-4 w-4" />
+                {isArchived ? (
+                  <RotateCcw className="h-4 w-4" />
+                ) : (
+                  <Archive className="h-4 w-4" />
+                )}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Datensatz archivieren</AlertDialogTitle>
+                <AlertDialogTitle>
+                  {isArchived ? "Datensatz wiederherstellen" : "Datensatz archivieren"}
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  Möchtest du den Datensatz "{filename}" wirklich archivieren? 
-                  Der Datensatz wird aus der Hauptansicht entfernt, kann aber später wieder hergestellt werden.
+                  {isArchived 
+                    ? `Möchtest du den Datensatz "${filename}" wiederherstellen? Der Datensatz wird wieder in der Hauptansicht angezeigt.`
+                    : `Möchtest du den Datensatz "${filename}" wirklich archivieren? Der Datensatz wird aus der Hauptansicht entfernt, kann aber später wieder hergestellt werden.`
+                  }
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                <AlertDialogAction onClick={onArchive}>
-                  Archivieren
+                <AlertDialogAction onClick={isArchived ? onRestore : onArchive}>
+                  {isArchived ? "Wiederherstellen" : "Archivieren"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

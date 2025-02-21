@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Question } from '@/types/Question';
 import DatasetCard from './DatasetCard';
@@ -7,6 +8,7 @@ interface DatasetListProps {
   selectedFilename: string | null;
   onDatasetClick: (filename: string) => void;
   onStartTraining: (questions: Question[]) => void;
+  isArchived?: boolean;
 }
 
 const DatasetList = ({
@@ -14,6 +16,7 @@ const DatasetList = ({
   selectedFilename,
   onDatasetClick,
   onStartTraining,
+  isArchived = false,
 }: DatasetListProps) => {
   return (
     <div className="grid gap-4">
@@ -25,6 +28,7 @@ const DatasetList = ({
           isSelected={selectedFilename === filename}
           onDatasetClick={onDatasetClick}
           onStartTraining={onStartTraining}
+          isArchived={isArchived}
         />
       ))}
     </div>

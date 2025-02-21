@@ -11,6 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ArchivedDatasets = () => {
   const { user } = useAuth();
@@ -29,7 +30,6 @@ const ArchivedDatasets = () => {
 
       if (error) throw error;
       
-      // Map database columns to Question type
       return (data || []).map(q => ({
         id: q.id,
         question: q.question,
@@ -104,6 +104,7 @@ const ArchivedDatasets = () => {
             selectedFilename={selectedFilename}
             onDatasetClick={handleDatasetClick}
             onStartTraining={handleStartTraining}
+            isArchived={true}
           />
         ) : (
           <Card>
