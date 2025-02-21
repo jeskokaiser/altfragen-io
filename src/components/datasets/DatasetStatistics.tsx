@@ -17,7 +17,15 @@ interface DatasetStatisticsProps {
 const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = React.useState(true);
+  const [isOpen, setIsOpen] = React.useState(() => {
+    const saved = localStorage.getItem('statsCollapsibleState');
+    return saved ? JSON.parse(saved) : true;
+  });
+
+  // Save to localStorage whenever isOpen changes
+  React.useEffect(() => {
+    localStorage.setItem('statsCollapsibleState', JSON.stringify(isOpen));
+  }, [isOpen]);
 
   const { data: userProgress } = useQuery({
     queryKey: ['user-progress', user?.id, questions[0]?.filename],
