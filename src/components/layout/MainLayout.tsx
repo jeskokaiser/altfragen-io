@@ -34,7 +34,7 @@ const MainLayout = () => {
           <Route path="/terms" element={<Terms />} />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/tutorial" element={<Tutorial />} />
-          <Route path="/unclear-questions" element={<UnclearQuestions />} />
+          <Route path="/unclear-questions/:filename" element={<UnclearQuestions />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/archived" element={<ArchivedDatasets />} />
