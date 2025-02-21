@@ -73,6 +73,10 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     <div className="max-w-md mx-auto p-6">
       <h2 className="text-2xl font-semibold mb-4">Training konfigurieren</h2>
       
+      <FilterForm 
+        subjects={subjects}
+        onSubmit={handleSubmit}
+      />
       <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
         <p className="mb-2">
           Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:
@@ -92,11 +96,6 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           <li>Zufällige Auswahl aktivieren</li>
         </ul>
       </div>
-
-      <FilterForm 
-        subjects={subjects}
-        onSubmit={handleSubmit}
-      />
     </div>
   );
 };
