@@ -71,7 +71,28 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
 
   return (
     <div className="max-w-md mx-auto p-6">
-      <h2 className="text-2xl font-semibold mb-6">Training konfigurieren</h2>
+      <h2 className="text-2xl font-semibold mb-4">Training konfigurieren</h2>
+      
+      <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+        <p className="mb-2">
+          Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:
+        </p>
+        <ol className="list-decimal ml-4 mb-3 space-y-1">
+          <li>Noch nie beantwortete Fragen</li>
+          <li>Falsch beantwortete Fragen</li>
+          <li>Richtig beantwortete Fragen</li>
+        </ol>
+        <p>
+          Du kannst die Auswahl anpassen durch:
+        </p>
+        <ul className="list-disc ml-4 space-y-1">
+          <li>Filtern nach Fach und Schwierigkeitsgrad</li>
+          <li>Nur falsch beantwortete Fragen anzeigen</li>
+          <li>Nach Anzahl der Versuche sortieren</li>
+          <li>Zufällige Auswahl aktivieren</li>
+        </ul>
+      </div>
+
       <FilterForm 
         subjects={subjects}
         onSubmit={handleSubmit}
