@@ -12,6 +12,7 @@ import Tutorial from '@/pages/Tutorial';
 import UnclearQuestions from '@/pages/UnclearQuestions';
 import Changelog from '@/pages/Changelog';
 import Dashboard from '@/components/Dashboard';
+import ArchivedDatasets from '@/pages/ArchivedDatasets';
 import Footer from '@/components/Footer';
 
 const MainLayout = () => {
@@ -36,6 +37,7 @@ const MainLayout = () => {
           <Route path="/unclear-questions" element={<UnclearQuestions />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/archived" element={<ArchivedDatasets />} />
           {/* Catch all other routes and redirect to index */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
