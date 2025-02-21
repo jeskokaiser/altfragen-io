@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,8 +28,6 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Map database columns to Question type
       return (data || []).map(q => ({
         id: q.id,
         question: q.question,
@@ -48,6 +46,65 @@ const Dashboard = () => {
         marked_unclear_at: q.marked_unclear_at
       })) as Question[];
     },
+  });
+
+  const { data: todayNewCount } = useQuery({
+    queryKey: ['today-new', user?.id],
+    queryFn: async () => {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('id')
+        .eq('user_id', user?.id)
+        .gte('created_at', today.toISOString());
+      if (error) throw error;
+      return data?.length ?? 0;
+    },
+    enabled: !!user
+  });
+
+  const { data: todayPracticeCount } = useQuery({
+    queryKey: ['today-practice', user?.id],
+    queryFn: async () => {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('id')
+        .eq('user_id', user?.id)
+        .gte('updated_at', today.toISOString());
+      if (error) throw error;
+      return data?.length ?? 0;
+    },
+    enabled: !!user
+  });
+
+  const { data: totalAnsweredCount } = useQuery({
+    queryKey: ['total-answers', user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact' })
+        .eq('user_id', user?.id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user
+  });
+
+  const { data: totalAttemptsCount } = useQuery({
+    queryKey: ['total-attempts', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('attempts_count')
+        .eq('user_id', user?.id);
+      if (error) throw error;
+      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+      return totalAttempts;
+    },
+    enabled: !!user
   });
 
   const unarchivedQuestions = useMemo(() => {
@@ -86,6 +143,48 @@ const Dashboard = () => {
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
       <DashboardHeader />
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Heute</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Neu</span>
+                <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Wiederholt</span>
+                <p className="text-2xl font-bold">
+                  {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">Gesamt</span>
+                <p className="text-2xl font-bold">{todayPracticeCount ?? 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Insgesamt</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <span className="text-sm text-muted-foreground">Fragen</span>
+              <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-sm text-muted-foreground">Versuche</span>
+              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
