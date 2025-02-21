@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,14 +28,32 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Question[];
+      
+      // Map database columns to Question type
+      return (data || []).map(q => ({
+        id: q.id,
+        question: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        optionC: q.option_c,
+        optionD: q.option_d,
+        optionE: q.option_e,
+        subject: q.subject,
+        correctAnswer: q.correct_answer,
+        comment: q.comment,
+        filename: q.filename,
+        created_at: q.created_at,
+        difficulty: q.difficulty,
+        is_unclear: q.is_unclear,
+        marked_unclear_at: q.marked_unclear_at
+      })) as Question[];
     },
   });
 
   const unarchivedQuestions = useMemo(() => {
     if (!questions) return [];
-    return questions.filter(q => !preferences.isDatasetArchived(q.filename));
-  }, [questions, preferences]);
+    return questions.filter(q => !preferences.archivedDatasets.includes(q.filename));
+  }, [questions, preferences.archivedDatasets]);
 
   const groupedQuestions = useMemo(() => {
     return unarchivedQuestions.reduce((acc, question) => {
@@ -53,6 +72,11 @@ const Dashboard = () => {
   const handleStartTraining = (questions: Question[]) => {
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     navigate('/training');
+  };
+
+  const handleQuestionsLoaded = () => {
+    // Refresh the questions list
+    window.location.reload();
   };
 
   if (!user) {
@@ -100,7 +124,7 @@ const Dashboard = () => {
             Datensatz hochladen
           </h2>
         </div>
-        <FileUpload />
+        <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
       </section>
     </div>
   );
