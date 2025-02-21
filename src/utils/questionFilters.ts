@@ -14,29 +14,35 @@ export const filterQuestions = (
   
   let filteredQuestions = [...questions];
   
+  // Filter wrong questions first if enabled
+  if (values.wrongQuestionsOnly && questionResults) {
+    console.log('Filtering wrong questions...');
+    console.log('Before wrong questions filter:', filteredQuestions.length);
+    filteredQuestions = filteredQuestions.filter(q => {
+      const result = questionResults.get(q.id);
+      const isWrong = result === false;
+      console.log('Question:', q.id, 'Result:', result, 'Is Wrong:', isWrong);
+      return isWrong;
+    });
+    console.log('After wrong questions filter:', filteredQuestions.length);
+  }
+  
+  // Then apply subject filter
   if (values.subject !== 'all') {
+    console.log('Filtering by subject:', values.subject);
     filteredQuestions = filteredQuestions.filter(q => q.subject === values.subject);
     console.log('After subject filter:', filteredQuestions.length);
   }
   
+  // Finally apply difficulty filter
   if (values.difficulty !== 'all') {
     const selectedDifficulty = parseInt(values.difficulty);
+    console.log('Filtering by difficulty:', selectedDifficulty);
     filteredQuestions = filteredQuestions.filter(q => {
       const questionDifficulty = q.difficulty ?? 3;
-      const matches = questionDifficulty === selectedDifficulty;
-      console.log('Question:', q.id, 'Difficulty:', questionDifficulty, 'Selected:', selectedDifficulty, 'Matches:', matches);
-      return matches;
+      return questionDifficulty === selectedDifficulty;
     });
     console.log('After difficulty filter:', filteredQuestions.length);
-  }
-
-  // Filter wrong questions if the option is enabled and we have results
-  if (values.wrongQuestionsOnly && questionResults) {
-    filteredQuestions = filteredQuestions.filter(q => {
-      const result = questionResults.get(q.id);
-      return result === false; // Only include questions that were answered incorrectly
-    });
-    console.log('After wrong questions filter:', filteredQuestions.length);
   }
 
   return filteredQuestions;

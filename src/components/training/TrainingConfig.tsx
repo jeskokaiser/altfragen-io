@@ -24,7 +24,20 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     console.log('Form values:', values);
     console.log('Total questions:', questions.length);
     
-    const filteredQuestions = filterQuestions(questions, values);
+    // Get user progress data before filtering
+    const { data: userProgress } = await supabase
+      .from('user_progress')
+      .select('question_id, is_correct, attempts_count')
+      .eq('user_id', user?.id);
+
+    // Create results map for filtering wrong questions
+    const questionResults = new Map();
+    userProgress?.forEach(progress => {
+      questionResults.set(progress.question_id, progress.is_correct);
+    });
+    
+    // Pass the questionResults to filterQuestions
+    const filteredQuestions = filterQuestions(questions, values, questionResults);
 
     if (filteredQuestions.length === 0) {
       showToast.error("Keine Fragen verfügbar", {
@@ -37,15 +50,9 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       ? filteredQuestions.length 
       : parseInt(values.questionCount);
     
-    const { data: userProgress } = await supabase
-      .from('user_progress')
-      .select('question_id, is_correct, attempts_count')
-      .eq('user_id', user?.id);
-
-    const questionResults = new Map();
+    // Create attempts count map for sorting
     const attemptsCount = new Map();
     userProgress?.forEach(progress => {
-      questionResults.set(progress.question_id, progress.is_correct);
       attemptsCount.set(progress.question_id, progress.attempts_count || 0);
     });
 
