@@ -3,6 +3,8 @@
 
 ![Altfragen.io interface](public/Screenshot_1.png)
 
+![Altfragen.io training session](public/Screenshot_2.png)
+
 ## Overview
 
 Altfragen.io is an intelligent platform for efficient exam preparation using past exam questions. The application allows students to upload their question collections as CSV files and train with an intuitive user interface. It's completely free and ad-free.
