@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { Github } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -11,10 +12,20 @@ const Footer = () => {
           </Link>
           <Link to="/terms" className="hover:text-foreground transition-colors">
             Nutzungsbedingungen
-            </Link>
+          </Link>
           <Link to="/changelog" className="hover:text-foreground transition-colors">                   
             Changelog
           </Link>
+          <a 
+            href="https://github.com/jeskokaiser/altfragen-io" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors flex items-center"
+            aria-label="GitHub Repository"
+          >
+            <Github size={16} className="mr-1" />
+            <span>GitHub</span>
+          </a>
         </div>
       </div>
     </footer>
