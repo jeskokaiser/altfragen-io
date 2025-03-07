@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
+import { showToast } from '@/utils/toast';
 
 export const useUpdateQuestion = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -28,9 +29,11 @@ export const useUpdateQuestion = () => {
         .single();
 
       if (error) {
+        showToast.error('Failed to update question');
         throw error;
       }
 
+      showToast.success('Question updated successfully');
       return {
         id: updatedQuestion.id,
         question: updatedQuestion.question,

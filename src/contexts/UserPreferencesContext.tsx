@@ -1,13 +1,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
-
-interface UserPreferences {
-  immediateFeedback: boolean;
-  archivedDatasets: string[];
-}
+import { UserPreferences } from '@/types/UserPreferences';
+import { 
+  loadUserPreferences,
+  updateUserPreferences
+} from '@/services/UserPreferencesService';
 
 interface UserPreferencesContextType {
   preferences: UserPreferences;
@@ -30,44 +29,20 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (user) {
-      loadUserPreferences();
+      loadUserPreferencesData();
     } else {
       setPreferences({ immediateFeedback: false, archivedDatasets: [] });
       setIsLoading(false);
     }
   }, [user]);
 
-  const loadUserPreferences = async () => {
+  const loadUserPreferencesData = async () => {
     if (!user) return;
 
     try {
-      const { data: existingPrefs, error: fetchError } = await supabase
-        .from('user_preferences')
-        .select()
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      if (existingPrefs) {
-        setPreferences({ 
-          immediateFeedback: existingPrefs.immediate_feedback,
-          archivedDatasets: existingPrefs.archived_datasets || []
-        });
-      } else {
-        const { error: insertError } = await supabase
-          .from('user_preferences')
-          .insert({
-            user_id: user.id,
-            immediate_feedback: false,
-            archived_datasets: []
-          });
-
-        if (insertError) throw insertError;
-        setPreferences({ immediateFeedback: false, archivedDatasets: [] });
-      }
+      setIsLoading(true);
+      const userPreferences = await loadUserPreferences(user.id);
+      setPreferences(userPreferences);
     } catch (error) {
       console.error('Error loading preferences:', error);
       toast.error('Failed to load preferences');
@@ -80,17 +55,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .update({
-          immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
-          archived_datasets: newPreferences.archivedDatasets ?? preferences.archivedDatasets,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
+      await updateUserPreferences(user.id, newPreferences);
       setPreferences(prev => ({ ...prev, ...newPreferences }));
       toast.success('Preferences updated successfully');
     } catch (error) {
@@ -140,4 +105,3 @@ export const useUserPreferences = () => {
   }
   return context;
 };
-

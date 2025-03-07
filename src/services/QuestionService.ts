@@ -4,7 +4,7 @@ import { Question } from '@/types/Question';
 
 /**
  * Fetches all questions from the database
- * @returns An array of Question objects
+ * @returns A list of questions
  */
 export const fetchQuestions = async (): Promise<Question[]> => {
   const { data, error } = await supabase
@@ -34,13 +34,11 @@ export const fetchQuestions = async (): Promise<Question[]> => {
 };
 
 /**
- * Fetches the count of new questions answered today by a user
+ * Fetches the count of new questions answered today
  * @param userId - The ID of the user
  * @returns The count of new questions answered today
  */
-export const fetchTodayNewCount = async (userId?: string): Promise<number> => {
-  if (!userId) return 0;
-  
+export const fetchTodayNewCount = async (userId: string): Promise<number> => {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   
@@ -55,13 +53,11 @@ export const fetchTodayNewCount = async (userId?: string): Promise<number> => {
 };
 
 /**
- * Fetches the count of questions practiced today by a user
+ * Fetches the count of questions practiced today
  * @param userId - The ID of the user
  * @returns The count of questions practiced today
  */
-export const fetchTodayPracticeCount = async (userId?: string): Promise<number> => {
-  if (!userId) return 0;
-  
+export const fetchTodayPracticeCount = async (userId: string): Promise<number> => {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   
@@ -76,13 +72,11 @@ export const fetchTodayPracticeCount = async (userId?: string): Promise<number> 
 };
 
 /**
- * Fetches the total count of answers by a user
+ * Fetches the total count of answered questions
  * @param userId - The ID of the user
- * @returns The total count of answers
+ * @returns The total count of answered questions
  */
-export const fetchTotalAnsweredCount = async (userId?: string): Promise<number> => {
-  if (!userId) return 0;
-  
+export const fetchTotalAnsweredCount = async (userId: string): Promise<number> => {
   const { count, error } = await supabase
     .from('user_progress')
     .select('*', { count: 'exact' })
@@ -93,18 +87,18 @@ export const fetchTotalAnsweredCount = async (userId?: string): Promise<number> 
 };
 
 /**
- * Fetches the total count of attempts by a user
+ * Fetches the total count of attempts for all questions
  * @param userId - The ID of the user
  * @returns The total count of attempts
  */
-export const fetchTotalAttemptsCount = async (userId?: string): Promise<number> => {
-  if (!userId) return 0;
-  
+export const fetchTotalAttemptsCount = async (userId: string): Promise<number> => {
   const { data, error } = await supabase
     .from('user_progress')
     .select('attempts_count')
     .eq('user_id', userId);
   
   if (error) throw error;
-  return data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+  
+  const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+  return totalAttempts;
 };

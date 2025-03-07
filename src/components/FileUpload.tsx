@@ -17,16 +17,19 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setError(null);
+    setIsLoading(true);
 
     if (!file) {
       setError("Bitte wähle eine Datei aus");
       toast.error("Keine Datei ausgewählt", {
         description: "Bitte wähle eine CSV-Datei aus"
       });
+      setIsLoading(false);
       return;
     }
 
@@ -35,6 +38,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       toast.error("Ungültiges Dateiformat", {
         description: "Es werden nur CSV-Dateien unterstützt"
       });
+      setIsLoading(false);
       return;
     }
 
@@ -66,6 +70,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       toast.error("Fehler beim Verarbeiten der Datei", {
         description: errorMessage
       });
+    } finally {
+      setIsLoading(false);
+      // Reset the file input
+      if (event.target) {
+        event.target.value = '';
+      }
     }
   }, [user, onQuestionsLoaded]);
 
@@ -90,8 +100,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           variant="outline" 
           className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
           onClick={() => document.getElementById('csv-upload')?.click()}
+          disabled={isLoading}
         >
-          CSV-Datei auswählen
+          {isLoading ? 'Wird hochgeladen...' : 'CSV-Datei auswählen'}
         </Button>
       </label>
       <input
@@ -100,6 +111,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         accept=".csv"
         onChange={handleFileUpload}
         className="hidden"
+        disabled={isLoading}
       />
     </div>
   );

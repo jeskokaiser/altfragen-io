@@ -1,6 +1,6 @@
 
 /**
- * User progress on a question
+ * Represents a user's progress on a question
  */
 export interface UserProgress {
   /**
@@ -9,37 +9,37 @@ export interface UserProgress {
   id: string;
   
   /**
-   * ID of the user
+   * The ID of the user
    */
-  user_id: string;
+  userId: string;
   
   /**
-   * ID of the question
+   * The ID of the question
    */
-  question_id: string;
+  questionId: string;
   
   /**
-   * The user's answer to the question
+   * Whether the user answered correctly
    */
-  user_answer?: string;
+  isCorrect: boolean;
   
   /**
-   * Whether the user's answer is correct
+   * The user's answer
    */
-  is_correct?: boolean;
+  userAnswer: string;
   
   /**
-   * Number of attempts the user has made on the question
+   * The number of attempts made on this question
    */
-  attempts_count: number;
+  attemptsCount: number;
   
   /**
-   * When the record was created
+   * When the progress was first recorded
    */
-  created_at: string;
+  createdAt: string;
   
   /**
-   * When the record was last updated
+   * When the progress was last updated
    */
-  updated_at?: string;
+  updatedAt: string;
 }
