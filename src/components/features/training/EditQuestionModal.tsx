@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -7,19 +8,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Question } from '@/types/Question';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { FormData } from './types/FormData';
-import { QuestionField } from './edit-question/QuestionField';
-import { OptionsFields } from './edit-question/OptionsFields';
-import { SubjectField } from './edit-question/SubjectField';
-import { DifficultyField } from './edit-question/DifficultyField';
+import { FormData } from '@/components/training/types/FormData';
+import { QuestionField } from '@/components/training/edit-question/QuestionField';
+import { OptionsFields } from '@/components/training/edit-question/OptionsFields';
+import { SubjectField } from '@/components/training/edit-question/SubjectField';
+import { DifficultyField } from '@/components/training/edit-question/DifficultyField';
+import { useUpdateQuestion } from '@/hooks/use-update-question';
+
 interface EditQuestionModalProps {
   question: Question;
   isOpen: boolean;
   onClose: () => void;
   onQuestionUpdated: (updatedQuestion: Question) => void;
 }
+
 const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   question,
   isOpen,
@@ -36,7 +39,10 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     setValue,
     watch
   } = useForm<FormData>();
+  
   const correctAnswer = watch('correctAnswer');
+  const { updateQuestion, isLoading } = useUpdateQuestion();
+  
   useEffect(() => {
     if (question) {
       reset({
@@ -53,57 +59,41 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       });
     }
   }, [question, reset]);
+  
   const onSubmit = async (data: FormData) => {
     try {
-      const {
-        data: updatedQuestion,
-        error
-      } = await supabase.from('questions').update({
+      const updatedQuestion = await updateQuestion({
+        id: question.id,
         question: data.question,
-        option_a: data.optionA,
-        option_b: data.optionB,
-        option_c: data.optionC,
-        option_d: data.optionD,
-        option_e: data.optionE,
-        correct_answer: data.correctAnswer,
+        optionA: data.optionA,
+        optionB: data.optionB,
+        optionC: data.optionC,
+        optionD: data.optionD,
+        optionE: data.optionE,
+        correctAnswer: data.correctAnswer,
         comment: data.comment,
         subject: data.subject,
-        difficulty: parseInt(data.difficulty)
-      }).eq('id', question.id).select().single();
-      if (error) {
-        console.error('Error updating question:', error);
-        throw error;
-      }
-      if (updatedQuestion) {
-        const mappedQuestion: Question = {
-          id: updatedQuestion.id,
-          question: updatedQuestion.question,
-          optionA: updatedQuestion.option_a,
-          optionB: updatedQuestion.option_b,
-          optionC: updatedQuestion.option_c,
-          optionD: updatedQuestion.option_d,
-          optionE: updatedQuestion.option_e,
-          correctAnswer: updatedQuestion.correct_answer,
-          comment: updatedQuestion.comment,
-          subject: updatedQuestion.subject,
-          filename: updatedQuestion.filename,
-          difficulty: updatedQuestion.difficulty
-        };
-        onQuestionUpdated(mappedQuestion);
-        toast.info('Frage erfolgreich aktualisiert');
-        onClose();
-      }
+        difficulty: parseInt(data.difficulty),
+        filename: question.filename
+      });
+      
+      onQuestionUpdated(updatedQuestion);
+      toast.info('Frage erfolgreich aktualisiert');
+      onClose();
     } catch (error: any) {
       console.error('Error updating question:', error);
       toast.error('Fehler beim Aktualisieren der Frage');
     }
   };
+  
   const handleMoveToComment = () => {
     const currentComment = watch('comment') || '';
     setValue('comment', `${correctAnswer}\n${currentComment}`);
     setValue('correctAnswer', '');
   };
-  return <Dialog open={isOpen} onOpenChange={onClose}>
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Frage bearbeiten</DialogTitle>
@@ -137,13 +127,15 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
               <Button type="button" variant="outline" onClick={onClose}>
                 Abbrechen
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || isLoading}>
                 Speichern
               </Button>
             </div>
           </form>
         </ScrollArea>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default EditQuestionModal;

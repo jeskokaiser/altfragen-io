@@ -7,10 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import SubjectSelect from './selects/SubjectSelect';
-import DifficultySelect from './selects/DifficultySelect';
-import QuestionCountSelect from './selects/QuestionCountSelect';
-import { FormValues } from './types/FormValues';
+import SubjectSelect from '@/components/training/selects/SubjectSelect';
+import DifficultySelect from '@/components/training/selects/DifficultySelect';
+import QuestionCountSelect from '@/components/training/selects/QuestionCountSelect';
+import { FormValues } from '@/components/training/types/FormValues';
 
 interface FilterFormProps {
   subjects: string[];

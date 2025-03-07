@@ -2,10 +2,10 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
-import QuestionControls from './QuestionControls';
-import QuestionContent from './QuestionContent';
-import AnswerSubmission from '../training/AnswerSubmission';
-import QuestionFeedback from '../training/QuestionFeedback';
+import QuestionControls from '@/components/questions/QuestionControls';
+import QuestionContent from '@/components/questions/QuestionContent';
+import AnswerSubmission from '@/components/training/AnswerSubmission';
+import QuestionFeedback from '@/components/training/QuestionFeedback';
 import { User } from '@supabase/supabase-js';
 import { useIsMobile } from '@/hooks/use-mobile';
 

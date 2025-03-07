@@ -1,12 +1,10 @@
 
 import React from 'react';
 import { Question } from '@/types/Question';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import FilterForm from './FilterForm';
-import { FormValues } from './types/FormValues';
-import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
+import { FormValues } from '@/components/training/types/FormValues';
 import { showToast } from '@/utils/toast';
+import { useQuestionFiltering } from '@/hooks/use-question-filtering';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -14,7 +12,7 @@ interface TrainingConfigProps {
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
-  const { user } = useAuth();
+  const { filterAndPrioritizeQuestions } = useQuestionFiltering();
 
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
@@ -24,20 +22,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     console.log('Form values:', values);
     console.log('Total questions:', questions.length);
     
-    // Get user progress data before filtering
-    const { data: userProgress } = await supabase
-      .from('user_progress')
-      .select('question_id, is_correct, attempts_count')
-      .eq('user_id', user?.id);
-
-    // Create results map for filtering wrong questions
-    const questionResults = new Map();
-    userProgress?.forEach(progress => {
-      questionResults.set(progress.question_id, progress.is_correct);
-    });
-    
-    // Pass the questionResults to filterQuestions
-    const filteredQuestions = filterQuestions(questions, values, questionResults);
+    const filteredQuestions = await filterAndPrioritizeQuestions(questions, values);
 
     if (filteredQuestions.length === 0) {
       showToast.error("Keine Fragen verfügbar", {
@@ -46,27 +31,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       return;
     }
     
-    const questionCount = values.questionCount === 'all' 
-      ? filteredQuestions.length 
-      : parseInt(values.questionCount);
-    
-    // Create attempts count map for sorting
-    const attemptsCount = new Map();
-    userProgress?.forEach(progress => {
-      attemptsCount.set(progress.question_id, progress.attempts_count || 0);
-    });
-
-    const prioritizedQuestions = prioritizeQuestions(
-      filteredQuestions,
-      questionResults,
-      questionCount,
-      values.isRandomSelection,
-      values.sortByAttempts,
-      attemptsCount,
-      values.sortDirection
-    );
-
-    onStart(prioritizedQuestions);
+    onStart(filteredQuestions);
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Settings, LogOut, Moon, Sun, BookOpen, Archive } from 'lucide-react';
@@ -10,30 +11,32 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLogout } from '@/hooks/use-logout';
+
 const Header = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    theme,
-    toggleTheme
-  } = useTheme();
+  const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { logout } = useLogout();
+  
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await logout();
       navigate('/auth');
       toast.success('Successfully logged out');
     } catch (error) {
       toast.error('Error logging out');
     }
   };
+  
   const getUserInitials = () => {
     if (!user?.email) return '?';
     return user.email.split('@')[0].slice(0, 2).toUpperCase();
   };
-  return <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between px-4 md:px-6">
         <Link to="/dashboard" className="flex items-center space-x-2">
           <span className="text-lg font-semibold tracking-tight hover:text-primary transition-colors">
@@ -97,6 +100,8 @@ const Header = () => {
           </DropdownMenu>
         </div>
       </div>
-    </header>;
+    </header>
+  );
 };
+
 export default Header;

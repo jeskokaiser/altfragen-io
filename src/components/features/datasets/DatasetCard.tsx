@@ -10,9 +10,9 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import DatasetStatistics from './DatasetStatistics';
+import DatasetStatistics from '@/components/datasets/DatasetStatistics';
 import DatasetHeader from './DatasetHeader';
-import QuestionList from './QuestionList';
+import QuestionList from '@/components/datasets/QuestionList';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface DatasetCardProps {
