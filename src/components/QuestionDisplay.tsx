@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './training/QuestionHeader';
 import QuestionContent from './training/QuestionContent';
 import NavigationButtons from './training/NavigationButtons';
-import EditQuestionModal from './training/EditQuestionModal';
+import { EditQuestionModal } from '@/components/features';
 import AnswerSubmission from './training/AnswerSubmission';
 import DifficultyControls from './training/DifficultyControls';
 import QuestionFeedback from './training/QuestionFeedback';
