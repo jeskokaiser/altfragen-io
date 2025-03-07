@@ -1,13 +1,13 @@
 
 # Altfragen.io
 
+## Overview
+
+Altfragen.io is an intelligent platform for efficient exam preparation using past exam questions. The application allows students to upload their question collections as CSV files and train with an intuitive user interface.
+
 ![Altfragen.io interface](public/Screenshot_1.png)
 
 ![Altfragen.io training session](public/Screenshot_2.png)
-
-## Overview
-
-Altfragen.io is an intelligent platform for efficient exam preparation using past exam questions. The application allows students to upload their question collections as CSV files and train with an intuitive user interface. It's completely free and ad-free.
 
 ## Features
 
@@ -41,16 +41,24 @@ Altfragen.io is an intelligent platform for efficient exam preparation using pas
 
 ## Getting Started
 
-### Prerequisites
+### Cloud based
+
+- Visit Altfragen.io (Available only in German UI for now)
+- Register with E-Mail
+- Start learning for free :)
+
+### Self hosted
+
+#### Prerequisites
 - Node.js (v16 or higher)
 - npm or bun
 
-### Installation
+#### Installation
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/altfragen.io.git
-cd altfragen.io
+git clone https://github.com/jeskokaiser/altfragen-io.git
+cd altfragen-io
 ```
 
 2. Install dependencies
@@ -87,6 +95,8 @@ The filename should reflect the exam (e.g., A1_2021-2024) for easy identificatio
 - **Backend**: Supabase (Authentication, Database, Storage)
 - **Build Tool**: Vite
 - **State Management**: React Query
+
+The code for this project is primarily built using lovable.dev
 
 ## License
 
