@@ -23,3 +23,33 @@ export interface Answer {
    */
   answeredAt: string;
 }
+
+/**
+ * Represents the state of a user's answer during training
+ */
+export interface AnswerState {
+  /**
+   * The selected answer value
+   */
+  value: string;
+  
+  /**
+   * Whether this was the first attempt
+   */
+  isFirstAttempt: boolean;
+  
+  /**
+   * Whether the solution was viewed
+   */
+  viewedSolution?: boolean;
+  
+  /**
+   * All attempts made on this question
+   */
+  attempts?: string[];
+  
+  /**
+   * The original first answer submitted
+   */
+  originalAnswer?: string;
+}

@@ -33,29 +33,22 @@ const Training = () => {
     const currentAnswer = newAnswers[currentQuestionIndex];
     
     if (viewedSolution) {
-      // If viewing solution, preserve the first answer ever made
       newAnswers[currentQuestionIndex] = {
         value: answer,
-        // Keep existing isFirstAttempt or determine based on attempts
         isFirstAttempt: currentAnswer?.isFirstAttempt ?? currentAnswer?.attempts?.length === 0 ?? true,
         viewedSolution: true,
-        // Keep existing attempts or initialize
         attempts: currentAnswer?.attempts ?? [],
-        // Preserve the very first answer or use the current value if no previous answer exists
         originalAnswer: currentAnswer?.originalAnswer || currentAnswer?.value || answer
       };
     } else {
-      // Regular answer submission
       const attempts = currentAnswer?.attempts ?? [];
       const isActualFirstAttempt = attempts.length === 0;
       
       newAnswers[currentQuestionIndex] = {
         value: answer,
-        // isFirstAttempt is now determined by the attempts array
         isFirstAttempt: isActualFirstAttempt,
         viewedSolution: currentAnswer?.viewedSolution ?? false,
         attempts: [...attempts, answer],
-        // Preserve existing originalAnswer if it exists
         originalAnswer: currentAnswer?.originalAnswer
       };
     }
@@ -85,7 +78,7 @@ const Training = () => {
   };
 
   const handleQuit = () => {
-    setShowResults(true);  // Show results instead of navigating away
+    setShowResults(true);
   };
 
   const handleQuestionUpdate = (updatedQuestion: Question) => {
