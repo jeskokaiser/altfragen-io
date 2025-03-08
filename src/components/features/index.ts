@@ -15,6 +15,10 @@ export { default as Results } from './questions/Results';
 export { default as QuestionControls } from './questions/controls/QuestionControls';
 export { default as QuestionHeader } from './questions/header/QuestionHeader';
 export { default as NavigationButtons } from './questions/navigation/NavigationButtons';
+export { default as QuestionViewHeader } from './questions/header/QuestionViewHeader';
+export { default as QuestionNavigation } from './questions/navigation/QuestionNavigation';
+export { default as QuestionContentWrapper } from './questions/container/QuestionContentWrapper';
+export { default as EditQuestionModalWrapper } from './questions/modal/EditQuestionModalWrapper';
 
 // Feedback
 export { default as FeedbackDisplay } from './questions/feedback/FeedbackDisplay';
