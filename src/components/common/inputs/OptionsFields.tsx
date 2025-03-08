@@ -15,7 +15,7 @@ export const OptionsFields: React.FC<OptionsFieldsProps> = ({ register }) => {
       {['A', 'B', 'C', 'D', 'E'].map((option) => (
         <div key={option}>
           <Label htmlFor={`option${option}`}>Option {option}</Label>
-          <Input id={`option${option}`} {...register(`option${option}` as keyof FormData)} />
+          <Input id={`option${option}`} {...register(`option${option}` as keyof FormData, { required: true })} />
         </div>
       ))}
     </div>
