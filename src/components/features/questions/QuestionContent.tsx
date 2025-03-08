@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from '@/components/features/questions/AnswerOption';
@@ -47,7 +48,11 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           {highlightNicht(questionData.question)}
         </h3>    
       </div>
-      <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
+      <RadioGroup 
+        value={selectedAnswer} 
+        onValueChange={onAnswerChange}
+        className="space-y-2"
+      >
         <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('A')} />
         <AnswerOption value="B" text={questionData.optionB} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('B')} />
         <AnswerOption value="C" text={questionData.optionC} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('C')} />

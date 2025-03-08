@@ -22,6 +22,7 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
 
   const handleStrikethrough = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsStrikethrough(!isStrikethrough);
   };
 
@@ -29,8 +30,8 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
     <div className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} ${
       isWrong ? 'border border-[#ea384c] rounded-md p-2' : ''
     }`}>
-      <RadioGroupItem value={value} id={value} />
-      <Label htmlFor={value} className="flex items-center flex-1">
+      <RadioGroupItem value={value} id={`option-${value}`} />
+      <Label htmlFor={`option-${value}`} className="flex items-center flex-1 cursor-pointer">
         <span className="font-semibold mr-2">{value})</span>
         <span className={isStrikethrough ? 'line-through' : ''}>
           {text}
