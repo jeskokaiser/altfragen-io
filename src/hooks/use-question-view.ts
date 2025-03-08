@@ -19,7 +19,7 @@ export const useQuestionView = ({
   onQuestionUpdate
 }: UseQuestionViewProps) => {
   const [showFeedback, setShowFeedback] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>(userAnswer?.value || '');
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -29,17 +29,18 @@ export const useQuestionView = ({
 
   // Reset state when question changes
   useEffect(() => {
-    console.log("Question changed, resetting state. User answer:", userAnswer?.value);
+    console.log("Question changed in useQuestionView, resetting state. User answer:", userAnswer?.value);
+    // Set the selected answer based on the user's previous answer
     setSelectedAnswer(userAnswer?.value || '');
-    setShowFeedback(false);
+    setShowFeedback(Boolean(userAnswer?.value));
     setCurrentQuestion(questionData);
-    setIsCorrect(false);
-    setWrongAnswers([]);
-    setShowSolution(false);
-  }, [questionData, userAnswer]);
+    setIsCorrect(userAnswer?.value === questionData.correctAnswer);
+    setWrongAnswers(userAnswer?.attempts?.filter(a => a !== questionData.correctAnswer) || []);
+    setShowSolution(Boolean(userAnswer?.viewedSolution));
+  }, [questionData.id, userAnswer]); // Only dependencies that should trigger a reset
 
   const handleAnswerChange = useCallback((answer: string) => {
-    console.log("Answer changed in QuestionView:", answer);
+    console.log("Answer changed in useQuestionView:", answer);
     setSelectedAnswer(answer);
   }, []);
 
