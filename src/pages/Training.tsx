@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Question } from '@/types/models/Question';
 import { AnswerState } from '@/types/models/Answer';
 import { QuestionView, TrainingConfig } from '@/components/features';
-import Results from '@/components/features/questions/Results';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import LoadingFallback from '@/components/common/LoadingFallback';
@@ -12,9 +11,9 @@ import { toast } from 'sonner';
 
 const Training = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [configurationComplete, setConfigurationComplete] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [showResults, setShowResults] = useState(false);
   
   // Use our custom localStorage hook with proper error handling and loading states
   const {
@@ -40,6 +39,17 @@ const Training = () => {
     isLoading: isLoadingAnswers
   } = useLocalStorage<AnswerState[]>('trainingUserAnswers', []);
   
+  // Check for restart flag from results page
+  useEffect(() => {
+    if (location.state?.restart) {
+      setCurrentQuestionIndex(0);
+      setUserAnswers([]);
+      setConfigurationComplete(false);
+      // Clear location state to prevent unexpected restarts
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, setUserAnswers]);
+  
   // Check for questions and redirect if none found
   useEffect(() => {
     if (!isLoadingQuestions && (!allQuestions || allQuestions.length === 0)) {
@@ -57,19 +67,19 @@ const Training = () => {
         userAnswers.every(answer => answer?.value);
       
       if (hasCompletedTraining) {
-        setShowResults(true);
+        navigate('/training/results', { state: { fromTraining: true } });
+        return;
       }
       
       setConfigurationComplete(true);
     }
-  }, [selectedQuestions, userAnswers, isLoadingSelected, isLoadingAnswers]);
+  }, [selectedQuestions, userAnswers, isLoadingSelected, isLoadingAnswers, navigate]);
 
   const handleStartTraining = (questions: Question[]) => {
     setSelectedQuestions(questions);
     setUserAnswers([]);
     setCurrentQuestionIndex(0);
     setConfigurationComplete(true);
-    setShowResults(false);
   };
 
   const handleAnswer = (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
@@ -104,7 +114,7 @@ const Training = () => {
     if (currentQuestionIndex < selectedQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      setShowResults(true);
+      navigate('/training/results', { state: { fromTraining: true } });
     }
   };
 
@@ -114,15 +124,8 @@ const Training = () => {
     }
   };
 
-  const handleRestart = () => {
-    setCurrentQuestionIndex(0);
-    setUserAnswers([]);
-    setShowResults(false);
-    setConfigurationComplete(false);
-  };
-
   const handleQuit = () => {
-    setShowResults(true);
+    navigate('/training/results', { state: { fromTraining: true } });
   };
 
   const handleQuestionUpdate = (updatedQuestion: Question) => {
@@ -187,20 +190,6 @@ const Training = () => {
           <TrainingConfig 
             questions={allQuestions}
             onStart={handleStartTraining}
-          />
-        </ErrorBoundary>
-      </div>
-    );
-  }
-
-  if (showResults) {
-    return (
-      <div className="container mx-auto py-8">
-        <ErrorBoundary onReset={handleErrorReset}>
-          <Results
-            questions={selectedQuestions}
-            userAnswers={userAnswers}
-            onRestart={handleRestart}
           />
         </ErrorBoundary>
       </div>
