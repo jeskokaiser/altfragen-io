@@ -1,12 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Question } from '@/types/Question';
+import { Question } from '@/types/models/Question';
 import { mapDatabaseQuestionToQuestion } from '@/utils/mappers/questionMappers';
-import { AppError, handleApiError } from '@/utils/errorHandler';
+import { AppError, handleApiError, logError } from '@/utils/errorHandler';
 
 /**
  * Fetches all questions from the database
- * @returns A list of questions
+ * @returns A promise that resolves to an array of Questions
+ * @throws {AppError} If there's an error fetching the questions
  */
 export const fetchQuestions = async (): Promise<Question[]> => {
   try {
@@ -17,8 +18,8 @@ export const fetchQuestions = async (): Promise<Question[]> => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Supabase error:", error);
-      throw new AppError(error.message, error);
+      logError(error, { source: 'fetchQuestions', message: error.message });
+      throw new AppError(`Failed to fetch questions: ${error.message}`, error);
     }
     
     console.log(`Fetched ${data?.length || 0} questions`);
@@ -30,11 +31,17 @@ export const fetchQuestions = async (): Promise<Question[]> => {
 };
 
 /**
- * Fetches the count of new questions answered today
+ * Fetches the count of new questions answered today by a specific user
  * @param userId - The ID of the user
- * @returns The count of new questions answered today
+ * @returns A promise that resolves to the count of new questions answered today
+ * @throws {AppError} If there's an error fetching the count
  */
 export const fetchTodayNewCount = async (userId: string): Promise<number> => {
+  if (!userId) {
+    console.warn('fetchTodayNewCount called with no userId');
+    return 0;
+  }
+
   try {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -45,7 +52,11 @@ export const fetchTodayNewCount = async (userId: string): Promise<number> => {
       .eq('user_id', userId)
       .gte('created_at', today.toISOString());
     
-    if (error) throw new AppError(error.message, error);
+    if (error) {
+      logError(error, { source: 'fetchTodayNewCount', userId });
+      throw new AppError(`Failed to fetch today's new count: ${error.message}`, error);
+    }
+
     return data?.length ?? 0;
   } catch (error) {
     throw handleApiError(error, 'Failed to fetch today\'s new questions count');
@@ -53,11 +64,17 @@ export const fetchTodayNewCount = async (userId: string): Promise<number> => {
 };
 
 /**
- * Fetches the count of questions practiced today
+ * Fetches the count of questions practiced today by a specific user
  * @param userId - The ID of the user
- * @returns The count of questions practiced today
+ * @returns A promise that resolves to the count of questions practiced today
+ * @throws {AppError} If there's an error fetching the count
  */
 export const fetchTodayPracticeCount = async (userId: string): Promise<number> => {
+  if (!userId) {
+    console.warn('fetchTodayPracticeCount called with no userId');
+    return 0;
+  }
+
   try {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -68,7 +85,11 @@ export const fetchTodayPracticeCount = async (userId: string): Promise<number> =
       .eq('user_id', userId)
       .gte('updated_at', today.toISOString());
     
-    if (error) throw new AppError(error.message, error);
+    if (error) {
+      logError(error, { source: 'fetchTodayPracticeCount', userId });
+      throw new AppError(`Failed to fetch today's practice count: ${error.message}`, error);
+    }
+
     return data?.length ?? 0;
   } catch (error) {
     throw handleApiError(error, 'Failed to fetch today\'s practice count');
@@ -76,18 +97,28 @@ export const fetchTodayPracticeCount = async (userId: string): Promise<number> =
 };
 
 /**
- * Fetches the total count of answered questions
+ * Fetches the total count of answered questions for a specific user
  * @param userId - The ID of the user
- * @returns The total count of answered questions
+ * @returns A promise that resolves to the total count of answered questions
+ * @throws {AppError} If there's an error fetching the count
  */
 export const fetchTotalAnsweredCount = async (userId: string): Promise<number> => {
+  if (!userId) {
+    console.warn('fetchTotalAnsweredCount called with no userId');
+    return 0;
+  }
+
   try {
     const { count, error } = await supabase
       .from('user_progress')
       .select('*', { count: 'exact' })
       .eq('user_id', userId);
     
-    if (error) throw new AppError(error.message, error);
+    if (error) {
+      logError(error, { source: 'fetchTotalAnsweredCount', userId });
+      throw new AppError(`Failed to fetch total answered count: ${error.message}`, error);
+    }
+
     return count || 0;
   } catch (error) {
     console.error("Error in fetchTotalAnsweredCount:", error);
@@ -96,18 +127,27 @@ export const fetchTotalAnsweredCount = async (userId: string): Promise<number> =
 };
 
 /**
- * Fetches the total count of attempts for all questions
+ * Fetches the total count of attempts for all questions by a specific user
  * @param userId - The ID of the user
- * @returns The total count of attempts
+ * @returns A promise that resolves to the total count of attempts
+ * @throws {AppError} If there's an error fetching the count
  */
 export const fetchTotalAttemptsCount = async (userId: string): Promise<number> => {
+  if (!userId) {
+    console.warn('fetchTotalAttemptsCount called with no userId');
+    return 0;
+  }
+
   try {
     const { data, error } = await supabase
       .from('user_progress')
       .select('attempts_count')
       .eq('user_id', userId);
     
-    if (error) throw new AppError(error.message, error);
+    if (error) {
+      logError(error, { source: 'fetchTotalAttemptsCount', userId });
+      throw new AppError(`Failed to fetch total attempts count: ${error.message}`, error);
+    }
     
     const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
     return totalAttempts;
