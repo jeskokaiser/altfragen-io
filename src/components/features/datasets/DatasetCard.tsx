@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -34,15 +34,20 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
 }) => {
   const { archiveDataset, restoreDataset } = useUserPreferences();
 
-  const handleArchive = async (e: React.MouseEvent) => {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleArchive = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    await archiveDataset(filename);
-  };
+    archiveDataset(filename);
+  }, [archiveDataset, filename]);
 
-  const handleRestore = async (e: React.MouseEvent) => {
+  const handleRestore = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    await restoreDataset(filename);
-  };
+    restoreDataset(filename);
+  }, [restoreDataset, filename]);
+
+  const handleDatasetClick = useCallback(() => {
+    onDatasetClick(filename);
+  }, [onDatasetClick, filename]);
 
   return (
     <Card className={`w-full transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
@@ -67,7 +72,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
       <CardFooter className="p-4">
         <Button
           variant="outline"
-          onClick={() => onDatasetClick(filename)}
+          onClick={handleDatasetClick}
           className="w-full"
         >
           {isSelected ? (
@@ -84,7 +89,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
         </Button>
       </CardFooter>
 
-      <QuestionList questions={questions} isSelected={isSelected} />
+      {isSelected && <QuestionList questions={questions} isSelected={isSelected} />}
     </Card>
   );
 });

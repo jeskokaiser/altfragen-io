@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +7,6 @@ import QuestionHeader from '@/components/features/questions/header/QuestionHeade
 import NavigationButtons from '@/components/features/questions/navigation/NavigationButtons';
 import EditQuestionModal from '@/components/features/training/EditQuestionModal';
 import QuestionContainer from './QuestionContainer';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMarkQuestionUnclear } from '@/hooks/use-mark-question-unclear';
@@ -44,8 +43,9 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const [showSolution, setShowSolution] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const { markQuestionUnclear } = useMarkQuestionUnclear();
+  const { markQuestionUnclear, isLoading: isMarkingUnclear } = useMarkQuestionUnclear();
 
+  // Reset state when question changes
   React.useEffect(() => {
     setSelectedAnswer('');
     setShowFeedback(false);
@@ -55,11 +55,12 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     setShowSolution(false);
   }, [questionData]);
 
-  const handleAnswerChange = (answer: string) => {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleAnswerChange = useCallback((answer: string) => {
     setSelectedAnswer(answer);
-  };
+  }, []);
 
-  const handleAnswerSubmitted = (answer: string, correct: boolean, showSol?: boolean) => {
+  const handleAnswerSubmitted = useCallback((answer: string, correct: boolean, showSol?: boolean) => {
     onAnswer(answer, wrongAnswers.length === 0, showSol || false);
     setShowFeedback(true);
     setIsCorrect(correct);
@@ -71,21 +72,21 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     if (!correct && answer !== 'solution_viewed') {
       setWrongAnswers(prev => [...prev, answer]);
     }
-  };
+  }, [wrongAnswers.length, onAnswer]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     onNext();
-  };
+  }, [onNext]);
 
-  const handleQuestionUpdate = (updatedQuestion: Question) => {
+  const handleQuestionUpdate = useCallback((updatedQuestion: Question) => {
     setCurrentQuestion(updatedQuestion);
     setIsEditModalOpen(false);
     if (onQuestionUpdate) {
       onQuestionUpdate(updatedQuestion);
     }
-  };
+  }, [onQuestionUpdate]);
 
-  const handleMarkUnclear = async () => {
+  const handleMarkUnclear = useCallback(async () => {
     try {
       await markQuestionUnclear(currentQuestion.id);
       toast.info('Frage als unklar markiert');
@@ -98,7 +99,60 @@ const QuestionView: React.FC<QuestionViewProps> = ({
       console.error('Error marking question as unclear:', error);
       toast.error('Fehler beim Markieren der Frage');
     }
-  };
+  }, [currentQuestion, markQuestionUnclear]);
+
+  // Memoize QuestionHeader props
+  const headerProps = useMemo(() => ({
+    currentIndex,
+    totalQuestions,
+    onQuit
+  }), [currentIndex, totalQuestions, onQuit]);
+
+  // Memoize QuestionContainer props
+  const containerProps = useMemo(() => ({
+    question: currentQuestion,
+    showFeedback,
+    selectedAnswer,
+    onAnswerChange: handleAnswerChange,
+    userAnswer: userAnswer?.value,
+    isCorrect,
+    wrongAnswers,
+    user,
+    onAnswerSubmitted: handleAnswerSubmitted,
+    onEditClick: () => setIsEditModalOpen(true),
+    onMarkUnclear: handleMarkUnclear
+  }), [
+    currentQuestion, 
+    showFeedback, 
+    selectedAnswer, 
+    handleAnswerChange, 
+    userAnswer?.value, 
+    isCorrect, 
+    wrongAnswers, 
+    user, 
+    handleAnswerSubmitted, 
+    handleMarkUnclear
+  ]);
+
+  // Memoize NavigationButtons props
+  const navigationProps = useMemo(() => ({
+    onPrevious,
+    onNext: handleNext,
+    isFirstQuestion: currentIndex === 0,
+    isLastQuestion: currentIndex === totalQuestions - 1,
+    hasUserAnswer: !!userAnswer && isCorrect,
+    wrongAttempts: wrongAnswers.length,
+    showSolution
+  }), [
+    onPrevious, 
+    handleNext, 
+    currentIndex, 
+    totalQuestions, 
+    userAnswer, 
+    isCorrect, 
+    wrongAnswers.length, 
+    showSolution
+  ]);
 
   if (!currentQuestion) {
     return <div>Loading question...</div>;
@@ -106,35 +160,11 @@ const QuestionView: React.FC<QuestionViewProps> = ({
 
   return (
     <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'px-2' : ''}`}>
-      <QuestionHeader
-        currentIndex={currentIndex}
-        totalQuestions={totalQuestions}
-        onQuit={onQuit}
-      />
+      <QuestionHeader {...headerProps} />
 
-      <QuestionContainer
-        question={currentQuestion}
-        showFeedback={showFeedback}
-        selectedAnswer={selectedAnswer}
-        onAnswerChange={handleAnswerChange}
-        userAnswer={userAnswer?.value}
-        isCorrect={isCorrect}
-        wrongAnswers={wrongAnswers}
-        user={user}
-        onAnswerSubmitted={handleAnswerSubmitted}
-        onEditClick={() => setIsEditModalOpen(true)}
-        onMarkUnclear={handleMarkUnclear}
-      />
+      <QuestionContainer {...containerProps} />
 
-      <NavigationButtons
-        onPrevious={onPrevious}
-        onNext={handleNext}
-        isFirstQuestion={currentIndex === 0}
-        isLastQuestion={currentIndex === totalQuestions - 1}
-        hasUserAnswer={!!userAnswer && isCorrect}
-        wrongAttempts={wrongAnswers.length}
-        showSolution={showSolution}
-      />
+      <NavigationButtons {...navigationProps} />
 
       <EditQuestionModal
         question={currentQuestion}
@@ -146,4 +176,4 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   );
 };
 
-export default QuestionView;
+export default React.memo(QuestionView);

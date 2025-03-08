@@ -3,10 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchQuestions } from '@/services/QuestionService';
 import { Question } from '@/types/Question';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 /**
- * Hook for fetching and filtering questions
+ * Hook for fetching and filtering questions with optimized caching
  */
 export const useFetchQuestions = () => {
   const { isDatasetArchived } = useUserPreferences();
@@ -19,15 +19,23 @@ export const useFetchQuestions = () => {
   } = useQuery({
     queryKey: ['questions'],
     queryFn: fetchQuestions,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
   });
 
-  // Filter out archived questions
-  const unarchivedQuestions = useMemo(() => {
+  // Memoized filter function
+  const filterUnarchivedQuestions = useCallback((questions: Question[] | undefined) => {
     if (!questions) return [];
     return questions.filter(q => !isDatasetArchived(q.filename));
-  }, [questions, isDatasetArchived]);
+  }, [isDatasetArchived]);
 
-  // Group questions by filename
+  // Filter out archived questions with memoization
+  const unarchivedQuestions = useMemo(() => 
+    filterUnarchivedQuestions(questions), 
+    [questions, filterUnarchivedQuestions]
+  );
+
+  // Group questions by filename with memoization
   const groupedQuestions = useMemo(() => {
     return unarchivedQuestions.reduce((acc, question) => {
       if (!acc[question.filename]) {

@@ -17,12 +17,14 @@ export const saveQuestions = async (questions: Question[], userId: string): Prom
   try {
     const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(q, userId));
     
-    // Fix: Change from array insert to individual inserts or properly type the array
-    const { error } = await supabase
-      .from('questions')
-      .insert(dbQuestions);
-
-    if (error) throw new AppError(error.message, error);
+    // Insert questions individually to avoid type errors with array inserts
+    for (const question of dbQuestions) {
+      const { error } = await supabase
+        .from('questions')
+        .insert(question);
+        
+      if (error) throw new AppError(error.message, error);
+    }
 
     const { data: insertedQuestions, error: fetchError } = await supabase
       .from('questions')
