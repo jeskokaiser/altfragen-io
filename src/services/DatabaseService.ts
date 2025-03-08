@@ -6,7 +6,8 @@ import {
   mapQuestionToDatabaseQuestion,
   mapDatabaseQuestionToQuestion
 } from '@/utils/mappers/questionMappers';
-import { ExtendedDatabaseQuestion, DatabaseOrganization } from '@/types/api/database';
+import { ExtendedDatabaseQuestion } from '@/types/api/database';
+import { getUserOrganization, isOrganizationWhitelisted } from './OrganizationService';
 
 /**
  * Saves questions to the database
@@ -22,15 +23,16 @@ export const saveQuestions = async (
 ): Promise<Question[]> => {
   try {
     // Get the user's organization ID
-    const { data: userProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', userId)
-      .single();
+    const userOrg = await getUserOrganization(userId);
+    const organizationId = userOrg?.id;
     
-    if (profileError) throw new AppError(profileError.message, profileError);
-    
-    const organizationId = userProfile?.organization_id;
+    // If trying to share with organization, check if organization is whitelisted
+    if (visibility === 'organization' && organizationId) {
+      const isWhitelisted = await isOrganizationWhitelisted(organizationId);
+      if (!isWhitelisted) {
+        throw new AppError('Your organization is not whitelisted for sharing', { code: 403 });
+      }
+    }
     
     const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(
       q, 
@@ -121,15 +123,16 @@ export const updateQuestionVisibility = async (
 ): Promise<boolean> => {
   try {
     // Get the user's organization ID
-    const { data: userProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', userId)
-      .single();
+    const userOrg = await getUserOrganization(userId);
+    const organizationId = userOrg?.id;
     
-    if (profileError) throw new AppError(profileError.message, profileError);
-    
-    const organizationId = userProfile?.organization_id;
+    // If trying to share with organization, check if organization is whitelisted
+    if (visibility === 'organization' && organizationId) {
+      const isWhitelisted = await isOrganizationWhitelisted(organizationId);
+      if (!isWhitelisted) {
+        throw new AppError('Your organization is not whitelisted for sharing', { code: 403 });
+      }
+    }
     
     const updateData: any = {
       visibility: visibility,
@@ -163,15 +166,16 @@ export const updateDatasetVisibility = async (
 ): Promise<boolean> => {
   try {
     // Get the user's organization ID
-    const { data: userProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', userId)
-      .single();
+    const userOrg = await getUserOrganization(userId);
+    const organizationId = userOrg?.id;
     
-    if (profileError) throw new AppError(profileError.message, profileError);
-    
-    const organizationId = userProfile?.organization_id;
+    // If trying to share with organization, check if organization is whitelisted
+    if (visibility === 'organization' && organizationId) {
+      const isWhitelisted = await isOrganizationWhitelisted(organizationId);
+      if (!isWhitelisted) {
+        throw new AppError('Your organization is not whitelisted for sharing', { code: 403 });
+      }
+    }
     
     const updateData: any = {
       visibility: visibility,
@@ -188,46 +192,5 @@ export const updateDatasetVisibility = async (
     return true;
   } catch (error) {
     throw handleApiError(error, 'Failed to update dataset visibility');
-  }
-};
-
-/**
- * Gets the organization information for a user
- * @param userId - The ID of the user
- * @returns Organization information including domain
- */
-export const getUserOrganization = async (userId: string): Promise<{ id: string, domain: string } | null> => {
-  try {
-    const { data: userProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('organization_id, email_domain')
-      .eq('id', userId)
-      .single();
-    
-    if (profileError) throw new AppError(profileError.message, profileError);
-    
-    if (!userProfile?.organization_id) return null;
-    
-    // Use RPC or raw SQL query to get organization info since we don't have direct table access
-    const { data: org, error: orgError } = await supabase.rpc('get_organization_by_id', {
-      org_id: userProfile.organization_id
-    });
-    
-    if (orgError) {
-      // Fallback approach if RPC doesn't exist
-      return {
-        id: userProfile.organization_id,
-        domain: userProfile.email_domain || ''
-      };
-    }
-    
-    return org || {
-      id: userProfile.organization_id,
-      domain: userProfile.email_domain || ''
-    };
-  } catch (error) {
-    console.error('Failed to get user organization:', error);
-    // Return a default value to prevent UI errors
-    return null;
   }
 };

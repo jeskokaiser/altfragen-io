@@ -13,6 +13,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Question } from '@/types/models/Question';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useQuery } from '@tanstack/react-query';
+import { getUserOrganization, isOrganizationWhitelisted } from '@/services/OrganizationService';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -25,6 +27,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const [shareWithOrganization, setShareWithOrganization] = useState(false);
   
   const { isLoading, execute } = useLoadingState<Question[]>();
+  
+  // Get user organization and check if it's whitelisted
+  const { data: userOrg } = useQuery({
+    queryKey: ['user-organization', user?.id],
+    queryFn: () => getUserOrganization(user?.id || ''),
+    enabled: !!user?.id
+  });
+
+  const isOrgWhitelisted = userOrg?.is_whitelisted || false;
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -49,6 +60,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     console.log('File selected:', file.name);
     console.log('Sharing with organization:', shareWithOrganization);
 
+    if (shareWithOrganization && !isOrgWhitelisted) {
+      setError("Deine Organisation ist nicht für das Teilen freigegeben");
+      showToast.error("Organisation nicht freigegeben", {
+        description: "Deine Organisation ist nicht für das Teilen freigegeben. Bitte kontaktiere den Administrator."
+      });
+      return;
+    }
+
     execute(async () => {
       const { headers, rows } = await parseCSV(file);
       const questions = mapRowsToQuestions(rows, headers, file.name);
@@ -64,19 +83,29 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       }
 
       const visibility = shareWithOrganization ? 'organization' : 'private';
-      const savedQuestions = await saveQuestions(questions, user?.id || '', visibility);
-      
-      // Invalidate questions query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['questions'] });
-      
-      onQuestionsLoaded(savedQuestions);
-      
-      const sharingText = shareWithOrganization ? ' und mit deiner Organisation geteilt' : '';
-      showToast.success(`${questions.length} Fragen aus "${file.name}" geladen${sharingText}`, {
-        description: "Die Fragen wurden erfolgreich gespeichert"
-      });
-      
-      return savedQuestions;
+      try {
+        const savedQuestions = await saveQuestions(questions, user?.id || '', visibility);
+        
+        // Invalidate questions query to refresh the list
+        queryClient.invalidateQueries({ queryKey: ['questions'] });
+        
+        onQuestionsLoaded(savedQuestions);
+        
+        const sharingText = shareWithOrganization ? ' und mit deiner Organisation geteilt' : '';
+        showToast.success(`${questions.length} Fragen aus "${file.name}" geladen${sharingText}`, {
+          description: "Die Fragen wurden erfolgreich gespeichert"
+        });
+        
+        return savedQuestions;
+      } catch (error: any) {
+        if (error.message?.includes('not whitelisted')) {
+          setError("Deine Organisation ist nicht für das Teilen freigegeben");
+          showToast.error("Organisation nicht freigegeben", {
+            description: "Deine Organisation ist nicht für das Teilen von Fragen freigegeben."
+          });
+        }
+        throw error;
+      }
     }, {
       showErrorToast: true,
       errorMessage: "Fehler beim Verarbeiten der Datei"
@@ -86,7 +115,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     if (event.target) {
       event.target.value = '';
     }
-  }, [user, onQuestionsLoaded, execute, queryClient, shareWithOrganization]);
+  }, [user, onQuestionsLoaded, execute, queryClient, shareWithOrganization, isOrgWhitelisted]);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -109,8 +138,18 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           id="share-organization"
           checked={shareWithOrganization}
           onCheckedChange={setShareWithOrganization}
+          disabled={!isOrgWhitelisted}
         />
-        <Label htmlFor="share-organization">Mit meiner Organisation teilen (@{user?.email?.split('@')[1]})</Label>
+        <div>
+          <Label htmlFor="share-organization">
+            Mit meiner Organisation teilen (@{user?.email?.split('@')[1]})
+          </Label>
+          {!isOrgWhitelisted && (
+            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+              Deine Organisation ist nicht für das Teilen freigegeben
+            </p>
+          )}
+        </div>
       </div>
 
       <label htmlFor="csv-upload">

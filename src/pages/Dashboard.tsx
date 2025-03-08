@@ -20,6 +20,7 @@ import { useDatasetManagement } from '@/hooks/use-dataset-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, User, Database } from 'lucide-react';
 import { DatasetView } from '@/types/models/DatasetView';
+import { Badge } from '@/components/ui/badge';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -149,13 +150,25 @@ const Dashboard = () => {
 
       <Card className="mb-6">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium">
-            Organisation: {userOrganization?.domain || 'Keine Organization'}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-medium">
+              Organisation: {userOrganization?.domain || 'Keine Organization'}
+            </CardTitle>
+            {userOrganization?.is_whitelisted ? (
+              <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                Freigegeben für Teilen
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
+                Nicht freigegeben für Teilen
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
             Datasets können mit allen Nutzern, die eine E-Mail-Adresse mit derselben Domain ({user.email?.split('@')[1]}) haben, geteilt werden.
+            {!userOrganization?.is_whitelisted && " Deine Organisation ist nicht für das Teilen freigegeben. Bitte kontaktiere den Administrator."}
           </p>
         </CardContent>
       </Card>
