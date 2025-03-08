@@ -9,5 +9,5 @@ export interface FormData {
   subject: string;
   correctAnswer: string;
   comment: string;
-  difficulty: number;
+  difficulty: string;
 }
