@@ -135,40 +135,42 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </Alert>
       )}
 
-      {/* Only show sharing option if organization is whitelisted */}
-      {isOrgWhitelisted && (
-        <div className="flex items-center space-x-2 mb-4">
-          <Switch
-            id="share-organization"
-            checked={shareWithOrganization}
-            onCheckedChange={setShareWithOrganization}
-          />
-          <div>
-            <Label htmlFor="share-organization">
-              Mit meiner Organisation teilen (@{user?.email?.split('@')[1]})
-            </Label>
-          </div>
-        </div>
-      )}
-
-      <label htmlFor="csv-upload">
-        <Button 
-          variant="outline" 
-          className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
-          onClick={() => document.getElementById('csv-upload')?.click()}
+      <div className="border border-slate-200 dark:border-zinc-700 rounded-lg p-6 w-full max-w-md">
+        <label htmlFor="csv-upload">
+          <Button 
+            variant="outline" 
+            className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800 w-full"
+            onClick={() => document.getElementById('csv-upload')?.click()}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Wird hochgeladen...' : 'CSV-Datei auswählen'}
+          </Button>
+        </label>
+        <input
+          id="csv-upload"
+          type="file"
+          accept=".csv"
+          onChange={handleFileUpload}
+          className="hidden"
           disabled={isLoading}
-        >
-          {isLoading ? 'Wird hochgeladen...' : 'CSV-Datei auswählen'}
-        </Button>
-      </label>
-      <input
-        id="csv-upload"
-        type="file"
-        accept=".csv"
-        onChange={handleFileUpload}
-        className="hidden"
-        disabled={isLoading}
-      />
+        />
+        
+        {/* Moved sharing option below the upload button */}
+        {isOrgWhitelisted && (
+          <div className="flex items-center space-x-2 mt-4">
+            <Switch
+              id="share-organization"
+              checked={shareWithOrganization}
+              onCheckedChange={setShareWithOrganization}
+            />
+            <div>
+              <Label htmlFor="share-organization">
+                Mit meiner Organisation teilen (@{user?.email?.split('@')[1]})
+              </Label>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
