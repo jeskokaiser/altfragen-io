@@ -24,7 +24,7 @@ export const executeRpc = async <T>(functionName: string, params: Record<string,
  * @returns The organization details
  */
 export const fetchUserOrganization = async (userId: string) => {
-  return executeRpc('get_user_organization', { user_id: userId });
+  return executeRpc('get_user_organization', { user_id: userId } as Record<string, any>);
 };
 
 /**
@@ -33,5 +33,5 @@ export const fetchUserOrganization = async (userId: string) => {
  * @returns Boolean indicating if the organization is whitelisted
  */
 export const checkOrganizationWhitelist = async (organizationId: string) => {
-  return executeRpc<boolean>('is_organization_whitelisted', { org_id: organizationId });
+  return executeRpc<boolean>('is_organization_whitelisted', { org_id: organizationId } as Record<string, any>);
 };

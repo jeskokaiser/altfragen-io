@@ -31,7 +31,7 @@ export const getUserOrganization = async (userId: string): Promise<DatabaseOrgan
       const { data: orgData, error: rpcError } = await supabase
         .rpc('get_organization_by_id', {
           org_id: userProfile.organization_id
-        } as { org_id: string });
+        } as Record<string, any>);
       
       if (rpcError) {
         console.error('Error in RPC call:', rpcError);
@@ -88,7 +88,7 @@ export const isOrganizationWhitelisted = async (organizationId: string): Promise
       const { data, error } = await supabase
         .rpc('is_organization_whitelisted', {
           org_id: organizationId
-        } as { org_id: string });
+        } as Record<string, any>);
       
       if (!error) {
         return !!data;
