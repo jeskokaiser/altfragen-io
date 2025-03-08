@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from '@/components/features/questions/AnswerOption';
-import { Question } from '@/types/Question';
+import { Question } from '@/types/models/Question';
 
 interface QuestionContentProps {
   questionData: Question;

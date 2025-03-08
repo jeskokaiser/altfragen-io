@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { Question } from '@/types/Question';
-import { AnswerState } from '@/types/Answer';
+import { Question } from '@/types/models/Question';
+import { AnswerState } from '@/types/models/Answer';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from '@/components/features/questions/header/QuestionHeader';
 import NavigationButtons from '@/components/features/questions/navigation/NavigationButtons';

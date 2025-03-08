@@ -1,4 +1,3 @@
-
 import { fetchQuestions, fetchTodayNewCount, fetchTodayPracticeCount, 
          fetchTotalAnsweredCount, fetchTotalAttemptsCount } from '@/services/QuestionService';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,14 +6,7 @@ import { AppError } from '@/utils/errorHandler';
 // Mock the supabase client
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(),
-        eq: jest.fn(() => ({
-          gte: jest.fn()
-        }))
-      }))
-    }))
+    from: jest.fn()
   }
 }));
 
@@ -47,13 +39,13 @@ describe('QuestionService', () => {
         }
       ];
       
-      const orderMock = jest.fn().mockResolvedValue({ data: mockData, error: null });
-      const selectMock = jest.fn().mockReturnValue({ order: orderMock });
-      const fromMock = jest.fn().mockReturnValue({ select: selectMock });
+      // Create a full chain of mocks that matches how supabase is used
+      const mockOrderFn = jest.fn().mockResolvedValue({ data: mockData, error: null });
+      const mockSelectFn = jest.fn().mockReturnValue({ order: mockOrderFn });
+      const mockFromFn = jest.fn().mockReturnValue({ select: mockSelectFn });
       
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: selectMock
-      });
+      // Apply the mocks
+      (supabase.from as jest.Mock).mockImplementation(mockFromFn);
       
       // Call the function
       const result = await fetchQuestions();
@@ -68,21 +60,21 @@ describe('QuestionService', () => {
 
       // Verify that the Supabase client was called correctly
       expect(supabase.from).toHaveBeenCalledWith('questions');
-      expect(selectMock).toHaveBeenCalledWith('*');
-      expect(orderMock).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(mockSelectFn).toHaveBeenCalledWith('*');
+      expect(mockOrderFn).toHaveBeenCalledWith('created_at', { ascending: false });
     });
 
     it('should throw an error if the Supabase query fails', async () => {
       // Mock the Supabase response with an error
-      const orderMock = jest.fn().mockResolvedValue({ 
+      const mockOrderFn = jest.fn().mockResolvedValue({ 
         data: null, 
         error: new Error('Database error') 
       });
-      const selectMock = jest.fn().mockReturnValue({ order: orderMock });
+      const mockSelectFn = jest.fn().mockReturnValue({ order: mockOrderFn });
+      const mockFromFn = jest.fn().mockReturnValue({ select: mockSelectFn });
       
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: selectMock
-      });
+      // Apply the mocks
+      (supabase.from as jest.Mock).mockImplementation(mockFromFn);
 
       // Call the function and expect it to throw
       await expect(fetchQuestions()).rejects.toThrow('Failed to fetch questions');
@@ -90,15 +82,15 @@ describe('QuestionService', () => {
     
     it('should return an empty array if no data is returned', async () => {
       // Mock the Supabase response with null data
-      const orderMock = jest.fn().mockResolvedValue({ 
+      const mockOrderFn = jest.fn().mockResolvedValue({ 
         data: null, 
         error: null 
       });
-      const selectMock = jest.fn().mockReturnValue({ order: orderMock });
+      const mockSelectFn = jest.fn().mockReturnValue({ order: mockOrderFn });
+      const mockFromFn = jest.fn().mockReturnValue({ select: mockSelectFn });
       
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: selectMock
-      });
+      // Apply the mocks
+      (supabase.from as jest.Mock).mockImplementation(mockFromFn);
 
       // Call the function
       const result = await fetchQuestions();
@@ -111,16 +103,16 @@ describe('QuestionService', () => {
   describe('fetchTodayNewCount', () => {
     it('should fetch the count of new questions answered today', async () => {
       // Mock the Supabase response
-      const gteMock = jest.fn().mockResolvedValue({ 
+      const mockGteFn = jest.fn().mockResolvedValue({ 
         data: [{ id: '1' }, { id: '2' }], 
         error: null 
       });
-      const eqMock = jest.fn().mockReturnValue({ gte: gteMock });
-      const selectMock = jest.fn().mockReturnValue({ eq: eqMock });
+      const mockEqFn = jest.fn().mockReturnValue({ gte: mockGteFn });
+      const mockSelectFn = jest.fn().mockReturnValue({ eq: mockEqFn });
+      const mockFromFn = jest.fn().mockReturnValue({ select: mockSelectFn });
       
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: selectMock
-      });
+      // Apply the mocks
+      (supabase.from as jest.Mock).mockImplementation(mockFromFn);
 
       // Call the function
       const result = await fetchTodayNewCount('user1');
@@ -130,22 +122,22 @@ describe('QuestionService', () => {
 
       // Verify that the Supabase client was called correctly
       expect(supabase.from).toHaveBeenCalledWith('user_progress');
-      expect(selectMock).toHaveBeenCalledWith('id');
-      expect(eqMock).toHaveBeenCalledWith('user_id', 'user1');
+      expect(mockSelectFn).toHaveBeenCalledWith('id');
+      expect(mockEqFn).toHaveBeenCalledWith('user_id', 'user1');
     });
 
     it('should throw an error if the Supabase query fails', async () => {
       // Mock the Supabase response with an error
-      const gteMock = jest.fn().mockResolvedValue({ 
+      const mockGteFn = jest.fn().mockResolvedValue({ 
         data: null, 
         error: new Error('Database error') 
       });
-      const eqMock = jest.fn().mockReturnValue({ gte: gteMock });
-      const selectMock = jest.fn().mockReturnValue({ eq: eqMock });
+      const mockEqFn = jest.fn().mockReturnValue({ gte: mockEqFn });
+      const mockSelectFn = jest.fn().mockReturnValue({ eq: mockEqFn });
+      const mockFromFn = jest.fn().mockReturnValue({ select: mockSelectFn });
       
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: selectMock
-      });
+      // Apply the mocks
+      (supabase.from as jest.Mock).mockImplementation(mockFromFn);
 
       // Call the function and expect it to throw
       await expect(fetchTodayNewCount('user1')).rejects.toThrow();

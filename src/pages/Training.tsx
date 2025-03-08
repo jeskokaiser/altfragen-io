@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Question } from '@/types/Question';
-import { AnswerState } from '@/types/Answer';
+import { Question } from '@/types/models/Question';
+import { AnswerState } from '@/types/models/Answer';
 import { QuestionView, TrainingConfig } from '@/components/features';
-import Results from '@/components/Results';
+import Results from '@/components/features/questions/Results';
 
 const Training = () => {
   const navigate = useNavigate();

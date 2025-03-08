@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Question } from '@/types/Question';
-import { AnswerState } from '@/types/Answer';
+import { Question } from '@/types/models/Question';
+import { AnswerState } from '@/types/models/Answer';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 

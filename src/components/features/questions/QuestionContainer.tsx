@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Question } from '@/types/Question';
+import { Question } from '@/types/models/Question';
 import QuestionControls from '@/components/features/questions/controls/QuestionControls';
 import QuestionContent from '@/components/features/questions/QuestionContent';
 import AnswerSubmission from '@/components/features/questions/submission/AnswerSubmission';

@@ -9,6 +9,7 @@ export { default as QuestionContainer } from './questions/QuestionContainer';
 export { default as QuestionView } from './questions/QuestionView';
 export { default as QuestionContent } from './questions/QuestionContent';
 export { default as AnswerOption } from './questions/AnswerOption';
+export { default as Results } from './questions/Results';
 
 // Question Components
 export { default as QuestionControls } from './questions/controls/QuestionControls';
