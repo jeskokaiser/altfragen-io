@@ -1,6 +1,6 @@
 
 import { Question } from '@/types/models/Question';
-import { DatabaseQuestion } from '@/types/api/database';
+import { ExtendedDatabaseQuestion } from '@/types/api/database';
 
 /**
  * Maps a database question object to a Question domain object
@@ -36,8 +36,8 @@ export const mapQuestionToDatabaseQuestion = (
   userId?: string, 
   visibility?: 'private' | 'organization',
   organizationId?: string | null
-): DatabaseQuestion => {
-  const dbQuestion: DatabaseQuestion = {
+): ExtendedDatabaseQuestion => {
+  const dbQuestion: ExtendedDatabaseQuestion = {
     question: question.question,
     option_a: question.optionA,
     option_b: question.optionB,

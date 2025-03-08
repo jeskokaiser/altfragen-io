@@ -19,6 +19,7 @@ import {
 import { useDatasetManagement } from '@/hooks/use-dataset-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, User, Database } from 'lucide-react';
+import { DatasetView } from '@/types/models/DatasetView';
 
 const Dashboard = () => {
   const { user } = useAuth();
