@@ -30,8 +30,8 @@ export const useQuestionView = ({
   // Reset state when question changes
   useEffect(() => {
     console.log("Question changed in useQuestionView, resetting state. User answer:", userAnswer?.value);
-    // Set the selected answer based on the user's previous answer
-    setSelectedAnswer(userAnswer?.value || '');
+    // Reset selected answer to empty (not to userAnswer.value) to allow for fresh selection
+    setSelectedAnswer('');
     setShowFeedback(Boolean(userAnswer?.value));
     setCurrentQuestion(questionData);
     setIsCorrect(userAnswer?.value === questionData.correctAnswer);
