@@ -5,6 +5,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Question } from '@/types/models/Question';
 import { AnswerState } from '@/types/models/Answer';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * Custom hook for managing the training state
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 export const useTrainingState = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [configurationComplete, setConfigurationComplete] = useState(false);
   
   // Get questions from localStorage with proper error handling
@@ -90,6 +92,9 @@ export const useTrainingState = () => {
   const handleQuitTraining = (navigateToResults = true) => {
     // Set a flag to indicate this was a manual quit
     sessionStorage.setItem('trainingQuit', 'true');
+    
+    // Invalidate all React Query cache to ensure fresh data when returning to dashboard
+    queryClient.invalidateQueries();
     
     if (navigateToResults) {
       navigate('/training/results', { state: { fromTraining: true } });
