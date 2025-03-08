@@ -29,6 +29,7 @@ const AnswerSubmission = ({
   const [showSolution, setShowSolution] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { preferences } = useUserPreferences();
+  const isTrainingMode = React.useMemo(() => window.location.pathname.includes('/training'), []);
 
   React.useEffect(() => {
     setHasSubmittedWrong(false);
@@ -44,9 +45,62 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      // In training mode, we will only update local state without database operations
-      // This avoids the row-level security policy error
-      
+      // Only update the database if we're not in training mode
+      if (!isTrainingMode) {
+        const { data: existingProgress, error: fetchError } = await supabase
+          .from('user_progress')
+          .select('is_correct, attempts_count')
+          .eq('user_id', user.id)
+          .eq('question_id', currentQuestion.id)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+
+        if (!existingProgress) {
+          const { error: insertError } = await supabase
+            .from('user_progress')
+            .insert({
+              user_id: user.id,
+              question_id: currentQuestion.id,
+              user_answer: selectedAnswer,
+              is_correct: isCorrect,
+              attempts_count: 1
+            });
+
+          if (insertError) throw insertError;
+        } else {
+          const { error: updateError } = await supabase
+            .from('user_progress')
+            .update({
+              user_answer: selectedAnswer,
+              attempts_count: (existingProgress.attempts_count || 1) + 1,
+              is_correct: isCorrect ? (preferences.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
+            })
+            .eq('user_id', user.id)
+            .eq('question_id', currentQuestion.id);
+
+          if (updateError) throw updateError;
+
+          if (existingProgress.is_correct) {
+            if (isCorrect) {
+              showToast.info("Diese Frage hattest du schon einmal richtig!");
+            } else {
+              showToast.warning("Schade, zuvor hattest du diese Frage richtig.");
+            }
+          } else {
+            if (isCorrect) {
+              if (preferences.immediateFeedback || wrongAnswers.length === 0) {
+                showToast.success("Super! Die Frage ist jetzt als richtig markiert.");
+              } else {
+                showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
+              }
+            } else {
+              showToast.info("Weiter üben! Du schaffst das!");
+            }
+          }
+        }
+      }
+
       if (!isCorrect && !preferences.immediateFeedback) {
         setHasSubmittedWrong(true);
         if (!wrongAnswers.includes(selectedAnswer)) {
