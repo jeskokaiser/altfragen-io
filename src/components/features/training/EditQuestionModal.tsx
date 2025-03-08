@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -9,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Question } from '@/types/models/Question';
 import { toast } from 'sonner';
-import { FormData } from '@/types/utils/FormTypes';
+import { FormData } from '@/components/training/types/FormData';
 import { QuestionField } from '@/components/common/inputs/QuestionField';
 import { OptionsFields } from '@/components/common/inputs/OptionsFields';
 import { SubjectField } from '@/components/common/inputs/SubjectField';
