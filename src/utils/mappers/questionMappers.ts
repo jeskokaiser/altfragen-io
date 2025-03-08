@@ -1,5 +1,9 @@
 
 import { Question } from '@/types/Question';
+import { Database } from '@/integrations/supabase/types';
+
+// Define the type for the database question
+type DatabaseQuestion = Database['public']['Tables']['questions']['Insert'];
 
 /**
  * Maps a database question object to a Question domain object
@@ -27,8 +31,8 @@ export const mapDatabaseQuestionToQuestion = (dbQuestion: any): Question => {
 /**
  * Maps a Question domain object to a database question object for insertion/update
  */
-export const mapQuestionToDatabaseQuestion = (question: Question, userId?: string): Record<string, any> => {
-  const dbQuestion: Record<string, any> = {
+export const mapQuestionToDatabaseQuestion = (question: Question, userId?: string): DatabaseQuestion => {
+  const dbQuestion: DatabaseQuestion = {
     question: question.question,
     option_a: question.optionA,
     option_b: question.optionB,
@@ -38,13 +42,13 @@ export const mapQuestionToDatabaseQuestion = (question: Question, userId?: strin
     subject: question.subject,
     correct_answer: question.correctAnswer,
     comment: question.comment,
-    difficulty: question.difficulty
+    difficulty: question.difficulty,
+    filename: question.filename
   };
 
-  // Only include these fields for new questions
+  // Only include user_id for new questions
   if (userId) {
     dbQuestion.user_id = userId;
-    dbQuestion.filename = question.filename;
   }
 
   return dbQuestion;

@@ -17,6 +17,7 @@ export const saveQuestions = async (questions: Question[], userId: string): Prom
   try {
     const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(q, userId));
     
+    // Fix: Change from array insert to individual inserts or properly type the array
     const { error } = await supabase
       .from('questions')
       .insert(dbQuestions);
