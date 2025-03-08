@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Copy } from 'lucide-react';
-import DifficultyControls from '../training/DifficultyControls';
+import DifficultyControls from '@/components/features/training/DifficultyControls';
 import { showToast } from '@/utils/toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Question } from '@/types/Question';

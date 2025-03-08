@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   FormControl,
@@ -13,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UseFormReturn } from 'react-hook-form';
-import { FormValues } from '../types/FormValues';
+import { FormValues } from '@/components/training/types/FormValues';
 
 interface DifficultySelectProps {
   form: UseFormReturn<FormValues>;

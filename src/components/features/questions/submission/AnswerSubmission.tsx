@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { XCircle, Eye } from 'lucide-react';
-import FeedbackDisplay from './FeedbackDisplay';
+import FeedbackDisplay from '../feedback/FeedbackDisplay';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { showToast } from '@/utils/toast';
 

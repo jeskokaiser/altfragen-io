@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   FormControl,
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from 'react-hook-form';
-import { FormValues } from '../types/FormValues';
+import { FormValues } from '@/components/training/types/FormValues';
 
 interface QuestionCountSelectProps {
   form: UseFormReturn<FormValues>;

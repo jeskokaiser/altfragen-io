@@ -10,10 +10,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Question } from '@/types/Question';
 import { toast } from 'sonner';
 import { FormData } from '@/components/training/types/FormData';
-import { QuestionField } from '@/components/training/edit-question/QuestionField';
-import { OptionsFields } from '@/components/training/edit-question/OptionsFields';
-import { SubjectField } from '@/components/training/edit-question/SubjectField';
-import { DifficultyField } from '@/components/training/edit-question/DifficultyField';
+import { QuestionField } from '@/components/common/inputs/QuestionField';
+import { OptionsFields } from '@/components/common/inputs/OptionsFields';
+import { SubjectField } from '@/components/common/inputs/SubjectField';
+import { DifficultyField } from '@/components/common/inputs/DifficultyField';
 import { useUpdateQuestion } from '@/hooks/use-update-question';
 
 interface EditQuestionModalProps {
