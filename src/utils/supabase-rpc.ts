@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
  * @returns The result of the RPC call
  */
 export const executeRpc = async <T>(functionName: string, params: Record<string, any> = {}): Promise<T | null> => {
-  const { data, error } = await supabase.rpc(functionName, params);
+  const { data, error } = await supabase.rpc(functionName, params as Record<string, any>);
   
   if (error) {
     console.error(`Error executing RPC function ${functionName}:`, error);
