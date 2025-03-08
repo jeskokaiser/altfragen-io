@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,24 +80,22 @@ const AnswerSubmission = ({
         if (updateError) throw updateError;
       }
 
-      // Only show notifications if not in training mode
-      if (!isTrainingMode) {
-        if (existingProgress?.is_correct) {
-          if (isCorrect) {
-            showToast.info("Diese Frage hattest du schon einmal richtig!");
+      // Show notifications in both regular and training mode
+      if (existingProgress?.is_correct) {
+        if (isCorrect) {
+          showToast.info("Diese Frage hattest du schon einmal richtig!");
+        } else {
+          showToast.warning("Schade, zuvor hattest du diese Frage richtig.");
+        }
+      } else {
+        if (isCorrect) {
+          if (preferences.immediateFeedback || wrongAnswers.length === 0) {
+            showToast.success("Super! Die Frage ist jetzt als richtig markiert.");
           } else {
-            showToast.warning("Schade, zuvor hattest du diese Frage richtig.");
+            showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
           }
         } else {
-          if (isCorrect) {
-            if (preferences.immediateFeedback || wrongAnswers.length === 0) {
-              showToast.success("Super! Die Frage ist jetzt als richtig markiert.");
-            } else {
-              showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
-            }
-          } else {
-            showToast.info("Weiter üben! Du schaffst das!");
-          }
+          showToast.info("Weiter üben! Du schaffst das!");
         }
       }
 
