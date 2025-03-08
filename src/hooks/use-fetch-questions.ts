@@ -49,8 +49,10 @@ export const useFetchQuestions = () => {
     gcTime: 1000 * 60 * 30, // 30 minutes (renamed from cacheTime in v5)
     retry: 2, // Retry failed requests up to 2 times
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    onError: (error) => {
-      logError(error, { hook: 'useFetchQuestions' });
+    meta: {
+      errorHandler: (error: any) => {
+        logError(error, { hook: 'useFetchQuestions' });
+      }
     },
   });
 

@@ -7,11 +7,14 @@ import { AppError } from '@/utils/errorHandler';
 // Mock the supabase client
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        order: jest.fn(),
+        eq: jest.fn(() => ({
+          gte: jest.fn()
+        }))
+      }))
+    }))
   }
 }));
 
@@ -44,12 +47,14 @@ describe('QuestionService', () => {
         }
       ];
       
+      const orderMock = jest.fn().mockResolvedValue({ data: mockData, error: null });
+      const selectMock = jest.fn().mockReturnValue({ order: orderMock });
+      const fromMock = jest.fn().mockReturnValue({ select: selectMock });
+      
       (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({ data: mockData, error: null })
-        })
+        select: selectMock
       });
-
+      
       // Call the function
       const result = await fetchQuestions();
 
@@ -63,17 +68,20 @@ describe('QuestionService', () => {
 
       // Verify that the Supabase client was called correctly
       expect(supabase.from).toHaveBeenCalledWith('questions');
+      expect(selectMock).toHaveBeenCalledWith('*');
+      expect(orderMock).toHaveBeenCalledWith('created_at', { ascending: false });
     });
 
     it('should throw an error if the Supabase query fails', async () => {
       // Mock the Supabase response with an error
+      const orderMock = jest.fn().mockResolvedValue({ 
+        data: null, 
+        error: new Error('Database error') 
+      });
+      const selectMock = jest.fn().mockReturnValue({ order: orderMock });
+      
       (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({ 
-            data: null, 
-            error: new Error('Database error') 
-          })
-        })
+        select: selectMock
       });
 
       // Call the function and expect it to throw
@@ -82,13 +90,14 @@ describe('QuestionService', () => {
     
     it('should return an empty array if no data is returned', async () => {
       // Mock the Supabase response with null data
+      const orderMock = jest.fn().mockResolvedValue({ 
+        data: null, 
+        error: null 
+      });
+      const selectMock = jest.fn().mockReturnValue({ order: orderMock });
+      
       (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({ 
-            data: null, 
-            error: null 
-          })
-        })
+        select: selectMock
       });
 
       // Call the function
@@ -102,15 +111,15 @@ describe('QuestionService', () => {
   describe('fetchTodayNewCount', () => {
     it('should fetch the count of new questions answered today', async () => {
       // Mock the Supabase response
+      const gteMock = jest.fn().mockResolvedValue({ 
+        data: [{ id: '1' }, { id: '2' }], 
+        error: null 
+      });
+      const eqMock = jest.fn().mockReturnValue({ gte: gteMock });
+      const selectMock = jest.fn().mockReturnValue({ eq: eqMock });
+      
       (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gte: jest.fn().mockResolvedValue({ 
-              data: [{ id: '1' }, { id: '2' }], 
-              error: null 
-            })
-          })
-        })
+        select: selectMock
       });
 
       // Call the function
@@ -121,21 +130,21 @@ describe('QuestionService', () => {
 
       // Verify that the Supabase client was called correctly
       expect(supabase.from).toHaveBeenCalledWith('user_progress');
-      expect(supabase.select).toHaveBeenCalledWith('id');
-      expect(supabase.eq).toHaveBeenCalledWith('user_id', 'user1');
+      expect(selectMock).toHaveBeenCalledWith('id');
+      expect(eqMock).toHaveBeenCalledWith('user_id', 'user1');
     });
 
     it('should throw an error if the Supabase query fails', async () => {
       // Mock the Supabase response with an error
+      const gteMock = jest.fn().mockResolvedValue({ 
+        data: null, 
+        error: new Error('Database error') 
+      });
+      const eqMock = jest.fn().mockReturnValue({ gte: gteMock });
+      const selectMock = jest.fn().mockReturnValue({ eq: eqMock });
+      
       (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            gte: jest.fn().mockResolvedValue({ 
-              data: null, 
-              error: new Error('Database error') 
-            })
-          })
-        })
+        select: selectMock
       });
 
       // Call the function and expect it to throw
@@ -157,17 +166,18 @@ describe('QuestionService', () => {
   describe('fetchTotalAttemptsCount', () => {
     it('should calculate the total number of attempts correctly', async () => {
       // Mock the Supabase response
+      const eqMock = jest.fn().mockResolvedValue({ 
+        data: [
+          { attempts_count: 3 },
+          { attempts_count: 2 },
+          { attempts_count: null }  // Test handling null counts
+        ], 
+        error: null 
+      });
+      const selectMock = jest.fn().mockReturnValue({ eq: eqMock });
+      
       (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ 
-            data: [
-              { attempts_count: 3 },
-              { attempts_count: 2 },
-              { attempts_count: null }  // Test handling null counts
-            ], 
-            error: null 
-          })
-        })
+        select: selectMock
       });
 
       // Call the function
@@ -178,19 +188,20 @@ describe('QuestionService', () => {
 
       // Verify that the Supabase client was called correctly
       expect(supabase.from).toHaveBeenCalledWith('user_progress');
-      expect(supabase.select).toHaveBeenCalledWith('attempts_count');
-      expect(supabase.eq).toHaveBeenCalledWith('user_id', 'user1');
+      expect(selectMock).toHaveBeenCalledWith('attempts_count');
+      expect(eqMock).toHaveBeenCalledWith('user_id', 'user1');
     });
 
     it('should throw an error if the Supabase query fails', async () => {
       // Mock the Supabase response with an error
+      const eqMock = jest.fn().mockResolvedValue({ 
+        data: null, 
+        error: new Error('Database error') 
+      });
+      const selectMock = jest.fn().mockReturnValue({ eq: eqMock });
+      
       (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ 
-            data: null, 
-            error: new Error('Database error') 
-          })
-        })
+        select: selectMock
       });
 
       // Call the function and expect it to throw
