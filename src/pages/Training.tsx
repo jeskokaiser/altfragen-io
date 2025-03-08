@@ -21,6 +21,7 @@ const Training = () => {
     questionsError,
     configurationComplete,
     handleStartTraining,
+    handleQuitTraining,
     setUserAnswers,
     handleErrorReset
   } = useTrainingState();
@@ -61,6 +62,7 @@ const Training = () => {
       userAnswers={userAnswers}
       setUserAnswers={setUserAnswers}
       onErrorReset={handleErrorReset}
+      onQuit={handleQuitTraining}
     />
   );
 };

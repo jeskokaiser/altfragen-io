@@ -48,6 +48,12 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   };
 
   const handleStartTraining = () => {
+    // Clear any existing training session data
+    localStorage.removeItem('currentTrainingQuestions');
+    localStorage.removeItem('trainingUserAnswers');
+    sessionStorage.removeItem('trainingQuit');
+    
+    // Set new questions and navigate
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     onStartTraining(questions);
     navigate('/training');

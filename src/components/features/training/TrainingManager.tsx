@@ -11,13 +11,15 @@ interface TrainingManagerProps {
   userAnswers: AnswerState[];
   setUserAnswers: (answers: AnswerState[]) => void;
   onErrorReset: () => void;
+  onQuit: () => void;
 }
 
 const TrainingManager: React.FC<TrainingManagerProps> = ({
   selectedQuestions,
   userAnswers,
   setUserAnswers,
-  onErrorReset
+  onErrorReset,
+  onQuit
 }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const navigate = useNavigate();
@@ -65,13 +67,10 @@ const TrainingManager: React.FC<TrainingManagerProps> = ({
   };
 
   const handleQuit = () => {
-    navigate('/training/results', { state: { fromTraining: true } });
+    onQuit();
   };
 
   const handleQuestionUpdate = (updatedQuestion: Question) => {
-    const updatedQuestions = selectedQuestions.map(q => 
-      q.id === updatedQuestion.id ? updatedQuestion : q
-    );
     // This will update the parent component's state
     // The parent should provide a setter for selectedQuestions
   };

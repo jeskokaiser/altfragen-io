@@ -28,14 +28,16 @@ export const useTrainingState = () => {
   const {
     value: selectedQuestions,
     setValue: setSelectedQuestions,
-    isLoading: isLoadingSelected
+    isLoading: isLoadingSelected,
+    removeItem: removeSelectedQuestions
   } = useLocalStorage<Question[]>('currentTrainingQuestions', []);
   
   // Store user answers with localStorage
   const {
     value: userAnswers,
     setValue: setUserAnswers,
-    isLoading: isLoadingAnswers
+    isLoading: isLoadingAnswers,
+    removeItem: removeUserAnswers
   } = useLocalStorage<AnswerState[]>('trainingUserAnswers', []);
   
   // Check for restart flag from results page
@@ -60,7 +62,10 @@ export const useTrainingState = () => {
   
   // Detect if training was in progress and restore state
   useEffect(() => {
-    if (!isLoadingSelected && !isLoadingAnswers && selectedQuestions.length > 0 && userAnswers.length > 0) {
+    // Only restore if not coming from a manual quit (check for a quit flag in sessionStorage)
+    const wasManuallyQuit = sessionStorage.getItem('trainingQuit') === 'true';
+    
+    if (!isLoadingSelected && !isLoadingAnswers && selectedQuestions.length > 0 && userAnswers.length > 0 && !wasManuallyQuit) {
       const hasCompletedTraining = userAnswers.length === selectedQuestions.length && 
         userAnswers.every(answer => answer?.value);
       
@@ -71,12 +76,29 @@ export const useTrainingState = () => {
       
       setConfigurationComplete(true);
     }
+    
+    // Clear the quit flag after checking
+    sessionStorage.removeItem('trainingQuit');
   }, [selectedQuestions, userAnswers, isLoadingSelected, isLoadingAnswers, navigate]);
 
   const handleStartTraining = (questions: Question[]) => {
     setSelectedQuestions(questions);
     setUserAnswers([]);
     setConfigurationComplete(true);
+  };
+
+  const handleQuitTraining = (navigateToResults = true) => {
+    // Set a flag to indicate this was a manual quit
+    sessionStorage.setItem('trainingQuit', 'true');
+    
+    if (navigateToResults) {
+      navigate('/training/results', { state: { fromTraining: true } });
+    } else {
+      // Just clear the session without navigating
+      removeSelectedQuestions();
+      removeUserAnswers();
+      setConfigurationComplete(false);
+    }
   };
 
   const handleErrorReset = () => {
@@ -93,6 +115,7 @@ export const useTrainingState = () => {
     questionsError,
     configurationComplete,
     handleStartTraining,
+    handleQuitTraining,
     setSelectedQuestions,
     setUserAnswers,
     handleErrorReset,
