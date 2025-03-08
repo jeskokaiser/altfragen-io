@@ -73,7 +73,7 @@ const AnswerSubmission = ({
           .update({
             user_answer: selectedAnswer,
             attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: isCorrect ? (preferences.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
+            is_correct: isCorrect ? true : existingProgress.is_correct
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
