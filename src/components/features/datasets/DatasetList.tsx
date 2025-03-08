@@ -12,6 +12,7 @@ interface DatasetListProps {
   isArchived?: boolean;
   onToggleVisibility?: (filename: string, currentVisibility: 'private' | 'organization') => void;
   isDatasetShared?: (questions: Question[]) => boolean;
+  isOrgWhitelisted?: boolean;
 }
 
 const DatasetList = ({
@@ -21,7 +22,8 @@ const DatasetList = ({
   onStartTraining,
   isArchived = false,
   onToggleVisibility,
-  isDatasetShared
+  isDatasetShared,
+  isOrgWhitelisted = false
 }: DatasetListProps) => {
   const { user } = useAuth();
 
@@ -43,6 +45,7 @@ const DatasetList = ({
             isCreator={isCreator}
             isShared={isShared}
             onToggleVisibility={onToggleVisibility}
+            isOrgWhitelisted={isOrgWhitelisted}
           />
         );
       })}

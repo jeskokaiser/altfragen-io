@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import {
 } from '@/services/QuestionService';
 import { useDatasetManagement } from '@/hooks/use-dataset-management';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, User, Database } from 'lucide-react';
+import { Database, User, Users } from 'lucide-react';
 import { DatasetView } from '@/types/models/DatasetView';
 import { Badge } from '@/components/ui/badge';
 
@@ -36,7 +35,8 @@ const Dashboard = () => {
     isLoading: isQuestionsLoading,
     toggleDatasetVisibility,
     isDatasetShared,
-    userOrganization
+    userOrganization,
+    isOrgWhitelisted
   } = useDatasetManagement();
 
   const { data: todayNewCount, isLoading: isNewCountLoading } = useQuery({
@@ -193,10 +193,12 @@ const Dashboard = () => {
               <User className="h-4 w-4" />
               Meine Datasets
             </TabsTrigger>
-            <TabsTrigger value="organizational" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Geteilte Datasets
-            </TabsTrigger>
+            {isOrgWhitelisted && (
+              <TabsTrigger value="organizational" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Geteilte Datasets
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="all" className="mt-0">
@@ -214,6 +216,7 @@ const Dashboard = () => {
                 onStartTraining={handleStartTraining}
                 onToggleVisibility={toggleDatasetVisibility}
                 isDatasetShared={isDatasetShared}
+                isOrgWhitelisted={isOrgWhitelisted}
               />
             ) : (
               <Card>
@@ -244,6 +247,7 @@ const Dashboard = () => {
                 onStartTraining={handleStartTraining}
                 onToggleVisibility={toggleDatasetVisibility}
                 isDatasetShared={isDatasetShared}
+                isOrgWhitelisted={isOrgWhitelisted}
               />
             ) : (
               <Card>
@@ -259,35 +263,38 @@ const Dashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="organizational" className="mt-0">
-            {isQuestionsLoading ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                  <p className="text-muted-foreground">Lade geteilte Datensätze...</p>
-                </CardContent>
-              </Card>
-            ) : Object.keys(groupedQuestions).length > 0 ? (
-              <DatasetList
-                groupedQuestions={groupedQuestions}
-                selectedFilename={selectedFilename}
-                onDatasetClick={handleDatasetClick}
-                onStartTraining={handleStartTraining}
-                onToggleVisibility={toggleDatasetVisibility}
-                isDatasetShared={isDatasetShared}
-              />
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                  <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-                    Keine geteilten Datensätze vorhanden
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Nutzer mit der gleichen Email-Domain (@{user.email?.split('@')[1]}) können Datensätze mit dir teilen
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+          {isOrgWhitelisted && (
+            <TabsContent value="organizational" className="mt-0">
+              {isQuestionsLoading ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <p className="text-muted-foreground">Lade geteilte Datensätze...</p>
+                  </CardContent>
+                </Card>
+              ) : Object.keys(groupedQuestions).length > 0 ? (
+                <DatasetList
+                  groupedQuestions={groupedQuestions}
+                  selectedFilename={selectedFilename}
+                  onDatasetClick={handleDatasetClick}
+                  onStartTraining={handleStartTraining}
+                  onToggleVisibility={toggleDatasetVisibility}
+                  isDatasetShared={isDatasetShared}
+                  isOrgWhitelisted={isOrgWhitelisted}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
+                      Keine geteilten Datensätze vorhanden
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Nutzer mit der gleichen Email-Domain (@{user.email?.split('@')[1]}) können Datensätze mit dir teilen
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </section>
 

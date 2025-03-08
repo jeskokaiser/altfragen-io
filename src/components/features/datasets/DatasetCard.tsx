@@ -27,6 +27,7 @@ interface DatasetCardProps {
   isCreator?: boolean;
   isShared?: boolean;
   onToggleVisibility?: (filename: string, currentVisibility: 'private' | 'organization') => void;
+  isOrgWhitelisted?: boolean;
 }
 
 const DatasetCard: React.FC<DatasetCardProps> = memo(({
@@ -38,7 +39,8 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   isArchived = false,
   isCreator = true,
   isShared = false,
-  onToggleVisibility
+  onToggleVisibility,
+  isOrgWhitelisted = false
 }) => {
   const { archiveDataset, restoreDataset } = useUserPreferences();
   const { user } = useAuth();
@@ -98,7 +100,8 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
               </Badge>
             )}
             
-            {isCreator && onToggleVisibility && (
+            {/* Only show toggle visibility button if organization is whitelisted */}
+            {isCreator && onToggleVisibility && isOrgWhitelisted && (
               <Button
                 variant="outline"
                 size="sm"

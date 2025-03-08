@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchQuestions, fetchPersonalQuestions, fetchOrganizationalQuestions } from '@/services/QuestionService';
 import { updateDatasetVisibility } from '@/services/DatabaseService';
@@ -29,6 +28,25 @@ export const useDatasetManagement = () => {
   
   const isDatasetArchived = userPreferencesContext?.isDatasetArchived || (() => false);
   
+  // Get user organization to check whitelist status
+  const {
+    data: userOrganization,
+    isLoading: isOrganizationLoading,
+  } = useQuery({
+    queryKey: ['organization', user?.id],
+    queryFn: () => getUserOrganization(user?.id || ''),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    meta: {
+      errorHandler: (error: any) => {
+        logError(error, { hook: 'useDatasetManagement', query: 'userOrganization' });
+      }
+    },
+  });
+
+  // Determine if organization is whitelisted
+  const isOrgWhitelisted = userOrganization?.is_whitelisted || false;
+
   // Fetch all questions with React Query
   const {
     data: allQuestions,
@@ -67,7 +85,7 @@ export const useDatasetManagement = () => {
     },
   });
 
-  // Fetch organizational questions (shared by users with the same domain)
+  // Fetch organizational questions (shared by users with the same domain) - only if whitelisted
   const {
     data: organizationalQuestions,
     isLoading: isOrganizationalQuestionsLoading,
@@ -75,27 +93,12 @@ export const useDatasetManagement = () => {
   } = useQuery({
     queryKey: ['questions', 'organizational'],
     queryFn: fetchOrganizationalQuestions,
+    enabled: isOrgWhitelisted, // Only fetch if organization is whitelisted
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
     meta: {
       errorHandler: (error: any) => {
         logError(error, { hook: 'useDatasetManagement', query: 'organizationalQuestions' });
-      }
-    },
-  });
-
-  // Get user organization
-  const {
-    data: userOrganization,
-    isLoading: isOrganizationLoading,
-  } = useQuery({
-    queryKey: ['organization', user?.id],
-    queryFn: () => getUserOrganization(user?.id || ''),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 30, // 30 minutes
-    meta: {
-      errorHandler: (error: any) => {
-        logError(error, { hook: 'useDatasetManagement', query: 'userOrganization' });
       }
     },
   });
@@ -124,12 +127,13 @@ export const useDatasetManagement = () => {
       case 'personal':
         return personalQuestions || [];
       case 'organizational':
-        return organizationalQuestions || [];
+        // If not whitelisted, return empty array for organizational
+        return isOrgWhitelisted ? (organizationalQuestions || []) : [];
       case 'all':
       default:
         return allQuestions || [];
     }
-  }, [datasetView, allQuestions, personalQuestions, organizationalQuestions]);
+  }, [datasetView, allQuestions, personalQuestions, organizationalQuestions, isOrgWhitelisted]);
 
   /**
    * Filters out questions from archived datasets
@@ -189,9 +193,17 @@ export const useDatasetManagement = () => {
    * Updates the visibility of a dataset
    */
   const toggleDatasetVisibility = useCallback((filename: string, currentVisibility: 'private' | 'organization') => {
+    // Prevent sharing if organization is not whitelisted
+    if (currentVisibility === 'private' && !isOrgWhitelisted) {
+      toast.error('Sharing not allowed', {
+        description: 'Your organization is not whitelisted for sharing. Please contact the administrator.'
+      });
+      return;
+    }
+    
     const newVisibility = currentVisibility === 'private' ? 'organization' : 'private';
     updateVisibilityMutation.mutate({ filename, visibility: newVisibility });
-  }, [updateVisibilityMutation]);
+  }, [updateVisibilityMutation, isOrgWhitelisted]);
 
   /**
    * Determines if a dataset is shared with the organization
@@ -221,6 +233,7 @@ export const useDatasetManagement = () => {
     unarchivedQuestions,
     groupedQuestions,
     userOrganization,
+    isOrgWhitelisted,
     isLoading,
     error,
     refetchAllQuestions,

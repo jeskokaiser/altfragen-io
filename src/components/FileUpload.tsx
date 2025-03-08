@@ -14,7 +14,7 @@ import { Question } from '@/types/models/Question';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useQuery } from '@tanstack/react-query';
-import { getUserOrganization, isOrganizationWhitelisted } from '@/services/OrganizationService';
+import { getUserOrganization } from '@/services/OrganizationService';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -60,6 +60,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     console.log('File selected:', file.name);
     console.log('Sharing with organization:', shareWithOrganization);
 
+    // If user tries to share but org is not whitelisted, show error and return
     if (shareWithOrganization && !isOrgWhitelisted) {
       setError("Deine Organisation ist nicht für das Teilen freigegeben");
       showToast.error("Organisation nicht freigegeben", {
@@ -82,7 +83,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         return null;
       }
 
-      const visibility = shareWithOrganization ? 'organization' : 'private';
+      // Only use organization visibility if org is whitelisted
+      const visibility = shareWithOrganization && isOrgWhitelisted ? 'organization' : 'private';
       try {
         const savedQuestions = await saveQuestions(questions, user?.id || '', visibility);
         
@@ -91,7 +93,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         
         onQuestionsLoaded(savedQuestions);
         
-        const sharingText = shareWithOrganization ? ' und mit deiner Organisation geteilt' : '';
+        const sharingText = shareWithOrganization && isOrgWhitelisted ? ' und mit deiner Organisation geteilt' : '';
         showToast.success(`${questions.length} Fragen aus "${file.name}" geladen${sharingText}`, {
           description: "Die Fragen wurden erfolgreich gespeichert"
         });
@@ -133,24 +135,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </Alert>
       )}
 
-      <div className="flex items-center space-x-2 mb-4">
-        <Switch
-          id="share-organization"
-          checked={shareWithOrganization}
-          onCheckedChange={setShareWithOrganization}
-          disabled={!isOrgWhitelisted}
-        />
-        <div>
-          <Label htmlFor="share-organization">
-            Mit meiner Organisation teilen (@{user?.email?.split('@')[1]})
-          </Label>
-          {!isOrgWhitelisted && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
-              Deine Organisation ist nicht für das Teilen freigegeben
-            </p>
-          )}
+      {/* Only show sharing option if organization is whitelisted */}
+      {isOrgWhitelisted && (
+        <div className="flex items-center space-x-2 mb-4">
+          <Switch
+            id="share-organization"
+            checked={shareWithOrganization}
+            onCheckedChange={setShareWithOrganization}
+          />
+          <div>
+            <Label htmlFor="share-organization">
+              Mit meiner Organisation teilen (@{user?.email?.split('@')[1]})
+            </Label>
+          </div>
         </div>
-      </div>
+      )}
 
       <label htmlFor="csv-upload">
         <Button 
