@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Question } from '@/types/Question';
+import { Question } from '@/types/models/Question';
 import { AppError, handleApiError } from '@/utils/errorHandler';
 import { 
   mapQuestionToDatabaseQuestion,
@@ -11,11 +11,32 @@ import {
  * Saves questions to the database
  * @param questions - The questions to save
  * @param userId - The ID of the user
+ * @param visibility - The visibility of the questions ('private' or 'organization')
  * @returns The saved questions
  */
-export const saveQuestions = async (questions: Question[], userId: string): Promise<Question[]> => {
+export const saveQuestions = async (
+  questions: Question[], 
+  userId: string, 
+  visibility: 'private' | 'organization' = 'private'
+): Promise<Question[]> => {
   try {
-    const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(q, userId));
+    // Get the user's organization ID
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) throw new AppError(profileError.message, profileError);
+    
+    const organizationId = userProfile?.organization_id;
+    
+    const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(
+      q, 
+      userId, 
+      visibility, 
+      visibility === 'organization' ? organizationId : null
+    ));
     
     // Insert questions individually to avoid type errors with array inserts
     for (const question of dbQuestions) {
@@ -82,5 +103,116 @@ export const markQuestionUnclear = async (questionId: string, isUnclear: boolean
     return true;
   } catch (error) {
     throw handleApiError(error, 'Failed to mark question as unclear');
+  }
+};
+
+/**
+ * Updates a question's visibility in the database
+ * @param questionId - The ID of the question
+ * @param visibility - The new visibility setting ('private' or 'organization')
+ * @param userId - The ID of the user making the change
+ * @returns A boolean indicating success
+ */
+export const updateQuestionVisibility = async (
+  questionId: string, 
+  visibility: 'private' | 'organization',
+  userId: string
+): Promise<boolean> => {
+  try {
+    // Get the user's organization ID
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) throw new AppError(profileError.message, profileError);
+    
+    const organizationId = userProfile?.organization_id;
+    
+    const { error } = await supabase
+      .from('questions')
+      .update({
+        visibility: visibility,
+        organization_id: visibility === 'organization' ? organizationId : null
+      })
+      .eq('id', questionId)
+      .eq('user_id', userId);  // Ensure user owns the question
+
+    if (error) throw new AppError(error.message, error);
+    return true;
+  } catch (error) {
+    throw handleApiError(error, 'Failed to update question visibility');
+  }
+};
+
+/**
+ * Updates the visibility of all questions in a dataset
+ * @param filename - The filename of the dataset
+ * @param visibility - The new visibility setting ('private' or 'organization')
+ * @param userId - The ID of the user making the change
+ * @returns A boolean indicating success
+ */
+export const updateDatasetVisibility = async (
+  filename: string,
+  visibility: 'private' | 'organization',
+  userId: string
+): Promise<boolean> => {
+  try {
+    // Get the user's organization ID
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) throw new AppError(profileError.message, profileError);
+    
+    const organizationId = userProfile?.organization_id;
+    
+    const { error } = await supabase
+      .from('questions')
+      .update({
+        visibility: visibility,
+        organization_id: visibility === 'organization' ? organizationId : null
+      })
+      .eq('filename', filename)
+      .eq('user_id', userId);  // Ensure user owns the questions
+
+    if (error) throw new AppError(error.message, error);
+    return true;
+  } catch (error) {
+    throw handleApiError(error, 'Failed to update dataset visibility');
+  }
+};
+
+/**
+ * Gets the organization information for a user
+ * @param userId - The ID of the user
+ * @returns Organization information including domain
+ */
+export const getUserOrganization = async (userId: string): Promise<{ id: string, domain: string } | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('organization_id, email_domain')
+      .eq('id', userId)
+      .single();
+    
+    if (error) throw new AppError(error.message, error);
+    
+    if (!data?.organization_id) return null;
+    
+    const { data: org, error: orgError } = await supabase
+      .from('organizations')
+      .select('id, domain')
+      .eq('id', data.organization_id)
+      .single();
+    
+    if (orgError) throw new AppError(orgError.message, orgError);
+    
+    return org || null;
+  } catch (error) {
+    throw handleApiError(error, 'Failed to get user organization');
   }
 };

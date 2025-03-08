@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
@@ -11,6 +11,8 @@ import { useLoadingState } from '@/hooks/use-loading-state';
 import { showToast } from '@/utils/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Question } from '@/types/models/Question';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -20,6 +22,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [error, setError] = React.useState<string | null>(null);
+  const [shareWithOrganization, setShareWithOrganization] = useState(false);
   
   const { isLoading, execute } = useLoadingState<Question[]>();
 
@@ -44,6 +47,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     }
 
     console.log('File selected:', file.name);
+    console.log('Sharing with organization:', shareWithOrganization);
 
     execute(async () => {
       const { headers, rows } = await parseCSV(file);
@@ -59,13 +63,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         return null;
       }
 
-      const savedQuestions = await saveQuestions(questions, user?.id || '');
+      const visibility = shareWithOrganization ? 'organization' : 'private';
+      const savedQuestions = await saveQuestions(questions, user?.id || '', visibility);
       
       // Invalidate questions query to refresh the list
       queryClient.invalidateQueries({ queryKey: ['questions'] });
       
       onQuestionsLoaded(savedQuestions);
-      showToast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
+      
+      const sharingText = shareWithOrganization ? ' und mit deiner Organisation geteilt' : '';
+      showToast.success(`${questions.length} Fragen aus "${file.name}" geladen${sharingText}`, {
         description: "Die Fragen wurden erfolgreich gespeichert"
       });
       
@@ -79,7 +86,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     if (event.target) {
       event.target.value = '';
     }
-  }, [user, onQuestionsLoaded, execute, queryClient]);
+  }, [user, onQuestionsLoaded, execute, queryClient, shareWithOrganization]);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -96,6 +103,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      <div className="flex items-center space-x-2 mb-4">
+        <Switch
+          id="share-organization"
+          checked={shareWithOrganization}
+          onCheckedChange={setShareWithOrganization}
+        />
+        <Label htmlFor="share-organization">Mit meiner Organisation teilen (@{user?.email?.split('@')[1]})</Label>
+      </div>
 
       <label htmlFor="csv-upload">
         <Button 
