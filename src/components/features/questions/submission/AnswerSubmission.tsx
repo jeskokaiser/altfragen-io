@@ -45,58 +45,59 @@ const AnswerSubmission = ({
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
-      // Only update the database if we're not in training mode
-      if (!isTrainingMode) {
-        const { data: existingProgress, error: fetchError } = await supabase
+      // Always update the database, even in training mode
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from('user_progress')
+        .select('is_correct, attempts_count')
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      if (!existingProgress) {
+        const { error: insertError } = await supabase
           .from('user_progress')
-          .select('is_correct, attempts_count')
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: selectedAnswer,
+            is_correct: isCorrect,
+            attempts_count: 1
+          });
+
+        if (insertError) throw insertError;
+      } else {
+        const { error: updateError } = await supabase
+          .from('user_progress')
+          .update({
+            user_answer: selectedAnswer,
+            attempts_count: (existingProgress.attempts_count || 1) + 1,
+            is_correct: isCorrect ? (preferences.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
+          })
           .eq('user_id', user.id)
-          .eq('question_id', currentQuestion.id)
-          .maybeSingle();
+          .eq('question_id', currentQuestion.id);
 
-        if (fetchError) throw fetchError;
+        if (updateError) throw updateError;
+      }
 
-        if (!existingProgress) {
-          const { error: insertError } = await supabase
-            .from('user_progress')
-            .insert({
-              user_id: user.id,
-              question_id: currentQuestion.id,
-              user_answer: selectedAnswer,
-              is_correct: isCorrect,
-              attempts_count: 1
-            });
-
-          if (insertError) throw insertError;
+      // Only show notifications if not in training mode
+      if (!isTrainingMode) {
+        if (existingProgress?.is_correct) {
+          if (isCorrect) {
+            showToast.info("Diese Frage hattest du schon einmal richtig!");
+          } else {
+            showToast.warning("Schade, zuvor hattest du diese Frage richtig.");
+          }
         } else {
-          const { error: updateError } = await supabase
-            .from('user_progress')
-            .update({
-              user_answer: selectedAnswer,
-              attempts_count: (existingProgress.attempts_count || 1) + 1,
-              is_correct: isCorrect ? (preferences.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
-            })
-            .eq('user_id', user.id)
-            .eq('question_id', currentQuestion.id);
-
-          if (updateError) throw updateError;
-
-          if (existingProgress.is_correct) {
-            if (isCorrect) {
-              showToast.info("Diese Frage hattest du schon einmal richtig!");
+          if (isCorrect) {
+            if (preferences.immediateFeedback || wrongAnswers.length === 0) {
+              showToast.success("Super! Die Frage ist jetzt als richtig markiert.");
             } else {
-              showToast.warning("Schade, zuvor hattest du diese Frage richtig.");
+              showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
             }
           } else {
-            if (isCorrect) {
-              if (preferences.immediateFeedback || wrongAnswers.length === 0) {
-                showToast.success("Super! Die Frage ist jetzt als richtig markiert.");
-              } else {
-                showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
-              }
-            } else {
-              showToast.info("Weiter üben! Du schaffst das!");
-            }
+            showToast.info("Weiter üben! Du schaffst das!");
           }
         }
       }
