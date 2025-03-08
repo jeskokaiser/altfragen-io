@@ -2,20 +2,12 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
-import { UserPreferences } from '@/types/UserPreferences';
 import { 
   loadUserPreferences,
   updateUserPreferences
 } from '@/services/UserPreferencesService';
-
-interface UserPreferencesContextType {
-  preferences: UserPreferences;
-  isLoading: boolean;
-  updatePreferences: (newPreferences: Partial<UserPreferences>) => Promise<void>;
-  archiveDataset: (filename: string) => Promise<void>;
-  restoreDataset: (filename: string) => Promise<void>;
-  isDatasetArchived: (filename: string) => boolean;
-}
+import { UserPreferences } from '@/types/models/UserPreferences';
+import { UserPreferencesContextType } from '@/types/contexts/UserPreferencesContextType';
 
 const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
 

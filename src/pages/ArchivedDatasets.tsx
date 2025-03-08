@@ -2,7 +2,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
-import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import { Question } from '@/types/models/Question';
 
 const ArchivedDatasets = () => {
   const { user } = useAuth();

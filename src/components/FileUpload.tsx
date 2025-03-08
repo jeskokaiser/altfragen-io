@@ -1,7 +1,6 @@
 
 import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
@@ -11,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLoadingState } from '@/hooks/use-loading-state';
 import { showToast } from '@/utils/toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { Question } from '@/types/models/Question';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;

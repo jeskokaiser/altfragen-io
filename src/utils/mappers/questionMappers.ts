@@ -1,9 +1,6 @@
 
-import { Question } from '@/types/Question';
-import { Database } from '@/integrations/supabase/types';
-
-// Define the type for the database question
-type DatabaseQuestion = Database['public']['Tables']['questions']['Insert'];
+import { Question } from '@/types/models/Question';
+import { DatabaseQuestion } from '@/types/api/database';
 
 /**
  * Maps a database question object to a Question domain object

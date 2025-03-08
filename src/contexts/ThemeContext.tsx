@@ -1,11 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-
-interface ThemeContextType {
-  theme: 'light' | 'dark';
-  toggleTheme: () => void;
-}
+import { ThemeContextType } from '@/types/contexts/ThemeContextType';
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'light',

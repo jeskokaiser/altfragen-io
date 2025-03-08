@@ -1,6 +1,6 @@
 
-import { Question } from '@/types/Question';
-import { FormValues } from '@/components/training/types/FormValues';
+import { Question } from '@/types/models/Question';
+import { FormValues } from '@/types/utils/FormTypes';
 
 export const filterQuestions = (
   questions: Question[],
