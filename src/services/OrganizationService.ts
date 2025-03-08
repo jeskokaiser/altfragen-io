@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseOrganization, DatabaseOrganizationWhitelist } from '@/types/api/database';
 import { AppError, handleApiError } from '@/utils/errorHandler';
+import { RPCParams } from '@/types/supabase-rpc';
 
 /**
  * Gets the organization information for a user
@@ -29,9 +30,10 @@ export const getUserOrganization = async (userId: string): Promise<DatabaseOrgan
     // Try to get organization data with whitelist status using the RPC function
     try {
       const { data: orgData, error: rpcError } = await supabase
-        .rpc('get_organization_by_id', {
-          org_id: userProfile.organization_id
-        } as Record<string, any>);
+        .rpc<RPCParams['get_organization_by_id'], DatabaseOrganization>(
+          'get_organization_by_id', 
+          { org_id: userProfile.organization_id }
+        );
       
       if (rpcError) {
         console.error('Error in RPC call:', rpcError);
@@ -86,9 +88,10 @@ export const isOrganizationWhitelisted = async (organizationId: string): Promise
     // Try to use the RPC function first
     try {
       const { data, error } = await supabase
-        .rpc('is_organization_whitelisted', {
-          org_id: organizationId
-        } as Record<string, any>);
+        .rpc<RPCParams['is_organization_whitelisted'], boolean>(
+          'is_organization_whitelisted', 
+          { org_id: organizationId }
+        );
       
       if (!error) {
         return !!data;
