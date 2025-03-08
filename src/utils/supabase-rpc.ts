@@ -2,35 +2,36 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Wrapper for get_organization_by_id RPC function
- * @param organizationId - The ID of the organization to get
- * @returns The organization data
+ * Executes a Supabase RPC function with the given name and parameters
+ * @param functionName - The name of the RPC function to call
+ * @param params - The parameters to pass to the function
+ * @returns The result of the RPC call
  */
-export async function getOrganizationById(organizationId: string) {
-  const { data, error } = await supabase.rpc('get_organization_by_id', {
-    org_id: organizationId
-  });
+export const executeRpc = async <T>(functionName: string, params: Record<string, any> = {}): Promise<T | null> => {
+  const { data, error } = await supabase.rpc(functionName, params);
   
   if (error) {
-    throw error;
+    console.error(`Error executing RPC function ${functionName}:`, error);
+    return null;
   }
   
-  return data;
-}
+  return data as T;
+};
 
 /**
- * Wrapper for is_organization_whitelisted RPC function
- * @param organizationId - The ID of the organization to check
- * @returns A boolean indicating if the organization is whitelisted
+ * Fetches the organization details for a user
+ * @param userId - The ID of the user
+ * @returns The organization details
  */
-export async function checkOrganizationWhitelisted(organizationId: string) {
-  const { data, error } = await supabase.rpc('is_organization_whitelisted', {
-    org_id: organizationId
-  });
-  
-  if (error) {
-    throw error;
-  }
-  
-  return !!data;
-}
+export const fetchUserOrganization = async (userId: string) => {
+  return executeRpc('get_user_organization', { user_id: userId });
+};
+
+/**
+ * Checks if an organization is whitelisted
+ * @param organizationId - The ID of the organization
+ * @returns Boolean indicating if the organization is whitelisted
+ */
+export const checkOrganizationWhitelist = async (organizationId: string) => {
+  return executeRpc<boolean>('is_organization_whitelisted', { org_id: organizationId });
+};

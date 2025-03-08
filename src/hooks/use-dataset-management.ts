@@ -1,7 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchQuestions, fetchPersonalQuestions, fetchOrganizationalQuestions } from '@/services/QuestionService';
-import { updateDatasetVisibility, getUserOrganization } from '@/services/DatabaseService';
+import { updateDatasetVisibility } from '@/services/DatabaseService';
+import { getUserOrganization } from '@/services/OrganizationService';
 import { Question } from '@/types/models/Question';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useState, useCallback, useMemo } from 'react';
