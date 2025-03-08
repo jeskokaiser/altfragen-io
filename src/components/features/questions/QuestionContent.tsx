@@ -22,9 +22,16 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   wrongAnswers = [],
 }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
+  const [localSelectedAnswer, setLocalSelectedAnswer] = useState(selectedAnswer);
+
+  // Sync local state with parent state
+  useEffect(() => {
+    setLocalSelectedAnswer(selectedAnswer);
+  }, [selectedAnswer]);
 
   useEffect(() => {
     setResetTrigger(prev => prev + 1);
+    setLocalSelectedAnswer(''); // Reset selected answer when question changes
   }, [questionData]);
 
   const highlightNicht = (text: string) => {
@@ -38,7 +45,8 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   };
 
   const handleAnswerSelection = (value: string) => {
-    console.log("Answer selected:", value);
+    console.log("Answer selected in QuestionContent:", value);
+    setLocalSelectedAnswer(value);
     onAnswerChange(value);
   };
 
@@ -54,7 +62,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
         </h3>    
       </div>
       <RadioGroup 
-        value={selectedAnswer} 
+        value={localSelectedAnswer} 
         onValueChange={handleAnswerSelection}
         className="space-y-2"
       >

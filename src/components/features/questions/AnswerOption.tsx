@@ -26,6 +26,9 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
     setIsStrikethrough(!isStrikethrough);
   };
 
+  // Generate a unique ID using both value and text to avoid conflicts
+  const uniqueId = `option-${value}-${text.substring(0, 5).replace(/\s/g, '')}`;
+
   return (
     <div 
       className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} ${
@@ -33,12 +36,11 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
       }`}
     >
       <div className="flex-none">
-        <RadioGroupItem value={value} id={`option-${value}`} />
+        <RadioGroupItem value={value} id={uniqueId} />
       </div>
       <Label 
-        htmlFor={`option-${value}`} 
+        htmlFor={uniqueId} 
         className="flex items-center flex-1 cursor-pointer"
-        onClick={(e) => e.stopPropagation()}
       >
         <span className="font-semibold mr-2">{value})</span>
         <span className={isStrikethrough ? 'line-through' : ''}>

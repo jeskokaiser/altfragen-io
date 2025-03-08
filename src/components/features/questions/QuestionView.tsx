@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Question } from '@/types/models/Question';
 import { AnswerState } from '@/types/models/Answer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,7 +35,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   onQuestionUpdate,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [selectedAnswer, setSelectedAnswer] = useState<string>(userAnswer?.value || '');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -46,21 +46,24 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const { markQuestionUnclear, isLoading: isMarkingUnclear } = useMarkQuestionUnclear();
 
   // Reset state when question changes
-  React.useEffect(() => {
-    setSelectedAnswer('');
+  useEffect(() => {
+    console.log("Question changed, resetting state. User answer:", userAnswer?.value);
+    setSelectedAnswer(userAnswer?.value || '');
     setShowFeedback(false);
     setCurrentQuestion(questionData);
     setIsCorrect(false);
     setWrongAnswers([]);
     setShowSolution(false);
-  }, [questionData]);
+  }, [questionData, userAnswer]);
 
   // Memoize handlers to prevent unnecessary re-renders
   const handleAnswerChange = useCallback((answer: string) => {
+    console.log("Answer changed in QuestionView:", answer);
     setSelectedAnswer(answer);
   }, []);
 
   const handleAnswerSubmitted = useCallback((answer: string, correct: boolean, showSol?: boolean) => {
+    console.log("Answer submitted in QuestionView:", answer, "Correct:", correct);
     onAnswer(answer, wrongAnswers.length === 0, showSol || false);
     setShowFeedback(true);
     setIsCorrect(correct);
@@ -114,7 +117,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     showFeedback,
     selectedAnswer,
     onAnswerChange: handleAnswerChange,
-    userAnswer: userAnswer?.value,
+    userAnswer: userAnswer?.value || '',
     isCorrect,
     wrongAnswers,
     user,
