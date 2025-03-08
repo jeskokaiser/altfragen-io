@@ -27,11 +27,19 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
   };
 
   return (
-    <div className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} ${
-      isWrong ? 'border border-[#ea384c] rounded-md p-2' : ''
-    }`}>
-      <RadioGroupItem value={value} id={`option-${value}`} />
-      <Label htmlFor={`option-${value}`} className="flex items-center flex-1 cursor-pointer">
+    <div 
+      className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} ${
+        isWrong ? 'border border-[#ea384c] rounded-md p-2' : ''
+      }`}
+    >
+      <div className="flex-none">
+        <RadioGroupItem value={value} id={`option-${value}`} />
+      </div>
+      <Label 
+        htmlFor={`option-${value}`} 
+        className="flex items-center flex-1 cursor-pointer"
+        onClick={(e) => e.stopPropagation()}
+      >
         <span className="font-semibold mr-2">{value})</span>
         <span className={isStrikethrough ? 'line-through' : ''}>
           {text}
@@ -39,8 +47,9 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
       </Label>
       <button
         onClick={handleStrikethrough}
-        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+        className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-none"
         aria-label="Toggle strike-through"
+        type="button"
       >
         <X className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-gray-500`} />
       </button>

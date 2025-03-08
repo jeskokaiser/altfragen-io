@@ -37,6 +37,11 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
     );
   };
 
+  const handleAnswerSelection = (value: string) => {
+    console.log("Answer selected:", value);
+    onAnswerChange(value);
+  };
+
   if (!questionData) {
     return <div>Loading question...</div>;
   }
@@ -50,7 +55,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
       </div>
       <RadioGroup 
         value={selectedAnswer} 
-        onValueChange={onAnswerChange}
+        onValueChange={handleAnswerSelection}
         className="space-y-2"
       >
         <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('A')} />
