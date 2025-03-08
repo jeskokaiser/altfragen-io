@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -9,8 +9,8 @@ import FileUpload from '@/components/FileUpload';
 import DashboardHeader from '@/components/layout/DashboardHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { useFetchQuestions } from '@/hooks/use-fetch-questions';
 import { 
-  fetchQuestions, 
   fetchTodayNewCount, 
   fetchTodayPracticeCount, 
   fetchTotalAnsweredCount, 
@@ -21,52 +21,44 @@ const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
-  const { data: questions } = useQuery({
-    queryKey: ['questions'],
-    queryFn: fetchQuestions,
-  });
+  const { 
+    unarchivedQuestions, 
+    groupedQuestions, 
+    isLoading: isQuestionsLoading 
+  } = useFetchQuestions();
 
-  const { data: todayNewCount } = useQuery({
+  const { data: todayNewCount, isLoading: isNewCountLoading } = useQuery({
     queryKey: ['today-new', user?.id],
     queryFn: () => fetchTodayNewCount(user?.id || ''),
     enabled: !!user
   });
 
-  const { data: todayPracticeCount } = useQuery({
+  const { data: todayPracticeCount, isLoading: isPracticeCountLoading } = useQuery({
     queryKey: ['today-practice', user?.id],
     queryFn: () => fetchTodayPracticeCount(user?.id || ''),
     enabled: !!user
   });
 
-  const { data: totalAnsweredCount } = useQuery({
+  const { data: totalAnsweredCount, isLoading: isTotalAnswersLoading } = useQuery({
     queryKey: ['total-answers', user?.id],
     queryFn: () => fetchTotalAnsweredCount(user?.id || ''),
     enabled: !!user
   });
 
-  const { data: totalAttemptsCount } = useQuery({
+  const { data: totalAttemptsCount, isLoading: isTotalAttemptsLoading } = useQuery({
     queryKey: ['total-attempts', user?.id],
     queryFn: () => fetchTotalAttemptsCount(user?.id || ''),
     enabled: !!user
   });
 
-  const unarchivedQuestions = useMemo(() => {
-    if (!questions) return [];
-    return questions.filter(q => !isDatasetArchived(q.filename));
-  }, [questions, isDatasetArchived]);
-
-  const groupedQuestions = useMemo(() => {
-    return unarchivedQuestions.reduce((acc, question) => {
-      if (!acc[question.filename]) {
-        acc[question.filename] = [];
-      }
-      acc[question.filename].push(question);
-      return acc;
-    }, {} as Record<string, Question[]>);
-  }, [unarchivedQuestions]);
+  const isLoading = 
+    isQuestionsLoading || 
+    isNewCountLoading || 
+    isPracticeCountLoading || 
+    isTotalAnswersLoading || 
+    isTotalAttemptsLoading;
 
   const handleDatasetClick = (filename: string) => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
@@ -96,22 +88,28 @@ const Dashboard = () => {
             <CardTitle className="text-lg font-medium">Heute</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <span className="text-sm text-muted-foreground">Neu</span>
-                <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
+            {isLoading ? (
+              <div className="h-16 flex items-center justify-center">
+                <p className="text-muted-foreground">Loading...</p>
               </div>
-              <div className="space-y-1">
-                <span className="text-sm text-muted-foreground">Wiederholt</span>
-                <p className="text-2xl font-bold">
-                  {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
-                </p>
+            ) : (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Neu</span>
+                  <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Wiederholt</span>
+                  <p className="text-2xl font-bold">
+                    {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Gesamt</span>
+                  <p className="text-2xl font-bold">{todayPracticeCount ?? 0}</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <span className="text-sm text-muted-foreground">Gesamt</span>
-                <p className="text-2xl font-bold">{todayPracticeCount ?? 0}</p>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
@@ -119,15 +117,23 @@ const Dashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium">Insgesamt</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Fragen</span>
-              <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Versuche</span>
-              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
-            </div>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-16 flex items-center justify-center">
+                <p className="text-muted-foreground">Loading...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Fragen</span>
+                  <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Versuche</span>
+                  <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -138,11 +144,17 @@ const Dashboard = () => {
             Fragendatenbanken
           </h2>
           <span className="text-sm text-muted-foreground">
-            {unarchivedQuestions?.length || 0} Fragen insgesamt
+            {isQuestionsLoading ? 'Loading...' : `${unarchivedQuestions?.length || 0} Fragen insgesamt`}
           </span>
         </div>
         
-        {unarchivedQuestions && unarchivedQuestions.length > 0 ? (
+        {isQuestionsLoading ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-muted-foreground">Lade Datensätze...</p>
+            </CardContent>
+          </Card>
+        ) : unarchivedQuestions && unarchivedQuestions.length > 0 ? (
           <DatasetList
             groupedQuestions={groupedQuestions}
             selectedFilename={selectedFilename}

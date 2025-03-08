@@ -1,7 +1,6 @@
 
 import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
@@ -9,6 +8,9 @@ import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLoadingState } from '@/hooks/use-loading-state';
+import { showToast } from '@/utils/toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -16,35 +18,34 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
+  
+  const { isLoading, execute } = useLoadingState<Question[]>();
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setError(null);
-    setIsLoading(true);
 
     if (!file) {
       setError("Bitte wähle eine Datei aus");
-      toast.error("Keine Datei ausgewählt", {
+      showToast.error("Keine Datei ausgewählt", {
         description: "Bitte wähle eine CSV-Datei aus"
       });
-      setIsLoading(false);
       return;
     }
 
     if (!file.name.endsWith('.csv')) {
       setError("Bitte wähle eine CSV-Datei aus");
-      toast.error("Ungültiges Dateiformat", {
+      showToast.error("Ungültiges Dateiformat", {
         description: "Es werden nur CSV-Dateien unterstützt"
       });
-      setIsLoading(false);
       return;
     }
 
     console.log('File selected:', file.name);
 
-    try {
+    execute(async () => {
       const { headers, rows } = await parseCSV(file);
       const questions = mapRowsToQuestions(rows, headers, file.name);
 
@@ -52,32 +53,33 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
       if (questions.length === 0) {
         setError("Die CSV-Datei enthält keine gültigen Fragen");
-        toast.error("Keine gültigen Fragen gefunden", {
+        showToast.error("Keine gültigen Fragen gefunden", {
           description: "Überprüfe das Format deiner CSV-Datei"
         });
-        return;
+        return null;
       }
 
       const savedQuestions = await saveQuestions(questions, user?.id || '');
+      
+      // Invalidate questions query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      
       onQuestionsLoaded(savedQuestions);
-      toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
+      showToast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
         description: "Die Fragen wurden erfolgreich gespeichert"
       });
-    } catch (error: any) {
-      console.error('Error processing file:', error);
-      const errorMessage = error.message || "Ein unerwarteter Fehler ist aufgetreten";
-      setError(errorMessage);
-      toast.error("Fehler beim Verarbeiten der Datei", {
-        description: errorMessage
-      });
-    } finally {
-      setIsLoading(false);
-      // Reset the file input
-      if (event.target) {
-        event.target.value = '';
-      }
+      
+      return savedQuestions;
+    }, {
+      showErrorToast: true,
+      errorMessage: "Fehler beim Verarbeiten der Datei"
+    });
+    
+    // Reset the file input
+    if (event.target) {
+      event.target.value = '';
     }
-  }, [user, onQuestionsLoaded]);
+  }, [user, onQuestionsLoaded, execute, queryClient]);
 
   return (
     <div className="flex flex-col items-center gap-4">

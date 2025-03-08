@@ -1,6 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
+import { AppError, handleApiError } from '@/utils/errorHandler';
+import { 
+  mapQuestionToDatabaseQuestion,
+  mapDatabaseQuestionToQuestion
+} from '@/utils/mappers/questionMappers';
 
 /**
  * Saves questions to the database
@@ -9,48 +14,28 @@ import { Question } from '@/types/Question';
  * @returns The saved questions
  */
 export const saveQuestions = async (questions: Question[], userId: string): Promise<Question[]> => {
-  const { error } = await supabase.from('questions').insert(
-    questions.map(q => ({
-      user_id: userId,
-      question: q.question,
-      option_a: q.optionA,
-      option_b: q.optionB,
-      option_c: q.optionC,
-      option_d: q.optionD,
-      option_e: q.optionE,
-      subject: q.subject,
-      correct_answer: q.correctAnswer,
-      comment: q.comment,
-      filename: q.filename,
-      difficulty: q.difficulty
-    }))
-  );
+  try {
+    const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(q, userId));
+    
+    const { error } = await supabase
+      .from('questions')
+      .insert(dbQuestions);
 
-  if (error) throw error;
+    if (error) throw new AppError(error.message, error);
 
-  const { data: insertedQuestions, error: fetchError } = await supabase
-    .from('questions')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(questions.length);
+    const { data: insertedQuestions, error: fetchError } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(questions.length);
 
-  if (fetchError) throw fetchError;
+    if (fetchError) throw new AppError(fetchError.message, fetchError);
 
-  return insertedQuestions.map(q => ({
-    id: q.id,
-    question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
-    subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
-    filename: q.filename,
-    difficulty: q.difficulty,
-  }));
+    return (insertedQuestions || []).map(mapDatabaseQuestionToQuestion);
+  } catch (error) {
+    throw handleApiError(error, 'Failed to save questions');
+  }
 };
 
 /**
@@ -59,24 +44,19 @@ export const saveQuestions = async (questions: Question[], userId: string): Prom
  * @returns The updated question
  */
 export const updateQuestion = async (question: Question): Promise<Question> => {
-  const { error } = await supabase
-    .from('questions')
-    .update({
-      question: question.question,
-      option_a: question.optionA,
-      option_b: question.optionB,
-      option_c: question.optionC,
-      option_d: question.optionD,
-      option_e: question.optionE,
-      subject: question.subject,
-      correct_answer: question.correctAnswer,
-      comment: question.comment,
-      difficulty: question.difficulty
-    })
-    .eq('id', question.id);
+  try {
+    const dbQuestion = mapQuestionToDatabaseQuestion(question);
+    
+    const { error } = await supabase
+      .from('questions')
+      .update(dbQuestion)
+      .eq('id', question.id);
 
-  if (error) throw error;
-  return question;
+    if (error) throw new AppError(error.message, error);
+    return question;
+  } catch (error) {
+    throw handleApiError(error, 'Failed to update question');
+  }
 };
 
 /**
@@ -86,14 +66,18 @@ export const updateQuestion = async (question: Question): Promise<Question> => {
  * @returns A boolean indicating success
  */
 export const markQuestionUnclear = async (questionId: string, isUnclear: boolean): Promise<boolean> => {
-  const { error } = await supabase
-    .from('questions')
-    .update({
-      is_unclear: isUnclear,
-      marked_unclear_at: isUnclear ? new Date().toISOString() : null
-    })
-    .eq('id', questionId);
+  try {
+    const { error } = await supabase
+      .from('questions')
+      .update({
+        is_unclear: isUnclear,
+        marked_unclear_at: isUnclear ? new Date().toISOString() : null
+      })
+      .eq('id', questionId);
 
-  if (error) throw error;
-  return true;
+    if (error) throw new AppError(error.message, error);
+    return true;
+  } catch (error) {
+    throw handleApiError(error, 'Failed to mark question as unclear');
+  }
 };
