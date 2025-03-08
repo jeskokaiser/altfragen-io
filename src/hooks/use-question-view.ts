@@ -1,5 +1,4 @@
-
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Question } from '@/types/models/Question';
 import { AnswerState } from '@/types/models/Answer';
 import { useMarkQuestionUnclear } from '@/hooks/use-mark-question-unclear';
@@ -26,18 +25,23 @@ export const useQuestionView = ({
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
   const [showSolution, setShowSolution] = useState(false);
   const { markQuestionUnclear, isLoading: isMarkingUnclear } = useMarkQuestionUnclear();
+  
+  const lastQuestionIdRef = useRef<string>(questionData.id);
 
-  // Reset state when question changes
   useEffect(() => {
-    console.log("Question changed in useQuestionView, resetting state. User answer:", userAnswer?.value);
-    // Reset selected answer to empty (not to userAnswer.value) to allow for fresh selection
-    setSelectedAnswer('');
-    setShowFeedback(Boolean(userAnswer?.value));
-    setCurrentQuestion(questionData);
-    setIsCorrect(userAnswer?.value === questionData.correctAnswer);
-    setWrongAnswers(userAnswer?.attempts?.filter(a => a !== questionData.correctAnswer) || []);
-    setShowSolution(Boolean(userAnswer?.viewedSolution));
-  }, [questionData.id, userAnswer]); // Only dependencies that should trigger a reset
+    if (lastQuestionIdRef.current !== questionData.id) {
+      console.log("Question changed in useQuestionView, resetting state. User answer:", userAnswer?.value);
+      
+      setSelectedAnswer('');
+      setShowFeedback(Boolean(userAnswer?.value));
+      setCurrentQuestion(questionData);
+      setIsCorrect(userAnswer?.value === questionData.correctAnswer);
+      setWrongAnswers(userAnswer?.attempts?.filter(a => a !== questionData.correctAnswer) || []);
+      setShowSolution(Boolean(userAnswer?.viewedSolution));
+      
+      lastQuestionIdRef.current = questionData.id;
+    }
+  }, [questionData.id, userAnswer]); 
 
   const handleAnswerChange = useCallback((answer: string) => {
     console.log("Answer changed in useQuestionView:", answer);
