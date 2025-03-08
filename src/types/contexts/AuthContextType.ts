@@ -14,4 +14,14 @@ export interface AuthContextType {
    * Loading state while checking authentication
    */
   loading: boolean;
+
+  /**
+   * Error while authenticating
+   */
+  error: Error | null;
+
+  /**
+   * Logout function
+   */
+  logout: () => Promise<{ error: Error | null }>;
 }

@@ -1,32 +1,26 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Settings, LogOut, Moon, Sun, BookOpen, Archive } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useLogout } from '@/hooks/use-logout';
 
 const Header = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { logout } = useLogout();
   
   const handleLogout = async () => {
     try {
       await logout();
       navigate('/auth');
-      toast.success('Successfully logged out');
     } catch (error) {
-      toast.error('Error logging out');
+      console.error('Error logging out:', error);
     }
   };
   

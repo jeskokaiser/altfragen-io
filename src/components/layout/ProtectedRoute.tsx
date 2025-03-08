@@ -6,9 +6,13 @@ import LoadingFallback from '@/components/common/LoadingFallback';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  redirectPath?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  redirectPath = '/auth'
+}) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -18,8 +22,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!user) {
     // Save the intended destination for redirect after login
-    const redirectPath = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/auth?redirect=${redirectPath}`} replace />;
+    const redirectPathWithQuery = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`${redirectPath}?redirect=${redirectPathWithQuery}`} replace />;
   }
 
   return <>{children}</>;

@@ -4,29 +4,47 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { AuthContextType } from '@/types/contexts/AuthContextType';
 import { logError } from '@/utils/errorHandler';
+import { toast } from 'sonner';
 
 /**
  * Context for managing authentication state throughout the application
  */
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ 
+  user: null, 
+  loading: true,
+  error: null,
+  logout: async () => ({ error: null }) 
+});
 
 /**
  * Provider component for the authentication context
  * 
  * @param children - The child components to be wrapped by the provider
  * @returns Auth provider component
- * 
- * @example
- * ```tsx
- * <AuthProvider>
- *   <App />
- * </AuthProvider>
- * ```
  */
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  const logout = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Erfolgreich abgemeldet');
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Ein unbekannter Fehler ist aufgetreten');
+      toast.error('Fehler beim Abmelden');
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -70,13 +88,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const contextValue = useMemo(() => ({
     user,
     loading,
-    error
+    error,
+    logout
   }), [user, loading, error]);
-
-  // Show a loading indicator while initializing
-  if (loading && !user) {
-    console.log('Auth is still loading...');
-  }
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -89,14 +103,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
  * Hook to access the authentication context
  * 
  * @returns The authentication context
- * 
- * @example
- * ```tsx
- * const { user, loading } = useAuth();
- * 
- * if (loading) return <Loading />;
- * if (!user) return <LoginForm />;
- * ```
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
