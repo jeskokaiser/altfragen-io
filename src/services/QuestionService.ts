@@ -10,15 +10,21 @@ import { AppError, handleApiError } from '@/utils/errorHandler';
  */
 export const fetchQuestions = async (): Promise<Question[]> => {
   try {
+    console.log("Fetching questions from Supabase...");
     const { data, error } = await supabase
       .from('questions')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw new AppError(error.message, error);
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new AppError(error.message, error);
+    }
     
+    console.log(`Fetched ${data?.length || 0} questions`);
     return (data || []).map(mapDatabaseQuestionToQuestion);
   } catch (error) {
+    console.error("Error in fetchQuestions:", error);
     throw handleApiError(error, 'Failed to fetch questions');
   }
 };
@@ -84,6 +90,7 @@ export const fetchTotalAnsweredCount = async (userId: string): Promise<number> =
     if (error) throw new AppError(error.message, error);
     return count || 0;
   } catch (error) {
+    console.error("Error in fetchTotalAnsweredCount:", error);
     throw handleApiError(error, 'Failed to fetch total answered count');
   }
 };
@@ -105,6 +112,7 @@ export const fetchTotalAttemptsCount = async (userId: string): Promise<number> =
     const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
     return totalAttempts;
   } catch (error) {
+    console.error("Error in fetchTotalAttemptsCount:", error);
     throw handleApiError(error, 'Failed to fetch total attempts count');
   }
 };

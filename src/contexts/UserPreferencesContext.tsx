@@ -17,7 +17,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     archivedDatasets: []
   });
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Memoize the loadUserPreferencesData function to prevent unnecessary re-renders
   const loadUserPreferencesData = useCallback(async () => {
@@ -36,13 +36,16 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      loadUserPreferencesData();
-    } else {
-      setPreferences({ immediateFeedback: false, archivedDatasets: [] });
-      setIsLoading(false);
+    // Only attempt to load preferences when auth is not loading and we have a user
+    if (!authLoading) {
+      if (user) {
+        loadUserPreferencesData();
+      } else {
+        setPreferences({ immediateFeedback: false, archivedDatasets: [] });
+        setIsLoading(false);
+      }
     }
-  }, [user, loadUserPreferencesData]);
+  }, [user, authLoading, loadUserPreferencesData]);
 
   // Memoize the update function to prevent unnecessary re-renders
   const updatePreferences = useCallback(async (newPreferences: Partial<UserPreferences>) => {
@@ -106,7 +109,16 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
 export const useUserPreferences = () => {
   const context = useContext(UserPreferencesContext);
   if (context === undefined) {
-    throw new Error('useUserPreferences must be used within a UserPreferencesProvider');
+    // Return a default implementation instead of throwing an error
+    console.warn('useUserPreferences must be used within a UserPreferencesProvider');
+    return {
+      preferences: { immediateFeedback: false, archivedDatasets: [] },
+      isLoading: false,
+      updatePreferences: async () => {},
+      archiveDataset: async () => {},
+      restoreDataset: async () => {},
+      isDatasetArchived: () => false
+    };
   }
   return context;
 };

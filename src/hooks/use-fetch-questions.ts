@@ -9,7 +9,9 @@ import { useMemo, useCallback } from 'react';
  * Hook for fetching and filtering questions with optimized caching
  */
 export const useFetchQuestions = () => {
-  const { isDatasetArchived } = useUserPreferences();
+  // Get user preferences safely with a fallback
+  const userPreferences = useUserPreferences();
+  const isDatasetArchived = userPreferences?.isDatasetArchived || (() => false);
   
   const {
     data: questions,
@@ -24,9 +26,9 @@ export const useFetchQuestions = () => {
   });
 
   // Memoized filter function
-  const filterUnarchivedQuestions = useCallback((questions: Question[] | undefined) => {
-    if (!questions) return [];
-    return questions.filter(q => !isDatasetArchived(q.filename));
+  const filterUnarchivedQuestions = useCallback((questionsData: Question[] | undefined) => {
+    if (!questionsData) return [];
+    return questionsData.filter(q => !isDatasetArchived(q.filename));
   }, [isDatasetArchived]);
 
   // Filter out archived questions with memoization
@@ -37,6 +39,12 @@ export const useFetchQuestions = () => {
 
   // Group questions by filename with memoization
   const groupedQuestions = useMemo(() => {
+    const result: Record<string, Question[]> = {};
+    
+    if (!unarchivedQuestions || unarchivedQuestions.length === 0) {
+      return result;
+    }
+    
     return unarchivedQuestions.reduce((acc, question) => {
       if (!acc[question.filename]) {
         acc[question.filename] = [];
@@ -47,8 +55,8 @@ export const useFetchQuestions = () => {
   }, [unarchivedQuestions]);
 
   return {
-    questions,
-    unarchivedQuestions,
+    questions: questions || [],
+    unarchivedQuestions: unarchivedQuestions || [],
     groupedQuestions,
     isLoading,
     error,
