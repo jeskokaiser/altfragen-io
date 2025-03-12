@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import * as pdfParse from 'npm:pdf-parse'
@@ -15,54 +14,78 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { pdfUrl, filename, userId, universityId } = await req.json()
-    
+    console.log('Starting PDF processing...');
+    const { pdfUrl, filename, userId, universityId } = await req.json();
+    console.log('Request params:', { pdfUrl, filename, userId, universityId });
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
+    );
 
+    console.log('Downloading PDF from storage...');
     // Download PDF from temp storage
     const { data: pdfData, error: downloadError } = await supabase
       .storage
       .from('temp_pdfs')
-      .download(pdfUrl)
+      .download(pdfUrl);
 
-    if (downloadError) throw new Error(`Error downloading PDF: ${downloadError.message}`)
+    if (downloadError) {
+      console.error('Download error:', downloadError);
+      throw new Error(`Error downloading PDF: ${downloadError.message}`);
+    }
+    console.log('PDF downloaded successfully');
 
     // Parse PDF
-    const dataBuffer = await pdfData.arrayBuffer()
-    const pdfContent = await pdfParse(dataBuffer)
+    console.log('Starting PDF parsing...');
+    const dataBuffer = await pdfData.arrayBuffer();
+    let pdfContent;
+    try {
+      pdfContent = await pdfParse(dataBuffer);
+      console.log('PDF parsed successfully');
+    } catch (parseError) {
+      console.error('PDF parsing error:', parseError);
+      throw new Error(`Error parsing PDF: ${parseError.message}`);
+    }
 
     // Process text content into questions
-    const questions = processTextContent(pdfContent.text, filename, userId, universityId)
+    console.log('Processing text content...');
+    const questions = processTextContent(pdfContent.text, filename, userId, universityId);
+    console.log(`Processed ${questions.length} questions`);
 
     // Save questions to database
+    console.log('Saving questions to database...');
     const { data: savedQuestions, error: saveError } = await supabase
       .from('questions')
       .insert(questions)
-      .select()
+      .select();
 
-    if (saveError) throw new Error(`Error saving questions: ${saveError.message}`)
+    if (saveError) {
+      console.error('Database save error:', saveError);
+      throw new Error(`Error saving questions: ${saveError.message}`);
+    }
+    console.log(`Successfully saved ${savedQuestions.length} questions`);
 
     // Clean up temp PDF
-    await supabase.storage.from('temp_pdfs').remove([pdfUrl])
+    console.log('Cleaning up temporary PDF...');
+    await supabase.storage.from('temp_pdfs').remove([pdfUrl]);
+    console.log('Temporary PDF cleaned up');
 
     return new Response(
       JSON.stringify({ questions: savedQuestions }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   } catch (error) {
-    console.error('Error processing PDF:', error)
+    console.error('Error processing PDF:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
-})
+});
 
 function processTextContent(text: string, filename: string, userId: string, universityId: string | null): any[] {
   const lines = text.split('\n').filter(line => line.trim())
