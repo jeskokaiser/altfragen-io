@@ -1,190 +1,156 @@
-
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Question } from '@/types/Question';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { DatasetList } from '@/components/features';
-import FileUpload from '@/components/FileUpload';
-import DashboardHeader from '@/components/layout/DashboardHeader';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { useFetchQuestions } from '@/hooks/use-fetch-questions';
-import { 
-  fetchTodayNewCount, 
-  fetchTodayPracticeCount, 
-  fetchTotalAnsweredCount, 
-  fetchTotalAttemptsCount 
-} from '@/services/QuestionService';
+import { fetchQuestions } from '@/services/QuestionService';
+import { Question } from '@/types/models/Question';
+import { logError } from '@/utils/errorHandler';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import DatasetList from '@/components/features/datasets/DatasetList';
+import QuestionsSummary from '@/components/features/dashboard/QuestionsSummary';
+import TrainingSummary from '@/components/features/dashboard/TrainingSummary';
+import UniversityQuestions from '@/components/features/dashboard/UniversityQuestions';
+
+const DashboardHeader = () => {
+  return (
+    <div className="mb-6">
+      <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+      <p className="text-slate-600">
+        Welcome to your Altfragen.io dashboard! Here you can manage your datasets, track your progress, and start new training sessions.
+      </p>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
-
-  const { 
-    unarchivedQuestions, 
-    groupedQuestions, 
-    isLoading: isQuestionsLoading 
-  } = useFetchQuestions();
-
-  const { data: todayNewCount, isLoading: isNewCountLoading } = useQuery({
-    queryKey: ['today-new', user?.id],
-    queryFn: () => fetchTodayNewCount(user?.id || ''),
-    enabled: !!user
-  });
-
-  const { data: todayPracticeCount, isLoading: isPracticeCountLoading } = useQuery({
-    queryKey: ['today-practice', user?.id],
-    queryFn: () => fetchTodayPracticeCount(user?.id || ''),
-    enabled: !!user
-  });
-
-  const { data: totalAnsweredCount, isLoading: isTotalAnswersLoading } = useQuery({
-    queryKey: ['total-answers', user?.id],
-    queryFn: () => fetchTotalAnsweredCount(user?.id || ''),
-    enabled: !!user
-  });
-
-  const { data: totalAttemptsCount, isLoading: isTotalAttemptsLoading } = useQuery({
-    queryKey: ['total-attempts', user?.id],
-    queryFn: () => fetchTotalAttemptsCount(user?.id || ''),
-    enabled: !!user
-  });
-
-  const isLoading = 
-    isQuestionsLoading || 
-    isNewCountLoading || 
-    isPracticeCountLoading || 
-    isTotalAnswersLoading || 
-    isTotalAttemptsLoading;
-
-  const handleDatasetClick = (filename: string) => {
-    setSelectedFilename(selectedFilename === filename ? null : filename);
+  const navigate = useNavigate();
+  const [unclearCount, setUnclearCount] = useState(0);
+  
+  const pageSize = 10;
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  
+  useEffect(() => {
+    const loadQuestions = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchQuestions();
+        setQuestions(data);
+        
+        // Calculate and set the count of unclear questions
+        const unclear = data.filter(q => q.is_unclear === true).length;
+        setUnclearCount(unclear);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to load questions'));
+        logError(err, { component: 'Dashboard', function: 'loadQuestions' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadQuestions();
+  }, []);
+  
+  const handlePageChange = (newPage: number) => {
+    setSearchParams({ page: newPage.toString() });
   };
-
-  const handleStartTraining = (questions: Question[]) => {
-    localStorage.setItem('trainingQuestions', JSON.stringify(questions));
+  
+  const handleDatasetClick = (filename: string) => {
+    setSelectedFilename(prev => prev === filename ? null : filename);
+  };
+  
+  const startTraining = (questions: Question[]) => {
+    // Store questions in sessionStorage for training page
+    sessionStorage.setItem('trainingQuestions', JSON.stringify(questions));
     navigate('/training');
   };
-
-  const handleQuestionsLoaded = () => {
-    // Refresh the questions list
-    window.location.reload();
-  };
-
-  if (!user) {
-    return <div>Loading...</div>;
-  }
+  
+  const groupedQuestions = React.useMemo(() => {
+    return questions.reduce((acc: Record<string, Question[]>, question) => {
+      if (!acc[question.filename]) {
+        acc[question.filename] = [];
+      }
+      acc[question.filename].push(question);
+      return acc;
+    }, {});
+  }, [questions]);
+  
+  const paginatedQuestions = React.useMemo(() => {
+    const dataset = Object.entries(groupedQuestions).find(([filename]) => filename === selectedFilename);
+    if (!dataset) return [];
+    
+    const [, questions] = dataset;
+    return questions.slice(startIndex, endIndex);
+  }, [groupedQuestions, selectedFilename, startIndex, endIndex]);
 
   return (
-    <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
+    <div className="container mx-auto px-4 py-8">
       <DashboardHeader />
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Heute</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-16 flex items-center justify-center">
-                <p className="text-muted-foreground">Loading...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <span className="text-sm text-muted-foreground">Neu</span>
-                  <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-sm text-muted-foreground">Wiederholt</span>
-                  <p className="text-2xl font-bold">
-                    {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-sm text-muted-foreground">Gesamt</span>
-                  <p className="text-2xl font-bold">{todayPracticeCount ?? 0}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Insgesamt</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-16 flex items-center justify-center">
-                <p className="text-muted-foreground">Loading...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-sm text-muted-foreground">Fragen</span>
-                  <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-sm text-muted-foreground">Versuche</span>
-                  <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <QuestionsSummary 
+          totalQuestions={questions.length} 
+          unclearCount={unclearCount}
+          userId={user?.id}
+        />
+        <UniversityQuestions />
+        <TrainingSummary userId={user?.id} />
       </div>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50">
-            Fragendatenbanken
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {isQuestionsLoading ? 'Loading...' : `${unarchivedQuestions?.length || 0} Fragen insgesamt`}
-          </span>
+      
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Datasets</h2>
+        <p className="text-slate-600">
+          Explore your datasets and start training sessions
+        </p>
+      </div>
+      
+      {loading ? (
+        <div className="grid gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="w-full">
+              <CardHeader>
+                <CardTitle><Skeleton className="h-5 w-40" /></CardTitle>
+                <CardDescription><Skeleton className="h-4 w-60" /></CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full mt-2" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        
-        {isQuestionsLoading ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-muted-foreground">Lade Datensätze...</p>
-            </CardContent>
-          </Card>
-        ) : unarchivedQuestions && unarchivedQuestions.length > 0 ? (
-          <DatasetList
-            groupedQuestions={groupedQuestions}
-            selectedFilename={selectedFilename}
-            onDatasetClick={handleDatasetClick}
-            onStartTraining={handleStartTraining}
-          />
-        ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-                Keine Datensätze vorhanden
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Lade neue Datensätze hoch, um loszulegen
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50">
-            Datensatz hochladen
-          </h2>
-        </div>
-        <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
-      </section>
+      ) : error ? (
+        <div className="text-red-500">Error: {error.message}</div>
+      ) : (
+        <DatasetList
+          groupedQuestions={groupedQuestions}
+          selectedFilename={selectedFilename}
+          onDatasetClick={handleDatasetClick}
+          onStartTraining={startTraining}
+        />
+      )}
+      
+      {selectedFilename && groupedQuestions[selectedFilename] && (
+        <Pagination
+          page={page}
+          totalCount={groupedQuestions[selectedFilename].length}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          className="mt-4"
+        />
+      )}
     </div>
   );
 };

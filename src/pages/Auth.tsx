@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,8 @@ import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, ArrowLeft } from "lucide-react";
+import { getUniversityByEmailDomain } from '@/services/UniversityService';
+import { University } from '@/types/models/University';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -17,17 +18,35 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
+  const [university, setUniversity] = useState<University | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for recovery mode and access token in URL parameters
+    const checkUniversity = async () => {
+      if (email && email.includes('@')) {
+        try {
+          const domain = email.split('@')[1];
+          const universityData = await getUniversityByEmailDomain(domain);
+          setUniversity(universityData);
+        } catch (error) {
+          console.error('Error checking university:', error);
+          setUniversity(null);
+        }
+      } else {
+        setUniversity(null);
+      }
+    };
+    
+    checkUniversity();
+  }, [email]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const type = params.get('type');
     const access_token = params.get('access_token');
     const refresh_token = params.get('refresh_token');
     
     if (type === 'recovery' && (access_token || refresh_token)) {
-      // Set the session using the tokens
       supabase.auth.setSession({
         access_token: access_token || '',
         refresh_token: refresh_token || ''
@@ -118,7 +137,6 @@ const Auth = () => {
 
       toast.success('Passwort erfolgreich aktualisiert');
       
-      // After successful password update, sign out the user and redirect to login
       await supabase.auth.signOut();
       setIsResetPassword(false);
       navigate('/auth');
@@ -150,11 +168,19 @@ const Auth = () => {
           return;
         }
 
+        if (university) {
+          toast.info(`Your email will be associated with ${university.name}`);
+        }
+
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
+            data: {
+              email_domain: email.split('@')[1],
+              university_name: university?.name
+            }
           },
         });
 
@@ -177,6 +203,12 @@ const Auth = () => {
         }
 
         toast.success('Erfolgreich registriert und eingeloggt!');
+        
+        if (university) {
+          navigate('/settings');
+          return;
+        }
+        
         navigate('/dashboard');
         return;
       }
@@ -326,6 +358,14 @@ const Auth = () => {
               disabled={loading}
               className="w-full"
             />
+            {isSignUp && university && (
+              <Alert className="mt-2 bg-green-50 text-green-800 border-green-200">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Your email will be associated with {university.name}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
           
           <div className="space-y-2">

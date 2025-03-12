@@ -21,7 +21,9 @@ export const mapDatabaseQuestionToQuestion = (dbQuestion: any): Question => {
     created_at: dbQuestion.created_at,
     difficulty: dbQuestion.difficulty,
     is_unclear: dbQuestion.is_unclear,
-    marked_unclear_at: dbQuestion.marked_unclear_at
+    marked_unclear_at: dbQuestion.marked_unclear_at,
+    visibility: dbQuestion.visibility,
+    university_id: dbQuestion.university_id
   };
 };
 
@@ -40,7 +42,9 @@ export const mapQuestionToDatabaseQuestion = (question: Question, userId?: strin
     correct_answer: question.correctAnswer,
     comment: question.comment,
     difficulty: question.difficulty,
-    filename: question.filename
+    filename: question.filename,
+    visibility: question.visibility || 'private',
+    university_id: question.university_id
   };
 
   // Only include user_id for new questions

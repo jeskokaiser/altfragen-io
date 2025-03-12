@@ -77,4 +77,14 @@ export interface Question {
    * When the question was marked as unclear
    */
   marked_unclear_at?: string;
+  
+  /**
+   * Visibility of the question (private, university, public)
+   */
+  visibility?: string;
+  
+  /**
+   * ID of the university this question is shared with (if visibility = university)
+   */
+  university_id?: string | null;
 }

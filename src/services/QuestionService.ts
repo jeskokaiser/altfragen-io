@@ -1,21 +1,30 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/models/Question';
 import { mapDatabaseQuestionToQuestion } from '@/utils/mappers/questionMappers';
 import { AppError, handleApiError, logError } from '@/utils/errorHandler';
+import { QuestionVisibility } from '@/types/api/database';
 
 /**
- * Fetches all questions from the database
+ * Fetches all questions from the database based on visibility rules
+ * @param visibility Optional filter for question visibility
  * @returns A promise that resolves to an array of Questions
  * @throws {AppError} If there's an error fetching the questions
  */
-export const fetchQuestions = async (): Promise<Question[]> => {
+export const fetchQuestions = async (visibility?: QuestionVisibility): Promise<Question[]> => {
   try {
-    console.log("Fetching questions from Supabase...");
-    const { data, error } = await supabase
+    console.log("Fetching questions from Supabase...", visibility ? `with visibility: ${visibility}` : '');
+    
+    let query = supabase
       .from('questions')
       .select('*')
       .order('created_at', { ascending: false });
+      
+    // If visibility filter is provided, add it to the query
+    if (visibility) {
+      query = query.eq('visibility', visibility);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       logError(error, { source: 'fetchQuestions', message: error.message });
@@ -27,6 +36,35 @@ export const fetchQuestions = async (): Promise<Question[]> => {
   } catch (error) {
     console.error("Error in fetchQuestions:", error);
     throw handleApiError(error, 'Failed to fetch questions');
+  }
+};
+
+/**
+ * Fetches questions shared by a specific university
+ * @param universityId The university ID
+ * @returns A promise that resolves to an array of Questions shared within that university
+ */
+export const fetchUniversityQuestions = async (universityId: string): Promise<Question[]> => {
+  try {
+    console.log(`Fetching questions for university: ${universityId}`);
+    
+    const { data, error } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('university_id', universityId)
+      .eq('visibility', 'university')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      logError(error, { source: 'fetchUniversityQuestions', message: error.message });
+      throw new AppError(`Failed to fetch university questions: ${error.message}`, error);
+    }
+    
+    console.log(`Fetched ${data?.length || 0} university questions`);
+    return (data || []).map(mapDatabaseQuestionToQuestion);
+  } catch (error) {
+    console.error("Error in fetchUniversityQuestions:", error);
+    throw handleApiError(error, 'Failed to fetch university questions');
   }
 };
 
