@@ -21,8 +21,12 @@ const Index = () => {
     }
   };
 
+  // Revised animation variants with proper initial states
   const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { 
+      opacity: 0, 
+      y: 20 
+    },
     visible: { 
       opacity: 1, 
       y: 0,
@@ -72,7 +76,8 @@ const Index = () => {
         <motion.div 
           className="container mx-auto relative z-10"
           initial="hidden"
-          animate="visible"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
           variants={fadeIn}
         >
           <div className="max-w-3xl mx-auto text-center">
@@ -121,8 +126,9 @@ const Index = () => {
           <motion.div 
             className="relative rounded-xl overflow-hidden shadow-2xl mx-auto"
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-purple-500/5 rounded-xl"></div>
             <img 
@@ -145,8 +151,8 @@ const Index = () => {
             className="text-center mb-16"
             initial="hidden"
             whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
             variants={fadeIn}
-            viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">
               Warum Altfragen.io?
@@ -161,7 +167,7 @@ const Index = () => {
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <FeatureCard 
               icon={<TrendingUp className="w-8 h-8" />}
@@ -198,8 +204,8 @@ const Index = () => {
             className="text-center mb-16"
             initial="hidden"
             whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
             variants={fadeIn}
-            viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">
               So funktioniert's
@@ -214,7 +220,7 @@ const Index = () => {
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <StepCard 
               number="1" 
@@ -244,10 +250,9 @@ const Index = () => {
           <motion.div 
             className="relative rounded-xl overflow-hidden shadow-2xl mx-auto"
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <div className="absolute inset-0 bg-gradient-to-tl from-blue-500/5 to-purple-500/5 rounded-xl"></div>
             <img 
@@ -271,7 +276,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
@@ -293,7 +298,7 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">
               Bereit für effizienteres Lernen?
