@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -15,7 +14,7 @@ interface FileUploadProps {
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
-  const { user } = useAuth();
+  const { user, universityId } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +53,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         return;
       }
 
-      const savedQuestions = await saveQuestions(questions, user?.id || '');
+      const savedQuestions = await saveQuestions(questions, user?.id || '', universityId);
       onQuestionsLoaded(savedQuestions);
       toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
         description: "Die Fragen wurden erfolgreich gespeichert"
@@ -67,7 +66,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         description: errorMessage
       });
     }
-  }, [user, onQuestionsLoaded]);
+  }, [user, universityId, onQuestionsLoaded]);
 
   return (
     <div className="flex flex-col items-center gap-4">
