@@ -41,41 +41,10 @@ Altfragen.io is an intelligent platform for efficient exam preparation using pas
 
 ## Getting Started
 
-### Cloud based
-
 - Visit Altfragen.io (Available only in German UI for now)
 - Register with E-Mail
 - Start learning for free :)
 
-### Self hosted
-
-#### Prerequisites
-- Node.js (v16 or higher)
-- npm or bun
-
-#### Installation
-
-1. Clone the repository
-```bash
-git clone https://github.com/jeskokaiser/altfragen-io.git
-cd altfragen-io
-```
-
-2. Install dependencies
-```bash
-npm install
-# or if you use bun
-bun install
-```
-
-3. Start the development server
-```bash
-npm run dev
-# or
-bun run dev
-```
-
-4. Open your browser and navigate to `http://localhost:8080`
 
 ## CSV File Format
 
