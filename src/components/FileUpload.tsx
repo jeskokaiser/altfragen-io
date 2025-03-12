@@ -1,13 +1,13 @@
+
 import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
-import { parseCSV } from '@/utils/CSVParser';
-import { mapRowsToQuestions } from '@/utils/QuestionMapper';
-import { saveQuestions } from '@/services/DatabaseService';
+import { supabase } from '@/integrations/supabase/client';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -16,48 +16,69 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setError(null);
+    setUploadProgress(0);
 
     if (!file) {
       setError("Bitte wähle eine Datei aus");
-      toast.error("Keine Datei ausgewählt", {
-        description: "Bitte wähle eine CSV-Datei aus"
-      });
+      toast.error("Keine Datei ausgewählt");
       return;
     }
 
-    if (!file.name.endsWith('.csv')) {
-      setError("Bitte wähle eine CSV-Datei aus");
+    if (!file.name.endsWith('.pdf')) {
+      setError("Bitte wähle eine PDF-Datei aus");
       toast.error("Ungültiges Dateiformat", {
-        description: "Es werden nur CSV-Dateien unterstützt"
+        description: "Es werden nur PDF-Dateien unterstützt"
       });
       return;
     }
-
-    console.log('File selected:', file.name);
 
     try {
-      const { headers, rows } = await parseCSV(file);
-      const questions = mapRowsToQuestions(rows, headers, file.name);
-
-      console.log('Total valid questions:', questions.length);
-
-      if (questions.length === 0) {
-        setError("Die CSV-Datei enthält keine gültigen Fragen");
-        toast.error("Keine gültigen Fragen gefunden", {
-          description: "Überprüfe das Format deiner CSV-Datei"
+      setIsUploading(true);
+      
+      // Upload PDF to temp storage
+      const timestamp = new Date().getTime();
+      const filePath = `${user?.id}/${timestamp}_${file.name}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('temp_pdfs')
+        .upload(filePath, file, {
+          onUploadProgress: (progress) => {
+            const percent = (progress.loaded / progress.total) * 100;
+            setUploadProgress(percent);
+          }
         });
-        return;
+
+      if (uploadError) throw new Error(`Error uploading PDF: ${uploadError.message}`);
+
+      // Process PDF using Edge function
+      const { data: processedData, error: processError } = await supabase.functions
+        .invoke('process-pdf', {
+          body: {
+            pdfUrl: filePath,
+            filename: file.name,
+            userId: user?.id,
+            universityId
+          }
+        });
+
+      if (processError) throw new Error(`Error processing PDF: ${processError.message}`);
+
+      const { questions } = processedData;
+      
+      if (!questions || questions.length === 0) {
+        throw new Error("Keine Fragen im PDF gefunden");
       }
 
-      const savedQuestions = await saveQuestions(questions, user?.id || '', universityId);
-      onQuestionsLoaded(savedQuestions);
-      toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
-        description: "Die Fragen wurden erfolgreich gespeichert"
-      });
+      onQuestionsLoaded(questions);
+      toast.success(`${questions.length} Fragen aus "${file.name}" geladen`);
+
     } catch (error: any) {
       console.error('Error processing file:', error);
       const errorMessage = error.message || "Ein unerwarteter Fehler ist aufgetreten";
@@ -65,6 +86,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       toast.error("Fehler beim Verarbeiten der Datei", {
         description: errorMessage
       });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   }, [user, universityId, onQuestionsLoaded]);
 
@@ -74,7 +98,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         Lade deine Fragen hoch
       </h2>
       <p className="text-slate-600 dark:text-zinc-300 mb-4">
-        Bitte lade eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeit
+        Bitte lade eine PDF-Datei mit deinen Fragen hoch. Das Format sollte wie folgt sein:
+        <br />
+        Frage: [Fragetext]
+        <br />
+        A) [Option A]
+        <br />
+        B) [Option B]
+        <br />
+        ...
+        <br />
+        Antwort: [Korrekte Antwort]
       </p>
       
       {error && (
@@ -84,21 +118,32 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </Alert>
       )}
 
-      <label htmlFor="csv-upload">
+      {isUploading && (
+        <div className="w-full max-w-xs">
+          <Progress value={uploadProgress} className="mb-2" />
+          <p className="text-sm text-center text-slate-500">
+            Verarbeite PDF... {Math.round(uploadProgress)}%
+          </p>
+        </div>
+      )}
+
+      <label htmlFor="pdf-upload">
         <Button 
           variant="outline" 
           className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
-          onClick={() => document.getElementById('csv-upload')?.click()}
+          onClick={() => document.getElementById('pdf-upload')?.click()}
+          disabled={isUploading}
         >
-          CSV-Datei auswählen
+          {isUploading ? 'Wird hochgeladen...' : 'PDF-Datei auswählen'}
         </Button>
       </label>
       <input
-        id="csv-upload"
+        id="pdf-upload"
         type="file"
-        accept=".csv"
+        accept=".pdf"
         onChange={handleFileUpload}
         className="hidden"
+        disabled={isUploading}
       />
     </div>
   );
