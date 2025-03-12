@@ -45,14 +45,22 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       const timestamp = new Date().getTime();
       const filePath = `${user?.id}/${timestamp}_${file.name}`;
       
+      // Create XHR to track upload progress
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percent = (event.loaded / event.total) * 100;
+          setUploadProgress(percent);
+        }
+      });
+
+      // Upload file using standard options
       const { data: uploadData, error: uploadError } = await supabase
         .storage
         .from('temp_pdfs')
         .upload(filePath, file, {
-          onUploadProgress: (progress) => {
-            const percent = (progress.loaded / progress.total) * 100;
-            setUploadProgress(percent);
-          }
+          cacheControl: '3600',
+          upsert: false
         });
 
       if (uploadError) throw new Error(`Error uploading PDF: ${uploadError.message}`);
