@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for changes on auth state (sign in, sign out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
       setUser(session?.user ?? null);
       
       // Handle email verification event
@@ -62,6 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateEmailVerificationStatus = async (userId: string, isVerified: boolean) => {
     try {
+      console.log('Updating email verification status:', { userId, isVerified });
       // Update the profile with the verification status
       const { error } = await supabase
         .from('profiles')
@@ -78,6 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching user profile for ID:', userId);
       // Fetch user profile information
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -91,9 +94,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      console.log('Profile data retrieved:', profileData);
+
       // Check if email is verified in Supabase Auth
       const { data: authData } = await supabase.auth.getUser();
       const isConfirmedInAuth = authData?.user?.email_confirmed_at !== null;
+      console.log('Auth verification status:', { 
+        isConfirmedInAuth, 
+        emailConfirmedAt: authData?.user?.email_confirmed_at,
+        profileVerified: profileData.is_email_verified
+      });
       
       // If email is confirmed in auth but not in profiles, update profiles
       if (isConfirmedInAuth && !profileData.is_email_verified) {
@@ -104,6 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       if (profileData.university_id) {
+        console.log('University ID found:', profileData.university_id);
         setUniversityId(profileData.university_id);
         
         // Fetch university name if university_id exists
@@ -116,9 +127,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (universityError) {
           console.error('Error fetching university:', universityError);
         } else {
+          console.log('University data retrieved:', universityData);
           setUniversityName(universityData.name);
         }
       } else {
+        console.log('No university ID found in profile');
         setUniversityId(null);
         setUniversityName(null);
       }

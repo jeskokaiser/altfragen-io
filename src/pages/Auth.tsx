@@ -116,6 +116,8 @@ const Auth = () => {
         setIsCheckingDomain(true);
         const emailDomain = email.split('@')[1];
         
+        console.log('Checking email domain:', emailDomain);
+        
         if (!emailDomain) return;
         
         const { data, error } = await supabase
@@ -124,12 +126,17 @@ const Auth = () => {
           .eq('email_domain', emailDomain)
           .single();
         
+        console.log('University lookup result:', { data, error });
+        
         if (error) {
           if (error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
             console.error('Error checking university domain:', error);
+          } else {
+            console.log('No matching university found for domain:', emailDomain);
           }
           setUniversityInfo(null);
         } else if (data) {
+          console.log('University found:', data);
           setUniversityInfo({ id: data.id, name: data.name });
         }
       } catch (error) {
@@ -139,6 +146,7 @@ const Auth = () => {
       }
     };
     
+    console.log('Email changed:', email, 'isSignUp:', isSignUp);
     const debounceTimer = setTimeout(checkEmailDomain, 500);
     return () => clearTimeout(debounceTimer);
   }, [email, isSignUp]);
