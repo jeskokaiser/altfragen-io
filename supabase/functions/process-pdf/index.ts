@@ -85,6 +85,7 @@ function processTextContent(text: string, filename: string, userId: string, univ
       currentQuestion = {
         question: questionText,
         filename,
+        exam_name: filename, // Add the filename as exam_name
         user_id: userId,
         university_id: universityId,
         visibility: universityId ? 'university' : 'private',
