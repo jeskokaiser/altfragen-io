@@ -85,34 +85,25 @@ serve(async (req: Request) => {
       return errorResponse('Failed to create Supabase client: ' + clientError.message, 500);
     }
 
-    // Validate that the temp_pdfs bucket exists
+    // No longer attempt to create bucket - assume it exists
+    // Instead, check if we can access it and provide clear errors
+    console.log('Checking if temp_pdfs bucket is accessible...');
     try {
-      console.log('Checking if temp_pdfs bucket exists...');
       const { data: buckets, error: bucketsError } = await supabase
         .storage
         .listBuckets();
       
       if (bucketsError) {
         console.error('Error listing buckets:', bucketsError);
-        return errorResponse('Error listing storage buckets', 500);
+        return errorResponse('Cannot access storage: ' + bucketsError.message, 500);
       }
       
       const tempBucketExists = buckets.some(bucket => bucket.name === 'temp_pdfs');
       if (!tempBucketExists) {
-        console.error('temp_pdfs bucket does not exist!');
-        // Create the bucket if it doesn't exist
-        const { error: createBucketError } = await supabase.storage.createBucket('temp_pdfs', {
-          public: false
-        });
-        
-        if (createBucketError) {
-          console.error('Failed to create temp_pdfs bucket:', createBucketError);
-          return errorResponse('Failed to create required storage bucket', 500);
-        }
-        console.log('Created temp_pdfs bucket');
-      } else {
-        console.log('temp_pdfs bucket exists');
+        console.error('temp_pdfs bucket does not exist and needs to be created via SQL migration');
+        return errorResponse('Storage not properly configured. Please contact support.', 500);
       }
+      console.log('temp_pdfs bucket is accessible');
     } catch (bucketError) {
       console.error('Error checking temp_pdfs bucket:', bucketError);
       return errorResponse('Error checking storage configuration: ' + bucketError.message, 500);
@@ -125,16 +116,49 @@ serve(async (req: Request) => {
     }, 50000); // 50 second timeout
 
     console.log('Downloading PDF from storage...');
-    // Download PDF from temp storage
-    const { data: pdfData, error: downloadError } = await supabase
-      .storage
-      .from('temp_pdfs')
-      .download(pdfUrl);
-
-    if (downloadError) {
-      console.error('Download error:', downloadError);
+    // Download PDF from temp storage - add retry logic
+    let pdfData;
+    let downloadError;
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await supabase
+          .storage
+          .from('temp_pdfs')
+          .download(pdfUrl);
+        
+        if (result.error) {
+          console.error(`Download attempt ${attempt} failed:`, result.error);
+          downloadError = result.error;
+          
+          if (attempt < maxRetries) {
+            console.log(`Retrying download (attempt ${attempt + 1}/${maxRetries})...`);
+            // Wait a bit before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+            continue;
+          }
+        } else {
+          pdfData = result.data;
+          downloadError = null;
+          console.log(`PDF downloaded successfully on attempt ${attempt}`);
+          break;
+        }
+      } catch (error) {
+        console.error(`Download attempt ${attempt} exception:`, error);
+        downloadError = error;
+        
+        if (attempt < maxRetries) {
+          console.log(`Retrying download after exception (attempt ${attempt + 1}/${maxRetries})...`);
+          await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+        }
+      }
+    }
+    
+    if (downloadError || !pdfData) {
+      console.error('All download attempts failed:', downloadError);
       clearTimeout(processingTimeout);
-      return errorResponse(`Error downloading PDF: ${downloadError.message}`);
+      return errorResponse(`Error downloading PDF after ${maxRetries} attempts: ${downloadError?.message || 'Unknown error'}`);
     }
     
     console.log('PDF downloaded successfully, size:', pdfData.size, 'bytes');
