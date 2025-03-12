@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,8 +43,7 @@ const Dashboard = () => {
         created_at: q.created_at,
         difficulty: q.difficulty,
         is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at,
-        visibility: q.visibility as 'private' | 'university'
+        marked_unclear_at: q.marked_unclear_at
       })) as Question[];
     },
   });

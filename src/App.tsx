@@ -6,15 +6,11 @@ import { UserPreferencesProvider } from "./contexts/UserPreferencesContext";
 import MainLayout from "./components/layout/MainLayout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import { useVerifyEmail } from './hooks/useVerifyEmail';
 
 // Create a client
 const queryClient = new QueryClient();
 
 function App() {
-  // Call the verification hook
-  useVerifyEmail();
-  
   return (
     <BrowserRouter>
       <ThemeProvider>

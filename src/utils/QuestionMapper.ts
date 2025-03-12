@@ -1,4 +1,3 @@
-
 import { Question } from '@/types/Question';
 
 export const mapRowsToQuestions = (rows: any[], headers: string[], filename: string): Question[] => {
@@ -27,8 +26,7 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       correctAnswer: rowData['Antwort'] || '',
       comment: rowData['Kommentar'] || '',
       filename: filename,
-      difficulty: parseInt(rowData['Schwierigkeit']) || 3, // Default to 3 if not provided
-      visibility: 'private' as 'private' // Explicitly type as 'private'
+      difficulty: parseInt(rowData['Schwierigkeit']) || 3 // Default to 3 if not provided
     };
   });
 

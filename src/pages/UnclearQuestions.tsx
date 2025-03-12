@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -45,8 +44,7 @@ const UnclearQuestions = () => {
         filename: q.filename,
         is_unclear: q.is_unclear,
         difficulty: q.difficulty,
-        marked_unclear_at: q.marked_unclear_at,
-        visibility: q.visibility as 'private' | 'university'
+        marked_unclear_at: q.marked_unclear_at
       })) as Question[];
     },
     enabled: !!user && !!filename
@@ -124,15 +122,13 @@ const UnclearQuestions = () => {
                   {question.comment && (
                     <p className="mt-2"><strong>Kommentar:</strong> {question.comment}</p>
                   )}
-                  {question.marked_unclear_at && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Als unklar markiert am: {new Date(question.marked_unclear_at).toLocaleDateString()}
-                    </p>
-                  )}
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Als unklar markiert am: {new Date(question.marked_unclear_at!).toLocaleDateString()}
+                  </p>
                   <div className="flex gap-2 mt-4">
                     <Button 
                       variant="secondary"
-                      onClick={() => handleRemoveUnclear(question.id!)}
+                      onClick={() => handleRemoveUnclear(question.id)}
                     >
                       Entfernen
                     </Button>
