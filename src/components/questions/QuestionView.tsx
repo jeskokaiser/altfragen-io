@@ -107,6 +107,13 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   };
 
+  // Check if user can edit the question - user owns the question or it's shared with their university
+  const canEditQuestion = user && (
+    user.id === currentQuestion.user_id || 
+    (user.user_metadata?.university_id === currentQuestion.university_id && 
+     currentQuestion.visibility === 'university')
+  );
+
   if (!currentQuestion) {
     return <div>Loading question...</div>;
   }
@@ -129,7 +136,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         wrongAnswers={wrongAnswers}
         user={user}
         onAnswerSubmitted={handleAnswerSubmitted}
-        onEditClick={() => setIsEditModalOpen(true)}
+        onEditClick={canEditQuestion ? () => setIsEditModalOpen(true) : undefined}
         onMarkUnclear={handleMarkUnclear}
       />
 
@@ -143,12 +150,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         showSolution={showSolution}
       />
 
-      <EditQuestionModal
-        question={currentQuestion}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onQuestionUpdated={handleQuestionUpdate}
-      />
+      {canEditQuestion && (
+        <EditQuestionModal
+          question={currentQuestion}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onQuestionUpdated={handleQuestionUpdate}
+        />
+      )}
     </div>
   );
 };

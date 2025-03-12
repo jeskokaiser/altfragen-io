@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface DifficultyControlsProps {
   questionId: string;
   difficulty: number;
-  onEditClick: () => void;
+  onEditClick?: () => void;
 }
 
 const DifficultyControls: React.FC<DifficultyControlsProps> = ({
@@ -79,7 +79,7 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
           difficulty={currentDifficulty} 
           attemptsCount={attemptsCount}
         />
-        <EditButton onClick={onEditClick} />
+        {onEditClick && <EditButton onClick={onEditClick} />}
       </div>
       
       <DifficultyToggle 

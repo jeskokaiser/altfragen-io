@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -14,12 +16,16 @@ import { QuestionField } from './edit-question/QuestionField';
 import { OptionsFields } from './edit-question/OptionsFields';
 import { SubjectField } from './edit-question/SubjectField';
 import { DifficultyField } from './edit-question/DifficultyField';
+import { useAuth } from '@/contexts/AuthContext';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
 interface EditQuestionModalProps {
   question: Question;
   isOpen: boolean;
   onClose: () => void;
   onQuestionUpdated: (updatedQuestion: Question) => void;
 }
+
 const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   question,
   isOpen,
@@ -36,7 +42,13 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     setValue,
     watch
   } = useForm<FormData>();
+  
   const correctAnswer = watch('correctAnswer');
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(
+    question.visibility || 'private'
+  );
+  const { user } = useAuth();
+  
   useEffect(() => {
     if (question) {
       reset({
@@ -51,8 +63,10 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         subject: question.subject,
         difficulty: question.difficulty?.toString() || '3'
       });
+      setVisibility(question.visibility || 'private');
     }
   }, [question, reset]);
+
   const onSubmit = async (data: FormData) => {
     try {
       const {
@@ -68,12 +82,15 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         correct_answer: data.correctAnswer,
         comment: data.comment,
         subject: data.subject,
-        difficulty: parseInt(data.difficulty)
+        difficulty: parseInt(data.difficulty),
+        visibility: visibility
       }).eq('id', question.id).select().single();
+
       if (error) {
         console.error('Error updating question:', error);
         throw error;
       }
+
       if (updatedQuestion) {
         const mappedQuestion: Question = {
           id: updatedQuestion.id,
@@ -87,7 +104,9 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           comment: updatedQuestion.comment,
           subject: updatedQuestion.subject,
           filename: updatedQuestion.filename,
-          difficulty: updatedQuestion.difficulty
+          difficulty: updatedQuestion.difficulty,
+          university_id: updatedQuestion.university_id,
+          visibility: updatedQuestion.visibility as 'private' | 'university' | 'public'
         };
         onQuestionUpdated(mappedQuestion);
         toast.info('Frage erfolgreich aktualisiert');
@@ -98,11 +117,18 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       toast.error('Fehler beim Aktualisieren der Frage');
     }
   };
+
   const handleMoveToComment = () => {
     const currentComment = watch('comment') || '';
     setValue('comment', `${correctAnswer}\n${currentComment}`);
     setValue('correctAnswer', '');
   };
+
+  // Determine if user can change visibility
+  // Users can only change visibility of their own questions
+  const canChangeVisibility = question.university_id === null || 
+                              (user && user.id === question.user_id);
+
   return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
@@ -132,6 +158,29 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
             </div>
 
             <SubjectField defaultValue={question.subject} onValueChange={value => setValue('subject', value)} />
+            
+            <div>
+              <Label htmlFor="visibility">Sichtbarkeit</Label>
+              <Select 
+                disabled={!canChangeVisibility}
+                value={visibility} 
+                onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sichtbarkeit wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="private">Privat (nur für dich)</SelectItem>
+                  <SelectItem value="university">Universität (alle an deiner Uni)</SelectItem>
+                  <SelectItem value="public">Öffentlich (alle Nutzer)</SelectItem>
+                </SelectContent>
+              </Select>
+              {!canChangeVisibility && question.visibility === 'university' && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Diese Frage wird mit deiner Universität geteilt. Du kannst die Sichtbarkeit nicht ändern.
+                </p>
+              )}
+            </div>
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>
@@ -146,4 +195,5 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       </DialogContent>
     </Dialog>;
 };
+
 export default EditQuestionModal;

@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Copy } from 'lucide-react';
+import { AlertCircle, Copy, GraduationCap, Globe, Lock } from 'lucide-react';
 import DifficultyControls from '../training/DifficultyControls';
 import { showToast } from '@/utils/toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Question } from '@/types/Question';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface QuestionControlsProps {
   question: Question;
-  onEditClick: () => void;
+  onEditClick?: () => void;
   onMarkUnclear: () => void;
 }
 
@@ -51,6 +52,28 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
     }
   };
 
+  const getVisibilityIcon = () => {
+    switch (question.visibility) {
+      case 'university':
+        return <GraduationCap className="h-4 w-4 text-blue-500" />;
+      case 'public':
+        return <Globe className="h-4 w-4 text-green-500" />;
+      default:
+        return <Lock className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getVisibilityTooltip = () => {
+    switch (question.visibility) {
+      case 'university':
+        return "Mit deiner Universität geteilt";
+      case 'public':
+        return "Öffentlich für alle Nutzer";
+      default:
+        return "Privat (nur für dich)";
+    }
+  };
+
   return (
     <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
       <div className="flex-grow">
@@ -60,6 +83,20 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
           onEditClick={onEditClick}
         />
       </div>
+      <TooltipProvider>
+        <div className="flex items-center gap-2 mb-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center justify-center w-6 h-6">
+                {getVisibilityIcon()}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{getVisibilityTooltip()}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
       <div className="flex gap-2">
         <Button
           variant="outline"
