@@ -41,29 +41,26 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     try {
       setIsUploading(true);
       
-      // Upload PDF to temp storage
+      // Generate a unique file path
       const timestamp = new Date().getTime();
       const filePath = `${user?.id}/${timestamp}_${file.name}`;
       
-      // Create XHR to track upload progress
-      const xhr = new XMLHttpRequest();
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const percent = (event.loaded / event.total) * 100;
-          setUploadProgress(percent);
-        }
-      });
+      // Create FormData for upload tracking
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Upload file using standard options
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
+      // Upload file with upload tracking
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('temp_pdfs')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
 
-      if (uploadError) throw new Error(`Error uploading PDF: ${uploadError.message}`);
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error(`Error uploading PDF: ${uploadError.message}`);
+      }
 
       // Process PDF using Edge function
       const { data: processedData, error: processError } = await supabase.functions
@@ -76,7 +73,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           }
         });
 
-      if (processError) throw new Error(`Error processing PDF: ${processError.message}`);
+      if (processError) {
+        console.error('Process error:', processError);
+        throw new Error(`Error processing PDF: ${processError.message}`);
+      }
 
       const { questions } = processedData;
       
