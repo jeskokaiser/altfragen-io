@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation, Routes, Route, useRoutes } from 'react-router-dom';
+import { useLocation, useRoutes } from 'react-router-dom';
 import Header from './Header/Header';
 import Footer from '@/components/Footer';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
@@ -12,7 +12,7 @@ const MainLayout = () => {
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/auth';
   const isTrainingPage = location.pathname.includes('/training');
-  const shouldShowFooter = !isTrainingPage && !location.pathname.includes('/results');
+  const shouldShowFooter = !isTrainingPage && !isLandingPage && !location.pathname.includes('/results');
   const shouldShowBreadcrumbs = !isLandingPage && !isAuthPage;
   
   // Use the routes configuration
