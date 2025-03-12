@@ -45,7 +45,10 @@ export const saveQuestions = async (questions: Question[], userId: string, visib
     comment: q.comment,
     filename: q.filename,
     difficulty: q.difficulty,
-    visibility: q.visibility
+    visibility: q.visibility as 'private' | 'university',
+    created_at: q.created_at,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at
   }));
 };
 
@@ -77,7 +80,10 @@ export const getUniversityQuestions = async (universityId: string) => {
     filename: q.filename,
     difficulty: q.difficulty,
     userId: q.user_id,
-    visibility: q.visibility
+    visibility: q.visibility as 'private' | 'university',
+    created_at: q.created_at,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at
   }));
 };
 

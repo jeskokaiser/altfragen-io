@@ -10,12 +10,14 @@ import ShareQuestionDialog from '../university/ShareQuestionDialog';
 interface QuestionControlsProps {
   question: Question;
   onMarkUnclear: () => void;
+  onEditClick?: () => void;
   onVisibilityChange?: (visibility: 'private' | 'university') => void;
 }
 
 const QuestionControls: React.FC<QuestionControlsProps> = ({ 
   question, 
   onMarkUnclear,
+  onEditClick,
   onVisibilityChange
 }) => {
   const { user } = useAuth();
@@ -34,7 +36,7 @@ const QuestionControls: React.FC<QuestionControlsProps> = ({
         Als unklar markieren
       </Button>
       
-      <EditButton question={question} />
+      {onEditClick && <EditButton onClick={onEditClick} />}
       
       {showShareButton && (
         <ShareQuestionDialog 

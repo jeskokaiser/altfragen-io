@@ -14,4 +14,7 @@ export interface Question {
   filename: string;
   userId?: string;
   visibility?: 'private' | 'university';
+  is_unclear?: boolean;
+  marked_unclear_at?: string;
+  created_at?: string;
 }
