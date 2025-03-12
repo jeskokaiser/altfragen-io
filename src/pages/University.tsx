@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -80,7 +79,7 @@ const University: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Alert variant="warning">
+            <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 You need to verify your university email to access university-shared questions.
