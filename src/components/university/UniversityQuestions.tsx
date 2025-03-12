@@ -16,6 +16,7 @@ const UniversityQuestions = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -77,7 +78,9 @@ const UniversityQuestions = () => {
           </Alert>
         ) : questions.length === 0 ? (
           <div className="text-center p-4">
-            <p className="text-muted-foreground">Keine Universitätsfragen gefunden.</p>
+            <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
+              Keine Universitätsfragen gefunden.
+            </p>
             <p className="text-sm mt-2">
               Teilen Sie Ihre Fragen mit Ihrer Universität, damit sie hier erscheinen.
             </p>
@@ -86,6 +89,7 @@ const UniversityQuestions = () => {
           <div>
             <QuestionList 
               questions={questions} 
+              isSelected={true}
               isLoading={loading}
               showFilters={true}
             />

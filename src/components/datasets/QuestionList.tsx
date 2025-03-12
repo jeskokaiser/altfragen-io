@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Question } from '@/types/Question';
 import { CardContent } from "@/components/ui/card";
@@ -6,10 +7,28 @@ import { Separator } from "@/components/ui/separator";
 interface QuestionListProps {
   questions: Question[];
   isSelected: boolean;
+  isLoading?: boolean;
+  showFilters?: boolean;
 }
 
-const QuestionList: React.FC<QuestionListProps> = ({ questions, isSelected }) => {
-  if (!isSelected) return null;
+const QuestionList: React.FC<QuestionListProps> = ({ 
+  questions, 
+  isSelected,
+  isLoading = false,
+  showFilters = false
+}) => {
+  if (!isSelected && !showFilters) return null;
+  
+  if (isLoading) {
+    return (
+      <>
+        <Separator />
+        <CardContent className="pt-6">
+          <div className="flex justify-center py-4">Loading...</div>
+        </CardContent>
+      </>
+    );
+  }
 
   return (
     <>
