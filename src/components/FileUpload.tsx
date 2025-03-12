@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Question } from '@/types/Question';
@@ -15,14 +15,16 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId } = useAuth();
-  const [error, setError] = React.useState<string | null>(null);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingStage, setProcessingStage] = useState<string | null>(null);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setError(null);
     setUploadProgress(0);
+    setProcessingStage(null);
 
     if (!file) {
       setError("Bitte wähle eine Datei aus");
@@ -40,16 +42,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
     try {
       setIsUploading(true);
+      setProcessingStage("Datei wird hochgeladen...");
       
       // Generate a unique file path
       const timestamp = new Date().getTime();
       const filePath = `${user?.id}/${timestamp}_${file.name}`;
       
-      // Create FormData for upload tracking
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Upload file with upload tracking
+      // Upload file
+      setUploadProgress(10);
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('temp_pdfs')
         .upload(filePath, file, {
@@ -59,8 +59,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        throw new Error(`Error uploading PDF: ${uploadError.message}`);
+        throw new Error(`Fehler beim Hochladen der PDF: ${uploadError.message}`);
       }
+      
+      setUploadProgress(40);
+      setProcessingStage("PDF wird verarbeitet...");
 
       // Process PDF using Edge function
       const { data: processedData, error: processError } = await supabase.functions
@@ -75,8 +78,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
       if (processError) {
         console.error('Process error:', processError);
-        throw new Error(`Error processing PDF: ${processError.message}`);
+        throw new Error(`Fehler beim Verarbeiten der PDF: ${processError.message}`);
       }
+
+      setUploadProgress(90);
+      setProcessingStage("Fragen werden geladen...");
 
       const { questions } = processedData;
       
@@ -84,6 +90,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         throw new Error("Keine Fragen im PDF gefunden");
       }
 
+      setUploadProgress(100);
       onQuestionsLoaded(questions);
       toast.success(`${questions.length} Fragen aus "${file.name}" geladen`);
 
@@ -97,6 +104,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
+      setProcessingStage(null);
     }
   }, [user, universityId, onQuestionsLoaded]);
 
@@ -120,17 +128,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       </p>
       
       {error && (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive" className="mb-4 w-full max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {isUploading && (
-        <div className="w-full max-w-xs">
+        <div className="w-full max-w-md">
           <Progress value={uploadProgress} className="mb-2" />
           <p className="text-sm text-center text-slate-500">
-            Verarbeite PDF... {Math.round(uploadProgress)}%
+            {processingStage || "Wird verarbeitet..."} {Math.round(uploadProgress)}%
           </p>
         </div>
       )}

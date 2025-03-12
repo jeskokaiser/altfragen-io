@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import * as pdfParse from 'npm:pdf-parse'
@@ -13,14 +14,54 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  console.log('Function invoked: process-pdf');
+
   try {
-    console.log('Starting PDF processing...');
-    const { pdfUrl, filename, userId, universityId } = await req.json();
+    // Parse request body with error handling
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log('Request body parsed successfully');
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body: ' + parseError.message }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const { pdfUrl, filename, userId, universityId } = requestBody;
     console.log('Request params:', { pdfUrl, filename, userId, universityId });
 
+    // Validate required parameters
+    if (!pdfUrl || !filename || !userId) {
+      const missingParams = [];
+      if (!pdfUrl) missingParams.push('pdfUrl');
+      if (!filename) missingParams.push('filename');
+      if (!userId) missingParams.push('userId');
+      
+      console.error('Missing required parameters:', missingParams);
+      return new Response(
+        JSON.stringify({ error: `Missing required parameters: ${missingParams.join(', ')}` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Use service role key for admin access to bypass RLS policies
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          persistSession: false,
+        }
+      }
     );
 
     console.log('Downloading PDF from storage...');
@@ -32,9 +73,26 @@ serve(async (req: Request) => {
 
     if (downloadError) {
       console.error('Download error:', downloadError);
-      throw new Error(`Error downloading PDF: ${downloadError.message}`);
+      return new Response(
+        JSON.stringify({ error: `Error downloading PDF: ${downloadError.message}` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
-    console.log('PDF downloaded successfully');
+    console.log('PDF downloaded successfully, size:', pdfData.size, 'bytes');
+
+    if (!pdfData || pdfData.size === 0) {
+      console.error('PDF data is empty');
+      return new Response(
+        JSON.stringify({ error: 'PDF data is empty or invalid' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Parse PDF
     console.log('Starting PDF parsing...');
@@ -42,16 +100,44 @@ serve(async (req: Request) => {
     let pdfContent;
     try {
       pdfContent = await pdfParse(dataBuffer);
-      console.log('PDF parsed successfully');
+      console.log('PDF parsed successfully, text length:', pdfContent.text.length);
     } catch (parseError) {
       console.error('PDF parsing error:', parseError);
-      throw new Error(`Error parsing PDF: ${parseError.message}`);
+      return new Response(
+        JSON.stringify({ error: `Error parsing PDF: ${parseError.message}` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Process text content into questions
     console.log('Processing text content...');
-    const questions = processTextContent(pdfContent.text, filename, userId, universityId);
-    console.log(`Processed ${questions.length} questions`);
+    let questions;
+    try {
+      questions = processTextContent(pdfContent.text, filename, userId, universityId);
+      console.log(`Processed ${questions.length} questions`);
+      
+      if (questions.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'No questions found in the PDF. Please check PDF format.' }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } catch (processError) {
+      console.error('Error processing text content:', processError);
+      return new Response(
+        JSON.stringify({ error: `Error processing PDF content: ${processError.message}` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Save questions to database
     console.log('Saving questions to database...');
@@ -62,25 +148,35 @@ serve(async (req: Request) => {
 
     if (saveError) {
       console.error('Database save error:', saveError);
-      throw new Error(`Error saving questions: ${saveError.message}`);
+      return new Response(
+        JSON.stringify({ error: `Error saving questions: ${saveError.message}` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
     console.log(`Successfully saved ${savedQuestions.length} questions`);
 
     // Clean up temp PDF
     console.log('Cleaning up temporary PDF...');
-    await supabase.storage.from('temp_pdfs').remove([pdfUrl]);
-    console.log('Temporary PDF cleaned up');
+    const { error: removeError } = await supabase.storage.from('temp_pdfs').remove([pdfUrl]);
+    if (removeError) {
+      console.warn('Warning: Failed to clean up temporary PDF:', removeError);
+    } else {
+      console.log('Temporary PDF cleaned up');
+    }
 
     return new Response(
       JSON.stringify({ questions: savedQuestions }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error processing PDF:', error);
+    console.error('Unhandled error processing PDF:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: `Unexpected error: ${error.message}` }),
       { 
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
