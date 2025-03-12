@@ -17,7 +17,6 @@ const Tutorial = lazy(() => import('@/pages/Tutorial'));
 const Changelog = lazy(() => import('@/pages/Changelog'));
 const Terms = lazy(() => import('@/pages/Terms'));
 const Impressum = lazy(() => import('@/pages/Impressum'));
-const University = lazy(() => import('@/pages/University'));
 
 // Wrap lazy-loaded components with Suspense
 const LazyLoad = (Component: React.ComponentType<any>) => (props: any) => (
@@ -71,10 +70,6 @@ const protectedRoutes: RouteObject[] = [
   {
     path: '/unclear-questions/:filename',
     element: <ProtectedRoute>{LazyLoad(UnclearQuestions)({})}</ProtectedRoute>
-  },
-  {
-    path: '/university',
-    element: <ProtectedRoute>{LazyLoad(University)({})}</ProtectedRoute>
   },
   // Training routes group
   {

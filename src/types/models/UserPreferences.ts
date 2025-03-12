@@ -12,9 +12,4 @@ export interface UserPreferences {
    * Array of dataset filenames that are archived
    */
   archivedDatasets: string[];
-  
-  /**
-   * Whether dark mode is enabled
-   */
-  darkMode: boolean;
 }

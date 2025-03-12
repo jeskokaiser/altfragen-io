@@ -5,7 +5,6 @@ import { Question } from '@/types/models/Question';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useMemo, useCallback } from 'react';
 import { logError } from '@/utils/errorHandler';
-import { QuestionVisibility } from '@/types/api/database';
 
 /**
  * Hook for fetching and filtering questions with optimized caching and error handling
@@ -27,7 +26,7 @@ import { QuestionVisibility } from '@/types/api/database';
  * if (error) return <ErrorDisplay error={error} />;
  * ```
  */
-export const useFetchQuestions = (visibility?: QuestionVisibility) => {
+export const useFetchQuestions = () => {
   // Get user preferences safely with a fallback
   const userPreferencesContext = useUserPreferences();
   
@@ -44,8 +43,8 @@ export const useFetchQuestions = (visibility?: QuestionVisibility) => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['questions', visibility], // Add visibility to queryKey so it refetches when visibility changes
-    queryFn: async () => fetchQuestions(visibility),
+    queryKey: ['questions'],
+    queryFn: fetchQuestions,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes (renamed from cacheTime in v5)
     retry: 2, // Retry failed requests up to 2 times

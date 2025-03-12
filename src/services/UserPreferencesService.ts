@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserPreferences } from '@/types/models/UserPreferences';
+import { UserPreferences } from '@/types/UserPreferences';
 
 /**
  * Loads user preferences from the database
@@ -21,15 +21,13 @@ export const loadUserPreferences = async (userId: string): Promise<UserPreferenc
   if (existingPrefs) {
     return {
       immediateFeedback: existingPrefs.immediate_feedback,
-      archivedDatasets: existingPrefs.archived_datasets || [],
-      darkMode: existingPrefs.dark_mode || false
+      archivedDatasets: existingPrefs.archived_datasets || []
     };
   } else {
     // Create default preferences if none exist
     const defaultPreferences: UserPreferences = {
       immediateFeedback: false,
-      archivedDatasets: [],
-      darkMode: false
+      archivedDatasets: []
     };
 
     await createUserPreferences(userId, defaultPreferences);
@@ -52,8 +50,7 @@ export const createUserPreferences = async (
     .insert({
       user_id: userId,
       immediate_feedback: preferences.immediateFeedback,
-      archived_datasets: preferences.archivedDatasets,
-      dark_mode: preferences.darkMode
+      archived_datasets: preferences.archivedDatasets
     });
 
   if (error) throw error;
@@ -78,10 +75,6 @@ export const updateUserPreferences = async (
   
   if (preferences.archivedDatasets !== undefined) {
     updateData.archived_datasets = preferences.archivedDatasets;
-  }
-  
-  if (preferences.darkMode !== undefined) {
-    updateData.dark_mode = preferences.darkMode;
   }
   
   updateData.updated_at = new Date().toISOString();

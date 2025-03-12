@@ -14,32 +14,18 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
-          is_email_verified: boolean | null
-          university_id: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
           id: string
-          is_email_verified?: boolean | null
-          university_id?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
-          is_email_verified?: boolean | null
-          university_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_university_id_fkey"
-            columns: ["university_id"]
-            isOneToOne: false
-            referencedRelation: "universities"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       questions: {
         Row: {
@@ -56,9 +42,9 @@ export type Database = {
           option_c: string
           option_d: string
           option_e: string
+          organization_id: string | null
           question: string
           subject: string
-          university_id: string | null
           user_id: string | null
           visibility: string | null
         }
@@ -76,9 +62,9 @@ export type Database = {
           option_c: string
           option_d: string
           option_e: string
+          organization_id?: string | null
           question: string
           subject: string
-          university_id?: string | null
           user_id?: string | null
           visibility?: string | null
         }
@@ -96,43 +82,11 @@ export type Database = {
           option_c?: string
           option_d?: string
           option_e?: string
+          organization_id?: string | null
           question?: string
           subject?: string
-          university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "questions_university_id_fkey"
-            columns: ["university_id"]
-            isOneToOne: false
-            referencedRelation: "universities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      universities: {
-        Row: {
-          created_at: string
-          email_domain: string
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email_domain: string
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email_domain?: string
-          id?: string
-          name?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -140,7 +94,6 @@ export type Database = {
         Row: {
           archived_datasets: string[] | null
           created_at: string | null
-          dark_mode: boolean | null
           id: string
           immediate_feedback: boolean | null
           updated_at: string | null
@@ -149,7 +102,6 @@ export type Database = {
         Insert: {
           archived_datasets?: string[] | null
           created_at?: string | null
-          dark_mode?: boolean | null
           id?: string
           immediate_feedback?: boolean | null
           updated_at?: string | null
@@ -158,7 +110,6 @@ export type Database = {
         Update: {
           archived_datasets?: string[] | null
           created_at?: string | null
-          dark_mode?: boolean | null
           id?: string
           immediate_feedback?: boolean | null
           updated_at?: string | null
