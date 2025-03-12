@@ -1,6 +1,5 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-import { serve } from "https://deno.fresh.run/std@10.0.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import * as pdfParse from 'npm:pdf-parse'
 
 const corsHeaders = {
