@@ -5,7 +5,6 @@ import { AppError, handleApiError } from '@/utils/errorHandler';
 
 /**
  * Fetches the current user's profile
- * @returns Promise<UserProfile | null> A promise that resolves to the user's profile or null if not found
  */
 export const fetchUserProfile = async (): Promise<UserProfile | null> => {
   try {
@@ -18,8 +17,18 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
     const { data, error } = await supabase
       .from('profiles')
       .select(`
-        *,
-        university:universities(*)
+        id,
+        email,
+        university_id,
+        is_email_verified,
+        created_at,
+        university:universities(
+          id,
+          name,
+          email_domain,
+          created_at,
+          updated_at
+        )
       `)
       .eq('id', user.id)
       .maybeSingle();
@@ -36,10 +45,6 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
 
 /**
  * Updates the user's university and verification status
- * @param userId The user's ID
- * @param universityId The university ID to assign
- * @param isVerified Whether the email is verified
- * @returns Promise<UserProfile | null> A promise that resolves to the updated profile
  */
 export const updateUserUniversity = async (
   userId: string, 

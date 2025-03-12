@@ -47,7 +47,6 @@ export const mapQuestionToDatabaseQuestion = (question: Question, userId?: strin
     university_id: question.university_id
   };
 
-  // Only include user_id for new questions
   if (userId) {
     dbQuestion.user_id = userId;
   }
