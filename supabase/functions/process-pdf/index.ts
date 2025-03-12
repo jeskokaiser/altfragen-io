@@ -1,8 +1,10 @@
 
 // Follow imports from Deno standard library
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import * as pdfParse from "https://cdn.jsdelivr.net/npm/pdf-parse@1.1.1/+esm";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+
+// Deno-compatible PDF parser
+import * as pdfJs from "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.5.141/build/pdf.min.js";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +53,10 @@ interface Question {
   user_id?: string | null;
 }
 
+// Initialize PDF.js worker
+const pdfWorkerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.5.141/build/pdf.worker.min.js";
+pdfJs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
+
 serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -72,7 +78,14 @@ serve(async (req: Request) => {
     console.log(`[${requestId}] Boot time: ${performance.now().toFixed(2)}ms`);
 
     // Parse request
-    const requestData: ProcessPdfRequest = await req.json();
+    let requestData: ProcessPdfRequest;
+    try {
+      requestData = await req.json();
+    } catch (parseError) {
+      console.error(`[${requestId}] JSON parse error:`, parseError);
+      return errorResponse(`Invalid request format: ${parseError.message}`);
+    }
+    
     const { pdfUrl, filename, userId, universityId, requestId: clientRequestId } = requestData;
     
     console.log(`[${requestId}] Processing request:`, { 
@@ -178,13 +191,30 @@ serve(async (req: Request) => {
     
     console.log(`[${requestId}] PDF downloaded successfully, size:`, pdfData.size, 'bytes');
 
-    // Parse PDF
+    // Parse PDF using PDF.js instead of pdf-parse
     console.log(`[${requestId}] Parsing PDF content...`);
     let rawText = '';
     try {
       const pdfData32 = new Uint8Array(await pdfData.arrayBuffer());
-      const pdf = await pdfParse.default(pdfData32);
-      rawText = pdf.text;
+      
+      // Load PDF document with PDF.js
+      const loadingTask = pdfJs.getDocument({ data: pdfData32 });
+      const pdf = await loadingTask.promise;
+      console.log(`[${requestId}] PDF loaded, pages: ${pdf.numPages}`);
+      
+      // Iterate through all pages to extract text
+      let combinedText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        console.log(`[${requestId}] Processing page ${i}/${pdf.numPages}`);
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        combinedText += pageText + '\n';
+      }
+      
+      rawText = combinedText;
       
       if (!rawText || rawText.trim().length === 0) {
         console.error(`[${requestId}] PDF parsing resulted in empty text`);
@@ -218,7 +248,8 @@ serve(async (req: Request) => {
       // Pattern 4: Simple number prefix format
       /(?:\d+\.\s*)(.*?)(?:\n|\r\n|\s+)(?:[A-Ea][\)\.:])\s*(.*?)(?:\n|\r\n|\s+)(?:[A-Eb][\)\.:])\s*(.*?)(?:\n|\r\n|\s+)(?:[A-Ec][\)\.:])\s*(.*?)(?:\n|\r\n|\s+)(?:[A-Ed][\)\.:])\s*(.*?)(?:\n|\r\n|\s+)(?:[A-Ee][\)\.:])\s*(.*?)(?:\n|\r\n|\s+)(?:Antwort:|\d+\.\s*Antwort:?|Lösung:)\s*([A-Ea-e])/gs,
       
-      // Add more patterns as needed
+      // Pattern 5: PDF.js specific pattern - more flexible with spaces
+      /(?:Frage:|(?:\d+\.)\s*Frage:?|(?:\d+\.)\s*)\s*(.*?)[\s\n]+(?:[Aa][\)\.:]|[Aa]\.|\([Aa]\))\s*(.*?)[\s\n]+(?:[Bb][\)\.:]|[Bb]\.|\([Bb]\))\s*(.*?)[\s\n]+(?:[Cc][\)\.:]|[Cc]\.|\([Cc]\))\s*(.*?)[\s\n]+(?:[Dd][\)\.:]|[Dd]\.|\([Dd]\))\s*(.*?)[\s\n]+(?:[Ee][\)\.:]|[Ee]\.|\([Ee]\))\s*(.*?)[\s\n]+(?:Antwort:|\d+\.\s*Antwort:?|Lösung:|Lösung\s*:)\s*([A-Ea-e])/gs,
     ];
     
     const questions: Question[] = [];
