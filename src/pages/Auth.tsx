@@ -17,6 +17,7 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
+  const [universityName, setUniversityName] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +42,43 @@ const Auth = () => {
       });
     }
   }, [navigate]);
+
+  // Check if email belongs to a university
+  const checkUniversityDomain = async (email: string) => {
+    if (!email || !email.includes('@')) return null;
+    
+    const domain = email.split('@')[1];
+    
+    try {
+      const { data, error } = await supabase
+        .from('universities')
+        .select('name')
+        .eq('email_domain', domain)
+        .single();
+      
+      if (error) {
+        console.error('Error checking university domain:', error);
+        return null;
+      }
+      
+      return data?.name || null;
+    } catch (error) {
+      console.error('Error checking university domain:', error);
+      return null;
+    }
+  };
+
+  // Check university domain when email changes
+  useEffect(() => {
+    if (isSignUp && email) {
+      const checkDomain = async () => {
+        const name = await checkUniversityDomain(email);
+        setUniversityName(name);
+      };
+      
+      checkDomain();
+    }
+  }, [email, isSignUp]);
 
   const validatePassword = (password: string) => {
     const minLength = 8;
@@ -150,11 +188,22 @@ const Auth = () => {
           return;
         }
 
-        const { error: signUpError } = await supabase.auth.signUp({
+        // Check university email domain during signup
+        const universityName = await checkUniversityDomain(email);
+        
+        if (!universityName) {
+          toast.error('Diese E-Mail-Domain gehört zu keiner registrierten Universität');
+          return;
+        }
+
+        const { error: signUpError, data } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
+            data: {
+              email_domain: email.split('@')[1],
+            }
           },
         });
 
@@ -167,17 +216,9 @@ const Auth = () => {
           return;
         }
 
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) {
-          throw signInError;
-        }
-
-        toast.success('Erfolgreich registriert und eingeloggt!');
-        navigate('/dashboard');
+        toast.success('Registrierung erfolgreich! Bitte bestätigen Sie Ihre E-Mail-Adresse.');
+        toast.info(`Sie werden der Universität "${universityName}" zugeordnet, sobald Sie Ihre E-Mail bestätigt haben.`);
+        setIsSignUp(false);
         return;
       }
 
@@ -326,6 +367,15 @@ const Auth = () => {
               disabled={loading}
               className="w-full"
             />
+            {isSignUp && (
+              <div className="text-sm mt-1">
+                {universityName ? (
+                  <span className="text-green-600">✓ Erkannt: {universityName}</span>
+                ) : email && email.includes('@') ? (
+                  <span className="text-red-600">✗ Keine Universitäts-Domain erkannt</span>
+                ) : null}
+              </div>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -345,8 +395,11 @@ const Auth = () => {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
-                einen Kleinbuchstaben und eine Zahl enthalten.
+                <p>Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
+                einen Kleinbuchstaben und eine Zahl enthalten.</p>
+                <p className="mt-1">
+                  Bitte verwenden Sie Ihre Universitäts-E-Mail-Adresse für die Registrierung.
+                </p>
               </AlertDescription>
             </Alert>
           )}

@@ -1,17 +1,17 @@
+
 export interface Question {
-  id: string;
+  id?: string;
   question: string;
   optionA: string;
   optionB: string;
   optionC: string;
   optionD: string;
   optionE: string;
-  subject: string;
   correctAnswer: string;
-  comment: string;
+  comment?: string;
+  subject: string;
+  difficulty?: number;
   filename: string;
-  created_at?: string;
-  difficulty: number;
-  is_unclear?: boolean;
-  marked_unclear_at?: string;
+  userId?: string;
+  visibility?: 'private' | 'university';
 }
