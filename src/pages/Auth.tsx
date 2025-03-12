@@ -100,44 +100,41 @@ const Auth = () => {
         setIsCheckingDomain(true);
         const emailDomain = email.split('@')[1]?.trim();
         
-        console.log('Checking email domain:', emailDomain);
-        console.log('Checking domain (hex):', emailDomain?.split('').map(c => c.charCodeAt(0).toString(16)).join(' '));
-        
         if (!emailDomain) return;
         
         const queryString = `universities?select=id,name&email_domain=eq.${encodeURIComponent(emailDomain)}`;
-        console.log('Query string:', queryString);
+
         
         const { data, error } = await supabase
           .from('universities')
           .select('id, name, email_domain')
           .eq('email_domain', emailDomain);
         
-        console.log('University lookup raw result:', data);
+
         
         if (error) {
           console.error('Error checking university domain:', error);
           setUniversityInfo(null);
         } else if (data && data.length > 0) {
           data.forEach((uni, index) => {
-            console.log(`University ${index} found:`, uni);
-            console.log(`Domain comparison: Input "${emailDomain}" vs DB "${uni.email_domain}"`);
-            console.log(`Domain equality check: ${emailDomain === uni.email_domain}`);
-            console.log(`Domain (DB) hex:`, uni.email_domain?.split('').map(c => c.charCodeAt(0).toString(16)).join(' '));
+
+
+
+
           });
           
           const university = data[0];
-          console.log('Using university:', university);
+
           setUniversityInfo({ id: university.id, name: university.name });
         } else {
-          console.log('No matching university found for domain:', emailDomain);
-          console.log('Trying fallback: checking if domain ends with known domains');
+
+
           
           const { data: allUniversities } = await supabase
             .from('universities')
             .select('id, name, email_domain');
             
-          console.log('All universities:', allUniversities);
+
           
           if (allUniversities && allUniversities.length > 0) {
             const matchingUniversity = allUniversities.find(uni => 
@@ -145,10 +142,9 @@ const Auth = () => {
             );
             
             if (matchingUniversity) {
-              console.log('Found matching university via suffix:', matchingUniversity);
               setUniversityInfo({ id: matchingUniversity.id, name: matchingUniversity.name });
-            } else {
-              console.log('No matching university found via suffix either');
+            } 
+            else {
               setUniversityInfo(null);
             }
           } else {
@@ -163,7 +159,7 @@ const Auth = () => {
       }
     };
     
-    console.log('Email changed:', email, 'isSignUp:', isSignUp);
+
     const debounceTimer = setTimeout(checkEmailDomain, 500);
     return () => clearTimeout(debounceTimer);
   }, [email, isSignUp]);
