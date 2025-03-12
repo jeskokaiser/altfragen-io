@@ -79,9 +79,11 @@ function processTextContent(text: string, filename: string, userId: string, univ
         questions.push(currentQuestion)
       }
       
-      // Remove any numbering and the "Frage:" prefix to get just the question text
+      // Extract just the question text by removing both numbering and "Frage:" prefix
+      const questionText = line.replace(/^(\d+\.)?\s*Frage:\s*/, '').trim()
+      
       currentQuestion = {
-        question: line.replace(/^(\d+\.)?\s*Frage:\s*/, '').trim(),
+        question: questionText,
         filename,
         user_id: userId,
         university_id: universityId,
