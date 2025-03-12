@@ -71,14 +71,15 @@ function processTextContent(text: string, filename: string, userId: string, univ
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    if (line.startsWith('Frage:')) {
+    // Match question with number: "16. Frage: Was ist keine häufige..."
+    if (/^\d+\.\s*Frage:/.test(line)) {
       // Save previous question if exists
       if (currentQuestion.question) {
         questions.push(currentQuestion)
       }
       
       currentQuestion = {
-        question: line.replace('Frage:', '').trim(),
+        question: line.replace(/^\d+\.\s*Frage:\s*/, '').trim(),
         filename,
         user_id: userId,
         university_id: universityId,
@@ -86,22 +87,36 @@ function processTextContent(text: string, filename: string, userId: string, univ
         difficulty: 3,
         image_urls: []
       }
-    } else if (line.startsWith('A)')) {
-      currentQuestion.option_a = line.replace('A)', '').trim()
-    } else if (line.startsWith('B)')) {
-      currentQuestion.option_b = line.replace('B)', '').trim()
-    } else if (line.startsWith('C)')) {
-      currentQuestion.option_c = line.replace('C)', '').trim()
-    } else if (line.startsWith('D)')) {
-      currentQuestion.option_d = line.replace('D)', '').trim()
-    } else if (line.startsWith('E)')) {
-      currentQuestion.option_e = line.replace('E)', '').trim()
-    } else if (line.startsWith('Antwort:')) {
-      currentQuestion.correct_answer = line.replace('Antwort:', '').trim()
-    } else if (line.startsWith('Kommentar:')) {
-      currentQuestion.comment = line.replace('Kommentar:', '').trim()
-    } else if (line.startsWith('Fach:')) {
+    } 
+    // Match options: "A) Text" or "A)" + next line
+    else if (/^[A-E]\)/.test(line)) {
+      const option = line[0].toLowerCase()
+      const optionText = line.substring(2).trim()
+      currentQuestion[`option_${option}`] = optionText
+    }
+    // Match subject: "Fach: HNO"
+    else if (line.startsWith('Fach:')) {
       currentQuestion.subject = line.replace('Fach:', '').trim()
+    }
+    // Match answer: "Antwort: A"
+    else if (line.startsWith('Antwort:')) {
+      currentQuestion.correct_answer = line.replace('Antwort:', '').trim()
+    }
+    // Match comment: "Kommentar: Hat da jemand..."
+    else if (line.startsWith('Kommentar:')) {
+      currentQuestion.comment = line.replace('Kommentar:', '').trim()
+      
+      // Check if comment continues on next line
+      let j = i + 1
+      while (j < lines.length && 
+             !lines[j].trim().startsWith('Frage:') && 
+             !lines[j].trim().startsWith('Fach:') &&
+             !lines[j].trim().startsWith('Antwort:') &&
+             !/^[A-E]\)/.test(lines[j].trim())) {
+        currentQuestion.comment += ' ' + lines[j].trim()
+        i = j
+        j++
+      }
     }
   }
 
