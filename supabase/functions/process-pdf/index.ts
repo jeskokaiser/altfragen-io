@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import * as pdfParse from 'npm:pdf-parse'
@@ -71,15 +72,16 @@ function processTextContent(text: string, filename: string, userId: string, univ
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Match question with number: "16. Frage: Was ist keine häufige..."
-    if (/^\d+\.\s*Frage:/.test(line)) {
+    // Match question with pattern like "16. Frage:" or just "Frage:"
+    if (/^(\d+\.)?\s*Frage:/.test(line)) {
       // Save previous question if exists
       if (currentQuestion.question) {
         questions.push(currentQuestion)
       }
       
+      // Remove any numbering and the "Frage:" prefix to get just the question text
       currentQuestion = {
-        question: line.replace(/^\d+\.\s*Frage:\s*/, '').trim(),
+        question: line.replace(/^(\d+\.)?\s*Frage:\s*/, '').trim(),
         filename,
         user_id: userId,
         university_id: universityId,
