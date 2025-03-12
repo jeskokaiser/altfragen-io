@@ -1,69 +1,143 @@
 
-import React from 'react';
-import { useTrainingState } from '@/hooks/use-training-state';
-import { TrainingConfig } from '@/components/features';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
-import { 
-  TrainingLoadingState, 
-  ErrorDisplay,
-  EmptyQuestionsDisplay 
-} from '@/components/features/training/LoadingAndError';
-import TrainingManager from '@/components/features/training/TrainingManager';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Question } from '@/types/Question';
+import { AnswerState } from '@/types/Answer';
+import QuestionView from '@/components/questions/QuestionView';
+import Results from '@/components/Results';
+import TrainingConfig from '@/components/training/TrainingConfig';
 
 const Training = () => {
-  const {
-    allQuestions,
-    selectedQuestions,
-    userAnswers,
-    isLoadingQuestions,
-    isLoadingSelected,
-    isLoadingAnswers,
-    questionsError,
-    configurationComplete,
-    handleStartTraining,
-    handleQuitTraining,
-    setUserAnswers,
-    handleErrorReset
-  } = useTrainingState();
+  const navigate = useNavigate();
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<AnswerState[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [configurationComplete, setConfigurationComplete] = useState(false);
 
-  // Show loading state
-  if (isLoadingQuestions || isLoadingSelected || isLoadingAnswers) {
-    return <TrainingLoadingState />;
-  }
-  
-  // Show error state
-  if (questionsError) {
-    return <ErrorDisplay error={questionsError} onReset={handleErrorReset} />;
-  }
+  useEffect(() => {
+    const storedQuestions = localStorage.getItem('trainingQuestions');
+    if (!storedQuestions) {
+      navigate('/dashboard');
+      return;
+    }
+    setAllQuestions(JSON.parse(storedQuestions));
+  }, [navigate]);
 
-  // Show empty state
+  const handleStartTraining = (questions: Question[]) => {
+    setSelectedQuestions(questions);
+    setConfigurationComplete(true);
+  };
+
+  const handleAnswer = (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
+    const newAnswers = [...userAnswers];
+    const currentAnswer = newAnswers[currentQuestionIndex];
+    
+    if (viewedSolution) {
+      // If viewing solution, preserve the first answer ever made
+      newAnswers[currentQuestionIndex] = {
+        value: answer,
+        // Keep existing isFirstAttempt or determine based on attempts
+        isFirstAttempt: currentAnswer?.isFirstAttempt ?? currentAnswer?.attempts?.length === 0 ?? true,
+        viewedSolution: true,
+        // Keep existing attempts or initialize
+        attempts: currentAnswer?.attempts ?? [],
+        // Preserve the very first answer or use the current value if no previous answer exists
+        originalAnswer: currentAnswer?.originalAnswer || currentAnswer?.value || answer
+      };
+    } else {
+      // Regular answer submission
+      const attempts = currentAnswer?.attempts ?? [];
+      const isActualFirstAttempt = attempts.length === 0;
+      
+      newAnswers[currentQuestionIndex] = {
+        value: answer,
+        // isFirstAttempt is now determined by the attempts array
+        isFirstAttempt: isActualFirstAttempt,
+        viewedSolution: currentAnswer?.viewedSolution ?? false,
+        attempts: [...attempts, answer],
+        // Preserve existing originalAnswer if it exists
+        originalAnswer: currentAnswer?.originalAnswer
+      };
+    }
+    
+    setUserAnswers(newAnswers);
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < selectedQuestions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      setShowResults(true);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleRestart = () => {
+    setCurrentQuestionIndex(0);
+    setUserAnswers([]);
+    setShowResults(false);
+    setConfigurationComplete(false);
+  };
+
+  const handleQuit = () => {
+    setShowResults(true);  // Show results instead of navigating away
+  };
+
+  const handleQuestionUpdate = (updatedQuestion: Question) => {
+    const updatedQuestions = selectedQuestions.map(q => 
+      q.id === updatedQuestion.id ? updatedQuestion : q
+    );
+    setSelectedQuestions(updatedQuestions);
+  };
+
   if (allQuestions.length === 0) {
-    return <EmptyQuestionsDisplay />;
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
 
-  // Show configuration screen
   if (!configurationComplete) {
     return (
       <div className="container mx-auto py-8">
-        <ErrorBoundary onReset={handleErrorReset}>
-          <TrainingConfig 
-            questions={allQuestions}
-            onStart={handleStartTraining}
-          />
-        </ErrorBoundary>
+        <TrainingConfig 
+          questions={allQuestions}
+          onStart={handleStartTraining}
+        />
       </div>
     );
   }
 
-  // Show training session
+  if (showResults) {
+    return (
+      <div className="container mx-auto py-8">
+        <Results
+          questions={selectedQuestions}
+          userAnswers={userAnswers}
+          onRestart={handleRestart}
+        />
+      </div>
+    );
+  }
+
   return (
-    <TrainingManager 
-      selectedQuestions={selectedQuestions}
-      userAnswers={userAnswers}
-      setUserAnswers={setUserAnswers}
-      onErrorReset={handleErrorReset}
-      onQuit={handleQuitTraining}
-    />
+    <div className="container mx-auto py-8">
+      <QuestionView
+        questionData={selectedQuestions[currentQuestionIndex]}
+        totalQuestions={selectedQuestions.length}
+        currentIndex={currentQuestionIndex}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        onAnswer={handleAnswer}
+        userAnswer={userAnswers[currentQuestionIndex]}
+        onQuit={handleQuit}
+        onQuestionUpdate={handleQuestionUpdate}
+      />
+    </div>
   );
 };
 

@@ -42,11 +42,9 @@ export type Database = {
           option_c: string
           option_d: string
           option_e: string
-          organization_id: string | null
           question: string
           subject: string
           user_id: string | null
-          visibility: string | null
         }
         Insert: {
           comment?: string | null
@@ -62,11 +60,9 @@ export type Database = {
           option_c: string
           option_d: string
           option_e: string
-          organization_id?: string | null
           question: string
           subject: string
           user_id?: string | null
-          visibility?: string | null
         }
         Update: {
           comment?: string | null
@@ -82,11 +78,9 @@ export type Database = {
           option_c?: string
           option_d?: string
           option_e?: string
-          organization_id?: string | null
           question?: string
           subject?: string
           user_id?: string | null
-          visibility?: string | null
         }
         Relationships: []
       }

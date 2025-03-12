@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { EditQuestionModal } from '@/components/features';
+import EditQuestionModal from '@/components/training/EditQuestionModal';
 
 const UnclearQuestions = () => {
   const { filename } = useParams();

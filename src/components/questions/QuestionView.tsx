@@ -1,34 +1,29 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Question } from '@/types/Question';
+import { AnswerState } from '@/types/Answer';
 import { useAuth } from '@/contexts/AuthContext';
-import QuestionHeader from './training/QuestionHeader';
-import QuestionContent from './training/QuestionContent';
-import NavigationButtons from './training/NavigationButtons';
-import EditQuestionModal from './training/EditQuestionModal';
-import AnswerSubmission from './training/AnswerSubmission';
-import DifficultyControls from './training/DifficultyControls';
-import QuestionFeedback from './training/QuestionFeedback';
-import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import QuestionHeader from './QuestionHeader';
+import NavigationButtons from '../training/NavigationButtons';
+import EditQuestionModal from '../training/EditQuestionModal';
+import QuestionContainer from './QuestionContainer';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-interface QuestionDisplayProps {
+interface QuestionViewProps {
   questionData: Question;
   totalQuestions: number;
   currentIndex: number;
   onNext: () => void;
   onPrevious: () => void;
-  onAnswer: (answer: string) => void;
-  userAnswer: string;
+  onAnswer: (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => void;
+  userAnswer: AnswerState;
   onQuit: () => void;
   onQuestionUpdate?: (updatedQuestion: Question) => void;
 }
 
-const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
+const QuestionView: React.FC<QuestionViewProps> = ({
   questionData,
   totalQuestions,
   currentIndex,
@@ -45,43 +40,38 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
+  const [showSolution, setShowSolution] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  useEffect(() => {
+  React.useEffect(() => {
     setSelectedAnswer('');
     setShowFeedback(false);
     setCurrentQuestion(questionData);
     setIsCorrect(false);
     setWrongAnswers([]);
+    setShowSolution(false);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
-  const handleAnswerSubmitted = (answer: string, correct: boolean) => {
-    onAnswer(answer);
+  const handleAnswerSubmitted = (answer: string, correct: boolean, showSol?: boolean) => {
+    onAnswer(answer, wrongAnswers.length === 0, showSol || false);
     setShowFeedback(true);
     setIsCorrect(correct);
     
-    if (!correct) {
-      setWrongAnswers(prev => [...prev, answer]);
+    if (showSol !== undefined) {
+      setShowSolution(showSol);
     }
     
-    if (correct) {
-      // Only allow proceeding to next question when the answer is correct
-      setTimeout(() => {
-        handleNext();
-      }, 1500);
+    if (!correct && answer !== 'solution_viewed') {
+      setWrongAnswers(prev => [...prev, answer]);
     }
   };
 
   const handleNext = () => {
-    setShowFeedback(false);
-    setSelectedAnswer('');
-    setIsCorrect(false);
-    setWrongAnswers([]);
     onNext();
   };
 
@@ -129,55 +119,19 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         onQuit={onQuit}
       />
 
-      <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
-        <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
-          <div className="flex-grow">
-            <DifficultyControls
-              questionId={currentQuestion.id}
-              difficulty={currentQuestion.difficulty || 3}
-              onEditClick={() => setIsEditModalOpen(true)}
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size={isMobile ? "sm" : "default"}
-              onClick={handleMarkUnclear}
-              className="flex items-center gap-2 hover:bg-gray-100"
-              disabled={currentQuestion.is_unclear}
-            >
-              <AlertCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Unklar</span>
-              <span className="sm:hidden">?!</span>
-            </Button>
-          </div>
-        </div>
-
-        <QuestionContent
-          questionData={currentQuestion}
-          selectedAnswer={selectedAnswer}
-          onAnswerChange={handleAnswerChange}
-          onConfirmAnswer={() => {}}
-          showFeedback={showFeedback}
-          wrongAnswers={wrongAnswers}
-        />
-
-        <AnswerSubmission
-          currentQuestion={currentQuestion}
-          selectedAnswer={selectedAnswer}
-          user={user}
-          onAnswerSubmitted={handleAnswerSubmitted}
-        />
-
-        <QuestionFeedback
-          showFeedback={showFeedback}
-          userAnswer={userAnswer}
-          correctAnswer={currentQuestion.correctAnswer}
-          comment={currentQuestion.comment}
-          isCorrect={isCorrect}
-          wrongAnswers={wrongAnswers}
-        />
-      </Card>
+      <QuestionContainer
+        question={currentQuestion}
+        showFeedback={showFeedback}
+        selectedAnswer={selectedAnswer}
+        onAnswerChange={handleAnswerChange}
+        userAnswer={userAnswer?.value}
+        isCorrect={isCorrect}
+        wrongAnswers={wrongAnswers}
+        user={user}
+        onAnswerSubmitted={handleAnswerSubmitted}
+        onEditClick={() => setIsEditModalOpen(true)}
+        onMarkUnclear={handleMarkUnclear}
+      />
 
       <NavigationButtons
         onPrevious={onPrevious}
@@ -186,6 +140,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         isLastQuestion={currentIndex === totalQuestions - 1}
         hasUserAnswer={!!userAnswer && isCorrect}
         wrongAttempts={wrongAnswers.length}
+        showSolution={showSolution}
       />
 
       <EditQuestionModal
@@ -198,4 +153,4 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   );
 };
 
-export default QuestionDisplay;
+export default QuestionView;

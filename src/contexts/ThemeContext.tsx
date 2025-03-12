@@ -1,7 +1,11 @@
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ThemeContextType } from '@/types/contexts/ThemeContextType';
+
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'light',
@@ -31,21 +35,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [theme, isLandingPage]);
 
-  // Memoize the toggle function
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-  }, [theme]);
-
-  // Memoize the context value
-  const contextValue = useMemo(() => ({ 
-    theme, 
-    toggleTheme 
-  }), [theme, toggleTheme]);
+  };
 
   return (
-    <ThemeContext.Provider value={contextValue}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

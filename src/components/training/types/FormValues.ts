@@ -1,8 +1,8 @@
 
 export interface FormValues {
   subject: string;
-  difficulty: string;
   questionCount: string;
+  difficulty: string;
   isRandomSelection: boolean;
   sortByAttempts: boolean;
   sortDirection: 'asc' | 'desc';

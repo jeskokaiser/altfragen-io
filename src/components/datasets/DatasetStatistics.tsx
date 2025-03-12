@@ -1,14 +1,12 @@
 
 import React from 'react';
-import { Question } from '@/types/models/Question';
+import { Question } from '@/types/Question';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Loader2 } from "lucide-react";
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ChevronDown } from "lucide-react";
 
 interface DatasetStatisticsProps {
   questions: Question[];
@@ -16,14 +14,17 @@ interface DatasetStatisticsProps {
 
 const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
   const { user } = useAuth();
-  
-  // Use localStorage for collapsible state
-  const { 
-    value: isOpen,
-    setValue: setIsOpen 
-  } = useLocalStorage<boolean>('statsCollapsibleState', true);
+  const [isOpen, setIsOpen] = React.useState(() => {
+    const saved = localStorage.getItem('statsCollapsibleState');
+    return saved ? JSON.parse(saved) : true;
+  });
 
-  const { data: userProgress, isLoading, error } = useQuery({
+  // Save to localStorage whenever isOpen changes
+  React.useEffect(() => {
+    localStorage.setItem('statsCollapsibleState', JSON.stringify(isOpen));
+  }, [isOpen]);
+
+  const { data: userProgress } = useQuery({
     queryKey: ['user-progress', user?.id, questions[0]?.filename],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -85,47 +86,6 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         return acc;
       }, {} as Record<string, { total: number; answered: number; correct: number }>);
   }, [questions, filteredProgress]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-              <Skeleton className="h-6 w-36 mb-2" />
-              <Skeleton className="h-2 w-full mb-2" />
-              <Skeleton className="h-4 w-28" />
-            </div>
-          ))}
-        </div>
-        
-        <div className="border rounded-lg p-4">
-          <Skeleton className="h-6 w-48 mb-4" />
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex justify-between">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 w-16" />
-                </div>
-                <Skeleton className="h-2 w-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
-        <p className="text-red-600 dark:text-red-400">
-          Fehler beim Laden der Statistiken. Bitte versuche es später erneut.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

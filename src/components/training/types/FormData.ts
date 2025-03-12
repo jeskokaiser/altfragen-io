@@ -1,4 +1,3 @@
-
 export interface FormData {
   question: string;
   optionA: string;
@@ -6,8 +5,8 @@ export interface FormData {
   optionC: string;
   optionD: string;
   optionE: string;
-  subject: string;
   correctAnswer: string;
   comment: string;
+  subject: string;
   difficulty: string;
 }

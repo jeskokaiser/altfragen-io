@@ -1,86 +1,47 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
-import { AppError, handleApiError } from '@/utils/errorHandler';
-import { 
-  mapQuestionToDatabaseQuestion,
-  mapDatabaseQuestionToQuestion
-} from '@/utils/mappers/questionMappers';
 
-/**
- * Saves questions to the database
- * @param questions - The questions to save
- * @param userId - The ID of the user
- * @returns The saved questions
- */
-export const saveQuestions = async (questions: Question[], userId: string): Promise<Question[]> => {
-  try {
-    const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(q, userId));
-    
-    // Insert questions individually to avoid type errors with array inserts
-    for (const question of dbQuestions) {
-      const { error } = await supabase
-        .from('questions')
-        .insert(question);
-        
-      if (error) throw new AppError(error.message, error);
-    }
+export const saveQuestions = async (questions: Question[], userId: string) => {
+  const { error } = await supabase.from('questions').insert(
+    questions.map(q => ({
+      user_id: userId,
+      question: q.question,
+      option_a: q.optionA,
+      option_b: q.optionB,
+      option_c: q.optionC,
+      option_d: q.optionD,
+      option_e: q.optionE,
+      subject: q.subject,
+      correct_answer: q.correctAnswer,
+      comment: q.comment,
+      filename: q.filename,
+      difficulty: q.difficulty
+    }))
+  );
 
-    const { data: insertedQuestions, error: fetchError } = await supabase
-      .from('questions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(questions.length);
+  if (error) throw error;
 
-    if (fetchError) throw new AppError(fetchError.message, fetchError);
+  const { data: insertedQuestions, error: fetchError } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(questions.length);
 
-    return (insertedQuestions || []).map(mapDatabaseQuestionToQuestion);
-  } catch (error) {
-    throw handleApiError(error, 'Failed to save questions');
-  }
-};
+  if (fetchError) throw fetchError;
 
-/**
- * Updates a question in the database
- * @param question - The question to update
- * @returns The updated question
- */
-export const updateQuestion = async (question: Question): Promise<Question> => {
-  try {
-    const dbQuestion = mapQuestionToDatabaseQuestion(question);
-    
-    const { error } = await supabase
-      .from('questions')
-      .update(dbQuestion)
-      .eq('id', question.id);
-
-    if (error) throw new AppError(error.message, error);
-    return question;
-  } catch (error) {
-    throw handleApiError(error, 'Failed to update question');
-  }
-};
-
-/**
- * Marks a question as unclear in the database
- * @param questionId - The ID of the question
- * @param isUnclear - Whether the question is unclear
- * @returns A boolean indicating success
- */
-export const markQuestionUnclear = async (questionId: string, isUnclear: boolean): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('questions')
-      .update({
-        is_unclear: isUnclear,
-        marked_unclear_at: isUnclear ? new Date().toISOString() : null
-      })
-      .eq('id', questionId);
-
-    if (error) throw new AppError(error.message, error);
-    return true;
-  } catch (error) {
-    throw handleApiError(error, 'Failed to mark question as unclear');
-  }
+  return insertedQuestions.map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    difficulty: q.difficulty,
+  }));
 };
