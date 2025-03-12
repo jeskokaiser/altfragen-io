@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -8,6 +7,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -16,13 +22,16 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [detailedError, setDetailedError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<string | null>(null);
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setError(null);
+    setDetailedError(null);
     setUploadProgress(0);
     setProcessingStage(null);
 
@@ -42,14 +51,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
     try {
       setIsUploading(true);
-      setProcessingStage("Datei wird hochgeladen...");
+      setProcessingStage("Datei wird vorbereitet...");
       
       // Generate a unique file path
       const timestamp = new Date().getTime();
       const filePath = `${user?.id}/${timestamp}_${file.name}`;
       
+      // Start with file validation
+      setUploadProgress(5);
+      setProcessingStage("Datei wird validiert...");
+      
+      // Validate file size
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        throw new Error("Die Datei ist zu groß (max. 10 MB)");
+      }
+      
       // Upload file
       setUploadProgress(10);
+      setProcessingStage("Datei wird hochgeladen...");
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('temp_pdfs')
         .upload(filePath, file, {
@@ -78,7 +98,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
       if (processError) {
         console.error('Process error:', processError);
+        // Store detailed error for dialog
+        setDetailedError(processError.message || "Unbekannter Fehler bei der Verarbeitung");
         throw new Error(`Fehler beim Verarbeiten der PDF: ${processError.message}`);
+      }
+
+      if (!processedData) {
+        throw new Error("Keine Daten vom Server erhalten");
       }
 
       setUploadProgress(90);
@@ -98,12 +124,28 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       console.error('Error processing file:', error);
       const errorMessage = error.message || "Ein unerwarteter Fehler ist aufgetreten";
       setError(errorMessage);
+      
+      // If the error happens during PDF processing (after 40% progress), 
+      // it's likely a content parsing issue
+      if (uploadProgress >= 40) {
+        setDetailedError("Das PDF konnte nicht verarbeitet werden. Mögliche Gründe: " +
+          "Falsches Format, beschädigte Datei, oder nicht unterstützte PDF-Struktur. " +
+          "Bitte stelle sicher, dass dein PDF korrekt formatiert ist und dem Beispielformat entspricht.");
+      }
+      
       toast.error("Fehler beim Verarbeiten der Datei", {
         description: errorMessage
       });
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
+      // Keep progress at failed point for better UX feedback
+      // Only reset after starting a new upload
+      
+      // Reset form so the same file can be selected again
+      if (event.target) {
+        event.target.value = '';
+      }
+      
       setProcessingStage(null);
     }
   }, [user, universityId, onQuestionsLoaded]);
@@ -130,7 +172,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       {error && (
         <Alert variant="destructive" className="mb-4 w-full max-w-md">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex flex-col">
+            <span>{error}</span>
+            {detailedError && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-2 self-start text-xs"
+                onClick={() => setShowErrorDetails(true)}
+              >
+                Details anzeigen
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -161,6 +215,32 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         className="hidden"
         disabled={isUploading}
       />
+      
+      <Dialog open={showErrorDetails} onOpenChange={setShowErrorDetails}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fehlerdetails</DialogTitle>
+            <DialogDescription>
+              {detailedError && (
+                <div className="mt-4 p-4 bg-gray-100 dark:bg-zinc-800 rounded text-sm overflow-auto max-h-80">
+                  {detailedError}
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
+                    <h4 className="font-medium mb-2">Hinweise zur Behebung:</h4>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Stelle sicher, dass das PDF nicht passwortgeschützt ist</li>
+                      <li>Versuche, das PDF neu zu erstellen oder zu exportieren</li>
+                      <li>Überprüfe, ob das PDF dem geforderten Format entspricht</li>
+                      <li>Versuche, eine kleinere Datei (weniger Seiten) hochzuladen</li>
+                      <li>Prüfe, ob das PDF kopierbare Texte enthält (nicht nur Bilder/Scans)</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

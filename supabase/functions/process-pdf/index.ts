@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import * as pdfParse from 'npm:pdf-parse'
@@ -81,7 +80,9 @@ serve(async (req: Request) => {
         }
       );
     }
+    
     console.log('PDF downloaded successfully, size:', pdfData.size, 'bytes');
+    console.log('PDF type:', pdfData.type);
 
     if (!pdfData || pdfData.size === 0) {
       console.error('PDF data is empty');
@@ -94,17 +95,71 @@ serve(async (req: Request) => {
       );
     }
 
-    // Parse PDF
+    // Basic PDF validation by checking file signature/magic bytes
+    const firstBytes = await pdfData.slice(0, 5).arrayBuffer();
+    const signature = new Uint8Array(firstBytes);
+    const isPDF = String.fromCharCode(...signature) === '%PDF-';
+    
+    if (!isPDF) {
+      console.error('File does not have PDF signature');
+      return new Response(
+        JSON.stringify({ error: 'File does not appear to be a valid PDF' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Parse PDF with enhanced error handling
     console.log('Starting PDF parsing...');
     const dataBuffer = await pdfData.arrayBuffer();
     let pdfContent;
+    
     try {
-      pdfContent = await pdfParse(dataBuffer);
+      // Additional options for pdf-parse to help with problematic PDFs
+      const options = {
+        max: 0, // No page limit
+        version: 'default'
+      };
+      
+      pdfContent = await pdfParse(dataBuffer, options);
+      
+      if (!pdfContent) {
+        throw new Error('PDF parsing returned null or undefined result');
+      }
+      
+      if (!pdfContent.text || pdfContent.text.length === 0) {
+        throw new Error('PDF parsing produced empty text content');
+      }
+      
       console.log('PDF parsed successfully, text length:', pdfContent.text.length);
+      console.log('PDF num pages:', pdfContent.numpages);
+      console.log('PDF info:', pdfContent.info);
+      
+      // Log first 100 chars of content for debugging
+      console.log('PDF content preview:', pdfContent.text.substring(0, 100) + '...');
     } catch (parseError) {
-      console.error('PDF parsing error:', parseError);
+      console.error('PDF parsing error details:', parseError);
+      // Attempt to get more specific error information
+      let errorMessage = 'Unknown PDF parsing error';
+      
+      if (parseError instanceof Error) {
+        errorMessage = parseError.message;
+        console.error('Error stack:', parseError.stack);
+        
+        // Check for common pdf-parse errors
+        if (errorMessage.includes('Invalid XRef stream header')) {
+          errorMessage = 'PDF has invalid cross-reference stream. The file may be corrupted.';
+        } else if (errorMessage.includes('Invalid object stream')) {
+          errorMessage = 'PDF contains invalid object stream. The file may be corrupted.';
+        } else if (errorMessage.includes('Password required')) {
+          errorMessage = 'PDF is password protected. Please provide an unprotected PDF.';
+        }
+      }
+      
       return new Response(
-        JSON.stringify({ error: `Error parsing PDF: ${parseError.message}` }),
+        JSON.stringify({ error: `Error parsing PDF: ${errorMessage}` }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
