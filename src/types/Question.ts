@@ -1,3 +1,4 @@
+
 export interface Question {
   id: string;
   question: string;
@@ -14,4 +15,6 @@ export interface Question {
   difficulty: number;
   is_unclear?: boolean;
   marked_unclear_at?: string;
+  university_id?: string | null;
+  visibility?: 'private' | 'university' | 'public';
 }

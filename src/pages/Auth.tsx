@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,8 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, ArrowLeft } from "lucide-react";
+import { Info, ArrowLeft, School, Mail } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -17,6 +17,8 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
+  const [universityInfo, setUniversityInfo] = useState<{ id: string, name: string } | null>(null);
+  const [isCheckingDomain, setIsCheckingDomain] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,6 +44,42 @@ const Auth = () => {
     }
   }, [navigate]);
 
+  // Check email domain against universities table
+  useEffect(() => {
+    const checkEmailDomain = async () => {
+      if (!email || !email.includes('@') || !isSignUp) return;
+      
+      try {
+        setIsCheckingDomain(true);
+        const emailDomain = email.split('@')[1];
+        
+        if (!emailDomain) return;
+        
+        const { data, error } = await supabase
+          .from('universities')
+          .select('id, name')
+          .eq('email_domain', emailDomain)
+          .single();
+        
+        if (error) {
+          if (error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
+            console.error('Error checking university domain:', error);
+          }
+          setUniversityInfo(null);
+        } else if (data) {
+          setUniversityInfo({ id: data.id, name: data.name });
+        }
+      } catch (error) {
+        console.error('Error in checkEmailDomain:', error);
+      } finally {
+        setIsCheckingDomain(false);
+      }
+    };
+    
+    const debounceTimer = setTimeout(checkEmailDomain, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [email, isSignUp]);
+
   const validatePassword = (password: string) => {
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -60,6 +98,10 @@ const Auth = () => {
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const getEmailDomain = (email: string) => {
+    return email.split('@')[1] || '';
   };
 
   const handleResetPassword = async () => {
@@ -155,6 +197,10 @@ const Auth = () => {
           password,
           options: {
             emailRedirectTo: window.location.origin,
+            data: {
+              university_id: universityInfo?.id || null,
+              domain: getEmailDomain(email),
+            },
           },
         });
 
@@ -167,6 +213,7 @@ const Auth = () => {
           return;
         }
 
+        // After successful signup, sign in the user
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -176,11 +223,17 @@ const Auth = () => {
           throw signInError;
         }
 
-        toast.success('Erfolgreich registriert und eingeloggt!');
+        if (universityInfo) {
+          toast.success(`Erfolgreich bei ${universityInfo.name} registriert und eingeloggt!`);
+        } else {
+          toast.success('Erfolgreich registriert und eingeloggt!');
+        }
+        
         navigate('/dashboard');
         return;
       }
 
+      // Handle login
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -317,15 +370,47 @@ const Auth = () => {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">E-Mail</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="E-Mail-Adresse eingeben"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              className="w-full"
-            />
+            <div className="relative">
+              <Input
+                id="email"
+                type="email"
+                placeholder="E-Mail-Adresse eingeben"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading || isCheckingDomain}
+                className="w-full"
+              />
+              {isSignUp && email && email.includes('@') && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  {isCheckingDomain ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-400"></div>
+                  ) : universityInfo ? (
+                    <Badge variant="outline" className="flex items-center gap-1 bg-green-50 text-green-800 border-green-200">
+                      <School className="h-3 w-3" />
+                      {universityInfo.name}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
+                      <Mail className="h-3 w-3" />
+                      Standard
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+            {isSignUp && email && email.includes('@') && (
+              <div className="text-xs mt-1 text-slate-500">
+                {universityInfo ? (
+                  <span className="text-green-600">
+                    Du registrierst dich mit einer E-Mail von {universityInfo.name}
+                  </span>
+                ) : (
+                  <span>
+                    Standard-Konto: Du hast Zugriff auf deine eigenen Fragen
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -355,7 +440,7 @@ const Auth = () => {
             <Button 
               className="w-full" 
               onClick={() => handleAuth(isSignUp ? 'signup' : 'login')}
-              disabled={loading}
+              disabled={loading || isCheckingDomain}
             >
               {loading ? 'Lädt...' : (isSignUp ? 'Registrieren' : 'Anmelden')}
             </Button>

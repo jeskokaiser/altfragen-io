@@ -14,18 +14,32 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_email_verified: boolean | null
+          university_id: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
           id: string
+          is_email_verified?: boolean | null
+          university_id?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
+          is_email_verified?: boolean | null
+          university_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -44,7 +58,9 @@ export type Database = {
           option_e: string
           question: string
           subject: string
+          university_id: string | null
           user_id: string | null
+          visibility: string | null
         }
         Insert: {
           comment?: string | null
@@ -62,7 +78,9 @@ export type Database = {
           option_e: string
           question: string
           subject: string
+          university_id?: string | null
           user_id?: string | null
+          visibility?: string | null
         }
         Update: {
           comment?: string | null
@@ -80,7 +98,41 @@ export type Database = {
           option_e?: string
           question?: string
           subject?: string
+          university_id?: string | null
           user_id?: string | null
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      universities: {
+        Row: {
+          created_at: string
+          email_domain: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_domain: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_domain?: string
+          id?: string
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
