@@ -8,6 +8,7 @@ interface TrainingSummaryProps {
   todayPractice: number;
   totalAnswered: number;
   totalAttempts: number;
+  userId?: string;
 }
 
 const TrainingSummary: React.FC<TrainingSummaryProps> = ({

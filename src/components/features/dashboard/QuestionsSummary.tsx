@@ -2,18 +2,21 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileQuestion, User, Users } from 'lucide-react';
+import { FileQuestion, User, Users, AlertCircle } from 'lucide-react';
 
 interface QuestionsSummaryProps {
   totalQuestions: number;
   publicQuestions: number;
   universityQuestions: number;
+  unclearCount?: number;
+  userId?: string;
 }
 
 const QuestionsSummary: React.FC<QuestionsSummaryProps> = ({
   totalQuestions,
   publicQuestions,
-  universityQuestions
+  universityQuestions,
+  unclearCount = 0
 }) => {
   const { profile } = useAuth();
 
@@ -43,13 +46,22 @@ const QuestionsSummary: React.FC<QuestionsSummaryProps> = ({
           </div>
           <span className="font-semibold">{publicQuestions}</span>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-b pb-2">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-slate-500" />
             <span>University Questions</span>
           </div>
           <span className="font-semibold">{universityQuestions}</span>
         </div>
+        {unclearCount > 0 && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <span>Unclear Questions</span>
+            </div>
+            <span className="font-semibold">{unclearCount}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
