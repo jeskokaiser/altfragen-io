@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,19 +26,16 @@ const Auth = () => {
   const { user, isEmailVerified, universityName } = useAuth();
 
   useEffect(() => {
-    // Check for verification screen flag in URL
     const params = new URLSearchParams(location.search);
     if (params.get('verification') === 'pending') {
       setIsVerificationScreen(true);
     }
 
-    // Check for recovery mode and access token in URL parameters
     const type = params.get('type');
     const access_token = params.get('access_token');
     const refresh_token = params.get('refresh_token');
     
     if (type === 'recovery' && (access_token || refresh_token)) {
-      // Set the session using the tokens
       supabase.auth.setSession({
         access_token: access_token || '',
         refresh_token: refresh_token || ''
@@ -53,33 +49,23 @@ const Auth = () => {
       });
     }
     
-    // Check for email verification
     if (type === 'email_change' || type === 'signup') {
-      // Handle email verification redirect
       handleEmailVerification();
     }
   }, [location, navigate]);
 
-  // Handle email verification
   const handleEmailVerification = async () => {
     try {
       setLoading(true);
       
-      // Get current session
       const { data: sessionData } = await supabase.auth.getSession();
       
       if (sessionData.session) {
-        // User is signed in and verified
         toast.success('E-Mail wurde erfolgreich bestätigt!');
-        
-        // Ensure profile is updated with verification status
         const userId = sessionData.session.user.id;
         await updateVerificationStatus(userId, true);
-        
         navigate('/dashboard');
       } else {
-        // No session yet, user probably clicked verification link without being logged in
-        // Show verification success message and login form
         toast.success('E-Mail wurde bestätigt. Bitte melden Sie sich an.');
         navigate('/auth');
       }
@@ -91,7 +77,6 @@ const Auth = () => {
     }
   };
 
-  // Update verification status in profiles table
   const updateVerificationStatus = async (userId: string, isVerified: boolean) => {
     try {
       const { error } = await supabase
@@ -107,7 +92,6 @@ const Auth = () => {
     }
   };
 
-  // Check email domain against universities table
   useEffect(() => {
     const checkEmailDomain = async () => {
       if (!email || !email.includes('@') || !isSignUp) return;
@@ -123,24 +107,24 @@ const Auth = () => {
         const { data, error } = await supabase
           .from('universities')
           .select('id, name')
-          .eq('email_domain', emailDomain)
-          .single();
+          .eq('email_domain', emailDomain);
         
         console.log('University lookup result:', { data, error });
         
         if (error) {
-          if (error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
-            console.error('Error checking university domain:', error);
-          } else {
-            console.log('No matching university found for domain:', emailDomain);
-          }
+          console.error('Error checking university domain:', error);
           setUniversityInfo(null);
-        } else if (data) {
-          console.log('University found:', data);
-          setUniversityInfo({ id: data.id, name: data.name });
+        } else if (data && data.length > 0) {
+          const university = data[0];
+          console.log('University found:', university);
+          setUniversityInfo({ id: university.id, name: university.name });
+        } else {
+          console.log('No matching university found for domain:', emailDomain);
+          setUniversityInfo(null);
         }
       } catch (error) {
         console.error('Error in checkEmailDomain:', error);
+        setUniversityInfo(null);
       } finally {
         setIsCheckingDomain(false);
       }
@@ -231,7 +215,6 @@ const Auth = () => {
 
       toast.success('Passwort erfolgreich aktualisiert');
       
-      // After successful password update, sign out the user and redirect to login
       await supabase.auth.signOut();
       setIsResetPassword(false);
       navigate('/auth');
@@ -284,14 +267,12 @@ const Auth = () => {
           return;
         }
 
-        // After successful signup, redirect to verification pending screen
         setIsVerificationScreen(true);
         toast.success('Bitte überprüfen Sie Ihre E-Mail, um Ihre Registrierung abzuschließen.');
         navigate('/auth?verification=pending');
         return;
       }
 
-      // Handle login
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
