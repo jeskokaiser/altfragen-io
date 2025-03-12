@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +8,9 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, ArrowLeft, School, Mail } from "lucide-react";
+import { Info, ArrowLeft, School, Mail, CheckCircle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from '@/contexts/AuthContext';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -19,11 +21,19 @@ const Auth = () => {
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [universityInfo, setUniversityInfo] = useState<{ id: string, name: string } | null>(null);
   const [isCheckingDomain, setIsCheckingDomain] = useState(false);
+  const [isVerificationScreen, setIsVerificationScreen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, isEmailVerified, universityName } = useAuth();
 
   useEffect(() => {
+    // Check for verification screen flag in URL
+    const params = new URLSearchParams(location.search);
+    if (params.get('verification') === 'pending') {
+      setIsVerificationScreen(true);
+    }
+
     // Check for recovery mode and access token in URL parameters
-    const params = new URLSearchParams(window.location.search);
     const type = params.get('type');
     const access_token = params.get('access_token');
     const refresh_token = params.get('refresh_token');
@@ -42,7 +52,60 @@ const Auth = () => {
         }
       });
     }
-  }, [navigate]);
+    
+    // Check for email verification
+    if (type === 'email_change' || type === 'signup') {
+      // Handle email verification redirect
+      handleEmailVerification();
+    }
+  }, [location, navigate]);
+
+  // Handle email verification
+  const handleEmailVerification = async () => {
+    try {
+      setLoading(true);
+      
+      // Get current session
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (sessionData.session) {
+        // User is signed in and verified
+        toast.success('E-Mail wurde erfolgreich bestätigt!');
+        
+        // Ensure profile is updated with verification status
+        const userId = sessionData.session.user.id;
+        await updateVerificationStatus(userId, true);
+        
+        navigate('/dashboard');
+      } else {
+        // No session yet, user probably clicked verification link without being logged in
+        // Show verification success message and login form
+        toast.success('E-Mail wurde bestätigt. Bitte melden Sie sich an.');
+        navigate('/auth');
+      }
+    } catch (error: any) {
+      console.error('Email verification error:', error);
+      toast.error('Fehler bei der E-Mail-Bestätigung: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update verification status in profiles table
+  const updateVerificationStatus = async (userId: string, isVerified: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_email_verified: isVerified })
+        .eq('id', userId);
+        
+      if (error) {
+        console.error('Error updating verification status:', error);
+      }
+    } catch (error) {
+      console.error('Error in updateVerificationStatus:', error);
+    }
+  };
 
   // Check email domain against universities table
   useEffect(() => {
@@ -196,7 +259,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: window.location.origin + '/auth?verification=pending',
             data: {
               university_id: universityInfo?.id || null,
               domain: getEmailDomain(email),
@@ -213,23 +276,10 @@ const Auth = () => {
           return;
         }
 
-        // After successful signup, sign in the user
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) {
-          throw signInError;
-        }
-
-        if (universityInfo) {
-          toast.success(`Erfolgreich bei ${universityInfo.name} registriert und eingeloggt!`);
-        } else {
-          toast.success('Erfolgreich registriert und eingeloggt!');
-        }
-        
-        navigate('/dashboard');
+        // After successful signup, redirect to verification pending screen
+        setIsVerificationScreen(true);
+        toast.success('Bitte überprüfen Sie Ihre E-Mail, um Ihre Registrierung abzuschließen.');
+        navigate('/auth?verification=pending');
         return;
       }
 
@@ -242,6 +292,8 @@ const Auth = () => {
       if (error) {
         if (error.message.includes('Email not confirmed')) {
           toast.error('Bitte bestätigen Sie Ihre E-Mail-Adresse');
+          setIsVerificationScreen(true);
+          navigate('/auth?verification=pending');
         } else if (error.message.includes('Invalid login credentials')) {
           toast.error('Ungültige Anmeldedaten');
         } else {
@@ -258,6 +310,124 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleResendVerification = async () => {
+    try {
+      setLoading(true);
+      
+      if (!email) {
+        toast.error('Bitte geben Sie Ihre E-Mail-Adresse ein');
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+        return;
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: window.location.origin + '/auth?verification=pending',
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Bestätigungslink wurde erneut gesendet. Bitte überprüfen Sie Ihre E-Mails.');
+    } catch (error: any) {
+      toast.error('Fehler beim Senden der Bestätigungsmail: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isVerificationScreen) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+        <Card className="w-full max-w-md p-6 space-y-6">
+          <div className="space-y-2 text-center">
+            <div className="flex justify-center mb-4">
+              {isEmailVerified ? (
+                <CheckCircle className="h-16 w-16 text-green-500" />
+              ) : (
+                <AlertCircle className="h-16 w-16 text-amber-500" />
+              )}
+            </div>
+            <h2 className="text-2xl font-semibold text-slate-800">
+              {isEmailVerified 
+                ? 'E-Mail-Verifizierung abgeschlossen!' 
+                : 'E-Mail-Verifizierung ausstehend'}
+            </h2>
+            <p className="text-sm text-slate-600">
+              {isEmailVerified
+                ? universityName 
+                  ? `Sie haben jetzt Zugriff auf den Altfragen-Pool der ${universityName}.` 
+                  : 'Ihre E-Mail wurde erfolgreich verifiziert.'
+                : 'Wir haben Ihnen einen Bestätigungslink per E-Mail gesendet.'}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {!isEmailVerified && (
+              <Alert className="bg-amber-50 border-amber-200">
+                <Info className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-700">
+                  Bitte überprüfen Sie Ihren Posteingang und klicken Sie auf den Bestätigungslink.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {isEmailVerified && universityName && (
+              <Alert className="bg-green-50 border-green-200">
+                <School className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">
+                  Sie sind als Student der {universityName} verifiziert.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="pt-2 space-y-3">
+              {isEmailVerified ? (
+                <Button 
+                  className="w-full" 
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Zum Dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button 
+                    className="w-full" 
+                    onClick={handleResendVerification}
+                    disabled={loading}
+                  >
+                    {loading ? 'Lädt...' : 'Bestätigungslink erneut senden'}
+                  </Button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsVerificationScreen(false);
+                        navigate('/auth');
+                      }}
+                      className="text-sm text-slate-600 hover:text-slate-900 underline"
+                      disabled={loading}
+                    >
+                      Zurück zur Anmeldung
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   if (isResetPassword) {
     return (

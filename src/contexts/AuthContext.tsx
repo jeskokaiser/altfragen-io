@@ -38,8 +38,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     // Listen for changes on auth state (sign in, sign out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
+      
+      // Handle email verification event
+      if (event === 'USER_UPDATED' && session?.user) {
+        // When user is updated (like email verification), update profile information
+        await updateEmailVerificationStatus(session.user.id, session.user.email_confirmed_at !== null);
+      }
+      
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
@@ -52,6 +59,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const updateEmailVerificationStatus = async (userId: string, isVerified: boolean) => {
+    try {
+      // Update the profile with the verification status
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_email_verified: isVerified })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating email verification status:', error);
+      }
+    } catch (error) {
+      console.error('Error in updateEmailVerificationStatus:', error);
+    }
+  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -68,7 +91,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      setIsEmailVerified(profileData.is_email_verified || false);
+      // Check if email is verified in Supabase Auth
+      const { data: authData } = await supabase.auth.getUser();
+      const isConfirmedInAuth = authData?.user?.email_confirmed_at !== null;
+      
+      // If email is confirmed in auth but not in profiles, update profiles
+      if (isConfirmedInAuth && !profileData.is_email_verified) {
+        await updateEmailVerificationStatus(userId, true);
+        setIsEmailVerified(true);
+      } else {
+        setIsEmailVerified(profileData.is_email_verified || false);
+      }
       
       if (profileData.university_id) {
         setUniversityId(profileData.university_id);

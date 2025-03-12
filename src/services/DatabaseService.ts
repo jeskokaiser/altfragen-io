@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
@@ -18,7 +17,7 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       filename: q.filename,
       difficulty: q.difficulty,
       university_id: universityId || null,
-      visibility: 'private' // Default to private visibility
+      visibility: universityId ? 'university' : 'private'
     }))
   );
 
@@ -47,6 +46,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     filename: q.filename,
     difficulty: q.difficulty,
     is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at
+    marked_unclear_at: q.marked_unclear_at,
+    university_id: q.university_id,
+    visibility: q.visibility
   }));
 };
