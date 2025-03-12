@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, FileQuestion, Info } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { 
@@ -13,7 +13,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -27,13 +38,36 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<string | null>(null);
   const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [showFunctionLogs, setShowFunctionLogs] = useState(false);
+  const [functionLogs, setFunctionLogs] = useState<string | null>(null);
+  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const verifyAndUploadFile = (file: File) => {
+    setSelectedFile(file);
+    setShowVerifyDialog(true);
+  };
+
+  const confirmUpload = () => {
+    if (selectedFile) {
+      setShowVerifyDialog(false);
+      executeFileUpload(selectedFile);
+    }
+  };
+
+  const cancelUpload = () => {
+    setSelectedFile(null);
+    setShowVerifyDialog(false);
+  };
+
+  const executeFileUpload = useCallback(async (file: File) => {
     setError(null);
     setDetailedError(null);
+    setFunctionLogs(null);
     setUploadProgress(0);
     setProcessingStage(null);
+    setRetryCount(prevCount => prevCount + 1);
 
     if (!file) {
       setError("Bitte wähle eine Datei aus");
@@ -66,6 +100,28 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         throw new Error("Die Datei ist zu groß (max. 10 MB)");
       }
       
+      // Validate file type more thoroughly
+      const fileReader = new FileReader();
+      const headerCheck = new Promise<void>((resolve, reject) => {
+        fileReader.onloadend = (e) => {
+          try {
+            const arr = new Uint8Array(e.target?.result as ArrayBuffer).subarray(0, 5);
+            const header = Array.from(arr).map(byte => String.fromCharCode(byte)).join('');
+            if (header !== '%PDF-') {
+              reject(new Error("Die Datei scheint kein gültiges PDF zu sein"));
+            } else {
+              resolve();
+            }
+          } catch (err) {
+            reject(new Error("Fehler beim Überprüfen des PDF-Formats"));
+          }
+        };
+        fileReader.onerror = () => reject(new Error("Fehler beim Lesen der Datei"));
+        fileReader.readAsArrayBuffer(file.slice(0, 5));
+      });
+      
+      await headerCheck;
+      
       // Upload file
       setUploadProgress(10);
       setProcessingStage("Datei wird hochgeladen...");
@@ -86,20 +142,55 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       setProcessingStage("PDF wird verarbeitet...");
 
       // Process PDF using Edge function
+      // Add request ID for tracking in logs
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      console.log(`Starting process-pdf function call with requestId: ${requestId}`);
+      
       const { data: processedData, error: processError } = await supabase.functions
         .invoke('process-pdf', {
           body: {
             pdfUrl: filePath,
             filename: file.name,
             userId: user?.id,
-            universityId
+            universityId,
+            requestId
           }
         });
 
       if (processError) {
         console.error('Process error:', processError);
-        // Store detailed error for dialog
-        setDetailedError(processError.message || "Unbekannter Fehler bei der Verarbeitung");
+        // Try to check for function logs
+        try {
+          // This is just to show we're handling the error now
+          setProcessingStage("Fehler beim Verarbeiten. Sammle Diagnose-Informationen...");
+          setUploadProgress(45);
+          
+          // Store detailed error for dialog
+          setDetailedError(processError.message || "Unbekannter Fehler bei der Verarbeitung");
+          
+          // Check if the error contains any JSON data that might have details
+          if (typeof processError.message === 'string') {
+            try {
+              // Sometimes error messages can contain JSON
+              const matches = processError.message.match(/\{.*\}/);
+              if (matches) {
+                const errorJson = JSON.parse(matches[0]);
+                if (errorJson.error) {
+                  setDetailedError(errorJson.error);
+                }
+                if (errorJson.details) {
+                  setFunctionLogs(JSON.stringify(errorJson.details, null, 2));
+                }
+              }
+            } catch (jsonError) {
+              // Failed to parse error as JSON, just continue
+            }
+          }
+          
+        } catch (logError) {
+          console.error('Error getting function logs:', logError);
+        }
+        
         throw new Error(`Fehler beim Verarbeiten der PDF: ${processError.message}`);
       }
 
@@ -128,9 +219,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       // If the error happens during PDF processing (after 40% progress), 
       // it's likely a content parsing issue
       if (uploadProgress >= 40) {
-        setDetailedError("Das PDF konnte nicht verarbeitet werden. Mögliche Gründe: " +
-          "Falsches Format, beschädigte Datei, oder nicht unterstützte PDF-Struktur. " +
-          "Bitte stelle sicher, dass dein PDF korrekt formatiert ist und dem Beispielformat entspricht.");
+        if (!detailedError) {
+          setDetailedError("Das PDF konnte nicht verarbeitet werden. Mögliche Gründe: " +
+            "Falsches Format, beschädigte Datei, oder nicht unterstützte PDF-Struktur. " +
+            "Bitte stelle sicher, dass dein PDF korrekt formatiert ist und dem Beispielformat entspricht.");
+        }
       }
       
       toast.error("Fehler beim Verarbeiten der Datei", {
@@ -142,13 +235,22 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       // Only reset after starting a new upload
       
       // Reset form so the same file can be selected again
-      if (event.target) {
-        event.target.value = '';
+      const fileInput = document.getElementById('pdf-upload') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
       }
       
-      setProcessingStage(null);
+      // Keep processing stage for error context
     }
-  }, [user, universityId, onQuestionsLoaded]);
+  }, [user, universityId, onQuestionsLoaded, detailedError, uploadProgress]);
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Instead of immediately processing, show verification dialog
+      verifyAndUploadFile(file);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -174,16 +276,28 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex flex-col">
             <span>{error}</span>
-            {detailedError && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="mt-2 self-start text-xs"
-                onClick={() => setShowErrorDetails(true)}
-              >
-                Details anzeigen
-              </Button>
-            )}
+            <div className="flex gap-2 mt-2">
+              {detailedError && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="self-start text-xs"
+                  onClick={() => setShowErrorDetails(true)}
+                >
+                  Details anzeigen
+                </Button>
+              )}
+              {(uploadProgress >= 40 && error.includes("Verarbeiten")) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="self-start text-xs"
+                  onClick={() => setShowFunctionLogs(true)}
+                >
+                  Debug-Info anzeigen
+                </Button>
+              )}
+            </div>
           </AlertDescription>
         </Alert>
       )}
@@ -214,8 +328,39 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         onChange={handleFileUpload}
         className="hidden"
         disabled={isUploading}
+        key={`file-input-${retryCount}`} // Force re-render to reset the input
       />
       
+      {/* Verification Dialog */}
+      <AlertDialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>PDF hochladen bestätigen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Du bist dabei die Datei "{selectedFile?.name}" hochzuladen.
+              
+              <Alert className="mt-4">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <p>Bitte stelle sicher, dass dein PDF:</p>
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>Das richtige Format hat (Frage: ..., A) ..., B) ..., Antwort: ...)</li>
+                    <li>Keine Bilder oder Scans enthält</li>
+                    <li>Nicht passwortgeschützt ist</li>
+                    <li>Nicht beschädigt ist</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelUpload}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmUpload}>Hochladen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Error Details Dialog */}
       <Dialog open={showErrorDetails} onOpenChange={setShowErrorDetails}>
         <DialogContent>
           <DialogHeader>
@@ -241,8 +386,69 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           </DialogHeader>
         </DialogContent>
       </Dialog>
+
+      {/* Function Logs Dialog */}
+      <Dialog open={showFunctionLogs} onOpenChange={setShowFunctionLogs}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileQuestion className="h-5 w-5" />
+              Diagnose-Informationen
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="bg-gray-100 dark:bg-zinc-800 rounded-md p-4 mt-2">
+            <h3 className="font-medium mb-2">Verarbeitungsdetails:</h3>
+            <div className="text-sm rounded overflow-x-auto">
+              <p>Datei: {selectedFile?.name}</p>
+              <p>Größe: {selectedFile ? (selectedFile.size / 1024).toFixed(2) + ' KB' : 'Unbekannt'}</p>
+              <p>Typ: {selectedFile?.type || 'Unbekannt'}</p>
+              <p>Zuletzt verarbeitet: {new Date().toLocaleString()}</p>
+              <p>Verarbeitungsstatus: {processingStage}</p>
+              <p>Fehler: {error}</p>
+            </div>
+            
+            {functionLogs && (
+              <>
+                <h3 className="font-medium mt-4 mb-2">Fehlerdetails vom Server:</h3>
+                <pre className="text-xs bg-gray-200 dark:bg-zinc-900 p-3 rounded overflow-x-auto max-h-60">
+                  {functionLogs}
+                </pre>
+              </>
+            )}
+            
+            <h3 className="font-medium mt-4 mb-2">Mögliche Lösungen:</h3>
+            <ul className="list-disc pl-5 space-y-1 text-sm">
+              <li>Verwende ein anderes PDF, das einfacher formatiert ist</li>
+              <li>Speichere das PDF mit einem anderen PDF-Editor</li>
+              <li>Teile das PDF in kleinere Dateien auf</li>
+              <li>Kopiere den Inhalt in ein Textdokument und exportiere es erneut als PDF</li>
+              <li>Stelle sicher, dass der Text im PDF kopierbar ist (keine Scans oder Bilder)</li>
+            </ul>
+          </div>
+          
+          <DialogFooter className="mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowFunctionLogs(false);
+                
+                // Reset state for a fresh attempt
+                setError(null);
+                setDetailedError(null);
+                setFunctionLogs(null);
+                setUploadProgress(0);
+                setProcessingStage(null);
+              }}
+            >
+              Schließen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default FileUpload;
+
