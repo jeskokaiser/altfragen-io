@@ -100,9 +100,19 @@ serve(async (req: Request) => {
       const tempBucketExists = buckets.some(bucket => bucket.name === 'temp_pdfs');
       if (!tempBucketExists) {
         console.error('temp_pdfs bucket does not exist!');
-        return errorResponse('Storage bucket "temp_pdfs" does not exist', 500);
+        // Create the bucket if it doesn't exist
+        const { error: createBucketError } = await supabase.storage.createBucket('temp_pdfs', {
+          public: false
+        });
+        
+        if (createBucketError) {
+          console.error('Failed to create temp_pdfs bucket:', createBucketError);
+          return errorResponse('Failed to create required storage bucket', 500);
+        }
+        console.log('Created temp_pdfs bucket');
+      } else {
+        console.log('temp_pdfs bucket exists');
       }
-      console.log('temp_pdfs bucket exists');
     } catch (bucketError) {
       console.error('Error checking temp_pdfs bucket:', bucketError);
       return errorResponse('Error checking storage configuration: ' + bucketError.message, 500);
@@ -191,8 +201,8 @@ serve(async (req: Request) => {
       console.log('PDF info:', pdfContent.info);
       console.log('Memory usage after parsing:', Deno.memoryUsage());
       
-      // Log first 100 chars of content for debugging
-      console.log('PDF content preview:', pdfContent.text.substring(0, 100) + '...');
+      // Log first 500 chars of content for debugging
+      console.log('PDF content preview:', pdfContent.text.substring(0, 500) + '...');
     } catch (parseError) {
       console.error('PDF parsing error details:', parseError);
       // Attempt to get more specific error information
@@ -294,17 +304,25 @@ function processTextContent(text: string, filename: string, userId: string, univ
   const lines = text.split('\n').filter(line => line.trim())
   console.log(`Extracted ${lines.length} non-empty lines from PDF`);
   
+  // Log the first 10 lines for debugging
+  console.log('First 10 lines of content:');
+  lines.slice(0, 10).forEach((line, i) => console.log(`Line ${i+1}: ${line}`));
+  
   const questions = []
   let currentQuestion: any = {}
   let questionCount = 0;
+  let inQuestionBlock = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Match question with pattern like "16. Frage:" or just "Frage:"
-    if (/^(\d+\.)?\s*Frage:/.test(line)) {
+    // Match question with pattern like "16. Frage:" or just "Frage:" or "1. Frage" or "Frage 1"
+    // Also match numbered questions like "1." at the beginning of a line
+    if (/^(\d+\.?\s*Frage:?|Frage:?|Frage\s+\d+\.?)/i.test(line) || /^\d+\.\s*(?![A-E]\))/.test(line)) {
       // Save previous question if exists
       if (currentQuestion.question) {
+        // Make sure required fields are present
+        ensureRequiredFields(currentQuestion);
         questions.push(currentQuestion)
         questionCount++;
         if (questionCount % 10 === 0) {
@@ -313,7 +331,29 @@ function processTextContent(text: string, filename: string, userId: string, univ
       }
       
       // Extract just the question text by removing both numbering and "Frage:" prefix
-      const questionText = line.replace(/^(\d+\.)?\s*Frage:\s*/, '').trim()
+      let questionText = line;
+      
+      // Remove question identifiers
+      if (/Frage/i.test(line)) {
+        questionText = line.replace(/^(\d+\.?)?\s*Frage:?\s*(\d+\.?)?\s*/i, '').trim();
+      } else if (/^\d+\./.test(line)) {
+        // For cases like "1. The question text"
+        questionText = line.replace(/^\d+\.\s*/, '').trim();
+      }
+      
+      // Sometimes the question continues on the next line(s)
+      let j = i + 1;
+      while (j < lines.length && 
+             !lines[j].trim().match(/^[A-E]\)/) && 
+             !lines[j].trim().match(/^(\d+\.?\s*Frage:?|Frage:?|Frage\s+\d+\.?)/i) &&
+             !lines[j].trim().match(/^Fach:/) &&
+             !lines[j].trim().match(/^Antwort:/) &&
+             !lines[j].trim().match(/^Kommentar:/) &&
+             !lines[j].trim().match(/^\d+\.\s*(?![A-E]\))/)) {
+        questionText += ' ' + lines[j].trim();
+        i = j;
+        j++;
+      }
       
       currentQuestion = {
         question: questionText,
@@ -323,34 +363,63 @@ function processTextContent(text: string, filename: string, userId: string, univ
         university_id: universityId,
         visibility: universityId ? 'university' : 'private',
         difficulty: 3,
-        image_urls: []
+        image_urls: [],
+        option_a: '',
+        option_b: '',
+        option_c: '',
+        option_d: '',
+        option_e: ''
       }
+      
+      inQuestionBlock = true;
     } 
-    // Match options: "A) Text" or "A)" + next line
-    else if (/^[A-E]\)/.test(line)) {
+    // Match options with more flexible patterns: "A) Text" or "A." or "A:"
+    else if (inQuestionBlock && /^[A-E][\)\.\:]/.test(line)) {
       const option = line[0].toLowerCase()
       const optionText = line.substring(2).trim()
-      currentQuestion[`option_${option}`] = optionText
+      
+      // Handle multi-line options
+      let fullOptionText = optionText;
+      let j = i + 1;
+      // Continue reading until we hit another option or the end of the option block
+      while (j < lines.length && 
+             !lines[j].trim().match(/^[A-E][\)\.\:]/) && 
+             !lines[j].trim().match(/^(\d+\.?\s*Frage:?|Frage:?|Frage\s+\d+\.?)/i) &&
+             !lines[j].trim().match(/^Fach:/) &&
+             !lines[j].trim().match(/^Antwort:/) &&
+             !lines[j].trim().match(/^Kommentar:/) &&
+             !lines[j].trim().match(/^\d+\.\s*(?![A-E]\))/)) {
+        fullOptionText += ' ' + lines[j].trim();
+        i = j;
+        j++;
+      }
+      
+      currentQuestion[`option_${option}`] = fullOptionText;
     }
-    // Match subject: "Fach: HNO"
-    else if (line.startsWith('Fach:')) {
-      currentQuestion.subject = line.replace('Fach:', '').trim()
+    // Match subject: "Fach: HNO" or "Fach HNO"
+    else if (inQuestionBlock && /^Fach:?\s+/i.test(line)) {
+      currentQuestion.subject = line.replace(/^Fach:?\s+/i, '').trim()
     }
-    // Match answer: "Antwort: A"
-    else if (line.startsWith('Antwort:')) {
-      currentQuestion.correct_answer = line.replace('Antwort:', '').trim()
+    // Match answer: "Antwort: A" or "Antwort A" or "Lösung: A" or "Lösung A"
+    else if (inQuestionBlock && /^(Antwort|Lösung):?\s+/i.test(line)) {
+      const answer = line.replace(/^(Antwort|Lösung):?\s+/i, '').trim().charAt(0);
+      if (/^[A-Ea-e]$/.test(answer)) {
+        currentQuestion.correct_answer = answer.toUpperCase();
+      }
     }
-    // Match comment: "Kommentar: Hat da jemand..."
-    else if (line.startsWith('Kommentar:')) {
-      currentQuestion.comment = line.replace('Kommentar:', '').trim()
+    // Match comment: "Kommentar: Hat da jemand..." or "Kommentar Hat da jemand..."
+    else if (inQuestionBlock && /^Kommentar:?\s+/i.test(line)) {
+      currentQuestion.comment = line.replace(/^Kommentar:?\s+/i, '').trim()
       
       // Check if comment continues on next line
       let j = i + 1
       while (j < lines.length && 
-             !lines[j].trim().startsWith('Frage:') && 
-             !lines[j].trim().startsWith('Fach:') &&
-             !lines[j].trim().startsWith('Antwort:') &&
-             !/^[A-E]\)/.test(lines[j].trim())) {
+             !lines[j].trim().match(/^[A-E][\)\.\:]/) &&
+             !lines[j].trim().match(/^(\d+\.?\s*Frage:?|Frage:?|Frage\s+\d+\.?)/i) &&
+             !lines[j].trim().match(/^Fach:/) &&
+             !lines[j].trim().match(/^Antwort:/) &&
+             !lines[j].trim().match(/^Kommentar:/) &&
+             !lines[j].trim().match(/^\d+\.\s*(?![A-E]\))/)) {
         currentQuestion.comment += ' ' + lines[j].trim()
         i = j
         j++
@@ -360,10 +429,54 @@ function processTextContent(text: string, filename: string, userId: string, univ
 
   // Add last question
   if (currentQuestion.question) {
+    // Make sure required fields are present
+    ensureRequiredFields(currentQuestion);
     questions.push(currentQuestion)
     questionCount++;
   }
 
   console.log(`Completed processing ${questionCount} questions`);
+  
+  // Debug logging for the first question we found
+  if (questions.length > 0) {
+    console.log('First question sample:');
+    console.log(JSON.stringify(questions[0], null, 2));
+  }
+  
   return questions
+}
+
+// Helper function to ensure all required fields are present in a question
+function ensureRequiredFields(question: any) {
+  // Make sure all options exist (at least empty strings)
+  const options = ['a', 'b', 'c', 'd', 'e'];
+  options.forEach(opt => {
+    const key = `option_${opt}`;
+    if (!question[key]) {
+      question[key] = '';
+    }
+  });
+  
+  // Make sure subject exists
+  if (!question.subject) {
+    question.subject = 'Unbekannt';
+  }
+  
+  // Make sure correct_answer exists
+  if (!question.correct_answer) {
+    // Default to first option if no answer specified
+    question.correct_answer = 'A';
+  }
+  
+  // Make sure comment exists
+  if (!question.comment) {
+    question.comment = '';
+  }
+  
+  // Map option_a to optionA for compatibility
+  question.optionA = question.option_a;
+  question.optionB = question.option_b;
+  question.optionC = question.option_c;
+  question.optionD = question.option_d;
+  question.optionE = question.option_e;
 }
