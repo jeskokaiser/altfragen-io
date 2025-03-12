@@ -1,51 +1,27 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Question } from '@/types/models/Question';
+import { Question } from '@/types/Question';
 import { AppError, handleApiError } from '@/utils/errorHandler';
 import { 
   mapQuestionToDatabaseQuestion,
   mapDatabaseQuestionToQuestion
 } from '@/utils/mappers/questionMappers';
-import { ExtendedDatabaseQuestion } from '@/types/api/database';
-import { getUserOrganization, isOrganizationWhitelisted } from './OrganizationService';
 
 /**
  * Saves questions to the database
  * @param questions - The questions to save
  * @param userId - The ID of the user
- * @param visibility - The visibility of the questions ('private' or 'organization')
  * @returns The saved questions
  */
-export const saveQuestions = async (
-  questions: Question[], 
-  userId: string, 
-  visibility: 'private' | 'organization' = 'private'
-): Promise<Question[]> => {
+export const saveQuestions = async (questions: Question[], userId: string): Promise<Question[]> => {
   try {
-    // Get the user's organization ID
-    const userOrg = await getUserOrganization(userId);
-    const organizationId = userOrg?.id;
-    
-    // If trying to share with organization, check if organization is whitelisted
-    if (visibility === 'organization' && organizationId) {
-      const isWhitelisted = await isOrganizationWhitelisted(organizationId);
-      if (!isWhitelisted) {
-        throw new AppError('Your organization is not whitelisted for sharing', { code: 403 });
-      }
-    }
-    
-    const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(
-      q, 
-      userId, 
-      visibility, 
-      visibility === 'organization' ? organizationId : null
-    ));
+    const dbQuestions = questions.map(q => mapQuestionToDatabaseQuestion(q, userId));
     
     // Insert questions individually to avoid type errors with array inserts
     for (const question of dbQuestions) {
       const { error } = await supabase
         .from('questions')
-        .insert(question as ExtendedDatabaseQuestion);
+        .insert(question);
         
       if (error) throw new AppError(error.message, error);
     }
@@ -76,7 +52,7 @@ export const updateQuestion = async (question: Question): Promise<Question> => {
     
     const { error } = await supabase
       .from('questions')
-      .update(dbQuestion as ExtendedDatabaseQuestion)
+      .update(dbQuestion)
       .eq('id', question.id);
 
     if (error) throw new AppError(error.message, error);
@@ -106,91 +82,5 @@ export const markQuestionUnclear = async (questionId: string, isUnclear: boolean
     return true;
   } catch (error) {
     throw handleApiError(error, 'Failed to mark question as unclear');
-  }
-};
-
-/**
- * Updates a question's visibility in the database
- * @param questionId - The ID of the question
- * @param visibility - The new visibility setting ('private' or 'organization')
- * @param userId - The ID of the user making the change
- * @returns A boolean indicating success
- */
-export const updateQuestionVisibility = async (
-  questionId: string, 
-  visibility: 'private' | 'organization',
-  userId: string
-): Promise<boolean> => {
-  try {
-    // Get the user's organization ID
-    const userOrg = await getUserOrganization(userId);
-    const organizationId = userOrg?.id;
-    
-    // If trying to share with organization, check if organization is whitelisted
-    if (visibility === 'organization' && organizationId) {
-      const isWhitelisted = await isOrganizationWhitelisted(organizationId);
-      if (!isWhitelisted) {
-        throw new AppError('Your organization is not whitelisted for sharing', { code: 403 });
-      }
-    }
-    
-    const updateData: any = {
-      visibility: visibility,
-      organization_id: visibility === 'organization' ? organizationId : null
-    };
-    
-    const { error } = await supabase
-      .from('questions')
-      .update(updateData)
-      .eq('id', questionId)
-      .eq('user_id', userId);  // Ensure user owns the question
-
-    if (error) throw new AppError(error.message, error);
-    return true;
-  } catch (error) {
-    throw handleApiError(error, 'Failed to update question visibility');
-  }
-};
-
-/**
- * Updates the visibility of all questions in a dataset
- * @param filename - The filename of the dataset
- * @param visibility - The new visibility setting ('private' or 'organization')
- * @param userId - The ID of the user making the change
- * @returns A boolean indicating success
- */
-export const updateDatasetVisibility = async (
-  filename: string,
-  visibility: 'private' | 'organization',
-  userId: string
-): Promise<boolean> => {
-  try {
-    // Get the user's organization ID
-    const userOrg = await getUserOrganization(userId);
-    const organizationId = userOrg?.id;
-    
-    // If trying to share with organization, check if organization is whitelisted
-    if (visibility === 'organization' && organizationId) {
-      const isWhitelisted = await isOrganizationWhitelisted(organizationId);
-      if (!isWhitelisted) {
-        throw new AppError('Your organization is not whitelisted for sharing', { code: 403 });
-      }
-    }
-    
-    const updateData: any = {
-      visibility: visibility,
-      organization_id: visibility === 'organization' ? organizationId : null
-    };
-    
-    const { error } = await supabase
-      .from('questions')
-      .update(updateData)
-      .eq('filename', filename)
-      .eq('user_id', userId);  // Ensure user owns the questions
-
-    if (error) throw new AppError(error.message, error);
-    return true;
-  } catch (error) {
-    throw handleApiError(error, 'Failed to update dataset visibility');
   }
 };

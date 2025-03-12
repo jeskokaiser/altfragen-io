@@ -3,7 +3,7 @@ import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, AlertCircle, Archive, RotateCcw } from 'lucide-react';
-import { Question } from '@/types/models/Question';
+import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -26,7 +26,6 @@ interface DatasetHeaderProps {
   onArchive?: (e: React.MouseEvent) => void;
   onRestore?: (e: React.MouseEvent) => void;
   isArchived?: boolean;
-  isCreator?: boolean;
 }
 
 const DatasetHeader: React.FC<DatasetHeaderProps> = ({
@@ -37,7 +36,6 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   onArchive,
   onRestore,
   isArchived = false,
-  isCreator = true,
 }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();

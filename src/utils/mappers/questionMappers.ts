@@ -1,6 +1,6 @@
 
 import { Question } from '@/types/models/Question';
-import { ExtendedDatabaseQuestion } from '@/types/api/database';
+import { DatabaseQuestion } from '@/types/api/database';
 
 /**
  * Maps a database question object to a Question domain object
@@ -21,23 +21,15 @@ export const mapDatabaseQuestionToQuestion = (dbQuestion: any): Question => {
     created_at: dbQuestion.created_at,
     difficulty: dbQuestion.difficulty,
     is_unclear: dbQuestion.is_unclear,
-    marked_unclear_at: dbQuestion.marked_unclear_at,
-    visibility: dbQuestion.visibility || 'private',
-    user_id: dbQuestion.user_id,
-    organization_id: dbQuestion.organization_id
+    marked_unclear_at: dbQuestion.marked_unclear_at
   };
 };
 
 /**
  * Maps a Question domain object to a database question object for insertion/update
  */
-export const mapQuestionToDatabaseQuestion = (
-  question: Question, 
-  userId?: string, 
-  visibility?: 'private' | 'organization',
-  organizationId?: string | null
-): ExtendedDatabaseQuestion => {
-  const dbQuestion: ExtendedDatabaseQuestion = {
+export const mapQuestionToDatabaseQuestion = (question: Question, userId?: string): DatabaseQuestion => {
+  const dbQuestion: DatabaseQuestion = {
     question: question.question,
     option_a: question.optionA,
     option_b: question.optionB,
@@ -54,16 +46,6 @@ export const mapQuestionToDatabaseQuestion = (
   // Only include user_id for new questions
   if (userId) {
     dbQuestion.user_id = userId;
-  }
-
-  // Include visibility if provided
-  if (visibility) {
-    dbQuestion.visibility = visibility;
-  }
-
-  // Include organization_id if provided
-  if (organizationId !== undefined) {
-    dbQuestion.organization_id = organizationId;
   }
 
   return dbQuestion;

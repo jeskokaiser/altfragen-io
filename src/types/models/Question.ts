@@ -77,19 +77,4 @@ export interface Question {
    * When the question was marked as unclear
    */
   marked_unclear_at?: string;
-  
-  /**
-   * Visibility of the question ('private' or 'organization')
-   */
-  visibility?: 'private' | 'organization';
-  
-  /**
-   * ID of the user who created the question
-   */
-  user_id?: string;
-  
-  /**
-   * ID of the organization this question belongs to
-   */
-  organization_id?: string | null;
 }

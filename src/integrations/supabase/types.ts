@@ -9,84 +9,23 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      organization_whitelist: {
-        Row: {
-          created_at: string
-          id: string
-          is_whitelisted: boolean
-          organization_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_whitelisted?: boolean
-          organization_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_whitelisted?: boolean
-          organization_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "organization_whitelist_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: true
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organizations: {
-        Row: {
-          created_at: string
-          domain: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          domain: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          domain?: string
-          id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
           email: string | null
-          email_domain: string | null
           id: string
-          organization_id: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
-          email_domain?: string | null
           id: string
-          organization_id?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
-          email_domain?: string | null
           id?: string
-          organization_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       questions: {
         Row: {
@@ -103,11 +42,9 @@ export type Database = {
           option_c: string
           option_d: string
           option_e: string
-          organization_id: string | null
           question: string
           subject: string
           user_id: string | null
-          visibility: string | null
         }
         Insert: {
           comment?: string | null
@@ -123,11 +60,9 @@ export type Database = {
           option_c: string
           option_d: string
           option_e: string
-          organization_id?: string | null
           question: string
           subject: string
           user_id?: string | null
-          visibility?: string | null
         }
         Update: {
           comment?: string | null
@@ -143,21 +78,11 @@ export type Database = {
           option_c?: string
           option_d?: string
           option_e?: string
-          organization_id?: string | null
           question?: string
           subject?: string
           user_id?: string | null
-          visibility?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "questions_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_preferences: {
         Row: {

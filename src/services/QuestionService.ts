@@ -1,10 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/models/Question';
 import { mapDatabaseQuestionToQuestion } from '@/utils/mappers/questionMappers';
 import { AppError, handleApiError, logError } from '@/utils/errorHandler';
 
 /**
- * Fetches all questions from the database that the user has access to
+ * Fetches all questions from the database
  * @returns A promise that resolves to an array of Questions
  * @throws {AppError} If there's an error fetching the questions
  */
@@ -26,55 +27,6 @@ export const fetchQuestions = async (): Promise<Question[]> => {
   } catch (error) {
     console.error("Error in fetchQuestions:", error);
     throw handleApiError(error, 'Failed to fetch questions');
-  }
-};
-
-/**
- * Fetches personal questions (created by the user) from the database
- * @param userId - The ID of the user
- * @returns A promise that resolves to an array of Questions
- * @throws {AppError} If there's an error fetching the questions
- */
-export const fetchPersonalQuestions = async (userId: string): Promise<Question[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('questions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      logError(error, { source: 'fetchPersonalQuestions', message: error.message });
-      throw new AppError(`Failed to fetch personal questions: ${error.message}`, error);
-    }
-    
-    return (data || []).map(mapDatabaseQuestionToQuestion);
-  } catch (error) {
-    throw handleApiError(error, 'Failed to fetch personal questions');
-  }
-};
-
-/**
- * Fetches organizational questions (shared by users with the same domain) from the database
- * @returns A promise that resolves to an array of Questions
- * @throws {AppError} If there's an error fetching the questions
- */
-export const fetchOrganizationalQuestions = async (): Promise<Question[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('questions')
-      .select('*')
-      .eq('visibility', 'organization')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      logError(error, { source: 'fetchOrganizationalQuestions', message: error.message });
-      throw new AppError(`Failed to fetch organizational questions: ${error.message}`, error);
-    }
-    
-    return (data || []).map(mapDatabaseQuestionToQuestion);
-  } catch (error) {
-    throw handleApiError(error, 'Failed to fetch organizational questions');
   }
 };
 
