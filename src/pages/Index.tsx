@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +20,6 @@ const Index = () => {
     }
   };
 
-  // Revised animation variants with proper initial states
   const fadeIn = {
     hidden: { 
       opacity: 0, 
@@ -46,7 +44,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
-      {/* Sticky Navigation */}
       <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-slate-100">
         <div className="container mx-auto flex justify-between items-center py-4 px-4">
           <div className="text-2xl font-semibold">Altfragen<span className="text-blue-600">.</span>io</div>
@@ -69,7 +66,6 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 md:pt-40 md:pb-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white opacity-70 z-0"></div>
         
@@ -120,7 +116,6 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* Screenshot Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <motion.div 
@@ -144,7 +139,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-24 px-4 bg-slate-50">
         <div className="container mx-auto">
           <motion.div 
@@ -197,7 +191,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How it Works Section */}
       <section className="py-24 px-4">
         <div className="container mx-auto">
           <motion.div 
@@ -244,7 +237,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Second Screenshot Section */}
       <section className="py-20 px-4 bg-slate-50">
         <div className="container mx-auto">
           <motion.div 
@@ -268,7 +260,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonial Section */}
       <section className="py-24 px-4">
         <div className="container mx-auto">
           <motion.div 
@@ -291,7 +282,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-24 px-4 bg-slate-900 text-white">
         <div className="container mx-auto text-center">
           <motion.div
@@ -359,11 +349,6 @@ const StepCard = ({ number, title, description, variants }: StepCardProps) => {
       </div>
       <h3 className="text-xl font-semibold mb-2 text-slate-900">{title}</h3>
       <p className="text-slate-600">{description}</p>
-      
-      {/* Connecting Line */}
-      {number !== "3" && (
-        <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-slate-200 transform -translate-x-1/2"></div>
-      )}
     </motion.div>
   );
 };
