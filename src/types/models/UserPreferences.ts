@@ -16,5 +16,5 @@ export interface UserPreferences {
   /**
    * Whether dark mode is enabled
    */
-  darkMode?: boolean;
+  darkMode: boolean;
 }

@@ -140,6 +140,7 @@ export type Database = {
         Row: {
           archived_datasets: string[] | null
           created_at: string | null
+          dark_mode: boolean | null
           id: string
           immediate_feedback: boolean | null
           updated_at: string | null
@@ -148,6 +149,7 @@ export type Database = {
         Insert: {
           archived_datasets?: string[] | null
           created_at?: string | null
+          dark_mode?: boolean | null
           id?: string
           immediate_feedback?: boolean | null
           updated_at?: string | null
@@ -156,6 +158,7 @@ export type Database = {
         Update: {
           archived_datasets?: string[] | null
           created_at?: string | null
+          dark_mode?: boolean | null
           id?: string
           immediate_feedback?: boolean | null
           updated_at?: string | null

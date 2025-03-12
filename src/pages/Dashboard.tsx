@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchQuestions } from '@/services/QuestionService';
@@ -95,6 +96,17 @@ const Dashboard = () => {
     return questions.slice(startIndex, endIndex);
   }, [groupedQuestions, selectedFilename, startIndex, endIndex]);
 
+  // Calculate derived stats for the summary components
+  const publicQuestions = questions.filter(q => q.visibility === 'public').length;
+  const universityQuestions = questions.filter(q => q.visibility === 'university').length;
+  
+  // Training summary stats - in a real app these would come from a backend call
+  // Using placeholders for now
+  const todayNew = 5;
+  const todayPractice = 12;
+  const totalAnswered = 78;
+  const totalAttempts = 95;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <DashboardHeader />
@@ -102,11 +114,19 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <QuestionsSummary 
           totalQuestions={questions.length} 
+          publicQuestions={publicQuestions}
+          universityQuestions={universityQuestions}
           unclearCount={unclearCount}
           userId={user?.id}
         />
         <UniversityQuestions />
-        <TrainingSummary userId={user?.id} />
+        <TrainingSummary 
+          userId={user?.id}
+          todayNew={todayNew}
+          todayPractice={todayPractice}
+          totalAnswered={totalAnswered}
+          totalAttempts={totalAttempts}
+        />
       </div>
       
       <div className="mb-6">
