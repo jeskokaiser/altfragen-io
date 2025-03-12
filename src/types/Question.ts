@@ -17,4 +17,5 @@ export interface Question {
   marked_unclear_at?: string;
   university_id?: string | null;
   visibility?: 'private' | 'university' | 'public';
+  user_id?: string | null;
 }
