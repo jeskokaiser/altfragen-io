@@ -47,10 +47,8 @@ export type Database = {
           correct_answer: string
           created_at: string
           difficulty: number | null
-          exam_name: string | null
           filename: string
           id: string
-          image_urls: string[] | null
           is_unclear: boolean | null
           marked_unclear_at: string | null
           option_a: string
@@ -69,10 +67,8 @@ export type Database = {
           correct_answer: string
           created_at?: string
           difficulty?: number | null
-          exam_name?: string | null
           filename: string
           id?: string
-          image_urls?: string[] | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a: string
@@ -91,10 +87,8 @@ export type Database = {
           correct_answer?: string
           created_at?: string
           difficulty?: number | null
-          exam_name?: string | null
           filename?: string
           id?: string
-          image_urls?: string[] | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a?: string
@@ -215,13 +209,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_user_university_match: {
-        Args: {
-          user_uuid: string
-          university_uuid: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
