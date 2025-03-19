@@ -9,6 +9,7 @@ import DatasetList from '@/components/datasets/DatasetList';
 import { fetchAllQuestions } from '@/services/DatabaseService';
 import SemesterYearFilter from '@/components/datasets/SemesterYearFilter';
 import { GraduationCap, Folders } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const UniversityDatasets = () => {
   const { user, universityId } = useAuth();
@@ -98,6 +99,16 @@ const UniversityDatasets = () => {
     setSelectedDataset(null);
   };
 
+  // Move this useMemo before any conditional returns to maintain hooks order
+  const selectedDatasetForDisplay = useMemo(() => {
+    if (!selectedFilename || !groupedUniversityQuestions[selectedFilename]) {
+      return {};
+    }
+    return {
+      [selectedFilename]: groupedUniversityQuestions[selectedFilename]
+    };
+  }, [selectedFilename, groupedUniversityQuestions]);
+
   if (!user) {
     return <div>Loading...</div>;
   }
@@ -126,15 +137,6 @@ const UniversityDatasets = () => {
 
   const hasUniversityQuestions = Object.keys(groupedUniversityQuestions).length > 0;
   const hasSemesterOrYearData = universityQuestions.some(q => q.semester || q.year);
-
-  const selectedDatasetForDisplay = useMemo(() => {
-    if (!selectedFilename || !groupedUniversityQuestions[selectedFilename]) {
-      return {};
-    }
-    return {
-      [selectedFilename]: groupedUniversityQuestions[selectedFilename]
-    };
-  }, [selectedFilename, groupedUniversityQuestions]);
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
