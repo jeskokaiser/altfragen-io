@@ -86,8 +86,6 @@ export const fetchUniversityQuestions = async (universityId: string) => {
   }));
 };
 
-// Removed fetchPublicQuestions function since we no longer support public visibility
-
 export const updateQuestionVisibility = async (questionId: string, visibility: 'private' | 'university', universityId?: string | null) => {
   // First check if this question is already shared with university
   const { data: existingQuestion } = await supabase

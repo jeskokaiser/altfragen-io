@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Copy, GraduationCap, Globe, Lock } from 'lucide-react';
+import { AlertCircle, Copy, GraduationCap, Lock } from 'lucide-react';
 import DifficultyControls from '../training/DifficultyControls';
 import { showToast } from '@/utils/toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -56,8 +56,6 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
     switch (question.visibility) {
       case 'university':
         return <GraduationCap className="h-4 w-4 text-blue-500" />;
-      case 'public':
-        return <Globe className="h-4 w-4 text-green-500" />;
       default:
         return <Lock className="h-4 w-4 text-gray-500" />;
     }
@@ -67,8 +65,6 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
     switch (question.visibility) {
       case 'university':
         return "Mit deiner Universität geteilt";
-      case 'public':
-        return "Öffentlich für alle Nutzer";
       default:
         return "Privat (nur für dich)";
     }

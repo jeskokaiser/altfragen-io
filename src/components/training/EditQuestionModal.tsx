@@ -69,6 +69,12 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Check if trying to change from university to private
+      if (question.visibility === 'university' && visibility === 'private') {
+        toast.error('Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.');
+        return;
+      }
+
       const {
         data: updatedQuestion,
         error
@@ -164,31 +170,39 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
             
             <div>
               <Label htmlFor="visibility">Sichtbarkeit</Label>
-              <Select 
-                disabled={!canChangeVisibility}
-                value={visibility} 
-                onValueChange={(value: 'private' | 'university') => setVisibility(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sichtbarkeit wählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="private" disabled={!canChangeToPrivate}>
-                    Privat (nur für dich)
-                  </SelectItem>
-                  <SelectItem value="university" disabled={!universityId}>
-                    Universität (alle an deiner Uni)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {!canChangeVisibility && question.visibility === 'university' && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Diese Frage wird mit deiner Universität geteilt. Du kannst die Sichtbarkeit nicht ändern.
-                </p>
+              {question.visibility === 'university' ? (
+                <div className="flex items-center mt-2">
+                  <GraduationCap className="h-5 w-5 text-blue-500 mr-2" />
+                  <span>Mit deiner Universität geteilt (kann nicht geändert werden)</span>
+                </div>
+              ) : (
+                <Select 
+                  disabled={!canChangeVisibility}
+                  value={visibility} 
+                  onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sichtbarkeit wählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="private">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        <span>Privat (nur für dich)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="university" disabled={!universityId}>
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4" />
+                        <span>Universität (alle an deiner Uni)</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               )}
-              {question.visibility === 'university' && (
+              {question.visibility !== 'university' && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  Achtung: Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.
+                  Hinweis: Wenn du diese Frage mit deiner Universität teilst, kann die Sichtbarkeit nicht mehr zurück auf privat gesetzt werden.
                 </p>
               )}
             </div>
