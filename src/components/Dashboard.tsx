@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { fetchAllQuestions } from '@/services/DatabaseService';
 import SemesterYearFilter from './datasets/SemesterYearFilter';
-import { Calendar, SlidersHorizontal, GraduationCap } from 'lucide-react';
+import { Calendar, SlidersHorizontal, GraduationCap, Folders } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [uniSelectedSemester, setUniSelectedSemester] = useState<string | null>(null);
   const [uniSelectedYear, setUniSelectedYear] = useState<number | null>(null);
+  const [uniSelectedDataset, setUniSelectedDataset] = useState<string | null>(null);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -126,8 +127,12 @@ const Dashboard = () => {
       filtered = filtered.filter(q => q.year === uniSelectedYear);
     }
     
+    if (uniSelectedDataset) {
+      filtered = filtered.filter(q => q.filename === uniSelectedDataset);
+    }
+    
     return filtered;
-  }, [questions, universityId, uniSelectedSemester, uniSelectedYear, user?.id]);
+  }, [questions, universityId, uniSelectedSemester, uniSelectedYear, uniSelectedDataset, user?.id]);
 
   const groupedQuestions = useMemo(() => {
     const grouped = filteredQuestions.reduce((acc, question) => {
@@ -188,7 +193,21 @@ const Dashboard = () => {
   }, [universityQuestions]);
 
   const handleDatasetClick = (filename: string) => {
-    setSelectedFilename(selectedFilename === filename ? null : filename);
+    if (uniSelectedDataset === filename) {
+      setUniSelectedDataset(null);
+    } else {
+      setUniSelectedDataset(filename);
+      setSelectedFilename(null);
+    }
+  };
+
+  const handlePersonalDatasetClick = (filename: string) => {
+    if (selectedFilename === filename) {
+      setSelectedFilename(null);
+    } else {
+      setSelectedFilename(filename);
+      setUniSelectedDataset(null);
+    }
   };
 
   const handleStartTraining = (questions: Question[]) => {
@@ -208,6 +227,7 @@ const Dashboard = () => {
   const handleClearUniFilters = () => {
     setUniSelectedSemester(null);
     setUniSelectedYear(null);
+    setUniSelectedDataset(null);
   };
 
   if (!user) {
@@ -244,6 +264,22 @@ const Dashboard = () => {
   const hasSemesterOrYearData = filteredQuestions.some(q => q.semester || q.year);
   const hasUniSemesterOrYearData = universityQuestions.some(q => q.semester || q.year);
   const hasUniversityQuestions = Object.keys(groupedUniversityQuestions).length > 0;
+
+  const selectedUniDatasetQuestions = useMemo(() => {
+    if (!uniSelectedDataset || !groupedUniversityQuestions[uniSelectedDataset]) {
+      return [];
+    }
+    return groupedUniversityQuestions[uniSelectedDataset];
+  }, [uniSelectedDataset, groupedUniversityQuestions]);
+
+  const selectedUniDatasetForDisplay = useMemo(() => {
+    if (!uniSelectedDataset || !groupedUniversityQuestions[uniSelectedDataset]) {
+      return {};
+    }
+    return {
+      [uniSelectedDataset]: groupedUniversityQuestions[uniSelectedDataset]
+    };
+  }, [uniSelectedDataset, groupedUniversityQuestions]);
 
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
@@ -303,6 +339,7 @@ const Dashboard = () => {
             questions={filteredQuestions}
             selectedSemester={selectedSemester}
             selectedYear={selectedYear}
+            selectedDataset={null}
             onSemesterChange={setSelectedSemester}
             onYearChange={setSelectedYear}
             onClearFilters={handleClearFilters}
@@ -324,7 +361,7 @@ const Dashboard = () => {
           <DatasetList
             groupedQuestions={groupedQuestions}
             selectedFilename={selectedFilename}
-            onDatasetClick={handleDatasetClick}
+            onDatasetClick={handlePersonalDatasetClick}
             onStartTraining={handleStartTraining}
           />
         ) : (
@@ -361,20 +398,49 @@ const Dashboard = () => {
               questions={universityQuestions}
               selectedSemester={uniSelectedSemester}
               selectedYear={uniSelectedYear}
+              selectedDataset={uniSelectedDataset}
               onSemesterChange={setUniSelectedSemester}
               onYearChange={setUniSelectedYear}
+              onDatasetChange={setUniSelectedDataset}
               onClearFilters={handleClearUniFilters}
+              showDatasetFilter={true}
               title="Universitäts-Filter"
             />
           )}
           
           {hasUniversityQuestions ? (
-            <DatasetList
-              groupedQuestions={groupedUniversityQuestions}
-              selectedFilename={selectedFilename}
-              onDatasetClick={handleDatasetClick}
-              onStartTraining={handleStartTraining}
-            />
+            <>
+              {!uniSelectedDataset ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-700 dark:text-zinc-300 flex items-center gap-2">
+                    <Folders className="h-4 w-4" />
+                    Verfügbare Datensätze
+                  </h3>
+                  <DatasetList
+                    groupedQuestions={groupedUniversityQuestions}
+                    selectedFilename={uniSelectedDataset}
+                    onDatasetClick={handleDatasetClick}
+                    onStartTraining={handleStartTraining}
+                    isCompactView={true}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-slate-700 dark:text-zinc-300 flex items-center gap-2">
+                      <Folders className="h-4 w-4" />
+                      Ausgewählter Datensatz: {uniSelectedDataset}
+                    </h3>
+                  </div>
+                  <DatasetList
+                    groupedQuestions={selectedUniDatasetForDisplay}
+                    selectedFilename={uniSelectedDataset}
+                    onDatasetClick={handleDatasetClick}
+                    onStartTraining={handleStartTraining}
+                  />
+                </>
+              )}
+            </>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 text-center">
@@ -382,7 +448,7 @@ const Dashboard = () => {
                   Keine Universitäts-Datensätze vorhanden
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {uniSelectedSemester || uniSelectedYear 
+                  {uniSelectedSemester || uniSelectedYear || uniSelectedDataset
                     ? 'Keine Datensätze mit den ausgewählten Filtern gefunden'
                     : 'Noch keine Datensätze von anderen Nutzern deiner Universität geteilt'
                   }
