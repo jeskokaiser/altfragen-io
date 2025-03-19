@@ -13,6 +13,7 @@ import UnclearQuestions from '@/pages/UnclearQuestions';
 import Changelog from '@/pages/Changelog';
 import Dashboard from '@/components/Dashboard';
 import ArchivedDatasets from '@/pages/ArchivedDatasets';
+import UniversityDatasets from '@/pages/UniversityDatasets';
 import Footer from '@/components/Footer';
 
 const MainLayout = () => {
@@ -38,6 +39,7 @@ const MainLayout = () => {
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/archived" element={<ArchivedDatasets />} />
+          <Route path="/university-datasets" element={<UniversityDatasets />} />
           {/* Catch all other routes and redirect to index */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
