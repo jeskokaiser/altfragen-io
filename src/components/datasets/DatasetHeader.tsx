@@ -57,6 +57,9 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
 
   // Determine visibility of the dataset (using the first question as reference)
   const datasetVisibility = questions[0]?.visibility || 'private';
+  
+  // Determine if this is a private dataset (owned by current user)
+  const isPrivateDataset = datasetVisibility === 'private' && user?.id === questions[0]?.user_id;
 
   // Check if dataset can be changed to private (only if all questions are private)
   const canChangeToPrivate = !questions.some(q => q.visibility === 'university');
@@ -142,41 +145,44 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
             </Tooltip>
           </TooltipProvider>
           
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                title={isArchived ? "Wiederherstellen" : "Archivieren"}
-              >
-                {isArchived ? (
-                  <RotateCcw className="h-4 w-4" />
-                ) : (
-                  <Archive className="h-4 w-4" />
-                )}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {isArchived ? "Datensatz wiederherstellen" : "Datensatz archivieren"}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {isArchived 
-                    ? `Möchtest du den Datensatz "${filename}" wiederherstellen? Der Datensatz wird wieder in der Hauptansicht angezeigt.`
-                    : `Möchtest du den Datensatz "${filename}" wirklich archivieren? Der Datensatz wird aus der Hauptansicht entfernt, kann aber später wieder hergestellt werden.`
-                  }
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                <AlertDialogAction onClick={isArchived ? onRestore : onArchive}>
-                  {isArchived ? "Wiederherstellen" : "Archivieren"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {/* Only show archive/restore button for private datasets */}
+          {isPrivateDataset && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  title={isArchived ? "Wiederherstellen" : "Archivieren"}
+                >
+                  {isArchived ? (
+                    <RotateCcw className="h-4 w-4" />
+                  ) : (
+                    <Archive className="h-4 w-4" />
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {isArchived ? "Datensatz wiederherstellen" : "Datensatz archivieren"}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {isArchived 
+                      ? `Möchtest du den Datensatz "${filename}" wiederherstellen? Der Datensatz wird wieder in der Hauptansicht angezeigt.`
+                      : `Möchtest du den Datensatz "${filename}" wirklich archivieren? Der Datensatz wird aus der Hauptansicht entfernt, kann aber später wieder hergestellt werden.`
+                    }
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogAction onClick={isArchived ? onRestore : onArchive}>
+                    {isArchived ? "Wiederherstellen" : "Archivieren"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>{questions.length} Fragen</span>
