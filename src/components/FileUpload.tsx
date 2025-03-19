@@ -16,14 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
-  const { user, universityId } = useAuth();
+  const { user, universityId, universityName } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>('private');
 
@@ -102,6 +102,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     }
   };
 
+  const getUniversityContextMessage = () => {
+    if (!universityId) {
+      return "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.";
+    }
+    return `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.`;
+  };
+
   return (
     <div className="flex flex-col items-center gap-4">
       <h2 className="text-2xl font-semibold text-slate-800 dark:text-zinc-50">
@@ -119,7 +126,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       )}
 
       <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
+        <CardHeader>
+          <CardTitle className="text-xl">Fragen-Sichtbarkeit</CardTitle>
+          <CardDescription>
+            {getUniversityContextMessage()}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-2">
           <div className="flex flex-col gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Sichtbarkeit der Fragen</label>
@@ -140,7 +153,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                       <span>Privat (nur für dich)</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="university">
+                  <SelectItem value="university" disabled={!universityId}>
                     <div className="flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       <span>Universität (alle an deiner Uni)</span>
