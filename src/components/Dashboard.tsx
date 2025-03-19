@@ -18,13 +18,11 @@ import UniversityDatasetSelector from './datasets/UniversityDatasetSelector';
 import SelectedDatasetsDisplay from './datasets/SelectedDatasetsDisplay';
 import { Button } from '@/components/ui/button';
 
-const SELECTED_UNIVERSITY_DATASETS_KEY = 'selectedUniversityDatasets';
-
 const Dashboard = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { preferences, isDatasetArchived } = useUserPreferences();
+  const { preferences, isDatasetArchived, updateSelectedUniversityDatasets } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -35,22 +33,10 @@ const Dashboard = () => {
   const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
 
   useEffect(() => {
-    const storedDatasets = localStorage.getItem(SELECTED_UNIVERSITY_DATASETS_KEY);
-    if (storedDatasets) {
-      try {
-        const parsed = JSON.parse(storedDatasets);
-        if (Array.isArray(parsed)) {
-          setSelectedUniversityDatasets(parsed);
-        }
-      } catch (e) {
-        console.error("Failed to parse stored datasets");
-      }
+    if (preferences.selectedUniversityDatasets) {
+      setSelectedUniversityDatasets(preferences.selectedUniversityDatasets);
     }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(SELECTED_UNIVERSITY_DATASETS_KEY, JSON.stringify(selectedUniversityDatasets));
-  }, [selectedUniversityDatasets]);
+  }, [preferences.selectedUniversityDatasets]);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -258,14 +244,18 @@ const Dashboard = () => {
 
   const handleSelectedDatasetsChange = (datasets: string[]) => {
     setSelectedUniversityDatasets(datasets);
+    updateSelectedUniversityDatasets(datasets);
   };
 
   const handleRemoveDataset = (filename: string) => {
-    setSelectedUniversityDatasets(prev => prev.filter(f => f !== filename));
+    const newDatasets = selectedUniversityDatasets.filter(f => f !== filename);
+    setSelectedUniversityDatasets(newDatasets);
+    updateSelectedUniversityDatasets(newDatasets);
   };
 
   const handleClearAllSelectedDatasets = () => {
     setSelectedUniversityDatasets([]);
+    updateSelectedUniversityDatasets([]);
   };
 
   if (!user) {
