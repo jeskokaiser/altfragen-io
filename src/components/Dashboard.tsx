@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,8 @@ import DashboardHeader from './datasets/DashboardHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { fetchAllQuestions } from '@/services/DatabaseService';
+import SemesterYearFilter from './datasets/SemesterYearFilter';
+import { Calendar, SlidersHorizontal } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
@@ -19,6 +20,8 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -88,14 +91,24 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  const unarchivedQuestions = useMemo(() => {
+  const filteredQuestions = useMemo(() => {
     if (!questions) return [];
-    return questions.filter(q => !isDatasetArchived(q.filename));
-  }, [questions, isDatasetArchived]);
+    
+    let filtered = questions.filter(q => !isDatasetArchived(q.filename));
+    
+    if (selectedSemester) {
+      filtered = filtered.filter(q => q.semester === selectedSemester);
+    }
+    
+    if (selectedYear) {
+      filtered = filtered.filter(q => q.year === selectedYear);
+    }
+    
+    return filtered;
+  }, [questions, isDatasetArchived, selectedSemester, selectedYear]);
 
   const groupedQuestions = useMemo(() => {
-    // Group questions by filename
-    const grouped = unarchivedQuestions.reduce((acc, question) => {
+    const grouped = filteredQuestions.reduce((acc, question) => {
       if (!acc[question.filename]) {
         acc[question.filename] = [];
       }
@@ -103,30 +116,25 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, Question[]>);
     
-    // Sort questions within each dataset by semester/year if available
     Object.keys(grouped).forEach(filename => {
       grouped[filename].sort((a, b) => {
-        // First sort by year (descending)
         if (a.year && b.year && a.year !== b.year) {
           return b.year - a.year;
         }
         
-        // Then sort by semester if years are equal or not available
         if (a.semester && b.semester && a.semester !== b.semester) {
-          // Convert semester to number for sorting (e.g., "WS" comes before "SS")
           const semOrder = { 'WS': 1, 'SS': 2 };
           const semA = a.semester.startsWith('WS') ? 1 : 2;
           const semB = b.semester.startsWith('WS') ? 1 : 2;
           return semA - semB;
         }
         
-        // Default: sort by created_at (newest first)
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       });
     });
     
     return grouped;
-  }, [unarchivedQuestions]);
+  }, [filteredQuestions]);
 
   const handleDatasetClick = (filename: string) => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
@@ -138,8 +146,12 @@ const Dashboard = () => {
   };
 
   const handleQuestionsLoaded = () => {
-    // Refresh the questions list
     window.location.reload();
+  };
+
+  const handleClearFilters = () => {
+    setSelectedSemester(null);
+    setSelectedYear(null);
   };
 
   if (!user) {
@@ -172,6 +184,8 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  const hasSemesterOrYearData = filteredQuestions.some(q => q.semester || q.year);
 
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
@@ -219,17 +233,36 @@ const Dashboard = () => {
         </Card>
       </div>
 
+      {hasSemesterOrYearData && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50 flex items-center gap-2">
+              <SlidersHorizontal className="h-5 w-5" />
+              Filter
+            </h2>
+          </div>
+          <SemesterYearFilter
+            questions={questions || []}
+            selectedSemester={selectedSemester}
+            selectedYear={selectedYear}
+            onSemesterChange={setSelectedSemester}
+            onYearChange={setSelectedYear}
+            onClearFilters={handleClearFilters}
+          />
+        </section>
+      )}
+
       <section className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50">
             Fragendatenbanken
           </h2>
           <span className="text-sm text-muted-foreground">
-            {unarchivedQuestions?.length || 0} Fragen insgesamt
+            {filteredQuestions?.length || 0} Fragen insgesamt
           </span>
         </div>
         
-        {unarchivedQuestions && unarchivedQuestions.length > 0 ? (
+        {filteredQuestions && filteredQuestions.length > 0 ? (
           <DatasetList
             groupedQuestions={groupedQuestions}
             selectedFilename={selectedFilename}
@@ -243,7 +276,10 @@ const Dashboard = () => {
                 Keine Datensätze vorhanden
               </p>
               <p className="text-sm text-muted-foreground">
-                Lade neue Datensätze hoch, um loszulegen
+                {selectedSemester || selectedYear 
+                  ? 'Keine Datensätze mit den ausgewählten Filtern gefunden'
+                  : 'Lade neue Datensätze hoch, um loszulegen'
+                }
               </p>
             </CardContent>
           </Card>

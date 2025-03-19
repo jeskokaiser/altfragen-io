@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
@@ -18,7 +17,9 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       filename: q.filename,
       difficulty: q.difficulty,
       university_id: q.visibility === 'university' ? universityId : null,
-      visibility: q.visibility || 'private'
+      visibility: q.visibility || 'private',
+      semester: q.semester || null,
+      year: q.year || null
     }))
   );
 
@@ -49,7 +50,9 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     is_unclear: q.is_unclear,
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university') || 'private'
+    visibility: (q.visibility as 'private' | 'university') || 'private',
+    semester: q.semester || null,
+    year: q.year || null
   }));
 };
 
@@ -87,14 +90,12 @@ export const fetchUniversityQuestions = async (universityId: string) => {
 };
 
 export const updateQuestionVisibility = async (questionId: string, visibility: 'private' | 'university', universityId?: string | null) => {
-  // First check if this question is already shared with university
   const { data: existingQuestion } = await supabase
     .from('questions')
     .select('visibility')
     .eq('id', questionId)
     .single();
   
-  // If question is already shared with university, don't allow changing back to private
   if (existingQuestion?.visibility === 'university' && visibility === 'private') {
     throw new Error('Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.');
   }
@@ -112,7 +113,6 @@ export const updateQuestionVisibility = async (questionId: string, visibility: '
 };
 
 export const updateDatasetVisibility = async (filename: string, userId: string, visibility: 'private' | 'university', universityId?: string | null) => {
-  // First check if any questions in this dataset are already shared with university
   const { data: existingQuestions } = await supabase
     .from('questions')
     .select('visibility')
@@ -120,7 +120,6 @@ export const updateDatasetVisibility = async (filename: string, userId: string, 
     .eq('user_id', userId)
     .eq('visibility', 'university');
   
-  // If trying to change university questions back to private
   if (existingQuestions && existingQuestions.length > 0 && visibility === 'private') {
     throw new Error('Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.');
   }
@@ -138,9 +137,7 @@ export const updateDatasetVisibility = async (filename: string, userId: string, 
   return true;
 };
 
-// New function to fetch all questions (personal and university)
 export const fetchAllQuestions = async (userId: string, universityId?: string | null) => {
-  // First fetch the personal questions
   const { data: personalQuestions, error: personalError } = await supabase
     .from('questions')
     .select('*')
@@ -149,7 +146,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
 
   if (personalError) throw personalError;
 
-  // If we have a university ID, fetch the university questions as well
   let universityQuestions: any[] = [];
   if (universityId) {
     const { data: uniQuestions, error: uniError } = await supabase
@@ -157,14 +153,13 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
       .select('*')
       .eq('university_id', universityId)
       .eq('visibility', 'university')
-      .not('user_id', 'eq', userId) // Exclude own questions that are already in personalQuestions
+      .not('user_id', 'eq', userId)
       .order('created_at', { ascending: false });
 
     if (uniError) throw uniError;
     universityQuestions = uniQuestions || [];
   }
 
-  // Combine and map the questions
   const allQuestions = [...personalQuestions, ...universityQuestions].map(q => ({
     id: q.id,
     question: q.question,
@@ -184,7 +179,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     university_id: q.university_id,
     visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
     user_id: q.user_id,
-    // Add semester and year if available
     semester: q.semester || null,
     year: q.year || null
   }));

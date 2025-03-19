@@ -3,8 +3,9 @@ import React from 'react';
 import { Question } from '@/types/Question';
 import { CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { GraduationCap, Globe, Lock } from 'lucide-react';
+import { GraduationCap, Globe, Lock, Calendar } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 
 interface QuestionListProps {
   questions: Question[];
@@ -43,8 +44,8 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions, isSelected }) =>
         <h3 className="font-semibold mb-4">Fragen:</h3>
         <div className="space-y-4">
           {questions.map((question, index) => (
-            <div key={question.id} className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <div className="flex items-center gap-2">
+            <div key={question.id} className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-medium text-sm text-muted-foreground">Frage {index + 1}</span>
                 <TooltipProvider>
                   <Tooltip>
@@ -58,6 +59,18 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions, isSelected }) =>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                
+                {(question.semester || question.year) && (
+                  <div className="flex items-center gap-1 ml-auto">
+                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                    <Badge variant="outline" className="text-xs">
+                      {[
+                        question.semester, 
+                        question.year
+                      ].filter(Boolean).join(' ')}
+                    </Badge>
+                  </div>
+                )}
               </div>
               <p className="font-medium">{question.question}</p>
               <div className="space-y-2 pl-4">
@@ -68,9 +81,9 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions, isSelected }) =>
                 {question.optionE && <p className="text-sm">E: {question.optionE}</p>}
               </div>
               <div className="pt-2 border-t">
-                <p className="text-sm text-green-600">Richtige Antwort: {question.correctAnswer}</p>
+                <p className="text-sm text-green-600 dark:text-green-400">Richtige Antwort: {question.correctAnswer}</p>
                 {question.comment && (
-                  <p className="text-sm text-slate-600 mt-2">Kommentar: {question.comment}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">Kommentar: {question.comment}</p>
                 )}
               </div>
             </div>
