@@ -1,5 +1,4 @@
-
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -14,6 +13,11 @@ import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { fetchAllQuestions } from '@/services/DatabaseService';
 import SemesterYearFilter from './datasets/SemesterYearFilter';
 import { Calendar, SlidersHorizontal, GraduationCap } from 'lucide-react';
+import DatasetSelectionButton from './datasets/DatasetSelectionButton';
+import UniversityDatasetSelector from './datasets/UniversityDatasetSelector';
+import SelectedDatasetsDisplay from './datasets/SelectedDatasetsDisplay';
+
+const SELECTED_UNIVERSITY_DATASETS_KEY = 'selectedUniversityDatasets';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
@@ -25,6 +29,27 @@ const Dashboard = () => {
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [uniSelectedSemester, setUniSelectedSemester] = useState<string | null>(null);
   const [uniSelectedYear, setUniSelectedYear] = useState<string | null>(null);
+  
+  const [isDatasetSelectorOpen, setIsDatasetSelectorOpen] = useState(false);
+  const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
+
+  useEffect(() => {
+    const storedDatasets = localStorage.getItem(SELECTED_UNIVERSITY_DATASETS_KEY);
+    if (storedDatasets) {
+      try {
+        const parsed = JSON.parse(storedDatasets);
+        if (Array.isArray(parsed)) {
+          setSelectedUniversityDatasets(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse stored datasets");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(SELECTED_UNIVERSITY_DATASETS_KEY, JSON.stringify(selectedUniversityDatasets));
+  }, [selectedUniversityDatasets]);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -94,14 +119,13 @@ const Dashboard = () => {
     enabled: !!user
   });
 
-  // Filter personal datasets - exclude datasets that have university visibility
   const filteredQuestions = useMemo(() => {
     if (!questions) return [];
     
     let filtered = questions.filter(q => 
       !isDatasetArchived(q.filename) && 
       q.user_id === user?.id &&
-      q.visibility === 'private'  // Only include private datasets in personal section
+      q.visibility === 'private'
     );
     
     if (selectedSemester) {
@@ -115,14 +139,12 @@ const Dashboard = () => {
     return filtered;
   }, [questions, isDatasetArchived, selectedSemester, selectedYear, user?.id]);
 
-  // All university datasets, including those created by the current user
   const universityQuestions = useMemo(() => {
     if (!questions || !universityId) return [];
     
     let filtered = questions.filter(q => 
       q.visibility === 'university' && 
       q.university_id === universityId
-      // No longer excluding current user's questions from university section
     );
     
     if (uniSelectedSemester) {
@@ -152,7 +174,6 @@ const Dashboard = () => {
         }
         
         if (a.semester && b.semester && a.semester !== b.semester) {
-          const semOrder = { 'WS': 1, 'SS': 2 };
           const semA = a.semester.startsWith('WS') ? 1 : 2;
           const semB = b.semester.startsWith('WS') ? 1 : 2;
           return semA - semB;
@@ -181,7 +202,6 @@ const Dashboard = () => {
         }
         
         if (a.semester && b.semester && a.semester !== b.semester) {
-          const semOrder = { 'WS': 1, 'SS': 2 };
           const semA = a.semester.startsWith('WS') ? 1 : 2;
           const semB = b.semester.startsWith('WS') ? 1 : 2;
           return semA - semB;
@@ -193,6 +213,20 @@ const Dashboard = () => {
     
     return grouped;
   }, [universityQuestions]);
+
+  const selectedUniversityDatasetsForDisplay = useMemo(() => {
+    if (selectedUniversityDatasets.length === 0) {
+      return {};
+    }
+    
+    return Object.entries(groupedUniversityQuestions)
+      .filter(([filename]) => selectedUniversityDatasets.includes(filename))
+      .reduce((acc, [filename, questions]) => {
+        acc[filename] = questions;
+        return acc;
+      }, {} as Record<string, Question[]>);
+      
+  }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
   const handleDatasetClick = (filename: string) => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
@@ -215,6 +249,22 @@ const Dashboard = () => {
   const handleClearUniFilters = () => {
     setUniSelectedSemester(null);
     setUniSelectedYear(null);
+  };
+
+  const handleOpenDatasetSelector = () => {
+    setIsDatasetSelectorOpen(true);
+  };
+
+  const handleSelectedDatasetsChange = (datasets: string[]) => {
+    setSelectedUniversityDatasets(datasets);
+  };
+
+  const handleRemoveDataset = (filename: string) => {
+    setSelectedUniversityDatasets(prev => prev.filter(f => f !== filename));
+  };
+
+  const handleClearAllSelectedDatasets = () => {
+    setSelectedUniversityDatasets([]);
   };
 
   if (!user) {
@@ -358,9 +408,18 @@ const Dashboard = () => {
               <GraduationCap className="h-5 w-5" />
               Universitäts-Fragendatenbanken
             </h2>
-            <span className="text-sm text-muted-foreground">
-              {universityQuestions?.length || 0} Fragen
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {universityQuestions?.length || 0} Fragen verfügbar
+              </span>
+              {hasUniversityQuestions && (
+                <DatasetSelectionButton 
+                  onClick={handleOpenDatasetSelector}
+                  totalCount={Object.keys(groupedUniversityQuestions).length}
+                  selectedCount={selectedUniversityDatasets.length}
+                />
+              )}
+            </div>
           </div>
           
           {hasUniSemesterOrYearData && (
@@ -376,12 +435,43 @@ const Dashboard = () => {
           )}
           
           {hasUniversityQuestions ? (
-            <DatasetList
-              groupedQuestions={groupedUniversityQuestions}
-              selectedFilename={selectedFilename}
-              onDatasetClick={handleDatasetClick}
-              onStartTraining={handleStartTraining}
-            />
+            <>
+              {selectedUniversityDatasets.length > 0 ? (
+                <div className="space-y-4">
+                  <SelectedDatasetsDisplay 
+                    groupedQuestions={groupedUniversityQuestions}
+                    selectedDatasets={selectedUniversityDatasets}
+                    onRemoveDataset={handleRemoveDataset}
+                    onClearAll={handleClearAllSelectedDatasets}
+                  />
+                  <DatasetList
+                    groupedQuestions={selectedUniversityDatasetsForDisplay}
+                    selectedFilename={selectedFilename}
+                    onDatasetClick={handleDatasetClick}
+                    onStartTraining={handleStartTraining}
+                  />
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                    <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
+                      Keine Datensätze ausgewählt
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Klicke auf "Datensätze auswählen" um Datensätze auszuwählen
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleOpenDatasetSelector}
+                      className="flex items-center gap-2"
+                    >
+                      <ListPlus className="h-4 w-4" />
+                      Datensätze auswählen
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 text-center">
@@ -397,6 +487,14 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           )}
+          
+          <UniversityDatasetSelector 
+            open={isDatasetSelectorOpen}
+            onOpenChange={setIsDatasetSelectorOpen}
+            groupedQuestions={groupedUniversityQuestions}
+            selectedDatasets={selectedUniversityDatasets}
+            onSelectedDatasetsChange={handleSelectedDatasetsChange}
+          />
         </section>
       )}
 
