@@ -1,4 +1,3 @@
-
 import { Question } from '@/types/Question';
 
 export const mapRowsToQuestions = (rows: any[], headers: string[], filename: string): Question[] => {
@@ -15,8 +14,8 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       console.log(`Row ${index + 2} skipped - Missing question or answer:`, rowData);
     }
 
-    // Parse year as number if available
-    const year = rowData['Jahr'] ? parseInt(rowData['Jahr']) : null;
+    // Keep year as string instead of trying to parse it
+    const year = rowData['Jahr'] || null;
 
     return {
       id: crypto.randomUUID(),
@@ -33,7 +32,7 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       difficulty: parseInt(rowData['Schwierigkeit']) || 3, // Default to 3 if not provided
       visibility: 'private' as const,  // Explicitly type as 'private'
       semester: rowData['Semester'] || null,
-      year: !isNaN(year as number) ? year : null
+      year: year
     };
   });
 

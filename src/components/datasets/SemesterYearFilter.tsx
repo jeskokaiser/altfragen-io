@@ -16,10 +16,10 @@ import { Button } from '@/components/ui/button';
 interface SemesterYearFilterProps {
   questions: Question[];
   selectedSemester: string | null;
-  selectedYear: number | null;
+  selectedYear: string | null;  // Changed from number | null to string | null
   selectedDataset: string | null;
   onSemesterChange: (semester: string | null) => void;
-  onYearChange: (year: number | null) => void;
+  onYearChange: (year: string | null) => void;  // Updated to match type
   onDatasetChange?: (dataset: string | null) => void;
   onClearFilters: () => void;
   showDatasetFilter?: boolean;
@@ -42,23 +42,35 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   const uniqueSemesters = Array.from(
     new Set(
       questions
-        .filter(q => q.semester)
+        .filter(q => q.semester && q.semester.trim() !== '')
         .map(q => q.semester)
     )
   ).sort();
   
+  // Extract and sort years as strings
   const uniqueYears = Array.from(
     new Set(
       questions
-        .filter(q => q.year)
+        .filter(q => q.year && q.year.trim() !== '')
         .map(q => q.year)
     )
-  ).sort((a, b) => b! - a!); // Sort years in descending order
+  ).sort((a, b) => {
+    // Try to sort numerically if possible
+    const numA = parseInt(a || '0');
+    const numB = parseInt(b || '0');
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return numB - numA; // Descending order
+    }
+    // Fall back to string comparison
+    return (b || '').localeCompare(a || '');
+  });
 
   // Extract unique datasets (filenames)
   const uniqueDatasets = Array.from(
     new Set(
-      questions.map(q => q.filename)
+      questions
+        .filter(q => q.filename && q.filename.trim() !== '')
+        .map(q => q.filename)
     )
   ).sort();
 
@@ -72,7 +84,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
             <Label htmlFor="semester-filter">Semester</Label>
             <Select
               value={selectedSemester || undefined}
-              onValueChange={(value) => onSemesterChange(value || null)}
+              onValueChange={(value) => onSemesterChange(value === 'all' ? null : value)}
             >
               <SelectTrigger id="semester-filter" className="w-full">
                 <SelectValue placeholder="Alle Semester" />
@@ -80,7 +92,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
               <SelectContent>
                 <SelectItem value="all">Alle Semester</SelectItem>
                 {uniqueSemesters.map((semester) => (
-                  <SelectItem key={semester} value={semester!}>
+                  <SelectItem key={semester} value={semester || ''}>
                     {semester}
                   </SelectItem>
                 ))}
@@ -91,8 +103,8 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
           <div className="space-y-2">
             <Label htmlFor="year-filter">Jahr</Label>
             <Select
-              value={selectedYear?.toString() || undefined}
-              onValueChange={(value) => onYearChange(value ? parseInt(value) : null)}
+              value={selectedYear || undefined}
+              onValueChange={(value) => onYearChange(value === 'all' ? null : value)}
             >
               <SelectTrigger id="year-filter" className="w-full">
                 <SelectValue placeholder="Alle Jahre" />
@@ -100,7 +112,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
               <SelectContent>
                 <SelectItem value="all">Alle Jahre</SelectItem>
                 {uniqueYears.map((year) => (
-                  <SelectItem key={year} value={year!.toString()}>
+                  <SelectItem key={year} value={year || ''}>
                     {year}
                   </SelectItem>
                 ))}
@@ -113,7 +125,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
               <Label htmlFor="dataset-filter">Datensatz</Label>
               <Select
                 value={selectedDataset || undefined}
-                onValueChange={(value) => onDatasetChange(value || null)}
+                onValueChange={(value) => onDatasetChange(value === 'all' ? null : value)}
               >
                 <SelectTrigger id="dataset-filter" className="w-full">
                   <SelectValue placeholder="Alle Datensätze" />

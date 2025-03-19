@@ -22,6 +22,9 @@ interface SubjectSelectProps {
 }
 
 const SubjectSelect: React.FC<SubjectSelectProps> = ({ form, subjects }) => {
+  // Filter out any empty subjects to prevent Select.Item error
+  const validSubjects = subjects.filter(subject => subject && subject.trim() !== '');
+  
   return (
     <FormField
       control={form.control}
@@ -37,8 +40,8 @@ const SubjectSelect: React.FC<SubjectSelectProps> = ({ form, subjects }) => {
             </FormControl>
             <SelectContent>
               <SelectItem value="all">Alle Fächer</SelectItem>
-              {subjects.map((subject) => (
-                <SelectItem key={subject} value={subject || "unknown"}>
+              {validSubjects.map((subject) => (
+                <SelectItem key={subject} value={subject}>
                   {subject || "Unbekannt"}
                 </SelectItem>
               ))}
