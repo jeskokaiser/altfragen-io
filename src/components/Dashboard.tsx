@@ -1,51 +1,31 @@
-
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchAllUserQuestions } from '@/services/DatabaseService';
 import DatasetList from './datasets/DatasetList';
 import FileUpload from './FileUpload';
 import DashboardHeader from './datasets/DashboardHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
-  const { data: questions } = useQuery({
-    queryKey: ['questions'],
+  const { data: questions, isLoading } = useQuery({
+    queryKey: ['all-questions', user?.id, universityId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data || []).map(q => ({
-        id: q.id,
-        question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
-        optionD: q.option_d,
-        optionE: q.option_e,
-        subject: q.subject,
-        correctAnswer: q.correct_answer,
-        comment: q.comment,
-        filename: q.filename,
-        created_at: q.created_at,
-        difficulty: q.difficulty,
-        is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at
-      })) as Question[];
+      if (!user?.id) return [];
+      return fetchAllUserQuestions(user.id, universityId);
     },
+    enabled: !!user
   });
 
   const { data: todayNewCount } = useQuery({
@@ -101,7 +81,7 @@ const Dashboard = () => {
         .select('attempts_count')
         .eq('user_id', user?.id);
       if (error) throw error;
-      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+      const totalAttempts = data?.reduce((sum, record) => sum + (record.attempts_count || 1), 0) || 0;
       return totalAttempts;
     },
     enabled: !!user
@@ -138,6 +118,17 @@ const Dashboard = () => {
 
   if (!user) {
     return <div>Loading...</div>;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-6 flex justify-center items-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Laden...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
