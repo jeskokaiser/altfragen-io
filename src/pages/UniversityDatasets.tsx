@@ -16,8 +16,18 @@ const UniversityDatasets = () => {
   const navigate = useNavigate();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
+
+  // Move this useMemo before any conditional returns to maintain hooks order
+  const selectedDatasetForDisplay = useMemo(() => {
+    if (!selectedFilename || !groupedUniversityQuestions[selectedFilename]) {
+      return {};
+    }
+    return {
+      [selectedFilename]: groupedUniversityQuestions[selectedFilename]
+    };
+  }, [selectedFilename, groupedUniversityQuestions]);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -64,7 +74,8 @@ const UniversityDatasets = () => {
     Object.keys(grouped).forEach(filename => {
       grouped[filename].sort((a, b) => {
         if (a.year && b.year && a.year !== b.year) {
-          return b.year - a.year;
+          // Compare as strings for consistent sorting
+          return b.year.localeCompare(a.year);
         }
         
         if (a.semester && b.semester && a.semester !== b.semester) {
@@ -98,16 +109,6 @@ const UniversityDatasets = () => {
     setSelectedYear(null);
     setSelectedDataset(null);
   };
-
-  // Move this useMemo before any conditional returns to maintain hooks order
-  const selectedDatasetForDisplay = useMemo(() => {
-    if (!selectedFilename || !groupedUniversityQuestions[selectedFilename]) {
-      return {};
-    }
-    return {
-      [selectedFilename]: groupedUniversityQuestions[selectedFilename]
-    };
-  }, [selectedFilename, groupedUniversityQuestions]);
 
   if (!user) {
     return <div>Loading...</div>;

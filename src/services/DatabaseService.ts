@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
@@ -19,7 +20,7 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       university_id: q.visibility === 'university' ? universityId : null,
       visibility: q.visibility || 'private',
       semester: q.semester || null,
-      year: q.year || null
+      year: q.year || null // Keep as string
     }))
   );
 
