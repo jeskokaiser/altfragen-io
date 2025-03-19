@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   FormControl,
@@ -49,7 +50,10 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
         <FormItem className="space-y-2">
           <FormLabel>Anzahl der Fragen</FormLabel>
           <div className="space-y-2">
-            <Select onValueChange={handleSelectChange} value={showCustomInput ? 'custom' : field.value}>
+            <Select 
+              onValueChange={handleSelectChange} 
+              value={showCustomInput ? 'custom' : field.value || undefined}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Wähle die Anzahl" />
