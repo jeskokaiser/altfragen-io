@@ -33,7 +33,14 @@ const SelectedDatasetsDisplay: React.FC<SelectedDatasetsDisplayProps> = ({
   }, 0);
   return <div className="space-y-4">
       <div className="flex items-center justify-between">
-        
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">
+            {selectedDatasets.length} Datensätze ausgewählt
+          </span>
+          <Badge variant="secondary">
+            {totalQuestions} Fragen
+          </Badge>
+        </div>
         <Button variant="ghost" size="sm" onClick={onClearAll} className="h-8 px-2 text-xs">
           Alle entfernen
         </Button>
