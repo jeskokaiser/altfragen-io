@@ -44,10 +44,10 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   } = useForm<FormData>();
   
   const correctAnswer = watch('correctAnswer');
-  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(
-    question.visibility || 'private'
+  const [visibility, setVisibility] = useState<'private' | 'university'>(
+    (question.visibility as 'private' | 'university') || 'private'
   );
-  const { user } = useAuth();
+  const { user, universityId } = useAuth();
   
   useEffect(() => {
     if (question) {
@@ -63,7 +63,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         subject: question.subject,
         difficulty: question.difficulty?.toString() || '3'
       });
-      setVisibility(question.visibility || 'private');
+      setVisibility((question.visibility as 'private' | 'university') || 'private');
     }
   }, [question, reset]);
 
@@ -106,7 +106,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           filename: updatedQuestion.filename,
           difficulty: updatedQuestion.difficulty,
           university_id: updatedQuestion.university_id,
-          visibility: updatedQuestion.visibility as 'private' | 'university' | 'public'
+          visibility: updatedQuestion.visibility as 'private' | 'university'
         };
         onQuestionUpdated(mappedQuestion);
         toast.info('Frage erfolgreich aktualisiert');
@@ -128,6 +128,9 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   // Users can only change visibility of their own questions
   const canChangeVisibility = question.university_id === null || 
                               (user && user.id === question.user_id);
+                              
+  // Check if question is already shared with university to prevent changing back to private
+  const canChangeToPrivate = question.visibility !== 'university';
 
   return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
@@ -164,20 +167,28 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
               <Select 
                 disabled={!canChangeVisibility}
                 value={visibility} 
-                onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
+                onValueChange={(value: 'private' | 'university') => setVisibility(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sichtbarkeit wählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="private">Privat (nur für dich)</SelectItem>
-                  <SelectItem value="university">Universität (alle an deiner Uni)</SelectItem>
-                  <SelectItem value="public">Öffentlich (alle Nutzer)</SelectItem>
+                  <SelectItem value="private" disabled={!canChangeToPrivate}>
+                    Privat (nur für dich)
+                  </SelectItem>
+                  <SelectItem value="university" disabled={!universityId}>
+                    Universität (alle an deiner Uni)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {!canChangeVisibility && question.visibility === 'university' && (
                 <p className="text-sm text-muted-foreground mt-1">
                   Diese Frage wird mit deiner Universität geteilt. Du kannst die Sichtbarkeit nicht ändern.
+                </p>
+              )}
+              {question.visibility === 'university' && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Achtung: Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.
                 </p>
               )}
             </div>

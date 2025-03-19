@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
-import { AlertCircle, Lock, GraduationCap, Globe } from 'lucide-react';
+import { AlertCircle, Lock, GraduationCap } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Select,
@@ -25,7 +25,7 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId, universityName } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
-  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>('private');
+  const [visibility, setVisibility] = useState<'private' | 'university'>('private');
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -74,9 +74,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       
       const visibilityText = visibility === 'private' 
         ? 'privat' 
-        : visibility === 'university' 
-          ? 'mit deiner Universität geteilt' 
-          : 'öffentlich';
+        : 'mit deiner Universität geteilt';
           
       toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
         description: `Die Fragen wurden erfolgreich gespeichert und sind ${visibilityText}`
@@ -93,8 +91,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
   const renderVisibilityIcon = () => {
     switch (visibility) {
-      case 'public':
-        return <Globe className="h-4 w-4" />;
       case 'university':
         return <GraduationCap className="h-4 w-4" />;
       default:
@@ -138,7 +134,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
               <label className="text-sm font-medium">Sichtbarkeit der Fragen</label>
               <Select 
                 value={visibility} 
-                onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
+                onValueChange={(value: 'private' | 'university') => setVisibility(value)}
               >
                 <SelectTrigger className="w-full">
                   <div className="flex items-center gap-2">
@@ -157,12 +153,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                     <div className="flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       <span>Universität (alle an deiner Uni)</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="public">
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4" />
-                      <span>Öffentlich (alle Nutzer)</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
