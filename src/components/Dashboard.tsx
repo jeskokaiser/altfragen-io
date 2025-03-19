@@ -11,41 +11,22 @@ import FileUpload from './FileUpload';
 import DashboardHeader from './datasets/DashboardHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { fetchAllQuestions } from '@/services/DatabaseService';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
-  const { data: questions } = useQuery({
-    queryKey: ['questions'],
+  const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
+    queryKey: ['all-questions', user?.id, universityId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return (data || []).map(q => ({
-        id: q.id,
-        question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
-        optionD: q.option_d,
-        optionE: q.option_e,
-        subject: q.subject,
-        correctAnswer: q.correct_answer,
-        comment: q.comment,
-        filename: q.filename,
-        created_at: q.created_at,
-        difficulty: q.difficulty,
-        is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at
-      })) as Question[];
+      if (!user) return [];
+      return fetchAllQuestions(user.id, universityId);
     },
+    enabled: !!user
   });
 
   const { data: todayNewCount } = useQuery({
@@ -113,13 +94,38 @@ const Dashboard = () => {
   }, [questions, isDatasetArchived]);
 
   const groupedQuestions = useMemo(() => {
-    return unarchivedQuestions.reduce((acc, question) => {
+    // Group questions by filename
+    const grouped = unarchivedQuestions.reduce((acc, question) => {
       if (!acc[question.filename]) {
         acc[question.filename] = [];
       }
       acc[question.filename].push(question);
       return acc;
     }, {} as Record<string, Question[]>);
+    
+    // Sort questions within each dataset by semester/year if available
+    Object.keys(grouped).forEach(filename => {
+      grouped[filename].sort((a, b) => {
+        // First sort by year (descending)
+        if (a.year && b.year && a.year !== b.year) {
+          return b.year - a.year;
+        }
+        
+        // Then sort by semester if years are equal or not available
+        if (a.semester && b.semester && a.semester !== b.semester) {
+          // Convert semester to number for sorting (e.g., "WS" comes before "SS")
+          const semOrder = { 'WS': 1, 'SS': 2 };
+          const semA = a.semester.startsWith('WS') ? 1 : 2;
+          const semB = b.semester.startsWith('WS') ? 1 : 2;
+          return semA - semB;
+        }
+        
+        // Default: sort by created_at (newest first)
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+    });
+    
+    return grouped;
   }, [unarchivedQuestions]);
 
   const handleDatasetClick = (filename: string) => {
@@ -138,6 +144,33 @@ const Dashboard = () => {
 
   if (!user) {
     return <div>Loading...</div>;
+  }
+  
+  if (isQuestionsLoading) {
+    return (
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+          <div className="h-60 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (questionsError) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <Card className="p-6">
+          <CardTitle className="text-red-500 mb-2">Fehler beim Laden der Daten</CardTitle>
+          <p>Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.</p>
+        </Card>
+      </div>
+    );
   }
 
   return (

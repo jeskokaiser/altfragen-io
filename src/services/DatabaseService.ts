@@ -137,3 +137,57 @@ export const updateDatasetVisibility = async (filename: string, userId: string, 
   if (error) throw error;
   return true;
 };
+
+// New function to fetch all questions (personal and university)
+export const fetchAllQuestions = async (userId: string, universityId?: string | null) => {
+  // First fetch the personal questions
+  const { data: personalQuestions, error: personalError } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (personalError) throw personalError;
+
+  // If we have a university ID, fetch the university questions as well
+  let universityQuestions: any[] = [];
+  if (universityId) {
+    const { data: uniQuestions, error: uniError } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('university_id', universityId)
+      .eq('visibility', 'university')
+      .not('user_id', 'eq', userId) // Exclude own questions that are already in personalQuestions
+      .order('created_at', { ascending: false });
+
+    if (uniError) throw uniError;
+    universityQuestions = uniQuestions || [];
+  }
+
+  // Combine and map the questions
+  const allQuestions = [...personalQuestions, ...universityQuestions].map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    created_at: q.created_at,
+    difficulty: q.difficulty,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at,
+    university_id: q.university_id,
+    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+    user_id: q.user_id,
+    // Add semester and year if available
+    semester: q.semester || null,
+    year: q.year || null
+  }));
+
+  return allQuestions;
+};
