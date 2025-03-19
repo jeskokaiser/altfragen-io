@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -18,6 +17,7 @@ import { SubjectField } from './edit-question/SubjectField';
 import { DifficultyField } from './edit-question/DifficultyField';
 import { useAuth } from '@/contexts/AuthContext';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { GraduationCap, Lock } from 'lucide-react';
 
 interface EditQuestionModalProps {
   question: Question;
@@ -69,7 +69,6 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Check if trying to change from university to private
       if (question.visibility === 'university' && visibility === 'private') {
         toast.error('Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.');
         return;
@@ -130,12 +129,9 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     setValue('correctAnswer', '');
   };
 
-  // Determine if user can change visibility
-  // Users can only change visibility of their own questions
   const canChangeVisibility = question.university_id === null || 
                               (user && user.id === question.user_id);
                               
-  // Check if question is already shared with university to prevent changing back to private
   const canChangeToPrivate = question.visibility !== 'university';
 
   return <Dialog open={isOpen} onOpenChange={onClose}>
