@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   FormControl,
@@ -37,7 +36,7 @@ const DifficultySelect: React.FC<DifficultySelectProps> = ({ form }) => {
             <SelectContent>
               <SelectItem value="all">Alle Schwierigkeitsgrade</SelectItem>
               {[1, 2, 3, 4, 5].map((level) => (
-                <SelectItem key={level} value={level.toString()}>
+                <SelectItem key={level} value={String(level)}>
                   {level} {level === 1 ? '(Sehr leicht)' : level === 5 ? '(Sehr schwer)' : ''}
                 </SelectItem>
               ))}

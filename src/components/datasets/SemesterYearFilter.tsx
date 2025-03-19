@@ -16,10 +16,10 @@ import { Button } from '@/components/ui/button';
 interface SemesterYearFilterProps {
   questions: Question[];
   selectedSemester: string | null;
-  selectedYear: string | null;  // Changed from number | null to string | null
+  selectedYear: number | null;
   selectedDataset: string | null;
   onSemesterChange: (semester: string | null) => void;
-  onYearChange: (year: string | null) => void;  // Updated to match type
+  onYearChange: (year: number | null) => void;
   onDatasetChange?: (dataset: string | null) => void;
   onClearFilters: () => void;
   showDatasetFilter?: boolean;
@@ -42,35 +42,23 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   const uniqueSemesters = Array.from(
     new Set(
       questions
-        .filter(q => q.semester && q.semester.trim() !== '')
+        .filter(q => q.semester)
         .map(q => q.semester)
     )
   ).sort();
   
-  // Extract and sort years as strings
   const uniqueYears = Array.from(
     new Set(
       questions
-        .filter(q => q.year && q.year.trim() !== '')
+        .filter(q => q.year)
         .map(q => q.year)
     )
-  ).sort((a, b) => {
-    // Try to sort numerically if possible
-    const numA = parseInt(a || '0');
-    const numB = parseInt(b || '0');
-    if (!isNaN(numA) && !isNaN(numB)) {
-      return numB - numA; // Descending order
-    }
-    // Fall back to string comparison
-    return (b || '').localeCompare(a || '');
-  });
+  ).sort((a, b) => b! - a!); // Sort years in descending order
 
   // Extract unique datasets (filenames)
   const uniqueDatasets = Array.from(
     new Set(
-      questions
-        .filter(q => q.filename && q.filename.trim() !== '')
-        .map(q => q.filename)
+      questions.map(q => q.filename)
     )
   ).sort();
 
@@ -83,16 +71,16 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
           <div className="space-y-2">
             <Label htmlFor="semester-filter">Semester</Label>
             <Select
-              value={selectedSemester || undefined}
-              onValueChange={(value) => onSemesterChange(value === 'all' ? null : value)}
+              value={selectedSemester || ''}
+              onValueChange={(value) => onSemesterChange(value || null)}
             >
               <SelectTrigger id="semester-filter" className="w-full">
                 <SelectValue placeholder="Alle Semester" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Alle Semester</SelectItem>
+                <SelectItem value="">Alle Semester</SelectItem>
                 {uniqueSemesters.map((semester) => (
-                  <SelectItem key={semester} value={semester || ''}>
+                  <SelectItem key={semester} value={semester!}>
                     {semester}
                   </SelectItem>
                 ))}
@@ -103,16 +91,16 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
           <div className="space-y-2">
             <Label htmlFor="year-filter">Jahr</Label>
             <Select
-              value={selectedYear || undefined}
-              onValueChange={(value) => onYearChange(value === 'all' ? null : value)}
+              value={selectedYear?.toString() || ''}
+              onValueChange={(value) => onYearChange(value ? parseInt(value) : null)}
             >
               <SelectTrigger id="year-filter" className="w-full">
                 <SelectValue placeholder="Alle Jahre" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Alle Jahre</SelectItem>
+                <SelectItem value="">Alle Jahre</SelectItem>
                 {uniqueYears.map((year) => (
-                  <SelectItem key={year} value={year || ''}>
+                  <SelectItem key={year} value={year!.toString()}>
                     {year}
                   </SelectItem>
                 ))}
@@ -124,14 +112,14 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
             <div className="space-y-2">
               <Label htmlFor="dataset-filter">Datensatz</Label>
               <Select
-                value={selectedDataset || undefined}
-                onValueChange={(value) => onDatasetChange(value === 'all' ? null : value)}
+                value={selectedDataset || ''}
+                onValueChange={(value) => onDatasetChange(value || null)}
               >
                 <SelectTrigger id="dataset-filter" className="w-full">
                   <SelectValue placeholder="Alle Datensätze" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Datensätze</SelectItem>
+                  <SelectItem value="">Alle Datensätze</SelectItem>
                   {uniqueDatasets.map((dataset) => (
                     <SelectItem key={dataset} value={dataset}>
                       {dataset}

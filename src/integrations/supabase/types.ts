@@ -64,7 +64,7 @@ export type Database = {
           university_id: string | null
           user_id: string | null
           visibility: string | null
-          year: string | null
+          year: number | null
         }
         Insert: {
           comment?: string | null
@@ -88,7 +88,7 @@ export type Database = {
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: string | null
+          year?: number | null
         }
         Update: {
           comment?: string | null
@@ -112,7 +112,7 @@ export type Database = {
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: string | null
+          year?: number | null
         }
         Relationships: [
           {
