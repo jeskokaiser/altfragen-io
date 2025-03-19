@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -26,6 +28,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId, universityName } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'university'>('private');
+  const [semester, setSemester] = useState<string>('');
+  const [year, setYear] = useState<string>('');
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -63,13 +67,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         return;
       }
 
-      // Set visibility for all questions
-      const questionsWithVisibility = questions.map(q => ({
+      // Set visibility, semester, and year for all questions
+      const questionsWithMetadata = questions.map(q => ({
         ...q,
-        visibility
+        visibility,
+        semester: semester || null,
+        year: year ? parseInt(year) : null
       }));
 
-      const savedQuestions = await saveQuestions(questionsWithVisibility, user?.id || '', universityId);
+      const savedQuestions = await saveQuestions(questionsWithMetadata, user?.id || '', universityId);
       onQuestionsLoaded(savedQuestions);
       
       const visibilityText = visibility === 'private' 
@@ -87,7 +93,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         description: errorMessage
       });
     }
-  }, [user, universityId, onQuestionsLoaded, visibility]);
+  }, [user, universityId, onQuestionsLoaded, visibility, semester, year]);
 
   const renderVisibilityIcon = () => {
     switch (visibility) {
@@ -104,6 +110,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     }
     return `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.`;
   };
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -123,7 +132,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-xl">Fragen-Sichtbarkeit</CardTitle>
+          <CardTitle className="text-xl">Fragen-Metadaten</CardTitle>
           <CardDescription>
             {getUniversityContextMessage()}
           </CardDescription>
@@ -157,6 +166,45 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                   </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="semester">Semester</Label>
+                <Select 
+                  value={semester} 
+                  onValueChange={setSemester}
+                >
+                  <SelectTrigger id="semester">
+                    <SelectValue placeholder="Semester wählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Kein Semester</SelectItem>
+                    <SelectItem value="WS">Wintersemester</SelectItem>
+                    <SelectItem value="SS">Sommersemester</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="year">Jahr</Label>
+                <Select 
+                  value={year} 
+                  onValueChange={setYear}
+                >
+                  <SelectTrigger id="year">
+                    <SelectValue placeholder="Jahr wählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Kein Jahr</SelectItem>
+                    {yearOptions.map(yearOption => (
+                      <SelectItem key={yearOption} value={yearOption.toString()}>
+                        {yearOption}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex justify-center mt-2">

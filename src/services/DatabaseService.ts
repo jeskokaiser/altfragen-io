@@ -18,7 +18,9 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       filename: q.filename,
       difficulty: q.difficulty,
       university_id: q.visibility === 'university' ? universityId : null,
-      visibility: q.visibility || 'private'
+      visibility: q.visibility || 'private',
+      semester: q.semester || null,
+      year: q.year || null
     }))
   );
 
@@ -49,7 +51,62 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     is_unclear: q.is_unclear,
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university') || 'private'
+    visibility: (q.visibility as 'private' | 'university') || 'private',
+    semester: q.semester,
+    year: q.year
+  }));
+};
+
+export const fetchAllUserQuestions = async (userId: string, universityId: string | null) => {
+  // First fetch user's own questions
+  const { data: userQuestions, error: userError } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (userError) throw userError;
+  
+  // Then fetch university questions that the user can access
+  let universityQuestions: any[] = [];
+  
+  if (universityId) {
+    const { data: uniQuestions, error: uniError } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('university_id', universityId)
+      .eq('visibility', 'university')
+      .not('user_id', 'eq', userId) // Exclude the user's own questions to avoid duplicates
+      .order('created_at', { ascending: false });
+    
+    if (uniError) throw uniError;
+    universityQuestions = uniQuestions || [];
+  }
+  
+  // Combine both sets of questions
+  const allQuestions = [...userQuestions, ...universityQuestions];
+  
+  return allQuestions.map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    difficulty: q.difficulty,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at,
+    university_id: q.university_id,
+    visibility: (q.visibility as 'private' | 'university') || 'private',
+    user_id: q.user_id,
+    created_at: q.created_at,
+    semester: q.semester,
+    year: q.year
   }));
 };
 
@@ -82,7 +139,9 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
     visibility: (q.visibility as 'private' | 'university') || 'private',
-    user_id: q.user_id
+    user_id: q.user_id,
+    semester: q.semester,
+    year: q.year
   }));
 };
 
@@ -130,6 +189,33 @@ export const updateDatasetVisibility = async (filename: string, userId: string, 
     .update({ 
       visibility,
       university_id: visibility === 'university' ? universityId : null 
+    })
+    .eq('filename', filename)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return true;
+};
+
+export const updateQuestionSemesterAndYear = async (questionId: string, semester: string | null, year: number | null) => {
+  const { error } = await supabase
+    .from('questions')
+    .update({ 
+      semester, 
+      year 
+    })
+    .eq('id', questionId);
+
+  if (error) throw error;
+  return true;
+};
+
+export const updateDatasetSemesterAndYear = async (filename: string, userId: string, semester: string | null, year: number | null) => {
+  const { error } = await supabase
+    .from('questions')
+    .update({ 
+      semester, 
+      year 
     })
     .eq('filename', filename)
     .eq('user_id', userId);

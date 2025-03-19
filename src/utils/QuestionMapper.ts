@@ -28,7 +28,9 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       comment: rowData['Kommentar'] || '',
       filename: filename,
       difficulty: parseInt(rowData['Schwierigkeit']) || 3, // Default to 3 if not provided
-      visibility: 'private' as const  // Explicitly type as 'private'
+      visibility: 'private' as const,  // Explicitly type as 'private'
+      semester: rowData['Semester'] || null,
+      year: rowData['Jahr'] ? parseInt(rowData['Jahr']) : null
     };
   });
 
