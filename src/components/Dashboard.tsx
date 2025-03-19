@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,9 +22,9 @@ const Dashboard = () => {
   const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [uniSelectedSemester, setUniSelectedSemester] = useState<string | null>(null);
-  const [uniSelectedYear, setUniSelectedYear] = useState<number | null>(null);
+  const [uniSelectedYear, setUniSelectedYear] = useState<string | null>(null);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -93,10 +94,15 @@ const Dashboard = () => {
     enabled: !!user
   });
 
+  // Filter personal datasets - exclude datasets that have university visibility
   const filteredQuestions = useMemo(() => {
     if (!questions) return [];
     
-    let filtered = questions.filter(q => !isDatasetArchived(q.filename) && q.user_id === user?.id);
+    let filtered = questions.filter(q => 
+      !isDatasetArchived(q.filename) && 
+      q.user_id === user?.id &&
+      q.visibility === 'private'  // Only include private datasets in personal section
+    );
     
     if (selectedSemester) {
       filtered = filtered.filter(q => q.semester === selectedSemester);
@@ -109,13 +115,14 @@ const Dashboard = () => {
     return filtered;
   }, [questions, isDatasetArchived, selectedSemester, selectedYear, user?.id]);
 
+  // All university datasets, including those created by the current user
   const universityQuestions = useMemo(() => {
     if (!questions || !universityId) return [];
     
     let filtered = questions.filter(q => 
       q.visibility === 'university' && 
-      q.university_id === universityId &&
-      q.user_id !== user?.id
+      q.university_id === universityId
+      // No longer excluding current user's questions from university section
     );
     
     if (uniSelectedSemester) {
@@ -127,7 +134,7 @@ const Dashboard = () => {
     }
     
     return filtered;
-  }, [questions, universityId, uniSelectedSemester, uniSelectedYear, user?.id]);
+  }, [questions, universityId, uniSelectedSemester, uniSelectedYear]);
 
   const groupedQuestions = useMemo(() => {
     const grouped = filteredQuestions.reduce((acc, question) => {
@@ -141,7 +148,7 @@ const Dashboard = () => {
     Object.keys(grouped).forEach(filename => {
       grouped[filename].sort((a, b) => {
         if (a.year && b.year && a.year !== b.year) {
-          return b.year - a.year;
+          return b.year.localeCompare(a.year);
         }
         
         if (a.semester && b.semester && a.semester !== b.semester) {
@@ -170,7 +177,7 @@ const Dashboard = () => {
     Object.keys(grouped).forEach(filename => {
       grouped[filename].sort((a, b) => {
         if (a.year && b.year && a.year !== b.year) {
-          return b.year - a.year;
+          return b.year.localeCompare(a.year);
         }
         
         if (a.semester && b.semester && a.semester !== b.semester) {
@@ -352,7 +359,7 @@ const Dashboard = () => {
               Universitäts-Fragendatenbanken
             </h2>
             <span className="text-sm text-muted-foreground">
-              {universityQuestions?.length || 0} Fragen von anderen Nutzern
+              {universityQuestions?.length || 0} Fragen
             </span>
           </div>
           

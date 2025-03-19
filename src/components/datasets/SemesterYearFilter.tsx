@@ -16,9 +16,9 @@ import { Button } from '@/components/ui/button';
 interface SemesterYearFilterProps {
   questions: Question[];
   selectedSemester: string | null;
-  selectedYear: number | null;
+  selectedYear: string | null;
   onSemesterChange: (semester: string | null) => void;
-  onYearChange: (year: number | null) => void;
+  onYearChange: (year: string | null) => void;
   onClearFilters: () => void;
   title?: string;
 }
@@ -47,7 +47,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
         .filter(q => q.year)
         .map(q => q.year)
     )
-  ).sort((a, b) => b! - a!); // Sort years in descending order
+  ).sort((a, b) => (b || '').localeCompare(a || '')); // Sort years in descending order
 
   const hasFilters = !!(selectedSemester || selectedYear);
 
@@ -58,16 +58,16 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
           <div className="space-y-2">
             <Label htmlFor="semester-filter">Semester</Label>
             <Select
-              value={selectedSemester || ''}
+              value={selectedSemester || undefined}
               onValueChange={(value) => onSemesterChange(value || null)}
             >
               <SelectTrigger id="semester-filter" className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Alle Semester" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle Semester</SelectItem>
+                <SelectItem value="all">Alle Semester</SelectItem>
                 {uniqueSemesters.map((semester) => (
-                  <SelectItem key={semester} value={semester!}>
+                  <SelectItem key={semester} value={semester || ''}>
                     {semester}
                   </SelectItem>
                 ))}
@@ -78,16 +78,16 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
           <div className="space-y-2">
             <Label htmlFor="year-filter">Jahr</Label>
             <Select
-              value={selectedYear?.toString() || ''}
-              onValueChange={(value) => onYearChange(value ? parseInt(value) : null)}
+              value={selectedYear || undefined}
+              onValueChange={(value) => onYearChange(value || null)}
             >
               <SelectTrigger id="year-filter" className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Alle Jahre" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle Jahre</SelectItem>
+                <SelectItem value="all">Alle Jahre</SelectItem>
                 {uniqueYears.map((year) => (
-                  <SelectItem key={year} value={year!.toString()}>
+                  <SelectItem key={year} value={year || ''}>
                     {year}
                   </SelectItem>
                 ))}
