@@ -19,5 +19,5 @@ export interface Question {
   visibility?: 'private' | 'university' | 'public';
   user_id?: string | null;
   semester?: string | null;
-  year?: string | null;
+  year?: number | null;
 }

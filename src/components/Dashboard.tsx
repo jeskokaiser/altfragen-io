@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import DatasetList from './datasets/DatasetList';
@@ -12,8 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { fetchAllQuestions } from '@/services/DatabaseService';
 import SemesterYearFilter from './datasets/SemesterYearFilter';
-import { Calendar, SlidersHorizontal, GraduationCap, Folders, ExternalLink } from 'lucide-react';
-import { Button } from './ui/button';
+import { Calendar, SlidersHorizontal, GraduationCap, Folders } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
@@ -22,7 +21,10 @@ const Dashboard = () => {
   const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [uniSelectedSemester, setUniSelectedSemester] = useState<string | null>(null);
+  const [uniSelectedYear, setUniSelectedYear] = useState<number | null>(null);
+  const [uniSelectedDataset, setUniSelectedDataset] = useState<string | null>(null);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -111,12 +113,26 @@ const Dashboard = () => {
   const universityQuestions = useMemo(() => {
     if (!questions || !universityId) return [];
     
-    return questions.filter(q => 
+    let filtered = questions.filter(q => 
       q.visibility === 'university' && 
       q.university_id === universityId &&
       q.user_id !== user?.id
     );
-  }, [questions, universityId, user?.id]);
+    
+    if (uniSelectedSemester) {
+      filtered = filtered.filter(q => q.semester === uniSelectedSemester);
+    }
+    
+    if (uniSelectedYear) {
+      filtered = filtered.filter(q => q.year === uniSelectedYear);
+    }
+    
+    if (uniSelectedDataset) {
+      filtered = filtered.filter(q => q.filename === uniSelectedDataset);
+    }
+    
+    return filtered;
+  }, [questions, universityId, uniSelectedSemester, uniSelectedYear, uniSelectedDataset, user?.id]);
 
   const groupedQuestions = useMemo(() => {
     const grouped = filteredQuestions.reduce((acc, question) => {
@@ -130,10 +146,11 @@ const Dashboard = () => {
     Object.keys(grouped).forEach(filename => {
       grouped[filename].sort((a, b) => {
         if (a.year && b.year && a.year !== b.year) {
-          return b.year.localeCompare(a.year);
+          return b.year - a.year;
         }
         
         if (a.semester && b.semester && a.semester !== b.semester) {
+          const semOrder = { 'WS': 1, 'SS': 2 };
           const semA = a.semester.startsWith('WS') ? 1 : 2;
           const semB = b.semester.startsWith('WS') ? 1 : 2;
           return semA - semB;
@@ -146,11 +163,50 @@ const Dashboard = () => {
     return grouped;
   }, [filteredQuestions]);
 
+  const groupedUniversityQuestions = useMemo(() => {
+    const grouped = universityQuestions.reduce((acc, question) => {
+      if (!acc[question.filename]) {
+        acc[question.filename] = [];
+      }
+      acc[question.filename].push(question);
+      return acc;
+    }, {} as Record<string, Question[]>);
+    
+    Object.keys(grouped).forEach(filename => {
+      grouped[filename].sort((a, b) => {
+        if (a.year && b.year && a.year !== b.year) {
+          return b.year - a.year;
+        }
+        
+        if (a.semester && b.semester && a.semester !== b.semester) {
+          const semOrder = { 'WS': 1, 'SS': 2 };
+          const semA = a.semester.startsWith('WS') ? 1 : 2;
+          const semB = b.semester.startsWith('WS') ? 1 : 2;
+          return semA - semB;
+        }
+        
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+    });
+    
+    return grouped;
+  }, [universityQuestions]);
+
+  const handleDatasetClick = (filename: string) => {
+    if (uniSelectedDataset === filename) {
+      setUniSelectedDataset(null);
+    } else {
+      setUniSelectedDataset(filename);
+      setSelectedFilename(null);
+    }
+  };
+
   const handlePersonalDatasetClick = (filename: string) => {
     if (selectedFilename === filename) {
       setSelectedFilename(null);
     } else {
       setSelectedFilename(filename);
+      setUniSelectedDataset(null);
     }
   };
 
@@ -166,6 +222,12 @@ const Dashboard = () => {
   const handleClearFilters = () => {
     setSelectedSemester(null);
     setSelectedYear(null);
+  };
+
+  const handleClearUniFilters = () => {
+    setUniSelectedSemester(null);
+    setUniSelectedYear(null);
+    setUniSelectedDataset(null);
   };
 
   if (!user) {
@@ -200,7 +262,24 @@ const Dashboard = () => {
   }
 
   const hasSemesterOrYearData = filteredQuestions.some(q => q.semester || q.year);
-  const hasUniversityQuestions = universityQuestions.length > 0;
+  const hasUniSemesterOrYearData = universityQuestions.some(q => q.semester || q.year);
+  const hasUniversityQuestions = Object.keys(groupedUniversityQuestions).length > 0;
+
+  const selectedUniDatasetQuestions = useMemo(() => {
+    if (!uniSelectedDataset || !groupedUniversityQuestions[uniSelectedDataset]) {
+      return [];
+    }
+    return groupedUniversityQuestions[uniSelectedDataset];
+  }, [uniSelectedDataset, groupedUniversityQuestions]);
+
+  const selectedUniDatasetForDisplay = useMemo(() => {
+    if (!uniSelectedDataset || !groupedUniversityQuestions[uniSelectedDataset]) {
+      return {};
+    }
+    return {
+      [uniSelectedDataset]: groupedUniversityQuestions[uniSelectedDataset]
+    };
+  }, [uniSelectedDataset, groupedUniversityQuestions]);
 
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
@@ -314,25 +393,54 @@ const Dashboard = () => {
             </span>
           </div>
           
+          {hasUniSemesterOrYearData && (
+            <SemesterYearFilter
+              questions={universityQuestions}
+              selectedSemester={uniSelectedSemester}
+              selectedYear={uniSelectedYear}
+              selectedDataset={uniSelectedDataset}
+              onSemesterChange={setUniSelectedSemester}
+              onYearChange={setUniSelectedYear}
+              onDatasetChange={setUniSelectedDataset}
+              onClearFilters={handleClearUniFilters}
+              showDatasetFilter={true}
+              title="Universitäts-Filter"
+            />
+          )}
+          
           {hasUniversityQuestions ? (
-            <Card className="p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-medium text-slate-700 dark:text-zinc-300 mb-2">
-                    Erhalte Zugriff auf Datensätze von anderen Nutzern deiner Universität
+            <>
+              {!uniSelectedDataset ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-700 dark:text-zinc-300 flex items-center gap-2">
+                    <Folders className="h-4 w-4" />
+                    Verfügbare Datensätze
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {universityQuestions.length} Fragen in {new Set(universityQuestions.map(q => q.filename)).size} Datensätzen verfügbar
-                  </p>
+                  <DatasetList
+                    groupedQuestions={groupedUniversityQuestions}
+                    selectedFilename={uniSelectedDataset}
+                    onDatasetClick={handleDatasetClick}
+                    onStartTraining={handleStartTraining}
+                    isCompactView={true}
+                  />
                 </div>
-                <Button asChild>
-                  <Link to="/university-datasets" className="flex items-center gap-2">
-                    <ExternalLink className="h-4 w-4" />
-                    Zu den Universitäts-Datensätzen
-                  </Link>
-                </Button>
-              </div>
-            </Card>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-slate-700 dark:text-zinc-300 flex items-center gap-2">
+                      <Folders className="h-4 w-4" />
+                      Ausgewählter Datensatz: {uniSelectedDataset}
+                    </h3>
+                  </div>
+                  <DatasetList
+                    groupedQuestions={selectedUniDatasetForDisplay}
+                    selectedFilename={uniSelectedDataset}
+                    onDatasetClick={handleDatasetClick}
+                    onStartTraining={handleStartTraining}
+                  />
+                </>
+              )}
+            </>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 text-center">
@@ -340,7 +448,10 @@ const Dashboard = () => {
                   Keine Universitäts-Datensätze vorhanden
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Noch keine Datensätze von anderen Nutzern deiner Universität geteilt
+                  {uniSelectedSemester || uniSelectedYear || uniSelectedDataset
+                    ? 'Keine Datensätze mit den ausgewählten Filtern gefunden'
+                    : 'Noch keine Datensätze von anderen Nutzern deiner Universität geteilt'
+                  }
                 </p>
               </CardContent>
             </Card>
