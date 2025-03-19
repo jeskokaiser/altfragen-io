@@ -22,7 +22,7 @@ const Dashboard = () => {
   const { preferences, isDatasetArchived } = useUserPreferences();
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -130,11 +130,10 @@ const Dashboard = () => {
     Object.keys(grouped).forEach(filename => {
       grouped[filename].sort((a, b) => {
         if (a.year && b.year && a.year !== b.year) {
-          return b.year - a.year;
+          return b.year.localeCompare(a.year);
         }
         
         if (a.semester && b.semester && a.semester !== b.semester) {
-          const semOrder = { 'WS': 1, 'SS': 2 };
           const semA = a.semester.startsWith('WS') ? 1 : 2;
           const semB = b.semester.startsWith('WS') ? 1 : 2;
           return semA - semB;

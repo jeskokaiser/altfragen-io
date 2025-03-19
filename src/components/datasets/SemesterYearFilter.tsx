@@ -16,10 +16,10 @@ import { Button } from '@/components/ui/button';
 interface SemesterYearFilterProps {
   questions: Question[];
   selectedSemester: string | null;
-  selectedYear: number | null;
+  selectedYear: string | null;
   selectedDataset: string | null;
   onSemesterChange: (semester: string | null) => void;
-  onYearChange: (year: number | null) => void;
+  onYearChange: (year: string | null) => void;
   onDatasetChange?: (dataset: string | null) => void;
   onClearFilters: () => void;
   showDatasetFilter?: boolean;
@@ -53,7 +53,10 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
         .filter(q => q.year)
         .map(q => q.year)
     )
-  ).sort((a, b) => b! - a!); // Sort years in descending order
+  ).sort((a, b) => {
+    // Sort as strings in descending order
+    return b!.localeCompare(a!);
+  });
 
   // Extract unique datasets (filenames)
   const uniqueDatasets = Array.from(
@@ -92,7 +95,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
             <Label htmlFor="year-filter">Jahr</Label>
             <Select
               value={selectedYear?.toString() || ''}
-              onValueChange={(value) => onYearChange(value ? parseInt(value) : null)}
+              onValueChange={(value) => onYearChange(value || null)}
             >
               <SelectTrigger id="year-filter" className="w-full">
                 <SelectValue placeholder="Alle Jahre" />
@@ -100,7 +103,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
               <SelectContent>
                 <SelectItem value="">Alle Jahre</SelectItem>
                 {uniqueYears.map((year) => (
-                  <SelectItem key={year} value={year!.toString()}>
+                  <SelectItem key={year} value={year!}>
                     {year}
                   </SelectItem>
                 ))}
