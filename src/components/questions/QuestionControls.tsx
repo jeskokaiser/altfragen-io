@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Copy, GraduationCap, Lock } from 'lucide-react';
@@ -73,7 +74,16 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
         <DifficultyControls questionId={question.id} difficulty={question.difficulty || 3} onEditClick={onEditClick} />
       </div>
       <TooltipProvider>
-        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="mr-2 flex items-center">
+              {getVisibilityIcon()}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{getVisibilityTooltip()}</p>
+          </TooltipContent>
+        </Tooltip>
       </TooltipProvider>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="flex items-center gap-2">
