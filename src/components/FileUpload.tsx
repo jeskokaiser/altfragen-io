@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -111,7 +110,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         Lade deine Fragen hoch
       </h2>
       <p className="text-slate-600 dark:text-zinc-300 mb-4">
-        Bitte lade eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeit
+        Bitte lade eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeitsgrad
       </p>
       
       {error && (
@@ -137,10 +136,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                 onValueChange={(value: 'private' | 'university') => setVisibility(value)}
               >
                 <SelectTrigger className="w-full">
-                  <div className="flex items-center gap-2">
-                    {renderVisibilityIcon()}
-                    <SelectValue placeholder="Sichtbarkeit wählen" />
-                  </div>
+                  <SelectValue placeholder="Sichtbarkeit wählen" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="private">
