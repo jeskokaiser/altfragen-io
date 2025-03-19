@@ -154,6 +154,7 @@ export type Database = {
           created_at: string | null
           id: string
           immediate_feedback: boolean | null
+          selected_university_datasets: string[] | null
           updated_at: string | null
           user_id: string | null
         }
@@ -162,6 +163,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
+          selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -170,6 +172,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
+          selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
