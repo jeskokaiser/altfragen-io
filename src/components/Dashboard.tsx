@@ -12,10 +12,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { fetchAllQuestions } from '@/services/DatabaseService';
 import SemesterYearFilter from './datasets/SemesterYearFilter';
-import { Calendar, SlidersHorizontal, GraduationCap } from 'lucide-react';
+import { Calendar, SlidersHorizontal, GraduationCap, ListPlus } from 'lucide-react';
 import DatasetSelectionButton from './datasets/DatasetSelectionButton';
 import UniversityDatasetSelector from './datasets/UniversityDatasetSelector';
 import SelectedDatasetsDisplay from './datasets/SelectedDatasetsDisplay';
+import { Button } from '@/components/ui/button';
 
 const SELECTED_UNIVERSITY_DATASETS_KEY = 'selectedUniversityDatasets';
 
