@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+
+import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Question } from '@/types/Question';
@@ -6,8 +7,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Lock, GraduationCap, Globe } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -16,6 +25,7 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>('private');
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -53,10 +63,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         return;
       }
 
-      const savedQuestions = await saveQuestions(questions, user?.id || '', universityId);
+      // Set visibility for all questions
+      const questionsWithVisibility = questions.map(q => ({
+        ...q,
+        visibility
+      }));
+
+      const savedQuestions = await saveQuestions(questionsWithVisibility, user?.id || '', universityId);
       onQuestionsLoaded(savedQuestions);
+      
+      const visibilityText = visibility === 'private' 
+        ? 'privat' 
+        : visibility === 'university' 
+          ? 'mit deiner Universität geteilt' 
+          : 'öffentlich';
+          
       toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
-        description: "Die Fragen wurden erfolgreich gespeichert"
+        description: `Die Fragen wurden erfolgreich gespeichert und sind ${visibilityText}`
       });
     } catch (error: any) {
       console.error('Error processing file:', error);
@@ -66,7 +89,18 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         description: errorMessage
       });
     }
-  }, [user, universityId, onQuestionsLoaded]);
+  }, [user, universityId, onQuestionsLoaded, visibility]);
+
+  const renderVisibilityIcon = () => {
+    switch (visibility) {
+      case 'public':
+        return <Globe className="h-4 w-4" />;
+      case 'university':
+        return <GraduationCap className="h-4 w-4" />;
+      default:
+        return <Lock className="h-4 w-4" />;
+    }
+  };
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -84,22 +118,65 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </Alert>
       )}
 
-      <label htmlFor="csv-upload">
-        <Button 
-          variant="outline" 
-          className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
-          onClick={() => document.getElementById('csv-upload')?.click()}
-        >
-          CSV-Datei auswählen
-        </Button>
-      </label>
-      <input
-        id="csv-upload"
-        type="file"
-        accept=".csv"
-        onChange={handleFileUpload}
-        className="hidden"
-      />
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sichtbarkeit der Fragen</label>
+              <Select 
+                value={visibility} 
+                onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <div className="flex items-center gap-2">
+                    {renderVisibilityIcon()}
+                    <SelectValue placeholder="Sichtbarkeit wählen" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="private">
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      <span>Privat (nur für dich)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="university">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>Universität (alle an deiner Uni)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="public">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      <span>Öffentlich (alle Nutzer)</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-center mt-2">
+              <label htmlFor="csv-upload">
+                <Button 
+                  variant="outline" 
+                  className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
+                  onClick={() => document.getElementById('csv-upload')?.click()}
+                >
+                  CSV-Datei auswählen
+                </Button>
+              </label>
+              <input
+                id="csv-upload"
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
