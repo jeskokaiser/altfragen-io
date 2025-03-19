@@ -52,6 +52,7 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
     visibility: (q.visibility as 'private' | 'university') || 'private',
+    user_id: q.user_id,
     semester: q.semester,
     year: q.year
   }));
