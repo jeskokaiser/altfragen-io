@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
@@ -160,6 +161,29 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     universityQuestions = uniQuestions || [];
   }
 
+  // Fetch user-specific difficulty ratings for the questions
+  const allQuestionsIds = [...personalQuestions, ...universityQuestions].map(q => q.id);
+  let userDifficulties: Record<string, number> = {};
+  
+  if (allQuestionsIds.length > 0) {
+    const { data: progressData, error: progressError } = await supabase
+      .from('user_progress')
+      .select('question_id, user_difficulty')
+      .eq('user_id', userId)
+      .in('question_id', allQuestionsIds)
+      .not('user_difficulty', 'is', null);
+    
+    if (!progressError && progressData) {
+      // Create a mapping of question_id to user_difficulty
+      userDifficulties = progressData.reduce((acc: Record<string, number>, item) => {
+        if (item.user_difficulty !== null) {
+          acc[item.question_id] = item.user_difficulty;
+        }
+        return acc;
+      }, {});
+    }
+  }
+
   const allQuestions = [...personalQuestions, ...universityQuestions].map(q => ({
     id: q.id,
     question: q.question,
@@ -173,7 +197,8 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     comment: q.comment,
     filename: q.filename,
     created_at: q.created_at,
-    difficulty: q.difficulty,
+    // Use user-specific difficulty if available, otherwise use the question's default difficulty
+    difficulty: q.id in userDifficulties ? userDifficulties[q.id] : q.difficulty,
     is_unclear: q.is_unclear,
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
@@ -184,4 +209,20 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
   }));
 
   return allQuestions;
+};
+
+// Add a new function to fetch user's difficulty for a specific question
+export const fetchUserDifficulty = async (userId: string, questionId: string): Promise<number | null> => {
+  if (!userId || !questionId) return null;
+  
+  const { data, error } = await supabase
+    .from('user_progress')
+    .select('user_difficulty')
+    .eq('user_id', userId)
+    .eq('question_id', questionId)
+    .maybeSingle();
+  
+  if (error || !data) return null;
+  
+  return data.user_difficulty;
 };

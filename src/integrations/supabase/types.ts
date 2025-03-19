@@ -187,6 +187,7 @@ export type Database = {
           question_id: string | null
           updated_at: string | null
           user_answer: string | null
+          user_difficulty: number | null
           user_id: string | null
         }
         Insert: {
@@ -197,6 +198,7 @@ export type Database = {
           question_id?: string | null
           updated_at?: string | null
           user_answer?: string | null
+          user_difficulty?: number | null
           user_id?: string | null
         }
         Update: {
@@ -207,6 +209,7 @@ export type Database = {
           question_id?: string | null
           updated_at?: string | null
           user_answer?: string | null
+          user_difficulty?: number | null
           user_id?: string | null
         }
         Relationships: [
