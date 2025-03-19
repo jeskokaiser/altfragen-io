@@ -59,12 +59,10 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
-          semester: string | null
           subject: string
           university_id: string | null
           user_id: string | null
           visibility: string | null
-          year: number | null
         }
         Insert: {
           comment?: string | null
@@ -83,12 +81,10 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
-          semester?: string | null
           subject: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: number | null
         }
         Update: {
           comment?: string | null
@@ -107,12 +103,10 @@ export type Database = {
           option_d?: string
           option_e?: string
           question?: string
-          semester?: string | null
           subject?: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: number | null
         }
         Relationships: [
           {
