@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, FilterX } from 'lucide-react';
+import { FilterX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SemesterYearFilterProps {
@@ -20,6 +20,7 @@ interface SemesterYearFilterProps {
   onSemesterChange: (semester: string | null) => void;
   onYearChange: (year: number | null) => void;
   onClearFilters: () => void;
+  title?: string;
 }
 
 const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
@@ -29,6 +30,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   onSemesterChange,
   onYearChange,
   onClearFilters,
+  title = "Filter",
 }) => {
   // Extract unique semesters and years from questions
   const uniqueSemesters = Array.from(
