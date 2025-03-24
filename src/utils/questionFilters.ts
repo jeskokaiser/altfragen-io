@@ -34,12 +34,17 @@ export const filterQuestions = (
     console.log('After subject filter:', filteredQuestions.length);
   }
   
-  // Apply year filter if selected
-  if (values.year !== 'all') {
-    console.log('Filtering by year:', values.year);
-    filteredQuestions = filteredQuestions.filter(q => q.year === values.year);
-    console.log('After year filter:', filteredQuestions.length);
-  }
+  // Apply year range filter
+  const [minYear, maxYear] = values.yearRange;
+  console.log('Filtering by year range:', minYear, 'to', maxYear);
+  filteredQuestions = filteredQuestions.filter(q => {
+    // Skip questions with no year data
+    if (!q.year) return false;
+    
+    const questionYear = parseInt(q.year);
+    return !isNaN(questionYear) && questionYear >= minYear && questionYear <= maxYear;
+  });
+  console.log('After year range filter:', filteredQuestions.length);
   
   // Finally apply difficulty filter
   if (values.difficulty !== 'all') {

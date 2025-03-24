@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import SubjectSelect from './selects/SubjectSelect';
 import DifficultySelect from './selects/DifficultySelect';
 import QuestionCountSelect from './selects/QuestionCountSelect';
@@ -20,6 +19,16 @@ interface FilterFormProps {
 }
 
 const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) => {
+  const numericYears = useMemo(() => {
+    return years
+      .map(year => parseInt(year))
+      .filter(year => !isNaN(year))
+      .sort((a, b) => a - b);
+  }, [years]);
+
+  const minYear = numericYears.length > 0 ? numericYears[0] : 2000;
+  const maxYear = numericYears.length > 0 ? numericYears[numericYears.length - 1] : new Date().getFullYear();
+
   const form = useForm<FormValues>({
     defaultValues: {
       subject: 'all',
@@ -29,13 +38,14 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
       sortByAttempts: false,
       sortDirection: 'desc',
       wrongQuestionsOnly: false,
-      year: 'all',
+      yearRange: [minYear, maxYear],
     },
     mode: 'onChange',
   });
 
   const isRandomMode = form.watch('isRandomSelection');
   const isSortingEnabled = form.watch('sortByAttempts');
+  const yearRange = form.watch('yearRange');
 
   const isFormValid = form.watch('subject') && 
                      form.watch('difficulty') && 
@@ -49,26 +59,23 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
           <SubjectSelect form={form} subjects={subjects} />
           <DifficultySelect form={form} />
           
-          {/* Year select field */}
-          <div className="space-y-2">
-            <Label htmlFor="year-filter">Jahr</Label>
-            <Select
-              value={form.watch('year')}
-              onValueChange={(value) => form.setValue('year', value)}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Prüfungsjahre</Label>
+              <span className="text-sm text-muted-foreground">
+                {yearRange[0]} - {yearRange[1]}
+              </span>
+            </div>
+            <Slider
+              defaultValue={[minYear, maxYear]}
+              min={minYear}
+              max={maxYear}
+              step={1}
+              value={yearRange}
+              onValueChange={(value) => form.setValue('yearRange', value as [number, number])}
               disabled={isRandomMode}
-            >
-              <SelectTrigger id="year-filter">
-                <SelectValue placeholder="Alle Jahre" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle Jahre</SelectItem>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className="my-4"
+            />
           </div>
         </div>
         
