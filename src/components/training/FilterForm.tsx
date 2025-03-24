@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SubjectSelect from './selects/SubjectSelect';
 import DifficultySelect from './selects/DifficultySelect';
 import QuestionCountSelect from './selects/QuestionCountSelect';
@@ -14,10 +15,11 @@ import { FormValues } from './types/FormValues';
 
 interface FilterFormProps {
   subjects: string[];
+  years: string[];
   onSubmit: (values: FormValues) => void;
 }
 
-const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
+const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) => {
   const form = useForm<FormValues>({
     defaultValues: {
       subject: 'all',
@@ -27,6 +29,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
       sortByAttempts: false,
       sortDirection: 'desc',
       wrongQuestionsOnly: false,
+      year: 'all',
     },
     mode: 'onChange',
   });
@@ -45,6 +48,28 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, onSubmit }) => {
         <div className={`space-y-6 ${isRandomMode ? 'opacity-50 pointer-events-none' : ''}`}>
           <SubjectSelect form={form} subjects={subjects} />
           <DifficultySelect form={form} />
+          
+          {/* Year select field */}
+          <div className="space-y-2">
+            <Label htmlFor="year-filter">Jahr</Label>
+            <Select
+              value={form.watch('year')}
+              onValueChange={(value) => form.setValue('year', value)}
+              disabled={isRandomMode}
+            >
+              <SelectTrigger id="year-filter">
+                <SelectValue placeholder="Alle Jahre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle Jahre</SelectItem>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <QuestionCountSelect form={form} />

@@ -34,6 +34,13 @@ export const filterQuestions = (
     console.log('After subject filter:', filteredQuestions.length);
   }
   
+  // Apply year filter if selected
+  if (values.year !== 'all') {
+    console.log('Filtering by year:', values.year);
+    filteredQuestions = filteredQuestions.filter(q => q.year === values.year);
+    console.log('After year filter:', filteredQuestions.length);
+  }
+  
   // Finally apply difficulty filter
   if (values.difficulty !== 'all') {
     const selectedDifficulty = parseInt(values.difficulty);

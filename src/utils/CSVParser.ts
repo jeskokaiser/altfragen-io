@@ -1,3 +1,4 @@
+
 import Papa from 'papaparse';
 import { toast } from 'sonner';
 
@@ -20,12 +21,21 @@ export const parseCSV = (file: File): Promise<CSVParseResult> => {
         const headers = Array.isArray(results.data[0]) ? results.data[0] : Object.keys(results.data[0]);
         console.log('CSV headers:', headers);
         
+        // Required columns including "Jahr"
         const requiredColumns = ['Frage', 'A', 'B', 'C', 'D', 'E', 'Fach', 'Antwort', 'Kommentar'];
+        const optionalColumns = ['Jahr', 'Semester']; // Optional columns that we support
+        
         const missingColumns = requiredColumns.filter(col => !headers.includes(col));
         
         if (missingColumns.length > 0) {
           reject(new Error(`Fehlende Spalten: ${missingColumns.join(', ')}`));
           return;
+        }
+        
+        // Log which optional columns were found
+        const foundOptionalColumns = optionalColumns.filter(col => headers.includes(col));
+        if (foundOptionalColumns.length > 0) {
+          console.log('Found optional columns:', foundOptionalColumns);
         }
 
         resolve({
