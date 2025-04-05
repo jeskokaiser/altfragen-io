@@ -60,6 +60,9 @@ serve(async (req) => {
     let statusData: BackendStatusResponse | null = null;
     let statusResponse: Response | null = null;
 
+    // --- Verbessertes Logging: URL vor dem Fetch ausgeben ---
+    console.log(`Attempting to fetch status from: ${statusEndpoint}`);
+
     console.log(`Checking status endpoint: ${statusEndpoint}`);
     try {
       statusResponse = await fetch(statusEndpoint, {
@@ -92,6 +95,9 @@ serve(async (req) => {
       }
     } catch (error) {
       console.error(`Network or fetch error checking ${statusEndpoint}:`, error.message);
+      // --- Verbessertes Logging: Gesamtes Fehlerobjekt ausgeben ---
+      console.error('Fetch error details:', error);
+
       // Handle fetch errors (e.g., network issues)
        return new Response(JSON.stringify({
          success: false,
