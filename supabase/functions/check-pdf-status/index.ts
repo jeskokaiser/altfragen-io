@@ -1,134 +1,204 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+// Definiere erwartete Typen für mehr Sicherheit
+interface BackendStatusResponse {
+  success: boolean;
+  status: 'processing' | 'completed' | 'error' | 'failed';
+  message?: string;
+  questions?: any[]; // Hier ggf. einen genaueren Question-Typ definieren
+  data?: any;
+  error?: string;
+  details?: string;
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-
-// List of possible API endpoints to try
-// Based on logs, the backend seems to be using different URL patterns than expected
-const API_ENDPOINTS = [
-  'https://api.altfragen.io/api/tasks',
-  'https://api.altfragen.io/status',
-  'https://api.altfragen.io/task',
-  'https://api.altfragen.io/tasks'
-];
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
 
   try {
-    // Extract task_id from URL query parameters
-    const url = new URL(req.url);
-    let taskId = url.searchParams.get('task_id');
-    
-    // If not in query params, try to get from request body as fallback
-    if (!taskId && req.method === 'POST') {
-      try {
-        const body = await req.json();
-        taskId = body.task_id;
-      } catch (e) {
-        console.error('Error parsing request body:', e);
-      }
+    // For GET requests, the task_id should be in the URL query parameters
+    if (req.method !== 'GET') {
+      return new Response(JSON.stringify({
+        error: 'Method not allowed'
+      }), {
+        status: 405,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
     }
 
-    console.log(`Received status check request for task: ${taskId}`);
-
+    // Extract task_id from the URL query parameters
+    const url = new URL(req.url);
+    const taskId = url.searchParams.get('task_id');
     if (!taskId) {
-      return new Response(JSON.stringify({ 
-        error: 'Missing task_id parameter',
-        status: 'failed'
+      return new Response(JSON.stringify({
+        error: 'Missing task_id parameter'
       }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Try each endpoint until one works
-    let response = null;
-    let responseData = null;
-    let statusCode = 0;
-    let endpointUsed = '';
-
-    // Maximum number of polling attempts before giving up
-    const MAX_POLLING_ATTEMPTS = 10;
-    
-    // Start with attempt 1
-    for (let attempt = 1; attempt <= MAX_POLLING_ATTEMPTS; attempt++) {
-      console.log(`Polling for task status (attempt ${attempt}/${MAX_POLLING_ATTEMPTS}): ${taskId}`);
-      
-      // Try each endpoint
-      for (const baseEndpoint of API_ENDPOINTS) {
-        const statusUrl = `${baseEndpoint}/${taskId}`;
-        console.log(`Checking status URL: ${statusUrl}`);
-        
-        try {
-          response = await fetch(statusUrl, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-          });
-          
-          statusCode = response.status;
-          console.log(`Status check response: ${statusCode}`);
-          
-          // Successfully reached the API
-          if (response.ok) {
-            responseData = await response.json();
-            endpointUsed = statusUrl;
-            console.log(`Found working endpoint: ${endpointUsed}`);
-            console.log(`Response data:`, responseData);
-            break;
-          } else {
-            // Log the error but continue trying other endpoints
-            const errorText = await response.text();
-            console.error(`Error checking task status: ${errorText}`);
-          }
-        } catch (error) {
-          console.error(`Network error with endpoint ${baseEndpoint}:`, error);
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      }
-      
-      // If we got data or are out of attempts, exit the polling loop
-      if (responseData || attempt >= MAX_POLLING_ATTEMPTS) {
-        break;
-      }
-      
-      // Wait 5 seconds before trying again
-      await new Promise(resolve => setTimeout(resolve, 5000));
-    }
-
-    // If we never got a successful response from any endpoint
-    if (!responseData) {
-      return new Response(JSON.stringify({
-        status: 'processing',
-        message: 'Still processing, please check back later',
-        endpoint_tried: endpointUsed || 'all failed',
-        response_code: statusCode
-      }), {
-        status: 202,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Return the API response to the client
-    return new Response(JSON.stringify(responseData), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    // Korrekter Backend-Status-Endpunkt
+    const BASE_API_URL = 'https://api.altfragen.io';
+    const statusEndpoint = `${BASE_API_URL}/status/${taskId}`;
+    
+    let statusData: BackendStatusResponse | null = null;
+    let statusResponse: Response | null = null;
 
+    console.log(`Checking status endpoint: ${statusEndpoint}`);
+    try {
+      statusResponse = await fetch(statusEndpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      console.log(`Status check response from ${statusEndpoint}:`, statusResponse.status);
+
+      if (statusResponse.ok) {
+        statusData = await statusResponse.json() as BackendStatusResponse;
+      } else {
+         // Handle non-OK responses (e.g., 404 Not Found)
+         const errorText = await statusResponse.text();
+         console.error(`Error checking ${statusEndpoint}: ${statusResponse.status} - ${errorText}`);
+         return new Response(JSON.stringify({
+            success: false,
+            status: 'error',
+            error: `Failed to check task status: ${statusResponse.status}`,
+            details: errorText
+         }), {
+            status: statusResponse.status, // Return the actual status code from backend
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            }
+         });
+      }
+    } catch (error) {
+      console.error(`Network or fetch error checking ${statusEndpoint}:`, error.message);
+      // Handle fetch errors (e.g., network issues)
+       return new Response(JSON.stringify({
+         success: false,
+         status: 'error',
+         error: 'Failed to check task status',
+         details: `Network error: ${error.message}`
+       }), {
+         status: 500, // Internal Server Error or Service Unavailable
+         headers: {
+           ...corsHeaders,
+           'Content-Type': 'application/json'
+         }
+       });
+    }
+
+    // If statusData is still null after fetch (shouldn't happen with error handling above, but as a safeguard)
+    if (!statusData) {
+       return new Response(JSON.stringify({
+         success: false,
+         status: 'error',
+         error: 'Failed to retrieve task status data after fetch attempt.',
+         details: 'Unknown error during status retrieval'
+       }), {
+         status: 500,
+         headers: {
+           ...corsHeaders,
+           'Content-Type': 'application/json'
+         }
+       });
+    }
+
+    console.log(`Task status data:`, JSON.stringify(statusData).substring(0, 500) + '...');
+
+    // Verarbeite die Backend-Antwort und reiche sie ggf. angepasst weiter
+    if (statusData.status === 'completed') {
+      console.log('Task processing completed successfully');
+      // Backend liefert bereits das korrekte Format, daher direkt durchreichen
+      if (statusData.success && statusData.questions) {
+        return new Response(JSON.stringify({
+          success: true,
+          status: 'completed',
+          message: statusData.message || 'PDF processing completed',
+          questions: statusData.questions, // Direkt durchreichen
+          data: statusData.data || {}
+        }), {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        });
+      } else {
+        // Completed but something went wrong (e.g., no questions found by backend)
+        return new Response(JSON.stringify({
+          success: false,
+          status: 'completed_error', // Eigener Status für diesen Fall?
+          error: statusData.error || statusData.message || 'Processing completed but no questions found or error reported by backend.',
+          details: statusData.details || ''
+        }), {
+          status: 400, // Oder 200 mit success: false?
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+    } else if (statusData.status === 'failed' || statusData.status === 'error') {
+      // Backend hat einen Fehler gemeldet
+      return new Response(JSON.stringify({
+        success: false,
+        status: statusData.status, // 'failed' or 'error'
+        error: statusData.message || statusData.error || 'PDF processing failed',
+        details: statusData.details || 'Unknown error from backend'
+      }), {
+        status: 400, // Fehler vom Backend, oft 4xx oder 5xx, aber wir geben 400 zurück?
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    } else {
+      // Noch in Bearbeitung ('processing')
+      return new Response(JSON.stringify({
+        success: true, // Anfrage war erfolgreich, Task läuft noch
+        status: 'processing',
+        message: statusData.message || 'PDF is still being processed'
+      }), {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
   } catch (error) {
-    console.error('Error in check-pdf-status:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error', 
-      details: error.message,
-      status: 'failed'
+    console.error('Unhandled error in status function:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      status: 'error',
+      error: 'Internal server error in Edge Function',
+      details: error.message
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
     });
   }
 });
