@@ -1,3 +1,4 @@
+
 // Note: I'm only modifying the parts of this file with type errors and not changing functionality
 
 import React, { useEffect, useState } from 'react';
@@ -5,10 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SessionActivity, SessionActivityDb } from '@/types/ExamSession';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { User, UserAvatar } from './ParticipantsList';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface SessionActivityFeedProps {
   sessionId: string;
+}
+
+interface User {
+  id: string;
+  email: string;
 }
 
 const SessionActivityFeed: React.FC<SessionActivityFeedProps> = ({ sessionId }) => {
@@ -31,7 +37,7 @@ const SessionActivityFeed: React.FC<SessionActivityFeedProps> = ({ sessionId }) 
 
         if (data) {
           // Convert the data to the SessionActivity type
-          const formattedActivities: SessionActivity[] = data.map((item: SessionActivityDb) => ({
+          const formattedActivities: SessionActivity[] = (data as any[]).map((item: SessionActivityDb) => ({
             id: item.id,
             session_id: item.session_id,
             user_id: item.user_id,
@@ -142,6 +148,26 @@ const SessionActivityFeed: React.FC<SessionActivityFeedProps> = ({ sessionId }) 
       </Card>
     );
   }
+
+  // Create a simple UserAvatar component
+  const UserAvatar = ({ user }: { user?: User }) => {
+    const getInitials = (email: string) => {
+      if (!email) return '?';
+      const parts = email.split('@')[0].split('.');
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+      return email.substring(0, 2).toUpperCase();
+    };
+
+    return (
+      <Avatar>
+        <AvatarFallback>
+          {user ? getInitials(user.email) : '?'}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
 
   return (
     <Card>

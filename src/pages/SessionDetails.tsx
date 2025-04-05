@@ -268,7 +268,7 @@ const SessionDetails: React.FC = () => {
           return acc;
         }, {} as Record<string, { online_at: string, presence_ref: string }>);
         
-        setPresenceState(formattedActiveUsers);
+        setPresenceState(state as any);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         console.log('User joined:', key, newPresences);
@@ -618,4 +618,3 @@ const SessionDetails: React.FC = () => {
 };
 
 export default SessionDetails;
-

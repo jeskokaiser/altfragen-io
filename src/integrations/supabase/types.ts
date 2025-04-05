@@ -160,9 +160,11 @@ export type Database = {
           created_at: string
           difficulty: number | null
           exam_name: string | null
+          exam_semester: string | null
+          exam_year: string | null
           filename: string
           id: string
-          image_urls: string[] | null
+          image_key: string | null
           is_unclear: boolean | null
           marked_unclear_at: string | null
           option_a: string
@@ -171,12 +173,10 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
-          semester: string | null
           subject: string
           university_id: string | null
           user_id: string | null
           visibility: string | null
-          year: string | null
         }
         Insert: {
           comment?: string | null
@@ -184,9 +184,11 @@ export type Database = {
           created_at?: string
           difficulty?: number | null
           exam_name?: string | null
+          exam_semester?: string | null
+          exam_year?: string | null
           filename: string
           id?: string
-          image_urls?: string[] | null
+          image_key?: string | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a: string
@@ -195,12 +197,10 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
-          semester?: string | null
           subject: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: string | null
         }
         Update: {
           comment?: string | null
@@ -208,9 +208,11 @@ export type Database = {
           created_at?: string
           difficulty?: number | null
           exam_name?: string | null
+          exam_semester?: string | null
+          exam_year?: string | null
           filename?: string
           id?: string
-          image_urls?: string[] | null
+          image_key?: string | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a?: string
@@ -219,12 +221,10 @@ export type Database = {
           option_d?: string
           option_e?: string
           question?: string
-          semester?: string | null
           subject?: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: string | null
         }
         Relationships: [
           {
