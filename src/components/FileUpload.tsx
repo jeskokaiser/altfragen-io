@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -66,7 +65,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         return;
       }
 
-      // Set visibility for all questions
       const questionsWithVisibility = questions.map(q => ({
         ...q,
         visibility
@@ -106,6 +104,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       return "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.";
     }
     return `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.`;
+  };
+
+  const handlePDFQuestionsLoaded = (questions: Question[]) => {
+    const questionsWithVisibility = questions.map(q => ({
+      ...q,
+      visibility
+    }));
+    
+    onQuestionsLoaded(questionsWithVisibility);
   };
 
   return (
@@ -209,7 +216,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </TabsContent>
         
         <TabsContent value="pdf">
-          <PDFUpload onQuestionsLoaded={onQuestionsLoaded} />
+          <PDFUpload 
+            onQuestionsLoaded={handlePDFQuestionsLoaded} 
+            visibility={visibility}
+          />
         </TabsContent>
       </Tabs>
     </div>
