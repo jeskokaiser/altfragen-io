@@ -255,19 +255,6 @@ const SessionDetails: React.FC = () => {
         const state = presenceChannel.presenceState();
         console.log('Current presence state:', state);
         
-        const formattedActiveUsers = Object.entries(state).reduce((acc, [key, values]: [string, any[]]) => {
-          if (values && values.length > 0) {
-            const userId = values[0].user_id;
-            if (userId) {
-              acc[userId] = {
-                online_at: values[0].online_at,
-                presence_ref: key
-              };
-            }
-          }
-          return acc;
-        }, {} as Record<string, { online_at: string, presence_ref: string }>);
-        
         setPresenceState(state as any);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
