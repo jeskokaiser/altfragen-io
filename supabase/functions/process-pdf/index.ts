@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -50,6 +49,8 @@ serve(async (req) => {
     const examYear = formData.get('examYear')?.toString();
     const examSemester = formData.get('examSemester')?.toString();
     const subject = formData.get('subject')?.toString();
+    const userId = formData.get('userId')?.toString();
+    const visibility = formData.get('visibility')?.toString();
 
     if (examName) {
       apiFormData.append('examName', examName);
@@ -67,7 +68,15 @@ serve(async (req) => {
       apiFormData.append('subject', subject);
     }
 
-    console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject });
+    if (userId) {
+      apiFormData.append('userId', userId);
+    }
+
+    if (visibility) {
+      apiFormData.append('visibility', visibility);
+    }
+
+    console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject, userId, visibility });
     console.log('Using API endpoint:', UPLOAD_ENDPOINT);
     console.log('PDF file name:', pdfFile.name, 'size:', pdfFile.size);
 

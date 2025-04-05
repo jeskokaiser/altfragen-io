@@ -139,8 +139,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: statusData.success ?? false, // Leite Backend 'success' weiter, default false
         status: 'completed', // Immer 'completed' hier
-        message: statusData.message || (statusData.success ? 'PDF processing completed' : 'Processing completed with issues or no questions found.'),
-        questions: statusData.questions || [], // Leere Liste als Fallback
+        message: statusData.message || (statusData.success ? 'PDF processing completed and questions saved' : 'Processing completed with issues or questions could not be saved.'),
         data: statusData.data || {},
         error: statusData.error // Leite mögliche Fehlermeldung vom Backend weiter
       }), {
@@ -171,7 +170,6 @@ serve(async (req) => {
          success: false, // Behandle Warnung als nicht vollständig erfolgreich
          status: 'completed', // Task ist abgeschlossen
          message: statusData.message || 'Processing completed with warnings (e.g., no questions found).',
-         questions: statusData.questions || [],
          data: statusData.data || {},
          error: 'Processing completed with warnings.' // Setze eine Fehlermeldung
        }), {
