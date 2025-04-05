@@ -52,6 +52,15 @@ serve(async (req) => {
     const userId = formData.get('userId')?.toString();
     const visibility = formData.get('visibility')?.toString();
 
+    console.log('Extracted form data:', {
+      userId,
+      visibility,
+      examName,
+      examYear,
+      examSemester,
+      subject
+    });
+
     if (examName) {
       apiFormData.append('examName', examName);
     }
@@ -70,10 +79,12 @@ serve(async (req) => {
 
     if (userId) {
       apiFormData.append('userId', userId);
+      apiFormData.append('user_id', userId);
     }
 
     if (visibility) {
       apiFormData.append('visibility', visibility);
+      apiFormData.append('visibility', visibility.toLowerCase());
     }
 
     console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject, userId, visibility });
@@ -106,6 +117,14 @@ serve(async (req) => {
     // Get the task_id from the response
     const initialData = await apiResponse.json();
     console.log('Initial API response:', JSON.stringify(initialData));
+    
+    // Log the sent form data for comparison
+    console.log('Form data sent to API:', {
+      userId: formData.get('userId'),
+      user_id: userId, // this should be the same
+      visibility: formData.get('visibility'),
+      visibility_lowercase: visibility?.toLowerCase()
+    });
     
     if (!initialData.task_id) {
       return new Response(JSON.stringify({ 

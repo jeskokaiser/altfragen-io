@@ -229,9 +229,13 @@ const PDFUpload: React.FC = () => {
       // Add user ID
       if (user?.id) {
         formData.append('userId', user.id);
+        console.log('Appending userId to form data:', user.id);
+      } else {
+        console.warn('No user.id available for form data');
       }
       // Add visibility
       formData.append('visibility', visibility);
+      console.log('Appending visibility to form data:', visibility);
 
       // Call the Supabase Edge Function to upload the PDF
       const { data, error } = await supabase.functions.invoke('process-pdf', {
