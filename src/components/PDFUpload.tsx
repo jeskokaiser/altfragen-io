@@ -162,11 +162,11 @@ const PDFUpload: React.FC = () => {
         } else {
           // Verarbeitung abgeschlossen, aber nicht erfolgreich (z.B. keine Fragen gefunden)
           const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
-          setError(errorMessage);
-          toast.error("Verarbeitung abgeschlossen, aber mit Problemen", {
+          toast.info("Verarbeitung abgeschlossen", { 
             description: errorMessage
           });
-          setActiveTask(null);
+          // Reset state to allow new uploads
+          resetState(); 
         }
       } else if (data.status === 'failed') {
         // Clear the interval since we got an error
@@ -181,7 +181,8 @@ const PDFUpload: React.FC = () => {
         toast.error("Verarbeitung fehlgeschlagen", {
           description: failMessage
         });
-        setActiveTask(null);
+        // Reset state to allow new uploads or retries
+        resetState(); 
       } else {
         // Still processing - update progress
         const currentProgress = uploadProgress;
