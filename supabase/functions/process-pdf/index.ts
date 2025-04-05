@@ -42,11 +42,29 @@ serve(async (req) => {
     const apiFormData = new FormData();
     apiFormData.append('file', blob, pdfFile.name);
 
-    // Additional metadata can be added here if needed
-    const subject = formData.get('subject');
-    if (subject) {
-      apiFormData.append('subject', subject.toString());
+    // Get metadata from the request and add it to the API request
+    const examName = formData.get('examName')?.toString();
+    const examYear = formData.get('examYear')?.toString();
+    const examSemester = formData.get('examSemester')?.toString();
+    const subject = formData.get('subject')?.toString();
+
+    if (examName) {
+      apiFormData.append('examName', examName);
     }
+    
+    if (examYear) {
+      apiFormData.append('examYear', examYear);
+    }
+    
+    if (examSemester) {
+      apiFormData.append('examSemester', examSemester);
+    }
+    
+    if (subject) {
+      apiFormData.append('subject', subject);
+    }
+
+    console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject });
 
     // Forward the request to the external API
     const apiResponse = await fetch(API_URL, {
@@ -75,18 +93,20 @@ serve(async (req) => {
       const questions = apiData.questions.map((q: any) => ({
         id: crypto.randomUUID(),
         question: q.question || '',
-        optionA: q.options?.A || '',
-        optionB: q.options?.B || '',
-        optionC: q.options?.C || '',
-        optionD: q.options?.D || '',
-        optionE: q.options?.E || '',
-        subject: q.subject || '',
+        options: {
+          A: q.options?.A || '',
+          B: q.options?.B || '',
+          C: q.options?.C || '',
+          D: q.options?.D || '',
+          E: q.options?.E || '',
+        },
         correctAnswer: q.correctAnswer || '',
+        subject: q.subject || subject || '',
         comment: q.comment || '',
-        filename: pdfFile.name,
+        filename: examName || pdfFile.name,
         difficulty: q.difficulty || 3,
-        semester: q.semester || null,
-        year: q.year || null,
+        semester: q.semester || examSemester || null,
+        year: q.year || examYear || null,
         image_key: q.image_key || null
       }));
 
@@ -94,7 +114,7 @@ serve(async (req) => {
         success: true,
         questions: questions,
         data: {
-          exam_name: pdfFile.name,
+          exam_name: examName || pdfFile.name,
           images_uploaded: apiData.data?.images_uploaded || 0,
           total_questions: questions.length,
           total_images: apiData.data?.total_images || 0

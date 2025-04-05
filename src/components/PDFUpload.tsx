@@ -6,15 +6,31 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question } from '@/types/Question';
 import { saveQuestions } from '@/services/DatabaseService';
-import { AlertCircle, Upload, FileText, Check, X } from 'lucide-react';
+import { AlertCircle, Upload, FileText, Check, X, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from '@/integrations/supabase/client';
 import PDFQuestionReview from './PDFQuestionReview';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PDFUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
 }
+
+// Define the form schema for exam metadata
+const examMetadataSchema = z.object({
+  examName: z.string().min(1, "Exam name is required"),
+  examYear: z.string().regex(/^\d{4}$/, "Please enter a valid year (e.g., 2024)").optional(),
+  examSemester: z.enum(["WS", "SS"]).optional(),
+  subject: z.string().min(1, "Subject is required")
+});
+
+type ExamMetadataFormValues = z.infer<typeof examMetadataSchema>;
 
 const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId, universityName } = useAuth();
@@ -30,6 +46,18 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     total_questions: number;
     total_images: number;
   } | null>(null);
+  const [showMetadataForm, setShowMetadataForm] = useState(true);
+  
+  // Initialize the form
+  const form = useForm<ExamMetadataFormValues>({
+    resolver: zodResolver(examMetadataSchema),
+    defaultValues: {
+      examName: "",
+      examYear: new Date().getFullYear().toString(),
+      examSemester: undefined,
+      subject: ""
+    }
+  });
 
   const resetState = () => {
     setError(null);
@@ -38,6 +66,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     setExtractedQuestions(null);
     setUploadStats(null);
     setSelectedFile(null);
+    setShowMetadataForm(true);
+    form.reset();
   };
 
   const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,11 +94,25 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     console.log('File selected:', file.name);
   };
 
+  const handleMetadataSubmit = (data: ExamMetadataFormValues) => {
+    console.log('Metadata submitted:', data);
+    setShowMetadataForm(false);
+    
+    // Auto-fill filename if none selected yet
+    if (!selectedFile) {
+      toast.info("Bitte wähle nun eine PDF-Datei aus", {
+        description: "Die Metadaten wurden erfasst"
+      });
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile || !user?.id) {
       setError("Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist");
       return;
     }
+
+    const formValues = form.getValues();
 
     setError(null);
     setIsUploading(true);
@@ -86,6 +130,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
       // Create form data for the API request
       const formData = new FormData();
       formData.append('pdf', selectedFile);
+      
+      // Add metadata to the form data
+      formData.append('examName', formValues.examName);
+      if (formValues.examYear) formData.append('examYear', formValues.examYear);
+      if (formValues.examSemester) formData.append('examSemester', formValues.examSemester);
+      formData.append('subject', formValues.subject);
 
       // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('process-pdf', {
@@ -105,8 +155,27 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
         throw new Error("Keine Fragen konnten aus der PDF-Datei extrahiert werden");
       }
 
+      // Map the API response to our Question type format
+      const mappedQuestions: Question[] = data.questions.map((q: any) => ({
+        id: q.id || crypto.randomUUID(),
+        question: q.question || '',
+        optionA: q.options?.A || '',
+        optionB: q.options?.B || '',
+        optionC: q.options?.C || '',
+        optionD: q.options?.D || '',
+        optionE: q.options?.E || '',
+        subject: q.subject || formValues.subject || '',
+        correctAnswer: q.correctAnswer || '',
+        comment: q.comment || '',
+        filename: formValues.examName || selectedFile.name,
+        difficulty: q.difficulty || 3,
+        semester: q.semester || formValues.examSemester || null,
+        year: q.year || formValues.examYear || null,
+        image_key: q.image_key || null
+      }));
+
       // Store the questions and stats
-      setExtractedQuestions(data.questions);
+      setExtractedQuestions(mappedQuestions);
       setUploadStats(data.data);
       
       // Success message
@@ -114,7 +183,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
         ? ` und ${data.data.images_uploaded} Bilder` 
         : '';
         
-      toast.success(`${data.questions.length} Fragen${imagesText} aus der PDF-Datei extrahiert`, {
+      toast.success(`${mappedQuestions.length} Fragen${imagesText} aus der PDF-Datei extrahiert`, {
         description: "Bitte überprüfe die Fragen bevor du sie speicherst"
       });
 
@@ -147,7 +216,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
         ? ` und ${uploadStats.images_uploaded} Bilder`
         : '';
           
-      toast.success(`${questionsToSave.length} Fragen${imagesText} aus "${selectedFile?.name}" gespeichert`, {
+      toast.success(`${questionsToSave.length} Fragen${imagesText} aus "${form.getValues().examName || selectedFile?.name}" gespeichert`, {
         description: `Die Fragen wurden erfolgreich gespeichert und sind ${visibilityText}`
       });
       
@@ -178,7 +247,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
           visibility={visibility}
           onSave={handleSaveQuestions}
           onCancel={handleCancelReview}
-          filename={selectedFile?.name || ''}
+          filename={form.getValues().examName || selectedFile?.name || ''}
           stats={uploadStats}
         />
       ) : (
@@ -207,61 +276,196 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {selectedFile ? (
-                <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <p className="font-medium text-sm">{selectedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              {/* Step 1: Metadata Form */}
+              {showMetadataForm ? (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleMetadataSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="examName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prüfungsname</FormLabel>
+                          <FormControl>
+                            <Input placeholder="z.B. Anatomie Klausur" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="subject"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fach</FormLabel>
+                          <FormControl>
+                            <Input placeholder="z.B. Anatomie" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="examSemester"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Semester (Optional)</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Wähle Semester" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="WS">Wintersemester</SelectItem>
+                                <SelectItem value="SS">Sommersemester</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="examYear"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Jahr (Optional)</FormLabel>
+                            <FormControl>
+                              <Input type="text" placeholder="z.B. 2024" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full mt-4 flex items-center justify-center gap-2"
+                    >
+                      Weiter zur Dateiauswahl
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </form>
+                </Form>
+              ) : (
+                <>
+                  {/* Step 2: File Upload */}
+                  <div className="bg-muted/20 p-3 rounded-md mb-4">
+                    <h3 className="font-medium mb-1">Prüfungsdaten:</h3>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Name:</strong> {form.getValues().examName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Fach:</strong> {form.getValues().subject}
+                    </p>
+                    {form.getValues().examSemester && (
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Semester:</strong> {form.getValues().examSemester === 'WS' ? 'Wintersemester' : 'Sommersemester'}
                       </p>
+                    )}
+                    {form.getValues().examYear && (
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Jahr:</strong> {form.getValues().examYear}
+                      </p>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="mt-2" 
+                      onClick={() => setShowMetadataForm(true)}
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  
+                  {selectedFile ? (
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <p className="font-medium text-sm">{selectedFile.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedFile(null)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
+                      <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground mb-1">Klicke um eine PDF-Datei hochzuladen</p>
+                      <p className="text-xs text-muted-foreground">Oder ziehe eine Datei hierher</p>
+                      <input
+                        id="pdf-upload"
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleFileSelection}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  )}
+
+                  {isUploading && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Verarbeite PDF...</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="h-2" />
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Sichtbarkeit der Fragen</label>
+                      <Select 
+                        value={visibility} 
+                        onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sichtbarkeit wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="private">Privat (nur für dich)</SelectItem>
+                          <SelectItem value="university" disabled={!universityId}>
+                            Universität (alle an deiner Uni)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <Button
+                        disabled={!selectedFile || isUploading}
+                        onClick={handleUpload}
+                        className="flex items-center gap-2"
+                      >
+                        {isUploading ? 'Verarbeite...' : 'PDF hochladen und analysieren'}
+                        {!isUploading && <Upload className="h-4 w-4" />}
+                      </Button>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFile(null)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
-                  <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-1">Klicke um eine PDF-Datei hochzuladen</p>
-                  <p className="text-xs text-muted-foreground">Oder ziehe eine Datei hierher</p>
-                  <input
-                    id="pdf-upload"
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileSelection}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                </div>
+                </>
               )}
-
-              {isUploading && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Verarbeite PDF...</span>
-                    <span>{uploadProgress}%</span>
-                  </div>
-                  <Progress value={uploadProgress} className="h-2" />
-                </div>
-              )}
-
-              <div className="pt-4 flex justify-end">
-                <Button
-                  disabled={!selectedFile || isUploading}
-                  onClick={handleUpload}
-                  className="flex items-center gap-2"
-                >
-                  {isUploading ? 'Verarbeite...' : 'PDF hochladen und analysieren'}
-                  {!isUploading && <Upload className="h-4 w-4" />}
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </>
