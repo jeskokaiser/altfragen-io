@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 interface UserPreferences {
   immediateFeedback: boolean;
   archivedDatasets: string[];
-  selectedUniversityDatasets: string[];
 }
 
 interface UserPreferencesContextType {
@@ -17,7 +16,6 @@ interface UserPreferencesContextType {
   archiveDataset: (filename: string) => Promise<void>;
   restoreDataset: (filename: string) => Promise<void>;
   isDatasetArchived: (filename: string) => boolean;
-  updateSelectedUniversityDatasets: (datasets: string[]) => Promise<void>;
 }
 
 const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
@@ -25,8 +23,7 @@ const UserPreferencesContext = createContext<UserPreferencesContextType | undefi
 export function UserPreferencesProvider({ children }: { children: React.ReactNode }) {
   const [preferences, setPreferences] = useState<UserPreferences>({ 
     immediateFeedback: false,
-    archivedDatasets: [],
-    selectedUniversityDatasets: []
+    archivedDatasets: []
   });
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -35,11 +32,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (user) {
       loadUserPreferences();
     } else {
-      setPreferences({ 
-        immediateFeedback: false, 
-        archivedDatasets: [],
-        selectedUniversityDatasets: [] 
-      });
+      setPreferences({ immediateFeedback: false, archivedDatasets: [] });
       setIsLoading(false);
     }
   }, [user]);
@@ -61,8 +54,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       if (existingPrefs) {
         setPreferences({ 
           immediateFeedback: existingPrefs.immediate_feedback,
-          archivedDatasets: existingPrefs.archived_datasets || [],
-          selectedUniversityDatasets: existingPrefs.selected_university_datasets || []
+          archivedDatasets: existingPrefs.archived_datasets || []
         });
       } else {
         const { error: insertError } = await supabase
@@ -70,16 +62,11 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           .insert({
             user_id: user.id,
             immediate_feedback: false,
-            archived_datasets: [],
-            selected_university_datasets: []
+            archived_datasets: []
           });
 
         if (insertError) throw insertError;
-        setPreferences({ 
-          immediateFeedback: false, 
-          archivedDatasets: [],
-          selectedUniversityDatasets: [] 
-        });
+        setPreferences({ immediateFeedback: false, archivedDatasets: [] });
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -98,7 +85,6 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         .update({
           immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
           archived_datasets: newPreferences.archivedDatasets ?? preferences.archivedDatasets,
-          selected_university_datasets: newPreferences.selectedUniversityDatasets ?? preferences.selectedUniversityDatasets,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -133,10 +119,6 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     return preferences.archivedDatasets.includes(filename);
   };
 
-  const updateSelectedUniversityDatasets = async (datasets: string[]) => {
-    await updatePreferences({ selectedUniversityDatasets: datasets });
-  };
-
   return (
     <UserPreferencesContext.Provider value={{ 
       preferences, 
@@ -144,8 +126,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       updatePreferences,
       archiveDataset,
       restoreDataset,
-      isDatasetArchived,
-      updateSelectedUniversityDatasets
+      isDatasetArchived
     }}>
       {children}
     </UserPreferencesContext.Provider>
@@ -159,3 +140,4 @@ export const useUserPreferences = () => {
   }
   return context;
 };
+

@@ -19,15 +19,6 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
   );
-  
-  // Extract unique years from questions
-  const years = Array.from(
-    new Set(
-      questions
-        .filter(q => q.year)
-        .map(q => q.year || '')
-    )
-  ).sort((a, b) => b.localeCompare(a)); // Sort years in descending order
 
   const handleSubmit = async (values: FormValues) => {
     console.log('Form values:', values);
@@ -84,7 +75,6 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       
       <FilterForm 
         subjects={subjects}
-        years={years}
         onSubmit={handleSubmit}
       />
       <br />
@@ -101,7 +91,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           Du kannst die Auswahl anpassen durch:
         </p>
         <ul className="list-disc ml-4 space-y-1">
-         <li>Filtern nach Fach, Schwierigkeitsgrad und Jahr</li>
+         <li>Filtern nach Fach und Schwierigkeitsgrad</li>
           <li>Nur falsch beantwortete Fragen</li>
          <li>Nach Anzahl der Versuche sortieren
             <ul>

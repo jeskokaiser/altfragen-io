@@ -47,10 +47,8 @@ export type Database = {
           correct_answer: string
           created_at: string
           difficulty: number | null
-          exam_name: string | null
           filename: string
           id: string
-          image_urls: string[] | null
           is_unclear: boolean | null
           marked_unclear_at: string | null
           option_a: string
@@ -59,22 +57,18 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
-          semester: string | null
           subject: string
           university_id: string | null
           user_id: string | null
           visibility: string | null
-          year: string | null
         }
         Insert: {
           comment?: string | null
           correct_answer: string
           created_at?: string
           difficulty?: number | null
-          exam_name?: string | null
           filename: string
           id?: string
-          image_urls?: string[] | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a: string
@@ -83,22 +77,18 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
-          semester?: string | null
           subject: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: string | null
         }
         Update: {
           comment?: string | null
           correct_answer?: string
           created_at?: string
           difficulty?: number | null
-          exam_name?: string | null
           filename?: string
           id?: string
-          image_urls?: string[] | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a?: string
@@ -107,12 +97,10 @@ export type Database = {
           option_d?: string
           option_e?: string
           question?: string
-          semester?: string | null
           subject?: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
-          year?: string | null
         }
         Relationships: [
           {
@@ -154,7 +142,6 @@ export type Database = {
           created_at: string | null
           id: string
           immediate_feedback: boolean | null
-          selected_university_datasets: string[] | null
           updated_at: string | null
           user_id: string | null
         }
@@ -163,7 +150,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
-          selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -172,7 +158,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
-          selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -187,7 +172,6 @@ export type Database = {
           question_id: string | null
           updated_at: string | null
           user_answer: string | null
-          user_difficulty: number | null
           user_id: string | null
         }
         Insert: {
@@ -198,7 +182,6 @@ export type Database = {
           question_id?: string | null
           updated_at?: string | null
           user_answer?: string | null
-          user_difficulty?: number | null
           user_id?: string | null
         }
         Update: {
@@ -209,7 +192,6 @@ export type Database = {
           question_id?: string | null
           updated_at?: string | null
           user_answer?: string | null
-          user_difficulty?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -227,13 +209,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_user_university_match: {
-        Args: {
-          user_uuid: string
-          university_uuid: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
