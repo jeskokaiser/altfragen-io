@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -6,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
-import { AlertCircle, Lock, GraduationCap } from 'lucide-react';
+import { AlertCircle, Lock, GraduationCap, FileText, FileUp } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Select,
@@ -15,7 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import PDFUpload from './PDFUpload';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -25,6 +28,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId, universityName } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'university'>('private');
+  const [uploadType, setUploadType] = useState<'csv' | 'pdf'>('csv');
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -110,7 +114,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         Lade deine Fragen hoch
       </h2>
       <p className="text-slate-600 dark:text-zinc-300 mb-4">
-        Bitte lade eine CSV-Datei mit den Spalten: Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeitsgrad
+        Bitte wähle ein Format und lade deine Fragen hoch
       </p>
       
       {error && (
@@ -120,62 +124,94 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </Alert>
       )}
 
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-xl">Fragen-Sichtbarkeit</CardTitle>
-          <CardDescription>
-            {getUniversityContextMessage()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <div className="flex flex-col gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Sichtbarkeit der Fragen</label>
-              <Select 
-                value={visibility} 
-                onValueChange={(value: 'private' | 'university') => setVisibility(value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sichtbarkeit wählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="private">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      <span>Privat (nur für dich)</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="university" disabled={!universityId}>
-                    <div className="flex items-center gap-2">
-                      <GraduationCap className="h-4 w-4" />
-                      <span>Universität (alle an deiner Uni)</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <Tabs defaultValue="csv" className="w-full max-w-3xl">
+        <TabsList className="grid grid-cols-2">
+          <TabsTrigger 
+            value="csv" 
+            onClick={() => setUploadType('csv')}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            CSV-Datei
+          </TabsTrigger>
+          <TabsTrigger 
+            value="pdf" 
+            onClick={() => setUploadType('pdf')}
+            className="flex items-center gap-2"
+          >
+            <FileUp className="h-4 w-4" />
+            PDF-Datei
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="csv">
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="text-xl">CSV Upload</CardTitle>
+              <CardDescription>
+                {getUniversityContextMessage()}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div className="flex flex-col gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Sichtbarkeit der Fragen</label>
+                  <Select 
+                    value={visibility} 
+                    onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sichtbarkeit wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="private">
+                        <div className="flex items-center gap-2">
+                          <Lock className="h-4 w-4" />
+                          <span>Privat (nur für dich)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="university" disabled={!universityId}>
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="h-4 w-4" />
+                          <span>Universität (alle an deiner Uni)</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="flex justify-center mt-2">
-              <label htmlFor="csv-upload">
-                <Button 
-                  variant="outline" 
-                  className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
-                  onClick={() => document.getElementById('csv-upload')?.click()}
-                >
-                  CSV-Datei auswählen
-                </Button>
-              </label>
-              <input
-                id="csv-upload"
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="flex justify-center mt-2">
+                  <label htmlFor="csv-upload">
+                    <Button 
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
+                      onClick={() => document.getElementById('csv-upload')?.click()}
+                    >
+                      CSV-Datei auswählen
+                    </Button>
+                  </label>
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </div>
+                
+                <div className="mt-2 p-4 bg-muted/50 rounded-lg text-xs text-muted-foreground">
+                  <p>Die CSV-Datei sollte folgende Spalten enthalten:</p>
+                  <p className="font-mono mt-1">Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeitsgrad</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="pdf">
+          <PDFUpload onQuestionsLoaded={onQuestionsLoaded} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
