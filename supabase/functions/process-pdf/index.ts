@@ -34,6 +34,7 @@ serve(async (req) => {
     // Set the API endpoints
     const BASE_API_URL = 'https://api.altfragen.io';
     const UPLOAD_ENDPOINT = `${BASE_API_URL}/upload`;
+    const STATUS_ENDPOINT = `${BASE_API_URL}/status`;
     
     // Convert the File to a Blob
     const arrayBuffer = await pdfFile.arrayBuffer();
@@ -79,7 +80,7 @@ serve(async (req) => {
     console.log('API response status:', apiResponse.status);
     console.log('API response headers:', Object.fromEntries(apiResponse.headers.entries()));
 
-    if (!apiResponse.ok) {
+    if (apiResponse.status !== 202 && !apiResponse.ok) {
       const errorText = await apiResponse.text();
       console.error('External API error:', errorText);
       return new Response(JSON.stringify({ 
@@ -92,55 +93,130 @@ serve(async (req) => {
       });
     }
 
-    // Get the response from the external API
-    const apiData = await apiResponse.json();
-    console.log('API data received:', JSON.stringify(apiData).substring(0, 500) + '...');
-
-    // Transform the API response to match our frontend expectations
-    if (apiData.success) {
-      const questions = apiData.questions.map((q: any) => ({
-        id: crypto.randomUUID(),
-        question: q.question || '',
-        options: {
-          A: q.options?.A || '',
-          B: q.options?.B || '',
-          C: q.options?.C || '',
-          D: q.options?.D || '',
-          E: q.options?.E || '',
-        },
-        correctAnswer: q.correctAnswer || '',
-        subject: q.subject || subject || '',
-        comment: q.comment || '',
-        filename: examName || pdfFile.name,
-        difficulty: q.difficulty || 3,
-        semester: q.semester || examSemester || null,
-        year: q.year || examYear || null,
-        image_key: q.image_key || null
-      }));
-
-      return new Response(JSON.stringify({
-        success: true,
-        questions: questions,
-        data: {
-          exam_name: examName || pdfFile.name,
-          images_uploaded: apiData.data?.images_uploaded || 0,
-          total_questions: questions.length,
-          total_images: apiData.data?.total_images || 0
-        }
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    } else {
+    // Get the task_id from the response
+    const initialData = await apiResponse.json();
+    console.log('Initial API response:', JSON.stringify(initialData));
+    
+    if (!initialData.task_id) {
       return new Response(JSON.stringify({ 
-        success: false, 
-        error: apiData.error || 'Unknown error', 
-        details: apiData.details || ''
+        error: 'Invalid response from API', 
+        details: 'No task_id received'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+    
+    const taskId = initialData.task_id;
+    
+    // Poll for the status of the task
+    const maxAttempts = 10;
+    const pollInterval = 3000; // 3 seconds between polls
+    let attempts = 0;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      
+      console.log(`Polling for task status (attempt ${attempts}/${maxAttempts}): ${taskId}`);
+      
+      // Wait before polling
+      if (attempts > 1) {
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+      }
+      
+      // Check task status
+      const statusResponse = await fetch(`${STATUS_ENDPOINT}/${taskId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log(`Status check response:`, statusResponse.status);
+      
+      if (!statusResponse.ok) {
+        const errorText = await statusResponse.text();
+        console.error(`Error checking task status:`, errorText);
+        continue; // Continue trying
+      }
+      
+      const statusData = await statusResponse.json();
+      console.log(`Task status:`, JSON.stringify(statusData).substring(0, 500) + '...');
+      
+      // Check if the task is complete
+      if (statusData.status === 'completed') {
+        console.log('Task processing completed successfully');
+        
+        if (statusData.success && statusData.questions) {
+          // Map the questions to our expected format
+          const questions = statusData.questions.map((q: any) => ({
+            id: crypto.randomUUID(),
+            question: q.question || '',
+            options: {
+              A: q.options?.A || '',
+              B: q.options?.B || '',
+              C: q.options?.C || '',
+              D: q.options?.D || '',
+              E: q.options?.E || '',
+            },
+            correctAnswer: q.correctAnswer || '',
+            subject: q.subject || subject || '',
+            comment: q.comment || '',
+            filename: examName || pdfFile.name,
+            difficulty: q.difficulty || 3,
+            semester: q.semester || examSemester || null,
+            year: q.year || examYear || null,
+            image_key: q.image_key || null
+          }));
+
+          return new Response(JSON.stringify({
+            success: true,
+            questions: questions,
+            data: {
+              exam_name: examName || pdfFile.name,
+              images_uploaded: statusData.data?.images_uploaded || 0,
+              total_questions: questions.length,
+              total_images: statusData.data?.total_images || 0
+            }
+          }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } else {
+          return new Response(JSON.stringify({ 
+            success: false, 
+            error: statusData.error || 'No questions found in the processed data', 
+            details: statusData.details || ''
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      } else if (statusData.status === 'failed') {
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'PDF processing failed', 
+          details: statusData.message || statusData.error || 'Unknown error'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // If still processing, continue the loop
+      console.log(`Task still processing (attempt ${attempts}/${maxAttempts}), waiting ${pollInterval/1000} seconds...`);
+    }
+    
+    // If we've reached max attempts and still no complete response
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: 'Timeout waiting for PDF processing to complete', 
+      details: 'The server is taking too long to process the PDF. Please try again later or with a smaller file.'
+    }), {
+      status: 408, // Request Timeout
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
   } catch (error) {
     console.error('Error processing PDF:', error);
     return new Response(JSON.stringify({ 
