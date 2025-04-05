@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
@@ -19,8 +18,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       difficulty: q.difficulty,
       university_id: q.visibility === 'university' ? universityId : null,
       visibility: q.visibility || 'private',
-      semester: q.semester || null,
-      year: q.year || null
+      exam_semester: q.semester || null,
+      exam_year: q.year || null
     }))
   );
 
@@ -52,8 +51,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
     visibility: (q.visibility as 'private' | 'university') || 'private',
-    semester: q.semester || null,
-    year: q.year || null
+    semester: q.exam_semester || null,
+    year: q.exam_year || null
   }));
 };
 
@@ -86,7 +85,9 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
     visibility: (q.visibility as 'private' | 'university') || 'private',
-    user_id: q.user_id
+    user_id: q.user_id,
+    semester: q.exam_semester || null,
+    year: q.exam_year || null
   }));
 };
 
@@ -204,14 +205,13 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     university_id: q.university_id,
     visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
     user_id: q.user_id,
-    semester: q.semester || null,
-    year: q.year || null
+    semester: q.exam_semester || null,
+    year: q.exam_year || null
   }));
 
   return allQuestions;
 };
 
-// Add a new function to fetch user's difficulty for a specific question
 export const fetchUserDifficulty = async (userId: string, questionId: string): Promise<number | null> => {
   if (!userId || !questionId) return null;
   
