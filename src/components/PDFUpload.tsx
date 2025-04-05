@@ -1,7 +1,7 @@
+
 import React, { useCallback, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { PdfProcessingTask } from '@/types/Question';
 import { AlertCircle, Upload, FileText, Check, X, ArrowRight } from 'lucide-react';
@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { showToast } from '@/utils/toast';
 
 // Define the form schema for exam metadata
 const examMetadataSchema = z.object({
@@ -93,7 +94,7 @@ const PDFUpload: React.FC = () => {
 
     if (!file) {
       setError("Bitte wähle eine Datei aus");
-      toast.error("Keine Datei ausgewählt", {
+      showToast.error("Keine Datei ausgewählt", {
         description: "Bitte wähle eine PDF-Datei aus"
       });
       return;
@@ -101,13 +102,16 @@ const PDFUpload: React.FC = () => {
 
     if (!file.name.endsWith('.pdf')) {
       setError("Bitte wähle eine PDF-Datei aus");
-      toast.error("Ungültiges Dateiformat", {
+      showToast.error("Ungültiges Dateiformat", {
         description: "Es werden nur PDF-Dateien unterstützt"
       });
       return;
     }
 
     setSelectedFile(file);
+    showToast.info("Datei ausgewählt", {
+      description: `${file.name} wurde ausgewählt`
+    });
     console.log('File selected:', file.name);
   };
 
@@ -117,8 +121,12 @@ const PDFUpload: React.FC = () => {
     
     // Auto-fill filename if none selected yet
     if (!selectedFile) {
-      toast.info("Bitte wähle nun eine PDF-Datei aus", {
+      showToast.info("Bitte wähle nun eine PDF-Datei aus", {
         description: "Die Metadaten wurden erfasst"
+      });
+    } else {
+      showToast.info("Metadaten erfasst", {
+        description: "Du kannst jetzt die PDF-Datei hochladen"
       });
     }
   };
@@ -128,10 +136,10 @@ const PDFUpload: React.FC = () => {
     try {
       console.log(`Checking status for task: ${taskId}`);
       
-      // Pass task_id as a query parameter instead of in the body
+      // Pass task_id as a body parameter, not as query parameter
       const { data, error } = await supabase.functions.invoke('check-pdf-status', {
-        query: { task_id: taskId },
-        method: 'GET',
+        body: { task_id: taskId },
+        method: 'POST',
       });
 
       if (error) {
@@ -154,7 +162,7 @@ const PDFUpload: React.FC = () => {
         if (data.success) {
           // Verarbeitung erfolgreich abgeschlossen & im Backend gespeichert
           const successMessage = data.message || "PDF erfolgreich verarbeitet und Fragen gespeichert.";
-          toast.success("Verarbeitung erfolgreich", {
+          showToast.success("Verarbeitung erfolgreich", {
             description: successMessage
           });
           // Reset state after successful processing
@@ -162,7 +170,7 @@ const PDFUpload: React.FC = () => {
         } else {
           // Verarbeitung abgeschlossen, aber nicht erfolgreich (z.B. keine Fragen gefunden)
           const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
-          toast.info("Verarbeitung abgeschlossen", { 
+          showToast.info("Verarbeitung abgeschlossen", { 
             description: errorMessage
           });
           // Reset state to allow new uploads
@@ -178,16 +186,23 @@ const PDFUpload: React.FC = () => {
         setIsUploading(false);
         const failMessage = data.error || data.details || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen";
         setError(failMessage);
-        toast.error("Verarbeitung fehlgeschlagen", {
+        showToast.error("Verarbeitung fehlgeschlagen", {
           description: failMessage
         });
         // Reset state to allow new uploads or retries
         resetState(); 
       } else {
-        // Still processing - update progress
+        // Still processing - update progress and show toast only on significant progress changes
         const currentProgress = uploadProgress;
         const newProgress = Math.min(currentProgress + 5, 95);
         setUploadProgress(newProgress);
+        
+        // Update toast only every 20% progress to avoid too many notifications
+        if (Math.floor(newProgress / 20) > Math.floor(currentProgress / 20)) {
+          showToast.info("Verarbeitung läuft", {
+            description: data.message || `Fortschritt: ${newProgress}%`
+          });
+        }
         
         // Update the task status
         setActiveTask({
@@ -199,6 +214,11 @@ const PDFUpload: React.FC = () => {
     } catch (error: any) {
       console.error('Error checking task status:', error);
       
+      // Show error toast but don't interrupt the process on network errors
+      showToast.error("Statusabfrage fehlgeschlagen", {
+        description: "Versuche es erneut in Kürze..."
+      });
+      
       // Don't clear the interval on network errors, let it retry
       setError(error.message || "Ein Fehler ist beim Überprüfen des Task-Status aufgetreten");
     }
@@ -207,6 +227,9 @@ const PDFUpload: React.FC = () => {
   const handleUpload = async () => {
     if (!selectedFile || !user?.id) {
       setError("Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist");
+      showToast.error("Upload nicht möglich", {
+        description: "Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist"
+      });
       return;
     }
 
@@ -215,6 +238,9 @@ const PDFUpload: React.FC = () => {
     setError(null);
     setIsUploading(true);
     setUploadProgress(10);
+    showToast.info("Upload gestartet", {
+      description: "Deine PDF-Datei wird hochgeladen und verarbeitet..."
+    });
 
     try {
       // Create form data for the API request
@@ -263,7 +289,7 @@ const PDFUpload: React.FC = () => {
         // Start progress at 20% after successful upload
         setUploadProgress(20);
         
-        toast.info("PDF-Verarbeitung gestartet", {
+        showToast.info("PDF-Verarbeitung gestartet", {
           description: "Die Verarbeitung kann einige Minuten dauern"
         });
         
@@ -278,7 +304,7 @@ const PDFUpload: React.FC = () => {
       setIsUploading(false);
       setUploadProgress(0);
       
-      toast.error("Fehler beim Verarbeiten der PDF-Datei", {
+      showToast.error("Fehler beim Verarbeiten der PDF-Datei", {
         description: error.message || "Bitte versuche es später erneut"
       });
     }
