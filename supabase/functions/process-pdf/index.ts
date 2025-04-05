@@ -66,14 +66,53 @@ serve(async (req) => {
       });
     }
 
-    // Get the response from the external API
-    const data = await apiResponse.json();
+    // Get the response from the external API - this now follows the new format
+    const apiData = await apiResponse.json();
 
-    // Return the processed data
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    // Transform the API response to match our frontend expectations
+    // The new API returns questions directly in a format we need to map to our format
+    if (apiData.success) {
+      const questions = apiData.questions.map((q: any) => ({
+        id: crypto.randomUUID(),
+        question: q.question || '',
+        optionA: q.options?.A || '',
+        optionB: q.options?.B || '',
+        optionC: q.options?.C || '',
+        optionD: q.options?.D || '',
+        optionE: q.options?.E || '',
+        subject: q.subject || '',
+        correctAnswer: q.correctAnswer || '',
+        comment: q.comment || '',
+        filename: pdfFile.name,
+        difficulty: q.difficulty || 3,
+        semester: q.semester || null,
+        year: q.year || null,
+        image_key: q.image_key || null
+      }));
+
+      return new Response(JSON.stringify({
+        success: true,
+        questions: questions,
+        data: {
+          exam_name: pdfFile.name,
+          images_uploaded: apiData.data?.images_uploaded || 0,
+          total_questions: questions.length,
+          total_images: apiData.data?.total_images || 0
+        }
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } else {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: apiData.error || 'Unknown error', 
+        details: apiData.details || ''
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
   } catch (error) {
     console.error('Error processing PDF:', error);
     return new Response(JSON.stringify({ 

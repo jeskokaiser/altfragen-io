@@ -24,12 +24,19 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
   const [extractedQuestions, setExtractedQuestions] = useState<Question[] | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'university'>('private');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadStats, setUploadStats] = useState<{
+    exam_name: string;
+    images_uploaded: number;
+    total_questions: number;
+    total_images: number;
+  } | null>(null);
 
   const resetState = () => {
     setError(null);
     setIsUploading(false);
     setUploadProgress(0);
     setExtractedQuestions(null);
+    setUploadStats(null);
     setSelectedFile(null);
   };
 
@@ -94,31 +101,20 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
 
       console.log('API response:', data);
 
-      if (!data || !data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+      if (!data.success || !data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
         throw new Error("Keine Fragen konnten aus der PDF-Datei extrahiert werden");
       }
 
-      // Map the API response to our Question format
-      const mappedQuestions: Question[] = data.questions.map((q: any) => ({
-        id: crypto.randomUUID(),
-        question: q.question || '',
-        optionA: q.options?.A || '',
-        optionB: q.options?.B || '',
-        optionC: q.options?.C || '',
-        optionD: q.options?.D || '',
-        optionE: q.options?.E || '',
-        subject: q.subject || '',
-        correctAnswer: q.correctAnswer || '',
-        comment: q.comment || '',
-        filename: selectedFile.name,
-        difficulty: q.difficulty || 3,
-        visibility: visibility,
-        semester: q.semester || null,
-        year: q.year || null
-      }));
-
-      setExtractedQuestions(mappedQuestions);
-      toast.success(`${mappedQuestions.length} Fragen aus der PDF-Datei extrahiert`, {
+      // Store the questions and stats
+      setExtractedQuestions(data.questions);
+      setUploadStats(data.data);
+      
+      // Success message
+      const imagesText = data.data.images_uploaded > 0 
+        ? ` und ${data.data.images_uploaded} Bilder` 
+        : '';
+        
+      toast.success(`${data.questions.length} Fragen${imagesText} aus der PDF-Datei extrahiert`, {
         description: "Bitte überprüfe die Fragen bevor du sie speicherst"
       });
 
@@ -146,8 +142,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
       const visibilityText = visibility === 'private' 
         ? 'privat' 
         : 'mit deiner Universität geteilt';
+      
+      const imagesText = uploadStats?.images_uploaded && uploadStats.images_uploaded > 0
+        ? ` und ${uploadStats.images_uploaded} Bilder`
+        : '';
           
-      toast.success(`${questionsToSave.length} Fragen aus "${selectedFile?.name}" gespeichert`, {
+      toast.success(`${questionsToSave.length} Fragen${imagesText} aus "${selectedFile?.name}" gespeichert`, {
         description: `Die Fragen wurden erfolgreich gespeichert und sind ${visibilityText}`
       });
       
@@ -163,6 +163,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
 
   const handleCancelReview = () => {
     setExtractedQuestions(null);
+    setUploadStats(null);
     toast.info("Vorgang abgebrochen", {
       description: "Die extrahierten Fragen wurden verworfen"
     });
@@ -178,6 +179,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
           onSave={handleSaveQuestions}
           onCancel={handleCancelReview}
           filename={selectedFile?.name || ''}
+          stats={uploadStats}
         />
       ) : (
         <>

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Accordion,
@@ -17,6 +17,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Badge } from '@/components/ui/badge';
+import QuestionImage from './questions/QuestionImage';
 
 interface PDFQuestionReviewProps {
   questions: Question[];
@@ -24,6 +26,12 @@ interface PDFQuestionReviewProps {
   onSave: (questions: Question[]) => void;
   onCancel: () => void;
   filename: string;
+  stats?: {
+    exam_name: string;
+    images_uploaded: number;
+    total_questions: number;
+    total_images: number;
+  } | null;
 }
 
 const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({ 
@@ -31,11 +39,15 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   visibility, 
   onSave, 
   onCancel,
-  filename
+  filename,
+  stats
 }) => {
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [validationErrors, setValidationErrors] = useState<{[key: number]: string[]}>({});
+  const [batchSubject, setBatchSubject] = useState('');
+  const [batchSemester, setBatchSemester] = useState('');
+  const [batchYear, setBatchYear] = useState('');
   
   const currentQuestion = questions[currentIndex];
   
@@ -157,6 +169,36 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     
     setValidationErrors(newValidationErrors);
   };
+
+  const handleRemoveImage = () => {
+    updateQuestion(currentIndex, { image_key: null });
+  };
+
+  const applyBatchChanges = () => {
+    const updatedQuestions = [...questions];
+    
+    updatedQuestions.forEach((question, index) => {
+      const updates: Partial<Question> = {};
+      
+      if (batchSubject) {
+        updates.subject = batchSubject;
+      }
+      
+      if (batchSemester) {
+        updates.semester = batchSemester;
+      }
+      
+      if (batchYear) {
+        updates.year = batchYear;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        updatedQuestions[index] = { ...question, ...updates };
+      }
+    });
+    
+    setQuestions(updatedQuestions);
+  };
   
   return (
     <div className="w-full">
@@ -169,7 +211,22 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             </span>
           </CardTitle>
           <CardDescription>
-            Die PDF-Datei "{filename}" wurde verarbeitet. Bitte überprüfe die extrahierten Fragen und korrigiere sie bei Bedarf.
+            <div className="space-y-2">
+              <p>Die PDF-Datei "{filename}" wurde verarbeitet. Bitte überprüfe die extrahierten Fragen und korrigiere sie bei Bedarf.</p>
+              
+              {stats && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Badge variant="outline" className="bg-muted/50">
+                    {stats.total_questions} Fragen extrahiert
+                  </Badge>
+                  {stats.images_uploaded > 0 && (
+                    <Badge variant="outline" className="bg-muted/50">
+                      {stats.images_uploaded} Bilder extrahiert
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
           </CardDescription>
         </CardHeader>
         
@@ -198,6 +255,24 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                 className="mt-1"
               />
             </div>
+
+            {currentQuestion.image_key && (
+              <div className="relative">
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Bild</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-destructive" 
+                    onClick={handleRemoveImage}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Bild entfernen
+                  </Button>
+                </div>
+                <QuestionImage imageKey={currentQuestion.image_key} />
+              </div>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -333,6 +408,56 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                         className="mt-1"
                       />
                     </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="batch-operations">
+                <AccordionTrigger>Massenbearbeitung</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      Änderungen werden auf alle Fragen angewendet, wenn du auf "Anwenden" klickst.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="batch-subject">Fach</Label>
+                        <Input
+                          id="batch-subject"
+                          value={batchSubject}
+                          onChange={(e) => setBatchSubject(e.target.value)}
+                          placeholder="Für alle Fragen setzen"
+                          className="mt-1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="batch-semester">Semester</Label>
+                        <Input
+                          id="batch-semester"
+                          value={batchSemester}
+                          onChange={(e) => setBatchSemester(e.target.value)}
+                          placeholder="Für alle Fragen setzen"
+                          className="mt-1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="batch-year">Jahr</Label>
+                        <Input
+                          id="batch-year"
+                          value={batchYear}
+                          onChange={(e) => setBatchYear(e.target.value)}
+                          placeholder="Für alle Fragen setzen"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button onClick={applyBatchChanges} variant="outline" size="sm">
+                      Massenänderungen anwenden
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>

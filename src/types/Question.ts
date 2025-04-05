@@ -20,4 +20,5 @@ export interface Question {
   user_id?: string | null;
   semester?: string | null;
   year?: string | null;
+  image_key?: string | null;
 }

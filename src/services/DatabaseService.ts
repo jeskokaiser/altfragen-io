@@ -19,7 +19,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       university_id: q.visibility === 'university' ? universityId : null,
       visibility: q.visibility || 'private',
       exam_semester: q.semester || null,
-      exam_year: q.year || null
+      exam_year: q.year || null,
+      image_key: q.image_key || null
     }))
   );
 
@@ -52,7 +53,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     university_id: q.university_id,
     visibility: (q.visibility as 'private' | 'university') || 'private',
     semester: q.exam_semester || null,
-    year: q.exam_year || null
+    year: q.exam_year || null,
+    image_key: q.image_key || null
   }));
 };
 
@@ -87,7 +89,8 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     visibility: (q.visibility as 'private' | 'university') || 'private',
     user_id: q.user_id,
     semester: q.exam_semester || null,
-    year: q.exam_year || null
+    year: q.exam_year || null,
+    image_key: q.image_key || null
   }));
 };
 
@@ -162,7 +165,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     universityQuestions = uniQuestions || [];
   }
 
-  // Fetch user-specific difficulty ratings for the questions
   const allQuestionsIds = [...personalQuestions, ...universityQuestions].map(q => q.id);
   let userDifficulties: Record<string, number> = {};
   
@@ -175,7 +177,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
       .not('user_difficulty', 'is', null);
     
     if (!progressError && progressData) {
-      // Create a mapping of question_id to user_difficulty
       userDifficulties = progressData.reduce((acc: Record<string, number>, item) => {
         if (item.user_difficulty !== null) {
           acc[item.question_id] = item.user_difficulty;
@@ -198,7 +199,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     comment: q.comment,
     filename: q.filename,
     created_at: q.created_at,
-    // Use user-specific difficulty if available, otherwise use the question's default difficulty
     difficulty: q.id in userDifficulties ? userDifficulties[q.id] : q.difficulty,
     is_unclear: q.is_unclear,
     marked_unclear_at: q.marked_unclear_at,
@@ -206,7 +206,8 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
     user_id: q.user_id,
     semester: q.exam_semester || null,
-    year: q.exam_year || null
+    year: q.exam_year || null,
+    image_key: q.image_key || null
   }));
 
   return allQuestions;
