@@ -1,9 +1,8 @@
-
 import React, { useCallback, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from '@/contexts/AuthContext';
-import { PdfProcessingTask } from '@/types/Question';
+import { Question, PdfProcessingTask } from '@/types/Question';
 import { AlertCircle, Upload, FileText, Check, X, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
@@ -26,13 +25,18 @@ const examMetadataSchema = z.object({
 
 type ExamMetadataFormValues = z.infer<typeof examMetadataSchema>;
 
-const PDFUpload: React.FC = () => {
+// Define the props interface for PDFUpload
+interface PDFUploadProps {
+  onQuestionsLoaded: (questions: Question[]) => void;
+  visibility: 'private' | 'university';
+}
+
+const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) => {
   const { user, universityId, universityName } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [visibility, setVisibility] = useState<'private' | 'university'>('private');
   const [showMetadataForm, setShowMetadataForm] = useState(true);
   const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
   const [statusCheckInterval, setStatusCheckInterval] = useState<number | null>(null);
@@ -60,12 +64,10 @@ const PDFUpload: React.FC = () => {
   // When we have an active task, periodically check its status
   useEffect(() => {
     if (activeTask && activeTask.status === 'processing') {
-      // Use window.setInterval and store the ID
       const intervalId = window.setInterval(async () => {
         await checkTaskStatus(activeTask.task_id);
-      }, 3000); // Check every 3 seconds
+      }, 3000); 
       
-      // Store the interval ID as a number
       setStatusCheckInterval(intervalId);
       
       return () => {
@@ -119,7 +121,6 @@ const PDFUpload: React.FC = () => {
     console.log('Metadata submitted:', data);
     setShowMetadataForm(false);
     
-    // Auto-fill filename if none selected yet
     if (!selectedFile) {
       showToast.info("Bitte wähle nun eine PDF-Datei aus", {
         description: "Die Metadaten wurden erfasst"
@@ -131,12 +132,10 @@ const PDFUpload: React.FC = () => {
     }
   };
 
-  // New function to check the status of a task
   const checkTaskStatus = async (taskId: string) => {
     try {
       console.log(`Checking status for task: ${taskId}`);
       
-      // Pass task_id as a body parameter, not as query parameter
       const { data, error } = await supabase.functions.invoke('check-pdf-status', {
         body: { task_id: taskId },
         method: 'POST',
@@ -150,7 +149,6 @@ const PDFUpload: React.FC = () => {
       console.log('Status check response:', data);
 
       if (data.status === 'completed') {
-        // Clear the interval since we got a result
         if (statusCheckInterval) {
           clearInterval(statusCheckInterval);
           setStatusCheckInterval(null);
@@ -160,24 +158,19 @@ const PDFUpload: React.FC = () => {
         setIsUploading(false);
         
         if (data.success) {
-          // Verarbeitung erfolgreich abgeschlossen & im Backend gespeichert
           const successMessage = data.message || "PDF erfolgreich verarbeitet und Fragen gespeichert.";
           showToast.success("Verarbeitung erfolgreich", {
             description: successMessage
           });
-          // Reset state after successful processing
           resetState(); 
         } else {
-          // Verarbeitung abgeschlossen, aber nicht erfolgreich (z.B. keine Fragen gefunden)
           const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
           showToast.info("Verarbeitung abgeschlossen", { 
             description: errorMessage
           });
-          // Reset state to allow new uploads
           resetState(); 
         }
       } else if (data.status === 'failed') {
-        // Clear the interval since we got an error
         if (statusCheckInterval) {
           clearInterval(statusCheckInterval);
           setStatusCheckInterval(null);
@@ -189,22 +182,18 @@ const PDFUpload: React.FC = () => {
         showToast.error("Verarbeitung fehlgeschlagen", {
           description: failMessage
         });
-        // Reset state to allow new uploads or retries
         resetState(); 
       } else {
-        // Still processing - update progress and show toast only on significant progress changes
         const currentProgress = uploadProgress;
         const newProgress = Math.min(currentProgress + 5, 95);
         setUploadProgress(newProgress);
         
-        // Update toast only every 20% progress to avoid too many notifications
         if (Math.floor(newProgress / 20) > Math.floor(currentProgress / 20)) {
           showToast.info("Verarbeitung läuft", {
             description: data.message || `Fortschritt: ${newProgress}%`
           });
         }
         
-        // Update the task status
         setActiveTask({
           ...activeTask!,
           status: data.status,
@@ -214,12 +203,10 @@ const PDFUpload: React.FC = () => {
     } catch (error: any) {
       console.error('Error checking task status:', error);
       
-      // Show error toast but don't interrupt the process on network errors
       showToast.error("Statusabfrage fehlgeschlagen", {
         description: "Versuche es erneut in Kürze..."
       });
       
-      // Don't clear the interval on network errors, let it retry
       setError(error.message || "Ein Fehler ist beim Überprüfen des Task-Status aufgetreten");
     }
   };
@@ -243,27 +230,22 @@ const PDFUpload: React.FC = () => {
     });
 
     try {
-      // Create form data for the API request
       const formData = new FormData();
       formData.append('pdf', selectedFile);
       
-      // Add metadata to the form data
       formData.append('examName', formValues.examName);
       if (formValues.examYear) formData.append('examYear', formValues.examYear);
       if (formValues.examSemester) formData.append('examSemester', formValues.examSemester);
       formData.append('subject', formValues.subject);
-      // Add user ID
       if (user?.id) {
         formData.append('userId', user.id);
         console.log('Appending userId to form data:', user.id);
       } else {
         console.warn('No user.id available for form data');
       }
-      // Add visibility
       formData.append('visibility', visibility);
       console.log('Appending visibility to form data:', visibility);
 
-      // Call the Supabase Edge Function to upload the PDF
       const { data, error } = await supabase.functions.invoke('process-pdf', {
         body: formData,
       });
@@ -278,7 +260,6 @@ const PDFUpload: React.FC = () => {
         throw new Error(data.error || "Fehler beim Hochladen der PDF-Datei");
       }
 
-      // If we get a task_id back, start polling for status
       if (data.task_id) {
         setActiveTask({
           task_id: data.task_id,
@@ -286,14 +267,12 @@ const PDFUpload: React.FC = () => {
           message: data.message || 'Verarbeitung läuft...'
         });
         
-        // Start progress at 20% after successful upload
         setUploadProgress(20);
         
         showToast.info("PDF-Verarbeitung gestartet", {
           description: "Die Verarbeitung kann einige Minuten dauern"
         });
         
-        // Do an initial status check
         await checkTaskStatus(data.task_id);
       } else {
         throw new Error("Keine Task-ID vom Server erhalten");
@@ -310,10 +289,8 @@ const PDFUpload: React.FC = () => {
     }
   };
 
-  // Create a ref for the file input
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Function to trigger the file input click
   const triggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -322,7 +299,6 @@ const PDFUpload: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-4xl mx-auto">
-      {/* Always show upload section */}
       <>
         <h2 className="text-2xl font-semibold text-slate-800 dark:text-zinc-50">
           Lade deine PDF-Datei hoch
@@ -348,7 +324,6 @@ const PDFUpload: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Step 1: Metadata Form */}
             {showMetadataForm ? (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleMetadataSubmit)} className="space-y-4">
@@ -432,7 +407,6 @@ const PDFUpload: React.FC = () => {
               </Form>
             ) : (
               <>
-                {/* Step 2: File Upload */}
                 <div className="bg-muted/20 p-3 rounded-md mb-4">
                   <h3 className="font-medium mb-1">Prüfungsdaten:</h3>
                   <p className="text-sm text-muted-foreground">
@@ -517,7 +491,7 @@ const PDFUpload: React.FC = () => {
                     <label className="text-sm font-medium mb-1 block">Sichtbarkeit der Fragen</label>
                     <Select 
                       value={visibility} 
-                      onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+                      onValueChange={(value: 'private' | 'university') => {}}
                       disabled={isUploading || !universityId}
                     >
                       <SelectTrigger>
@@ -553,7 +527,6 @@ const PDFUpload: React.FC = () => {
           </CardContent>
         </Card>
       </>
-      {/* End always show */}
     </div>
   );
 };
