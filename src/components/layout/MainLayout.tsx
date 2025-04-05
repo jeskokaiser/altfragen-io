@@ -13,6 +13,9 @@ import UnclearQuestions from '@/pages/UnclearQuestions';
 import Changelog from '@/pages/Changelog';
 import Dashboard from '@/components/Dashboard';
 import ArchivedDatasets from '@/pages/ArchivedDatasets';
+import CollabSessions from '@/pages/CollabSessions';
+import CreateSession from '@/pages/CreateSession';
+import SessionDetails from '@/pages/SessionDetails';
 import Footer from '@/components/Footer';
 
 const MainLayout = () => {
@@ -20,7 +23,8 @@ const MainLayout = () => {
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/auth';
   const isTrainingPage = location.pathname === '/training';
-  const shouldShowFooter = !isTrainingPage && !location.pathname.includes('/results');
+  const isCollabSessionPage = location.pathname.includes('/collab-session/');
+  const shouldShowFooter = !isTrainingPage && !location.pathname.includes('/results') && !isCollabSessionPage;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -38,6 +42,9 @@ const MainLayout = () => {
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/archived" element={<ArchivedDatasets />} />
+          <Route path="/collab" element={<CollabSessions />} />
+          <Route path="/collab/create" element={<CreateSession />} />
+          <Route path="/collab-session/:sessionId" element={<SessionDetails />} />
           {/* Catch all other routes and redirect to index */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

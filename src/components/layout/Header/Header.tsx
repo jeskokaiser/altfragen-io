@@ -1,102 +1,159 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Settings, LogOut, Moon, Sun, BookOpen, Archive } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, PlusCircle, GraduationCap, BookCopy, HelpCircle, UserPlus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useIsMobile } from '@/hooks/use-mobile';
+
 const Header = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    theme,
-    toggleTheme
-  } = useTheme();
+  const { user, universityId, universityName } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Effect to close the mobile menu when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
+  // Handle logout
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/auth');
-      toast.success('Successfully logged out');
+      toast.success('Du wurdest erfolgreich abgemeldet');
+      navigate('/');
     } catch (error) {
-      toast.error('Error logging out');
+      console.error('Error logging out:', error);
+      toast.error('Fehler beim Abmelden');
     }
   };
-  const getUserInitials = () => {
-    if (!user?.email) return '?';
-    return user.email.split('@')[0].slice(0, 2).toUpperCase();
+
+  // Mobile menu toggle
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
-  return <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between px-4 md:px-6">
-        <Link to="/dashboard" className="flex items-center space-x-2">
-          <span className="text-lg font-semibold tracking-tight hover:text-primary transition-colors">
+
+  // Navigation items
+  const navItems = [
+    { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
+    { label: 'Training', href: '/training', icon: <Book className="h-4 w-4 mr-2" /> },
+    { label: 'Collaboration', href: '/collab', icon: <UserPlus className="h-4 w-4 mr-2" /> },
+    { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="h-4 w-4 mr-2" /> },
+  ];
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background">
+      <div className="container flex h-16 items-center justify-between">
+        {/* Logo */}
+        <div className="flex items-center">
+          <Link to="/" className="font-bold text-xl flex items-center">
+            <GraduationCap className="h-6 w-6 mr-2" />
             Altfragen.io
-          </span>
-        </Link>
+          </Link>
+          {universityId && universityName && (
+            <Badge variant="outline" className="ml-2 hidden md:flex">
+              {universityName}
+            </Badge>
+          )}
+        </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <Button variant="ghost" onClick={() => navigate('/tutorial')} size={isMobile ? "icon" : "default"} className="hidden sm:flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            {!isMobile && "Tutorial"}
-          </Button>
+        {/* Desktop Navigation */}
+        {!isMobile && (
+          <nav className="flex items-center gap-6 text-sm">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`flex items-center transition-colors hover:text-foreground/80 ${
+                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
-          <Button variant="ghost" onClick={toggleTheme} size={isMobile ? "icon" : "default"} className="hidden sm:flex items-center gap-2">
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {!isMobile && "Anzeigemodus"}
-          </Button>
+        {/* Right side - Theme toggle, Auth buttons/User menu */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="User menu">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <div className="flex items-center justify-start gap-2 p-2">
-                <div className="flex flex-col space-y-1 leading-none">
-                  {user?.email && <p className="font-medium text-sm">{user.email}</p>}
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/archived" className="flex w-full cursor-pointer items-center">
-                  <Archive className="mr-2 h-4 w-4" />
-                  <span>Archiv</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex w-full cursor-pointer items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Einstellungen</span>
-                </Link>
-              </DropdownMenuItem>
-              {isMobile && <>
-                  <DropdownMenuItem onClick={() => navigate('/tutorial')}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    <span>Tutorial</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={toggleTheme}>
-                    {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                    <span>Anzeigemodus</span>
-                  </DropdownMenuItem>
-                </>}
-              <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Abmelden</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  {user.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <SettingsIcon className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={() => navigate('/auth')}>Login</Button>
+          )}
+
+          {/* Mobile menu toggle */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMenu}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          )}
         </div>
       </div>
-    </header>;
+
+      {/* Mobile Navigation */}
+      {isMobile && isMenuOpen && (
+        <div className="container py-4 border-t">
+          <nav className="flex flex-col space-y-4">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`flex items-center py-2 ${
+                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
+    </header>
+  );
 };
+
 export default Header;

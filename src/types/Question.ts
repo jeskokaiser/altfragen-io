@@ -18,4 +18,6 @@ export interface Question {
   university_id?: string | null;
   visibility?: 'private' | 'university' | 'public';
   user_id?: string | null;
+  semester?: string | null;
+  year?: string | null;
 }

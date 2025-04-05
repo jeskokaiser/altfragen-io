@@ -9,6 +9,118 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      draft_questions: {
+        Row: {
+          comment: string | null
+          correct_answer: string
+          created_at: string
+          creator_id: string
+          difficulty: number | null
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          option_e: string
+          question: string
+          session_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          correct_answer: string
+          created_at?: string
+          creator_id: string
+          difficulty?: number | null
+          id?: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          option_e: string
+          question: string
+          session_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          correct_answer?: string
+          created_at?: string
+          creator_id?: string
+          difficulty?: number | null
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          option_e?: string
+          question?: string
+          session_id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_questions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_sessions: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          semester: string | null
+          subject: string
+          title: string
+          university_id: string | null
+          updated_at: string
+          year: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          semester?: string | null
+          subject: string
+          title: string
+          university_id?: string | null
+          updated_at?: string
+          year?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          semester?: string | null
+          subject?: string
+          title?: string
+          university_id?: string | null
+          updated_at?: string
+          year?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_sessions_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -47,8 +159,10 @@ export type Database = {
           correct_answer: string
           created_at: string
           difficulty: number | null
+          exam_name: string | null
           filename: string
           id: string
+          image_urls: string[] | null
           is_unclear: boolean | null
           marked_unclear_at: string | null
           option_a: string
@@ -57,18 +171,22 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
+          semester: string | null
           subject: string
           university_id: string | null
           user_id: string | null
           visibility: string | null
+          year: string | null
         }
         Insert: {
           comment?: string | null
           correct_answer: string
           created_at?: string
           difficulty?: number | null
+          exam_name?: string | null
           filename: string
           id?: string
+          image_urls?: string[] | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a: string
@@ -77,18 +195,22 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
+          semester?: string | null
           subject: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
+          year?: string | null
         }
         Update: {
           comment?: string | null
           correct_answer?: string
           created_at?: string
           difficulty?: number | null
+          exam_name?: string | null
           filename?: string
           id?: string
+          image_urls?: string[] | null
           is_unclear?: boolean | null
           marked_unclear_at?: string | null
           option_a?: string
@@ -97,10 +219,12 @@ export type Database = {
           option_d?: string
           option_e?: string
           question?: string
+          semester?: string | null
           subject?: string
           university_id?: string | null
           user_id?: string | null
           visibility?: string | null
+          year?: string | null
         }
         Relationships: [
           {
@@ -108,6 +232,38 @@ export type Database = {
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_participants: {
+        Row: {
+          id: string
+          joined_at: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          role?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -142,6 +298,7 @@ export type Database = {
           created_at: string | null
           id: string
           immediate_feedback: boolean | null
+          selected_university_datasets: string[] | null
           updated_at: string | null
           user_id: string | null
         }
@@ -150,6 +307,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
+          selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -158,6 +316,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
+          selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -172,6 +331,7 @@ export type Database = {
           question_id: string | null
           updated_at: string | null
           user_answer: string | null
+          user_difficulty: number | null
           user_id: string | null
         }
         Insert: {
@@ -182,6 +342,7 @@ export type Database = {
           question_id?: string | null
           updated_at?: string | null
           user_answer?: string | null
+          user_difficulty?: number | null
           user_id?: string | null
         }
         Update: {
@@ -192,6 +353,7 @@ export type Database = {
           question_id?: string | null
           updated_at?: string | null
           user_answer?: string | null
+          user_difficulty?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -209,7 +371,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_user_university_match: {
+        Args: {
+          user_uuid: string
+          university_uuid: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
