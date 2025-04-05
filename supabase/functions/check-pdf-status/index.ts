@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 // Definiere erwartete Typen für mehr Sicherheit
 interface BackendStatusResponse {
   success: boolean;
-  status: 'processing' | 'completed' | 'error' | 'failed';
+  status: 'processing' | 'completed' | 'error' | 'failed' | 'warning';
   message?: string;
   questions?: any[]; // Hier ggf. einen genaueren Question-Typ definieren
   data?: any;
@@ -129,49 +129,52 @@ serve(async (req) => {
     if (statusData.status === 'completed') {
       console.log('Task processing completed successfully');
       // Backend liefert bereits das korrekte Format, daher direkt durchreichen
-      if (statusData.success && statusData.questions) {
-        return new Response(JSON.stringify({
-          success: true,
-          status: 'completed',
-          message: statusData.message || 'PDF processing completed',
-          questions: statusData.questions, // Direkt durchreichen
-          data: statusData.data || {}
-        }), {
-          status: 200,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        });
-      } else {
-        // Completed but something went wrong (e.g., no questions found by backend)
-        return new Response(JSON.stringify({
-          success: false,
-          status: 'completed_error', // Eigener Status für diesen Fall?
-          error: statusData.error || statusData.message || 'Processing completed but no questions found or error reported by backend.',
-          details: statusData.details || ''
-        }), {
-          status: 400, // Oder 200 mit success: false?
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        });
-      }
-    } else if (statusData.status === 'failed' || statusData.status === 'error') {
-      // Backend hat einen Fehler gemeldet
+      // Leite den 'success'-Status des Backends und die Daten/Fehler weiter
       return new Response(JSON.stringify({
-        success: false,
-        status: statusData.status, // 'failed' or 'error'
-        error: statusData.message || statusData.error || 'PDF processing failed',
-        details: statusData.details || 'Unknown error from backend'
+        success: statusData.success ?? false, // Leite Backend 'success' weiter, default false
+        status: 'completed', // Immer 'completed' hier
+        message: statusData.message || (statusData.success ? 'PDF processing completed' : 'Processing completed with issues or no questions found.'),
+        questions: statusData.questions || [], // Leere Liste als Fallback
+        data: statusData.data || {},
+        error: statusData.error // Leite mögliche Fehlermeldung vom Backend weiter
       }), {
-        status: 400, // Fehler vom Backend, oft 4xx oder 5xx, aber wir geben 400 zurück?
+        status: 200, // OK, da der Task abgeschlossen ist (auch wenn success=false)
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
         }
       });
+    } else if (statusData.status === 'failed' || statusData.status === 'error') {
+      // Backend hat einen Fehler gemeldet -> Status 'failed'
+      return new Response(JSON.stringify({
+        success: false,
+        status: 'failed', // Standardisiere auf 'failed'
+        error: statusData.message || statusData.error || 'PDF processing failed',
+        details: statusData.details || 'Unknown error from backend'
+      }), {
+        status: 400, // Client- oder serverseitiger Fehler vom Backend
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    } else if (statusData.status === 'warning') {
+       // Behandle 'warning' explizit als 'completed' mit success: false
+       console.log('Task processing completed with warnings');
+       return new Response(JSON.stringify({
+         success: false, // Behandle Warnung als nicht vollständig erfolgreich
+         status: 'completed', // Task ist abgeschlossen
+         message: statusData.message || 'Processing completed with warnings (e.g., no questions found).',
+         questions: statusData.questions || [],
+         data: statusData.data || {},
+         error: 'Processing completed with warnings.' // Setze eine Fehlermeldung
+       }), {
+         status: 200, // OK, Task ist abgeschlossen
+         headers: {
+           ...corsHeaders,
+           'Content-Type': 'application/json'
+         }
+       });
     } else {
       // Noch in Bearbeitung ('processing')
       return new Response(JSON.stringify({

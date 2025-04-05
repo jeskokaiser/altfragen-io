@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -167,12 +166,14 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
         setUploadProgress(100);
         setIsUploading(false);
         
-        if (data.success && data.questions && Array.isArray(data.questions)) {
+        if (data.success) {
           processCompletedTask(data);
         } else {
-          setError(data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden");
-          toast.error("Fehler beim Verarbeiten der PDF-Datei", {
-            description: data.error || "Bitte versuche es später erneut"
+          // Verarbeitung abgeschlossen, aber nicht erfolgreich (z.B. keine Fragen gefunden)
+          const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
+          setError(errorMessage);
+          toast.error("Verarbeitung abgeschlossen, aber mit Problemen", {
+            description: errorMessage
           });
           setActiveTask(null);
         }
@@ -184,9 +185,10 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
         }
         
         setIsUploading(false);
-        setError(data.error || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen");
-        toast.error("Fehler beim Verarbeiten der PDF-Datei", {
-          description: data.details || data.error || "Bitte versuche es später erneut"
+        const failMessage = data.error || data.details || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen";
+        setError(failMessage);
+        toast.error("Verarbeitung fehlgeschlagen", {
+          description: failMessage
         });
         setActiveTask(null);
       } else {
