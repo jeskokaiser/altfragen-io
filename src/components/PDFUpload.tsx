@@ -73,10 +73,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
   // When we have an active task, periodically check its status
   useEffect(() => {
     if (activeTask && activeTask.status === 'processing') {
-      const intervalId = setInterval(async () => {
+      // Use window.setInterval and store the ID
+      const intervalId = window.setInterval(async () => {
         await checkTaskStatus(activeTask.task_id);
       }, 3000); // Check every 3 seconds
       
+      // Store the interval ID as a number
       setStatusCheckInterval(intervalId);
       
       return () => {
@@ -140,12 +142,16 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
   // New function to check the status of a task
   const checkTaskStatus = async (taskId: string) => {
     try {
+      console.log(`Checking status for task: ${taskId}`);
+      
+      // Pass task_id as a query parameter instead of in the body
       const { data, error } = await supabase.functions.invoke('check-pdf-status', {
-        body: { task_id: taskId },
+        query: { task_id: taskId },
         method: 'GET',
       });
 
       if (error) {
+        console.error('Error from edge function:', error);
         throw new Error(error.message);
       }
 
@@ -232,7 +238,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     setUploadStats(data.data);
     
     // Success message
-    const imagesText = data.data.images_uploaded > 0 
+    const imagesText = data.data?.images_uploaded > 0 
       ? ` und ${data.data.images_uploaded} Bilder` 
       : '';
       
