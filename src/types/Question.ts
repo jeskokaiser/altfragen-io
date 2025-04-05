@@ -22,3 +22,9 @@ export interface Question {
   year?: string | null;
   image_key?: string | null;
 }
+
+export interface PdfProcessingTask {
+  task_id: string;
+  status: 'processing' | 'completed' | 'failed';
+  message?: string;
+}

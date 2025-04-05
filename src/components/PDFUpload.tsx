@@ -1,10 +1,10 @@
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question } from '@/types/Question';
+import { Question, PdfProcessingTask } from '@/types/Question';
 import { saveQuestions } from '@/services/DatabaseService';
 import { AlertCircle, Upload, FileText, Check, X, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -47,6 +47,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     total_images: number;
   } | null>(null);
   const [showMetadataForm, setShowMetadataForm] = useState(true);
+  const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
+  const [statusCheckInterval, setStatusCheckInterval] = useState<number | null>(null);
   
   // Initialize the form
   const form = useForm<ExamMetadataFormValues>({
@@ -59,6 +61,30 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     }
   });
 
+  // Clean up the interval when component unmounts or when we get results
+  useEffect(() => {
+    return () => {
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+      }
+    };
+  }, [statusCheckInterval]);
+
+  // When we have an active task, periodically check its status
+  useEffect(() => {
+    if (activeTask && activeTask.status === 'processing') {
+      const intervalId = setInterval(async () => {
+        await checkTaskStatus(activeTask.task_id);
+      }, 3000); // Check every 3 seconds
+      
+      setStatusCheckInterval(intervalId);
+      
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [activeTask]);
+
   const resetState = () => {
     setError(null);
     setIsUploading(false);
@@ -67,6 +93,11 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     setUploadStats(null);
     setSelectedFile(null);
     setShowMetadataForm(true);
+    setActiveTask(null);
+    if (statusCheckInterval) {
+      clearInterval(statusCheckInterval);
+      setStatusCheckInterval(null);
+    }
     form.reset();
   };
 
@@ -106,6 +137,113 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     }
   };
 
+  // New function to check the status of a task
+  const checkTaskStatus = async (taskId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-pdf-status', {
+        body: { task_id: taskId },
+        method: 'GET',
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      console.log('Status check response:', data);
+
+      if (data.status === 'completed') {
+        // Clear the interval since we got a result
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+          setStatusCheckInterval(null);
+        }
+        
+        setUploadProgress(100);
+        setIsUploading(false);
+        
+        if (data.success && data.questions && Array.isArray(data.questions)) {
+          processCompletedTask(data);
+        } else {
+          setError(data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden");
+          toast.error("Fehler beim Verarbeiten der PDF-Datei", {
+            description: data.error || "Bitte versuche es später erneut"
+          });
+          setActiveTask(null);
+        }
+      } else if (data.status === 'failed') {
+        // Clear the interval since we got an error
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+          setStatusCheckInterval(null);
+        }
+        
+        setIsUploading(false);
+        setError(data.error || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen");
+        toast.error("Fehler beim Verarbeiten der PDF-Datei", {
+          description: data.details || data.error || "Bitte versuche es später erneut"
+        });
+        setActiveTask(null);
+      } else {
+        // Still processing - update progress
+        const currentProgress = uploadProgress;
+        const newProgress = Math.min(currentProgress + 5, 95);
+        setUploadProgress(newProgress);
+        
+        // Update the task status
+        setActiveTask({
+          ...activeTask!,
+          status: data.status,
+          message: data.message
+        });
+      }
+    } catch (error: any) {
+      console.error('Error checking task status:', error);
+      
+      // Don't clear the interval on network errors, let it retry
+      setError(error.message || "Ein Fehler ist beim Überprüfen des Task-Status aufgetreten");
+    }
+  };
+
+  // Process completed task data
+  const processCompletedTask = (data: any) => {
+    const formValues = form.getValues();
+    
+    // Map the API response to our Question type format
+    const mappedQuestions: Question[] = data.questions.map((q: any) => ({
+      id: q.id || crypto.randomUUID(),
+      question: q.question || '',
+      optionA: q.options?.A || '',
+      optionB: q.options?.B || '',
+      optionC: q.options?.C || '',
+      optionD: q.options?.D || '',
+      optionE: q.options?.E || '',
+      subject: q.subject || formValues.subject || '',
+      correctAnswer: q.correctAnswer || '',
+      comment: q.comment || '',
+      filename: formValues.examName || selectedFile?.name || '',
+      difficulty: q.difficulty || 3,
+      semester: q.semester || formValues.examSemester || null,
+      year: q.year || formValues.examYear || null,
+      image_key: q.image_key || null
+    }));
+
+    // Store the questions and stats
+    setExtractedQuestions(mappedQuestions);
+    setUploadStats(data.data);
+    
+    // Success message
+    const imagesText = data.data.images_uploaded > 0 
+      ? ` und ${data.data.images_uploaded} Bilder` 
+      : '';
+      
+    toast.success(`${mappedQuestions.length} Fragen${imagesText} aus der PDF-Datei extrahiert`, {
+      description: "Bitte überprüfe die Fragen bevor du sie speicherst"
+    });
+
+    // Clear the task
+    setActiveTask(null);
+  };
+
   const handleUpload = async () => {
     if (!selectedFile || !user?.id) {
       setError("Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist");
@@ -119,14 +257,6 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
     setUploadProgress(10);
 
     try {
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          const newProgress = prev + 5;
-          return newProgress < 90 ? newProgress : prev;
-        });
-      }, 500);
-
       // Create form data for the API request
       const formData = new FormData();
       formData.append('pdf', selectedFile);
@@ -137,64 +267,50 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
       if (formValues.examSemester) formData.append('examSemester', formValues.examSemester);
       formData.append('subject', formValues.subject);
 
-      // Call the Supabase Edge Function
+      // Call the Supabase Edge Function to upload the PDF
       const { data, error } = await supabase.functions.invoke('process-pdf', {
         body: formData,
       });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
 
       if (error) {
         throw new Error(error.message);
       }
 
-      console.log('API response:', data);
+      console.log('Upload API response:', data);
 
-      if (!data.success || !data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
-        throw new Error("Keine Fragen konnten aus der PDF-Datei extrahiert werden");
+      if (!data.success) {
+        throw new Error(data.error || "Fehler beim Hochladen der PDF-Datei");
       }
 
-      // Map the API response to our Question type format
-      const mappedQuestions: Question[] = data.questions.map((q: any) => ({
-        id: q.id || crypto.randomUUID(),
-        question: q.question || '',
-        optionA: q.options?.A || '',
-        optionB: q.options?.B || '',
-        optionC: q.options?.C || '',
-        optionD: q.options?.D || '',
-        optionE: q.options?.E || '',
-        subject: q.subject || formValues.subject || '',
-        correctAnswer: q.correctAnswer || '',
-        comment: q.comment || '',
-        filename: formValues.examName || selectedFile.name,
-        difficulty: q.difficulty || 3,
-        semester: q.semester || formValues.examSemester || null,
-        year: q.year || formValues.examYear || null,
-        image_key: q.image_key || null
-      }));
-
-      // Store the questions and stats
-      setExtractedQuestions(mappedQuestions);
-      setUploadStats(data.data);
-      
-      // Success message
-      const imagesText = data.data.images_uploaded > 0 
-        ? ` und ${data.data.images_uploaded} Bilder` 
-        : '';
+      // If we get a task_id back, start polling for status
+      if (data.task_id) {
+        setActiveTask({
+          task_id: data.task_id,
+          status: 'processing',
+          message: data.message || 'Verarbeitung läuft...'
+        });
         
-      toast.success(`${mappedQuestions.length} Fragen${imagesText} aus der PDF-Datei extrahiert`, {
-        description: "Bitte überprüfe die Fragen bevor du sie speicherst"
-      });
-
+        // Start progress at 20% after successful upload
+        setUploadProgress(20);
+        
+        toast.info("PDF-Verarbeitung gestartet", {
+          description: "Die Verarbeitung kann einige Minuten dauern"
+        });
+        
+        // Do an initial status check
+        await checkTaskStatus(data.task_id);
+      } else {
+        throw new Error("Keine Task-ID vom Server erhalten");
+      }
     } catch (error: any) {
-      console.error('Error processing PDF:', error);
+      console.error('Error uploading PDF:', error);
       setError(error.message || "Ein unerwarteter Fehler ist aufgetreten");
+      setIsUploading(false);
+      setUploadProgress(0);
+      
       toast.error("Fehler beim Verarbeiten der PDF-Datei", {
         description: error.message || "Bitte versuche es später erneut"
       });
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -405,6 +521,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
                         size="sm"
                         onClick={() => setSelectedFile(null)}
                         className="text-muted-foreground hover:text-destructive"
+                        disabled={isUploading}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -420,6 +537,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
                         accept=".pdf"
                         onChange={handleFileSelection}
                         className="absolute inset-0 opacity-0 cursor-pointer"
+                        disabled={isUploading}
                       />
                     </div>
                   )}
@@ -427,7 +545,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
                   {isUploading && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Verarbeite PDF...</span>
+                        <span>{activeTask?.message || "Verarbeite PDF..."}</span>
                         <span>{uploadProgress}%</span>
                       </div>
                       <Progress value={uploadProgress} className="h-2" />
@@ -440,6 +558,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded }) => {
                       <Select 
                         value={visibility} 
                         onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+                        disabled={isUploading}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Sichtbarkeit wählen" />

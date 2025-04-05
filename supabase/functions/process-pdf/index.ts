@@ -31,11 +31,11 @@ serve(async (req) => {
       });
     }
 
-    // Set the API endpoints
+    // Set the API endpoints - updated based on actual backend behavior
     const BASE_API_URL = 'https://api.altfragen.io';
     const UPLOAD_ENDPOINT = `${BASE_API_URL}/upload`;
-    // The API expects the task_id at the end of the URL, not as a separate parameter
-    const STATUS_ENDPOINT = `${BASE_API_URL}/status`;
+    // The API appears to use /api/tasks for status checks based on logs
+    const STATUS_ENDPOINT = `${BASE_API_URL}/api/tasks`;
     
     // Convert the File to a Blob
     const arrayBuffer = await pdfFile.arrayBuffer();
@@ -110,128 +110,14 @@ serve(async (req) => {
     
     const taskId = initialData.task_id;
     
-    // Poll for the status of the task
-    const maxAttempts = 10;
-    const pollInterval = 3000; // 3 seconds between polls
-    let attempts = 0;
-    
-    while (attempts < maxAttempts) {
-      attempts++;
-      
-      console.log(`Polling for task status (attempt ${attempts}/${maxAttempts}): ${taskId}`);
-      
-      // Wait before polling (except for first attempt)
-      if (attempts > 1) {
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
-      }
-      
-      // Check task status - Ensure we append the task ID to the URL path
-      const statusUrl = `${STATUS_ENDPOINT}/${taskId}`;
-      console.log(`Checking status URL: ${statusUrl}`);
-      
-      const statusResponse = await fetch(statusUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log(`Status check response:`, statusResponse.status);
-      
-      if (!statusResponse.ok) {
-        const errorText = await statusResponse.text();
-        console.error(`Error checking task status:`, errorText);
-        
-        // Check if we've reached max attempts
-        if (attempts >= maxAttempts) {
-          return new Response(JSON.stringify({ 
-            success: false, 
-            error: 'Failed to check task status', 
-            details: `Maximum polling attempts (${maxAttempts}) reached. The server responded with: ${errorText}`
-          }), {
-            status: 408, // Request Timeout
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-        
-        continue; // Continue trying
-      }
-      
-      const statusData = await statusResponse.json();
-      console.log(`Task status:`, JSON.stringify(statusData).substring(0, 500) + '...');
-      
-      // Check if the task is complete
-      if (statusData.status === 'completed') {
-        console.log('Task processing completed successfully');
-        
-        if (statusData.success && statusData.questions) {
-          // Map the questions to our expected format
-          const questions = statusData.questions.map((q: any) => ({
-            id: crypto.randomUUID(),
-            question: q.question || '',
-            options: {
-              A: q.options?.A || '',
-              B: q.options?.B || '',
-              C: q.options?.C || '',
-              D: q.options?.D || '',
-              E: q.options?.E || '',
-            },
-            correctAnswer: q.correctAnswer || '',
-            subject: q.subject || subject || '',
-            comment: q.comment || '',
-            filename: examName || pdfFile.name,
-            difficulty: q.difficulty || 3,
-            semester: q.semester || examSemester || null,
-            year: q.year || examYear || null,
-            image_key: q.image_key || null
-          }));
-
-          return new Response(JSON.stringify({
-            success: true,
-            questions: questions,
-            data: {
-              exam_name: examName || pdfFile.name,
-              images_uploaded: statusData.data?.images_uploaded || 0,
-              total_questions: questions.length,
-              total_images: statusData.data?.total_images || 0
-            }
-          }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        } else {
-          return new Response(JSON.stringify({ 
-            success: false, 
-            error: statusData.error || 'No questions found in the processed data', 
-            details: statusData.details || ''
-          }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-      } else if (statusData.status === 'failed') {
-        return new Response(JSON.stringify({ 
-          success: false, 
-          error: 'PDF processing failed', 
-          details: statusData.message || statusData.error || 'Unknown error'
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      // If still processing, continue the loop
-      console.log(`Task still processing (attempt ${attempts}/${maxAttempts}), waiting ${pollInterval/1000} seconds...`);
-    }
-    
-    // If we've reached max attempts and still no complete response
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Timeout waiting for PDF processing to complete', 
-      details: 'The server is taking too long to process the PDF. Please try again later or with a smaller file.'
+    // Return success immediately and let the client track status with a separate endpoint
+    return new Response(JSON.stringify({
+      success: true,
+      status: 'processing',
+      message: 'PDF upload successful and processing started',
+      task_id: taskId
     }), {
-      status: 408, // Request Timeout
+      status: 202,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
