@@ -31,8 +31,9 @@ serve(async (req) => {
       });
     }
 
-    // Get the API URL from environment variable or use a default
-    const API_URL = Deno.env.get('EXTERNAL_PDF_API_URL') || 'https://your-api-url.com/extract';
+    // Set the API endpoints
+    const BASE_API_URL = 'https://api.altfragen.io';
+    const UPLOAD_ENDPOINT = `${BASE_API_URL}/upload`;
     
     // Convert the File to a Blob
     const arrayBuffer = await pdfFile.arrayBuffer();
@@ -65,9 +66,10 @@ serve(async (req) => {
     }
 
     console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject });
+    console.log('Using API endpoint:', UPLOAD_ENDPOINT);
 
     // Forward the request to the external API
-    const apiResponse = await fetch(API_URL, {
+    const apiResponse = await fetch(UPLOAD_ENDPOINT, {
       method: 'POST',
       body: apiFormData,
     });
