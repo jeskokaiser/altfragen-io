@@ -310,6 +310,16 @@ const PDFUpload: React.FC = () => {
     }
   };
 
+  // Create a ref for the file input
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Function to trigger the file input click
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-4xl mx-auto">
       {/* Always show upload section */}
@@ -473,16 +483,20 @@ const PDFUpload: React.FC = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
+                  <div 
+                    className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                    onClick={triggerFileInput}
+                  >
                     <Upload className="h-10 w-10 text-muted-foreground mb-2" />
                     <p className="text-sm text-muted-foreground mb-1">Klicke um eine PDF-Datei hochzuladen</p>
                     <p className="text-xs text-muted-foreground">Oder ziehe eine Datei hierher</p>
                     <input
                       id="pdf-upload"
+                      ref={fileInputRef}
                       type="file"
                       accept=".pdf"
                       onChange={handleFileSelection}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      className="hidden"
                       disabled={isUploading}
                     />
                   </div>
