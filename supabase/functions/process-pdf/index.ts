@@ -34,6 +34,7 @@ serve(async (req) => {
     // Set the API endpoints
     const BASE_API_URL = 'https://api.altfragen.io';
     const UPLOAD_ENDPOINT = `${BASE_API_URL}/upload`;
+    // The API expects the task_id at the end of the URL, not as a separate parameter
     const STATUS_ENDPOINT = `${BASE_API_URL}/status`;
     
     // Convert the File to a Blob
@@ -119,16 +120,20 @@ serve(async (req) => {
       
       console.log(`Polling for task status (attempt ${attempts}/${maxAttempts}): ${taskId}`);
       
-      // Wait before polling
+      // Wait before polling (except for first attempt)
       if (attempts > 1) {
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
       
-      // Check task status
-      const statusResponse = await fetch(`${STATUS_ENDPOINT}/${taskId}`, {
+      // Check task status - Ensure we append the task ID to the URL path
+      const statusUrl = `${STATUS_ENDPOINT}/${taskId}`;
+      console.log(`Checking status URL: ${statusUrl}`);
+      
+      const statusResponse = await fetch(statusUrl, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
       });
       
@@ -137,6 +142,19 @@ serve(async (req) => {
       if (!statusResponse.ok) {
         const errorText = await statusResponse.text();
         console.error(`Error checking task status:`, errorText);
+        
+        // Check if we've reached max attempts
+        if (attempts >= maxAttempts) {
+          return new Response(JSON.stringify({ 
+            success: false, 
+            error: 'Failed to check task status', 
+            details: `Maximum polling attempts (${maxAttempts}) reached. The server responded with: ${errorText}`
+          }), {
+            status: 408, // Request Timeout
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        
         continue; // Continue trying
       }
       
