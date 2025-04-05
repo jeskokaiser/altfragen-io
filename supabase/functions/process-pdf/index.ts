@@ -67,6 +67,7 @@ serve(async (req) => {
 
     console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject });
     console.log('Using API endpoint:', UPLOAD_ENDPOINT);
+    console.log('PDF file name:', pdfFile.name, 'size:', pdfFile.size);
 
     // Forward the request to the external API
     const apiResponse = await fetch(UPLOAD_ENDPOINT, {
@@ -74,23 +75,28 @@ serve(async (req) => {
       body: apiFormData,
     });
 
+    // Log the response status and headers for debugging
+    console.log('API response status:', apiResponse.status);
+    console.log('API response headers:', Object.fromEntries(apiResponse.headers.entries()));
+
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
       console.error('External API error:', errorText);
       return new Response(JSON.stringify({ 
         error: 'Failed to process PDF', 
-        details: errorText 
+        details: errorText,
+        status: apiResponse.status
       }), {
         status: apiResponse.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Get the response from the external API - this now follows the new format
+    // Get the response from the external API
     const apiData = await apiResponse.json();
+    console.log('API data received:', JSON.stringify(apiData).substring(0, 500) + '...');
 
     // Transform the API response to match our frontend expectations
-    // The new API returns questions directly in a format we need to map to our format
     if (apiData.success) {
       const questions = apiData.questions.map((q: any) => ({
         id: crypto.randomUUID(),
