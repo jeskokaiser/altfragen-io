@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,7 +37,9 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showMetadataForm, setShowMetadataForm] = useState(true);
   const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
-  const [statusCheckInterval, setStatusCheckInterval] = useState<number | null>(null);
+  
+  const taskIdRef = useRef<string | null>(null);
+  const intervalIdRef = useRef<number | null>(null);
 
   const form = useForm<ExamMetadataFormValues>({
     resolver: zodResolver(examMetadataSchema),
@@ -51,22 +53,35 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
 
   useEffect(() => {
     return () => {
-      if (statusCheckInterval) {
-        clearInterval(statusCheckInterval);
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
       }
     };
-  }, [statusCheckInterval]);
+  }, []);
 
   useEffect(() => {
     if (activeTask && activeTask.status === 'processing') {
-      const intervalId = window.setInterval(async () => {
-        await checkTaskStatus(activeTask.task_id);
-      }, 3000); 
+      taskIdRef.current = activeTask.task_id;
       
-      setStatusCheckInterval(intervalId);
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+      }
+      
+      const intervalId = window.setInterval(async () => {
+        if (taskIdRef.current) {
+          await checkTaskStatus(taskIdRef.current);
+        } else {
+          console.error('No task_id available for status check');
+          clearInterval(intervalId);
+        }
+      }, 3000);
+      
+      intervalIdRef.current = intervalId;
       
       return () => {
         clearInterval(intervalId);
+        intervalIdRef.current = null;
       };
     }
   }, [activeTask]);
@@ -78,10 +93,13 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
     setSelectedFile(null);
     setShowMetadataForm(true);
     setActiveTask(null);
-    if (statusCheckInterval) {
-      clearInterval(statusCheckInterval);
-      setStatusCheckInterval(null);
+    taskIdRef.current = null;
+    
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+      intervalIdRef.current = null;
     }
+    
     form.reset();
   };
 
@@ -143,10 +161,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
       console.log('Status check response:', data);
 
       if (data.status === 'completed') {
-        if (statusCheckInterval) {
-          clearInterval(statusCheckInterval);
-          setStatusCheckInterval(null);
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+          intervalIdRef.current = null;
         }
+        
+        taskIdRef.current = null;
         
         setUploadProgress(100);
         setIsUploading(false);
@@ -165,10 +185,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
           resetState(); 
         }
       } else if (data.status === 'failed') {
-        if (statusCheckInterval) {
-          clearInterval(statusCheckInterval);
-          setStatusCheckInterval(null);
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+          intervalIdRef.current = null;
         }
+        
+        taskIdRef.current = null;
         
         setIsUploading(false);
         const failMessage = data.error || data.details || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen";
@@ -188,11 +210,11 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
           });
         }
         
-        setActiveTask({
-          ...activeTask!,
+        setActiveTask(prevState => ({
+          ...(prevState || { task_id: taskId, status: 'processing', message: '' }),
           status: data.status,
           message: data.message
-        });
+        }));
       }
     } catch (error: any) {
       console.error('Error checking task status:', error);
@@ -255,6 +277,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
       }
 
       if (data.task_id) {
+        taskIdRef.current = data.task_id;
+        
         setActiveTask({
           task_id: data.task_id,
           status: 'processing',

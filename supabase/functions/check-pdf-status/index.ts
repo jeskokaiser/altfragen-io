@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Define expected types for more safety
@@ -58,11 +57,27 @@ serve(async (req) => {
     const BASE_API_URL = 'https://api.altfragen.io';
     const statusEndpoint = `${BASE_API_URL}/status/${taskId}`;
     
+    // Add safeguard for empty or "undefined" taskId string
+    if (taskId === "undefined" || taskId.trim() === "") {
+      console.error(`Invalid task_id parameter: "${taskId}"`);
+      return new Response(JSON.stringify({
+        success: false,
+        status: 'error',
+        error: 'Invalid task_id parameter',
+        details: 'The task_id cannot be "undefined" or empty'
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
+    console.log(`Attempting to fetch status from: ${statusEndpoint}`);
+
     let statusData: BackendStatusResponse | null = null;
     let statusResponse: Response | null = null;
-
-    // Log the URL before fetching
-    console.log(`Attempting to fetch status from: ${statusEndpoint}`);
 
     try {
       statusResponse = await fetch(statusEndpoint, {
