@@ -1,11 +1,12 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Definiere erwartete Typen für mehr Sicherheit
+// Define expected types for more safety
 interface BackendStatusResponse {
   success: boolean;
   status: 'processing' | 'completed' | 'error' | 'failed' | 'warning';
   message?: string;
-  questions?: any[]; // Hier ggf. einen genaueren Question-Typ definieren
+  questions?: any[]; 
   data?: any;
   error?: string;
   details?: string;
@@ -53,17 +54,16 @@ serve(async (req) => {
       });
     }
 
-    // Korrekter Backend-Status-Endpunkt
+    // Correct backend status endpoint
     const BASE_API_URL = 'https://api.altfragen.io';
     const statusEndpoint = `${BASE_API_URL}/status/${taskId}`;
     
     let statusData: BackendStatusResponse | null = null;
     let statusResponse: Response | null = null;
 
-    // --- Verbessertes Logging: URL vor dem Fetch ausgeben ---
+    // Log the URL before fetching
     console.log(`Attempting to fetch status from: ${statusEndpoint}`);
 
-    console.log(`Checking status endpoint: ${statusEndpoint}`);
     try {
       statusResponse = await fetch(statusEndpoint, {
         method: 'GET',
@@ -95,7 +95,6 @@ serve(async (req) => {
       }
     } catch (error) {
       console.error(`Network or fetch error checking ${statusEndpoint}:`, error.message);
-      // --- Verbessertes Logging: Gesamtes Fehlerobjekt ausgeben ---
       console.error('Fetch error details:', error);
 
       // Handle fetch errors (e.g., network issues)
@@ -105,7 +104,7 @@ serve(async (req) => {
          error: 'Failed to check task status',
          details: `Network error: ${error.message}`
        }), {
-         status: 500, // Internal Server Error or Service Unavailable
+         status: 500, 
          headers: {
            ...corsHeaders,
            'Content-Type': 'application/json'
@@ -131,58 +130,57 @@ serve(async (req) => {
 
     console.log(`Task status data:`, JSON.stringify(statusData).substring(0, 500) + '...');
 
-    // Verarbeite die Backend-Antwort und reiche sie ggf. angepasst weiter
+    // Process the backend response and forward it appropriately
     if (statusData.status === 'completed') {
       console.log('Task processing completed successfully');
-      // Backend liefert bereits das korrekte Format, daher direkt durchreichen
-      // Leite den 'success'-Status des Backends und die Daten/Fehler weiter
+      // Backend already provides the correct format, so forward it directly
       return new Response(JSON.stringify({
-        success: statusData.success ?? false, // Leite Backend 'success' weiter, default false
-        status: 'completed', // Immer 'completed' hier
+        success: statusData.success ?? false, // Forward backend 'success', default false
+        status: 'completed', // Always 'completed' here
         message: statusData.message || (statusData.success ? 'PDF processing completed and questions saved' : 'Processing completed with issues or questions could not be saved.'),
         data: statusData.data || {},
-        error: statusData.error // Leite mögliche Fehlermeldung vom Backend weiter
+        error: statusData.error // Forward any error message from backend
       }), {
-        status: 200, // OK, da der Task abgeschlossen ist (auch wenn success=false)
+        status: 200, // OK, as the task is completed (even if success=false)
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
         }
       });
     } else if (statusData.status === 'failed' || statusData.status === 'error') {
-      // Backend hat einen Fehler gemeldet -> Status 'failed'
+      // Backend reported an error -> Status 'failed'
       return new Response(JSON.stringify({
         success: false,
-        status: 'failed', // Standardisiere auf 'failed'
+        status: 'failed', // Standardize to 'failed'
         error: statusData.message || statusData.error || 'PDF processing failed',
         details: statusData.details || 'Unknown error from backend'
       }), {
-        status: 400, // Client- oder serverseitiger Fehler vom Backend
+        status: 400, // Client or server-side error from backend
         headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
         }
       });
     } else if (statusData.status === 'warning') {
-       // Behandle 'warning' explizit als 'completed' mit success: false
+       // Handle 'warning' explicitly as 'completed' with success: false
        console.log('Task processing completed with warnings');
        return new Response(JSON.stringify({
-         success: false, // Behandle Warnung als nicht vollständig erfolgreich
-         status: 'completed', // Task ist abgeschlossen
+         success: false, // Treat warning as not completely successful
+         status: 'completed', // Task is completed
          message: statusData.message || 'Processing completed with warnings (e.g., no questions found).',
          data: statusData.data || {},
-         error: 'Processing completed with warnings.' // Setze eine Fehlermeldung
+         error: 'Processing completed with warnings.' // Set an error message
        }), {
-         status: 200, // OK, Task ist abgeschlossen
+         status: 200, // OK, task is completed
          headers: {
            ...corsHeaders,
            'Content-Type': 'application/json'
          }
        });
     } else {
-      // Noch in Bearbeitung ('processing')
+      // Still processing ('processing')
       return new Response(JSON.stringify({
-        success: true, // Anfrage war erfolgreich, Task läuft noch
+        success: true, // Request was successful, task is still running
         status: 'processing',
         message: statusData.message || 'PDF is still being processed'
       }), {
