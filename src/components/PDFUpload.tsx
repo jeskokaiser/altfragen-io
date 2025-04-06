@@ -131,9 +131,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
     try {
       console.log(`Checking status for task: ${taskId}`);
       
-      const { data, error } = await supabase.functions.invoke('check-pdf-status', {
-        method: 'GET',
-        query: { task_id: taskId }
+      const { data, error } = await supabase.functions.invoke(`check-pdf-status?task_id=${taskId}`, {
+        method: 'GET'
       });
 
       if (error) {
