@@ -21,6 +21,7 @@ export interface Question {
   semester?: string | null;
   year?: string | null;
   image_key?: string | null;
+  show_image_after_answer?: boolean;
 }
 
 export interface PdfProcessingTask {

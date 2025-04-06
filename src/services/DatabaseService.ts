@@ -20,7 +20,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       visibility: q.visibility || 'private',
       exam_semester: q.semester || null,
       exam_year: q.year || null,
-      image_key: q.image_key || null
+      image_key: q.image_key || null,
+      show_image_after_answer: q.show_image_after_answer || false
     }))
   );
 
@@ -54,7 +55,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     visibility: (q.visibility as 'private' | 'university') || 'private',
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: q.image_key || null
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false
   }));
 };
 
@@ -90,7 +92,8 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: q.image_key || null
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false
   }));
 };
 
@@ -207,7 +210,8 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: q.image_key || null
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false
   }));
 
   return allQuestions;

@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import QuestionControls from './QuestionControls';
 import QuestionContent from './QuestionContent';
+import QuestionImage from './QuestionImage';
 import AnswerSubmission from '../training/AnswerSubmission';
 import QuestionFeedback from '../training/QuestionFeedback';
 import { User } from '@supabase/supabase-js';
@@ -37,6 +38,8 @@ const QuestionContainer: React.FC<QuestionContainerProps> = ({
   onMarkUnclear,
 }) => {
   const isMobile = useIsMobile();
+  const shouldShowImage = question.image_key && 
+    (!question.show_image_after_answer || (question.show_image_after_answer && showFeedback));
 
   return (
     <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
@@ -45,6 +48,8 @@ const QuestionContainer: React.FC<QuestionContainerProps> = ({
         onEditClick={onEditClick}
         onMarkUnclear={onMarkUnclear}
       />
+
+      {shouldShowImage && <QuestionImage imageKey={question.image_key} />}
 
       <QuestionContent
         questionData={question}

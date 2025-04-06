@@ -10,4 +10,5 @@ export interface FormData {
   comment: string;
   subject: string;
   difficulty: string;
+  show_image_after_answer?: boolean;
 }

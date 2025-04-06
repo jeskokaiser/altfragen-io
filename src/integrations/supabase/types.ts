@@ -173,6 +173,7 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
+          show_image_after_answer: boolean | null
           subject: string
           university_id: string | null
           user_id: string | null
@@ -197,6 +198,7 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
+          show_image_after_answer?: boolean | null
           subject: string
           university_id?: string | null
           user_id?: string | null
@@ -221,6 +223,7 @@ export type Database = {
           option_d?: string
           option_e?: string
           question?: string
+          show_image_after_answer?: boolean | null
           subject?: string
           university_id?: string | null
           user_id?: string | null
