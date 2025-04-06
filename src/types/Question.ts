@@ -22,6 +22,7 @@ export interface Question {
   year?: string | null;
   image_key?: string | null;
   show_image_after_answer?: boolean;
+  exam_name?: string | null;
 }
 
 export interface PdfProcessingTask {

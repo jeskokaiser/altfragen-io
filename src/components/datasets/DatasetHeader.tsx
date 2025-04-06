@@ -37,6 +37,7 @@ interface DatasetHeaderProps {
   onArchive?: (e: React.MouseEvent) => void;
   onRestore?: (e: React.MouseEvent) => void;
   isArchived?: boolean;
+  displayName?: string;
 }
 
 const DatasetHeader: React.FC<DatasetHeaderProps> = ({
@@ -47,6 +48,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   onArchive,
   onRestore,
   isArchived = false,
+  displayName,
 }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -131,7 +133,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
       <div className="flex-1 space-y-2">
         <div className="flex items-center gap-2">
           <CardTitle className="text-lg font-medium text-slate-800 dark:text-white">
-            {filename}
+            {displayName || filename}
           </CardTitle>
           
           <TooltipProvider>
