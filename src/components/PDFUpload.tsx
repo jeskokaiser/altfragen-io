@@ -1,10 +1,9 @@
-
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, PdfProcessingTask } from '@/types/Question';
-import { AlertCircle, Upload, FileText, Check, X, ArrowRight } from 'lucide-react';
+import { AlertCircle, Upload, FileText, Check, X, ArrowRight, Search } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showToast } from '@/utils/toast';
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 const examMetadataSchema = z.object({
   examName: z.string().min(1, "Exam name is required"),
@@ -38,6 +39,9 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   const [showMetadataForm, setShowMetadataForm] = useState(true);
   const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'university'>(initialVisibility);
+  const [examNameSuggestions, setExamNameSuggestions] = useState<string[]>([]);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   const taskIdRef = useRef<string | null>(null);
   const intervalIdRef = useRef<number | null>(null);
@@ -50,6 +54,49 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
       examSemester: undefined
     }
   });
+
+  const examNameValue = form.watch('examName');
+
+  useEffect(() => {
+    if (examNameValue.length >= 2) {
+      fetchExamNameSuggestions(examNameValue);
+      setShowSuggestions(true);
+    } else {
+      setExamNameSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [examNameValue]);
+
+  const fetchExamNameSuggestions = async (searchTerm: string) => {
+    if (!user?.id) return;
+    
+    setIsFetchingSuggestions(true);
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('exam_name')
+        .ilike('exam_name', `%${searchTerm}%`)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      
+      const uniqueExamNames = [...new Set(data
+        .filter(item => item.exam_name)
+        .map(item => item.exam_name as string))];
+        
+      setExamNameSuggestions(uniqueExamNames);
+    } catch (error) {
+      console.error('Error fetching exam name suggestions:', error);
+    } finally {
+      setIsFetchingSuggestions(false);
+    }
+  };
+
+  const handleSelectExamName = (examName: string) => {
+    form.setValue('examName', examName);
+    setShowSuggestions(false);
+  };
 
   useEffect(() => {
     return () => {
@@ -345,19 +392,54 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
             {showMetadataForm ? (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleMetadataSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="examName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Prüfungsname</FormLabel>
-                        <FormControl>
-                          <Input placeholder="z.B. Anatomie Klausur" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <Popover open={showSuggestions && examNameSuggestions.length > 0} onOpenChange={setShowSuggestions}>
+                    <FormField
+                      control={form.control}
+                      name="examName"
+                      render={({ field }) => (
+                        <FormItem className="relative">
+                          <FormLabel>Prüfungsname</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <PopoverAnchor>
+                                <Input 
+                                  placeholder="z.B. Anatomie Klausur" 
+                                  {...field} 
+                                  autoComplete="off"
+                                />
+                              </PopoverAnchor>
+                              {isFetchingSuggestions && (
+                                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-pulse" />
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <PopoverContent 
+                      className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px] overflow-y-auto" 
+                      align="start"
+                      side="bottom"
+                    >
+                      <Command>
+                        <CommandList>
+                          <CommandGroup>
+                            {examNameSuggestions.map((name) => (
+                              <CommandItem 
+                                key={name} 
+                                onSelect={() => handleSelectExamName(name)}
+                                className="cursor-pointer"
+                              >
+                                {name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                        <CommandEmpty>Keine Vorschläge gefunden</CommandEmpty>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
