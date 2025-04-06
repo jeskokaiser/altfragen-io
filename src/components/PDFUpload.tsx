@@ -15,7 +15,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showToast } from '@/utils/toast';
 
-// Define the form schema for exam metadata
 const examMetadataSchema = z.object({
   examName: z.string().min(1, "Exam name is required"),
   examYear: z.string().regex(/^\d{4}$/, "Please enter a valid year (e.g., 2024)").optional(),
@@ -25,7 +24,6 @@ const examMetadataSchema = z.object({
 
 type ExamMetadataFormValues = z.infer<typeof examMetadataSchema>;
 
-// Define the props interface for PDFUpload
 interface PDFUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
   visibility: 'private' | 'university';
@@ -40,8 +38,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
   const [showMetadataForm, setShowMetadataForm] = useState(true);
   const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
   const [statusCheckInterval, setStatusCheckInterval] = useState<number | null>(null);
-  
-  // Initialize the form
+
   const form = useForm<ExamMetadataFormValues>({
     resolver: zodResolver(examMetadataSchema),
     defaultValues: {
@@ -52,7 +49,6 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
     }
   });
 
-  // Clean up the interval when component unmounts or when we get results
   useEffect(() => {
     return () => {
       if (statusCheckInterval) {
@@ -61,7 +57,6 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
     };
   }, [statusCheckInterval]);
 
-  // When we have an active task, periodically check its status
   useEffect(() => {
     if (activeTask && activeTask.status === 'processing') {
       const intervalId = window.setInterval(async () => {
@@ -138,7 +133,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
       
       const { data, error } = await supabase.functions.invoke('check-pdf-status', {
         method: 'GET',
-        queryParams: { task_id: taskId }
+        query: { task_id: taskId }
       });
 
       if (error) {
