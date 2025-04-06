@@ -22,6 +22,7 @@ interface DatasetCardProps {
   onDatasetClick: (filename: string) => void;
   onStartTraining: (questions: Question[]) => void;
   isArchived?: boolean;
+  displayName?: string;
 }
 
 const DatasetCard: React.FC<DatasetCardProps> = memo(({
@@ -31,6 +32,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   onDatasetClick,
   onStartTraining,
   isArchived = false,
+  displayName,
 }) => {
   const { archiveDataset, restoreDataset } = useUserPreferences();
 
@@ -44,6 +46,8 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
     await restoreDataset(filename);
   };
 
+  const displayTitle = displayName || filename;
+
   return (
     <Card className={`w-full transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
       <CardHeader className="bg-slate-50/50 dark:bg-black/40">
@@ -55,6 +59,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
           onArchive={handleArchive}
           onRestore={handleRestore}
           isArchived={isArchived}
+          displayName={displayTitle}
         />
       </CardHeader>
 

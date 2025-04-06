@@ -147,15 +147,16 @@ const Dashboard = () => {
 
   const groupedQuestions = useMemo(() => {
     const grouped = filteredQuestions.reduce((acc, question) => {
-      if (!acc[question.filename]) {
-        acc[question.filename] = [];
+      const key = question.exam_name || question.filename;
+      if (!acc[key]) {
+        acc[key] = [];
       }
-      acc[question.filename].push(question);
+      acc[key].push(question);
       return acc;
     }, {} as Record<string, Question[]>);
     
-    Object.keys(grouped).forEach(filename => {
-      grouped[filename].sort((a, b) => {
+    Object.keys(grouped).forEach(key => {
+      grouped[key].sort((a, b) => {
         if (a.year && b.year && a.year !== b.year) {
           return b.year.localeCompare(a.year);
         }
@@ -175,15 +176,16 @@ const Dashboard = () => {
 
   const groupedUniversityQuestions = useMemo(() => {
     const grouped = universityQuestions.reduce((acc, question) => {
-      if (!acc[question.filename]) {
-        acc[question.filename] = [];
+      const key = question.exam_name || question.filename;
+      if (!acc[key]) {
+        acc[key] = [];
       }
-      acc[question.filename].push(question);
+      acc[key].push(question);
       return acc;
     }, {} as Record<string, Question[]>);
     
-    Object.keys(grouped).forEach(filename => {
-      grouped[filename].sort((a, b) => {
+    Object.keys(grouped).forEach(key => {
+      grouped[key].sort((a, b) => {
         if (a.year && b.year && a.year !== b.year) {
           return b.year.localeCompare(a.year);
         }
@@ -207,9 +209,9 @@ const Dashboard = () => {
     }
     
     return Object.entries(groupedUniversityQuestions)
-      .filter(([filename]) => selectedUniversityDatasets.includes(filename))
-      .reduce((acc, [filename, questions]) => {
-        acc[filename] = questions;
+      .filter(([key]) => selectedUniversityDatasets.includes(key))
+      .reduce((acc, [key, questions]) => {
+        acc[key] = questions;
         return acc;
       }, {} as Record<string, Question[]>);
       
