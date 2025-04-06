@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   FormControl,
@@ -37,7 +38,7 @@ const SubjectSelect: React.FC<SubjectSelectProps> = ({ form, subjects }) => {
             <SelectContent>
               <SelectItem value="all">Alle Fächer</SelectItem>
               {subjects.map((subject) => (
-                <SelectItem key={subject} value={subject}>
+                <SelectItem key={subject} value={subject || 'unknown'}>
                   {subject}
                 </SelectItem>
               ))}

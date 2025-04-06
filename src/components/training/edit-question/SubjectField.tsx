@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import {
@@ -20,13 +21,13 @@ export const SubjectField: React.FC<SubjectFieldProps> = ({ defaultValue, onValu
   return (
     <div>
       <Label htmlFor="subject">Fach</Label>
-      <Select onValueChange={onValueChange} defaultValue={defaultValue}>
+      <Select onValueChange={onValueChange} defaultValue={defaultValue || 'unknown'}>
         <SelectTrigger>
           <SelectValue placeholder="Wähle ein Fach" />
         </SelectTrigger>
         <SelectContent>
           {subjects.map((subject) => (
-            <SelectItem key={subject} value={subject}>
+            <SelectItem key={subject} value={subject || 'unknown'}>
               {subject}
             </SelectItem>
           ))}

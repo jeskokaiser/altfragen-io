@@ -96,7 +96,7 @@ const CreateSessionForm: React.FC = () => {
                   <FormLabel>Subject</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={field.value || undefined}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -106,12 +106,12 @@ const CreateSessionForm: React.FC = () => {
                     <SelectContent>
                       {subjects.length > 0 ? (
                         subjects.map((subject) => (
-                          <SelectItem key={subject} value={subject}>
+                          <SelectItem key={subject} value={subject || 'unknown'}>
                             {subject}
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="new" disabled>
+                        <SelectItem value="no-subjects" disabled>
                           No subjects found
                         </SelectItem>
                       )}
@@ -148,7 +148,7 @@ const CreateSessionForm: React.FC = () => {
                     <FormLabel>Semester (Optional)</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      defaultValue={field.value || undefined}
                     >
                       <FormControl>
                         <SelectTrigger>

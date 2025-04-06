@@ -32,11 +32,11 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   onClearFilters,
   title = "Filter",
 }) => {
-  // Extract unique semesters and years from questions
+  // Extract unique semesters and years from questions, ensuring we don't include empty values
   const uniqueSemesters = Array.from(
     new Set(
       questions
-        .filter(q => q.semester)
+        .filter(q => q.semester && q.semester.trim() !== '')
         .map(q => q.semester)
     )
   ).sort();
@@ -44,7 +44,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   const uniqueYears = Array.from(
     new Set(
       questions
-        .filter(q => q.year)
+        .filter(q => q.year && q.year.trim() !== '')
         .map(q => q.year)
     )
   ).sort((a, b) => (b || '').localeCompare(a || '')); // Sort years in descending order
@@ -67,7 +67,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
               <SelectContent>
                 <SelectItem value="all">Alle Semester</SelectItem>
                 {uniqueSemesters.map((semester) => (
-                  <SelectItem key={semester} value={semester || ''}>
+                  <SelectItem key={semester} value={semester || 'unknown'}>
                     {semester}
                   </SelectItem>
                 ))}
@@ -87,7 +87,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
               <SelectContent>
                 <SelectItem value="all">Alle Jahre</SelectItem>
                 {uniqueYears.map((year) => (
-                  <SelectItem key={year} value={year || ''}>
+                  <SelectItem key={year} value={year || 'unknown'}>
                     {year}
                   </SelectItem>
                 ))}
