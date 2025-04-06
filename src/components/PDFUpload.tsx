@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,8 +19,7 @@ import { showToast } from '@/utils/toast';
 const examMetadataSchema = z.object({
   examName: z.string().min(1, "Exam name is required"),
   examYear: z.string().regex(/^\d{4}$/, "Please enter a valid year (e.g., 2024)").optional(),
-  examSemester: z.enum(["WS", "SS"]).optional(),
-  subject: z.string().min(1, "Subject is required")
+  examSemester: z.enum(["WS", "SS"]).optional()
 });
 
 type ExamMetadataFormValues = z.infer<typeof examMetadataSchema>;
@@ -29,7 +29,7 @@ interface PDFUploadProps {
   visibility: 'private' | 'university';
 }
 
-const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) => {
+const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
   const { user, universityId, universityName } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -37,6 +37,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showMetadataForm, setShowMetadataForm] = useState(true);
   const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
+  const [visibility, setVisibility] = useState<'private' | 'university'>(initialVisibility);
   
   const taskIdRef = useRef<string | null>(null);
   const intervalIdRef = useRef<number | null>(null);
@@ -46,8 +47,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
     defaultValues: {
       examName: "",
       examYear: new Date().getFullYear().toString(),
-      examSemester: undefined,
-      subject: ""
+      examSemester: undefined
     }
   });
 
@@ -252,7 +252,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
       formData.append('examName', formValues.examName);
       if (formValues.examYear) formData.append('examYear', formValues.examYear);
       if (formValues.examSemester) formData.append('examSemester', formValues.examSemester);
-      formData.append('subject', formValues.subject);
+      
       if (user?.id) {
         formData.append('userId', user.id);
         console.log('Appending userId to form data:', user.id);
@@ -359,20 +359,6 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="subject"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fach</FormLabel>
-                        <FormControl>
-                          <Input placeholder="z.B. Anatomie" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -429,9 +415,6 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
                   <h3 className="font-medium mb-1">Prüfungsdaten:</h3>
                   <p className="text-sm text-muted-foreground">
                     <strong>Name:</strong> {form.getValues().examName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Fach:</strong> {form.getValues().subject}
                   </p>
                   {form.getValues().examSemester && (
                     <p className="text-sm text-muted-foreground">
@@ -509,7 +492,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility }) 
                     <label className="text-sm font-medium mb-1 block">Sichtbarkeit der Fragen</label>
                     <Select 
                       value={visibility} 
-                      onValueChange={(value: 'private' | 'university') => {}}
+                      onValueChange={(value: 'private' | 'university') => setVisibility(value)}
                       disabled={isUploading || !universityId}
                     >
                       <SelectTrigger>
