@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -9,6 +8,7 @@ interface AuthContextType {
   universityId: string | null;
   isEmailVerified: boolean;
   universityName: string | null;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -16,7 +16,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true, 
   universityId: null,
   isEmailVerified: false,
-  universityName: null
+  universityName: null,
+  logout: async () => {}
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -25,6 +26,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [universityId, setUniversityId] = useState<string | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [universityName, setUniversityName] = useState<string | null>(null);
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -148,7 +157,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading, 
       universityId, 
       isEmailVerified, 
-      universityName
+      universityName,
+      logout
     }}>
       {children}
     </AuthContext.Provider>
