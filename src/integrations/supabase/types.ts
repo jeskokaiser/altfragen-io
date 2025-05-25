@@ -416,6 +416,18 @@ export type Database = {
         Args: { user_uuid: string; university_uuid: string }
         Returns: boolean
       }
+      get_question_session_id: {
+        Args: { question_uuid: string }
+        Returns: string
+      }
+      is_session_host: {
+        Args: { session_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
+      is_session_participant: {
+        Args: { session_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

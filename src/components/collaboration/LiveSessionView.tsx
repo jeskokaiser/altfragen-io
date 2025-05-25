@@ -5,18 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ExamSession, DraftQuestion, SessionParticipant } from '@/types/ExamSession';
-import { useAuth } from '@/contexts/AuthContext';
+import { ExamSession, DraftQuestion } from '@/types/ExamSession';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { useSessionState } from '@/hooks/useSessionState';
 import {
   subscribeToSessionUpdates,
-  joinCollaborationSession,
-  addQuestionToSession,
-  updateQuestionStatus,
   publishSessionQuestions,
   closeCollaborationSession
 } from '@/services/CollaborationService';
+import { CollaborationServiceGuarded } from '@/services/CollaborationServiceGuarded';
 import QuickQuestionForm from './QuickQuestionForm';
-import { supabase } from '@/integrations/supabase/client';
 import { Users, Share2, CheckCircle, X, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -24,146 +22,112 @@ import { toast } from 'sonner';
 const LiveSessionView: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { user, universityId } = useAuth();
-  
-  const [session, setSession] = useState<ExamSession | null>(null);
-  const [participants, setParticipants] = useState<SessionParticipant[]>([]);
-  const [questions, setQuestions] = useState<DraftQuestion[]>([]);
-  const [isHost, setIsHost] = useState(false);
-  const [hasJoined, setHasJoined] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isReady, isAuthenticated, userId } = useAuthGuard();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [sessionState, sessionActions] = useSessionState(sessionId, userId);
+  const { 
+    session, 
+    participants, 
+    questions, 
+    isHost, 
+    hasJoined, 
+    isLoading, 
+    error 
+  } = sessionState;
 
+  // Redirect to auth if not authenticated
   useEffect(() => {
-    if (!sessionId || !user) return;
+    if (isReady && !isAuthenticated) {
+      navigate('/auth');
+    }
+  }, [isReady, isAuthenticated, navigate]);
 
-    loadSessionData();
-  }, [sessionId, user]);
-
+  // Load session data when auth is ready
   useEffect(() => {
-    if (!sessionId || !hasJoined) return;
+    if (isAuthenticated && sessionId && userId) {
+      sessionActions.loadSessionData();
+    }
+  }, [isAuthenticated, sessionId, userId]);
 
+  // Set up real-time subscriptions when user has joined
+  useEffect(() => {
+    if (!sessionId || !hasJoined || !isAuthenticated) return;
+
+    console.log('Setting up real-time subscriptions for session:', sessionId);
+    
     const cleanup = subscribeToSessionUpdates(
       sessionId,
-      setSession,
-      setParticipants,
-      setQuestions
+      (updatedSession) => {
+        console.log('Session updated via real-time:', updatedSession);
+        // Session updates are handled by the subscription
+      },
+      (updatedParticipants) => {
+        console.log('Participants updated via real-time:', updatedParticipants);
+        // Participants updates are handled by the subscription
+      },
+      (updatedQuestions) => {
+        console.log('Questions updated via real-time:', updatedQuestions);
+        // Questions updates are handled by the subscription
+      }
     );
 
     return cleanup;
-  }, [sessionId, hasJoined]);
-
-  const loadSessionData = async () => {
-    if (!sessionId || !user) return;
-
-    try {
-      // Load session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('exam_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      setSession(sessionData as ExamSession);
-
-      // Check if user is participant
-      const { data: participantData } = await supabase
-        .from('session_participants')
-        .select('*')
-        .eq('session_id', sessionId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (participantData) {
-        setHasJoined(true);
-        setIsHost(participantData.role === 'host');
-        
-        // Load participants and questions
-        loadParticipants();
-        loadQuestions();
-      }
-
-    } catch (error) {
-      console.error('Error loading session:', error);
-      toast.error('Failed to load session');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadParticipants = async () => {
-    if (!sessionId) return;
-
-    const { data, error } = await supabase
-      .from('session_participants')
-      .select('*')
-      .eq('session_id', sessionId);
-
-    if (error) {
-      console.error('Error loading participants:', error);
-      return;
-    }
-
-    setParticipants(data as SessionParticipant[]);
-  };
-
-  const loadQuestions = async () => {
-    if (!sessionId) return;
-
-    const { data, error } = await supabase
-      .from('draft_questions')
-      .select('*')
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error loading questions:', error);
-      return;
-    }
-
-    setQuestions(data as DraftQuestion[]);
-  };
+  }, [sessionId, hasJoined, isAuthenticated]);
 
   const handleJoinSession = async () => {
-    if (!sessionId || !user) return;
-
-    const success = await joinCollaborationSession(sessionId, user.id);
+    const success = await sessionActions.joinSession();
     if (success) {
-      setHasJoined(true);
-      loadParticipants();
-      loadQuestions();
+      toast.success('Successfully joined the session!');
     }
   };
 
   const handleAddQuestion = async (questionData: any) => {
-    if (!sessionId || !user) return;
+    if (!sessionId || !userId) return;
 
     setIsSubmitting(true);
     try {
-      await addQuestionToSession(sessionId, user.id, questionData);
+      const result = await CollaborationServiceGuarded.addQuestionToSession(
+        sessionId, 
+        userId, 
+        questionData
+      );
+      
+      if (result) {
+        // Refresh questions to show the new addition
+        await sessionActions.refreshData();
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleReviewQuestion = async (questionId: string) => {
-    if (!sessionId || !user) return;
+    if (!sessionId || !userId) return;
 
-    await updateQuestionStatus(questionId, sessionId, user.id, 'reviewed');
+    const success = await CollaborationServiceGuarded.updateQuestionStatus(
+      questionId, 
+      sessionId, 
+      userId, 
+      'reviewed'
+    );
+    
+    if (success) {
+      await sessionActions.refreshData();
+    }
   };
 
   const handlePublishQuestions = async () => {
-    if (!sessionId || !user) return;
+    if (!sessionId || !userId) return;
 
-    await publishSessionQuestions(sessionId, user.id, universityId);
+    await publishSessionQuestions(sessionId, userId, null);
+    await sessionActions.refreshData();
   };
 
   const handleCloseSession = async () => {
-    if (!sessionId || !user) return;
+    if (!sessionId || !userId) return;
 
-    const success = await closeCollaborationSession(sessionId, user.id);
+    const success = await closeCollaborationSession(sessionId, userId);
     if (success) {
       navigate('/collab');
     }
@@ -174,7 +138,8 @@ const LiveSessionView: React.FC = () => {
     toast.success('Session link copied to clipboard');
   };
 
-  if (isLoading) {
+  // Show loading state while auth is not ready
+  if (!isReady || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <div>Loading session...</div>
@@ -182,6 +147,19 @@ const LiveSessionView: React.FC = () => {
     );
   }
 
+  // Show error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <div className="text-red-500">Error: {error}</div>
+        <Button onClick={() => navigate('/collab')} className="mt-4">
+          Back to Sessions
+        </Button>
+      </div>
+    );
+  }
+
+  // Show session not found
   if (!session) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -193,6 +171,7 @@ const LiveSessionView: React.FC = () => {
     );
   }
 
+  // Show join session view if not joined
   if (!hasJoined) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-2xl">
