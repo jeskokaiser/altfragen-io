@@ -6,6 +6,7 @@ import Index from "@/pages/Index";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
 import Tutorial from "@/pages/Tutorial";
+import Settings from "@/pages/Settings";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { Toaster } from "sonner";
@@ -30,6 +31,7 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/tutorial" element={<Tutorial />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="/collab" element={<CollabSessions />} />
                   <Route path="/collab/create" element={<CreateSession />} />
                   <Route path="/collab-session/:sessionId" element={<LiveSessionView />} />
