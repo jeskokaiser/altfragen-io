@@ -1,23 +1,25 @@
+
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "@/pages/Index";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
 import Tutorial from "@/pages/Tutorial";
-import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
-import { QueryClient } from "@tanstack/react-query";
 import CreateSession from "@/pages/CreateSession";
 import CollabSessions from "@/pages/CollabSessions";
-import SessionDetails from "@/pages/SessionDetails";
 import LiveSessionView from '@/components/collaboration/LiveSessionView';
+import Navbar from '@/components/Navbar';
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <QueryClient>
+        <QueryClientProvider client={queryClient}>
           <div className="min-h-screen bg-background">
             <Navbar />
             <main className="flex-1">
@@ -33,7 +35,7 @@ function App() {
             </main>
             <Toaster />
           </div>
-        </QueryClient>
+        </QueryClientProvider>
       </AuthProvider>
     </Router>
   );

@@ -40,8 +40,8 @@ export const createCollaborationSession = async (
         role: 'host'
       });
 
-    // Log activity
-    await logActivity(session.id, userId, 'create', 'created the session');
+    // Log activity (simplified for now)
+    console.log(`Session created: ${session.id} by ${userId}`);
 
     return session as ExamSession;
   } catch (error) {
@@ -66,8 +66,8 @@ export const joinCollaborationSession = async (sessionId: string, userId: string
       throw error;
     }
 
-    // Log activity
-    await logActivity(sessionId, userId, 'join', 'joined the session');
+    // Log activity (simplified for now)
+    console.log(`User ${userId} joined session ${sessionId}`);
 
     return true;
   } catch (error) {
@@ -107,8 +107,8 @@ export const addQuestionToSession = async (
 
     if (error) throw error;
 
-    // Log activity
-    await logActivity(sessionId, userId, 'create', `added question "${questionData.question.substring(0, 30)}..."`);
+    // Log activity (simplified for now)
+    console.log(`Question added to session ${sessionId} by ${userId}`);
 
     return data as DraftQuestion;
   } catch (error) {
@@ -133,8 +133,8 @@ export const updateQuestionStatus = async (
 
     if (error) throw error;
 
-    // Log activity
-    await logActivity(sessionId, userId, 'review', `marked question as ${status}`);
+    // Log activity (simplified for now)
+    console.log(`Question ${questionId} marked as ${status} by ${userId}`);
 
     return true;
   } catch (error) {
@@ -206,8 +206,8 @@ export const publishSessionQuestions = async (
       .eq('session_id', sessionId)
       .eq('status', 'reviewed');
 
-    // Log activity
-    await logActivity(sessionId, userId, 'publish', `published ${questions.length} questions`);
+    // Log activity (simplified for now)
+    console.log(`Published ${questions.length} questions from session ${sessionId}`);
 
     toast.success(`Successfully published ${questions.length} questions!`);
     return true;
@@ -228,36 +228,13 @@ export const closeCollaborationSession = async (sessionId: string, userId: strin
 
     if (error) throw error;
 
-    // Log activity
-    await logActivity(sessionId, userId, 'update', 'closed the session');
+    // Log activity (simplified for now)
+    console.log(`Session ${sessionId} closed by ${userId}`);
 
     return true;
   } catch (error) {
     console.error('Error closing session:', error);
     return false;
-  }
-};
-
-// Log activity
-const logActivity = async (
-  sessionId: string,
-  userId: string,
-  activityType: 'join' | 'leave' | 'create' | 'update' | 'delete' | 'review' | 'publish',
-  message: string,
-  entityId?: string
-): Promise<void> => {
-  try {
-    await supabase
-      .from('session_activities')
-      .insert({
-        session_id: sessionId,
-        user_id: userId,
-        activity_type: activityType,
-        message,
-        entity_id: entityId
-      });
-  } catch (error) {
-    console.error('Error logging activity:', error);
   }
 };
 
