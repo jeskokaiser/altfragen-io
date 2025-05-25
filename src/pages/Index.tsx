@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -325,11 +324,6 @@ const StepCard = ({
     </div>
     <h3 className="text-2xl font-bold mb-4 text-slate-900">{title}</h3>
     <p className="text-slate-600 leading-relaxed text-lg">{description}</p>
-    
-    {/* Enhanced connecting line */}
-    {number !== "3" && (
-      <div className="hidden md:block absolute top-10 left-full w-full h-1 bg-gradient-to-r from-blue-200 via-purple-200 to-transparent transform -translate-x-1/2 rounded-full"></div>
-    )}
   </div>
 );
 
