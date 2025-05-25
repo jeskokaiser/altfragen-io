@@ -26,7 +26,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{session.title}</CardTitle>
           <Badge variant={session.is_active ? 'default' : 'secondary'}>
-            {session.is_active ? 'Active' : 'Closed'}
+            {session.is_active ? 'Aktiv' : 'Geschlossen'}
           </Badge>
         </div>
         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
@@ -36,7 +36,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
           </div>
           <div className="flex items-center">
             <Clock className="w-4 h-4 mr-1" />
-            {format(new Date(session.created_at), 'MMM d, yyyy')}
+            {format(new Date(session.created_at), 'dd.MM.yyyy')}
           </div>
         </div>
       </CardHeader>
@@ -51,10 +51,10 @@ const SessionCard: React.FC<SessionCardProps> = ({
           <div className="flex space-x-4 text-sm">
             <div className="flex items-center">
               <Users className="w-4 h-4 mr-1" />
-              {participantCount} participants
+              {participantCount} Teilnehmer
             </div>
             <div>
-              {questionCount} questions
+              {questionCount} Fragen
             </div>
           </div>
           
@@ -63,7 +63,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
               size="sm" 
               onClick={() => onJoin(session.id)}
             >
-              Join Session
+              Beitreten
             </Button>
           )}
         </div>

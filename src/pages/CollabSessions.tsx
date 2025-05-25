@@ -85,7 +85,7 @@ const CollabSessions: React.FC = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6 text-center">
-        <div>Loading sessions...</div>
+        <div>Sitzungen werden geladen...</div>
       </div>
     );
   }
@@ -102,14 +102,14 @@ const CollabSessions: React.FC = () => {
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Collaboration Sessions</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Zusammenarbeit</h1>
           <p className="text-muted-foreground">
-            Collect exam questions together in real-time
+            Sammelt gemeinsam Prüfungsfragen in Echtzeit
           </p>
         </div>
         <Button onClick={() => navigate('/collab/create')}>
           <Plus className="mr-2 h-4 w-4" />
-          New Session
+          Neue Sitzung
         </Button>
       </div>
 
@@ -119,10 +119,10 @@ const CollabSessions: React.FC = () => {
             <TabsList className="mb-4">
               <TabsTrigger value="active">
                 <Clock className="w-4 h-4 mr-2" />
-                Active Sessions ({activeSessions.length})
+                Aktive Sitzungen ({activeSessions.length})
               </TabsTrigger>
               <TabsTrigger value="closed">
-                Closed Sessions ({closedSessions.length})
+                Geschlossene Sitzungen ({closedSessions.length})
               </TabsTrigger>
             </TabsList>
 
@@ -131,13 +131,13 @@ const CollabSessions: React.FC = () => {
                 <Card>
                   <CardContent className="py-12 text-center">
                     <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">No active sessions</h3>
+                    <h3 className="text-lg font-semibold mb-2">Keine aktiven Sitzungen</h3>
                     <p className="text-muted-foreground mb-4">
-                      Create a new session to start collecting questions with your classmates.
+                      Erstelle eine neue Sitzung, um gemeinsam mit deinen Kommilitonen Fragen zu sammeln.
                     </p>
                     <Button onClick={() => navigate('/collab/create')}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Create Session
+                      Sitzung erstellen
                     </Button>
                   </CardContent>
                 </Card>
@@ -160,7 +160,7 @@ const CollabSessions: React.FC = () => {
               {closedSessions.length === 0 ? (
                 <Card>
                   <CardContent className="py-12 text-center">
-                    <p className="text-muted-foreground">No closed sessions yet.</p>
+                    <p className="text-muted-foreground">Noch keine geschlossenen Sitzungen.</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -183,12 +183,12 @@ const CollabSessions: React.FC = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Your Sessions</CardTitle>
+              <CardTitle>Deine Sitzungen</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {userActiveSessions.length > 0 ? (
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Active ({userActiveSessions.length})</h3>
+                  <h3 className="text-sm font-medium mb-2">Aktiv ({userActiveSessions.length})</h3>
                   {userActiveSessions.slice(0, 3).map((session) => (
                     <Button
                       key={session.id}
@@ -201,17 +201,17 @@ const CollabSessions: React.FC = () => {
                   ))}
                   {userActiveSessions.length > 3 && (
                     <p className="text-xs text-muted-foreground text-center">
-                      +{userActiveSessions.length - 3} more
+                      +{userActiveSessions.length - 3} weitere
                     </p>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No active sessions</p>
+                <p className="text-sm text-muted-foreground">Keine aktiven Sitzungen</p>
               )}
 
               {userClosedSessions.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Closed ({userClosedSessions.length})</h3>
+                  <h3 className="text-sm font-medium mb-2">Geschlossen ({userClosedSessions.length})</h3>
                   {userClosedSessions.slice(0, 2).map((session) => (
                     <Button
                       key={session.id}
@@ -224,7 +224,7 @@ const CollabSessions: React.FC = () => {
                   ))}
                   {userClosedSessions.length > 2 && (
                     <p className="text-xs text-muted-foreground text-center">
-                      +{userClosedSessions.length - 2} more
+                      +{userClosedSessions.length - 2} weitere
                     </p>
                   )}
                 </div>
@@ -237,7 +237,7 @@ const CollabSessions: React.FC = () => {
                   onClick={() => navigate('/collab/create')}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Create New Session
+                  Neue Sitzung erstellen
                 </Button>
               </div>
             </CardContent>
@@ -245,7 +245,7 @@ const CollabSessions: React.FC = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>How It Works</CardTitle>
+              <CardTitle>So funktioniert's</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-start space-x-2">
@@ -253,8 +253,8 @@ const CollabSessions: React.FC = () => {
                   1
                 </div>
                 <div>
-                  <p className="font-medium">Create a Session</p>
-                  <p className="text-muted-foreground">Start immediately after your exam</p>
+                  <p className="font-medium">Sitzung erstellen</p>
+                  <p className="text-muted-foreground">Direkt nach der Prüfung starten</p>
                 </div>
               </div>
               <div className="flex items-start space-x-2">
@@ -262,8 +262,8 @@ const CollabSessions: React.FC = () => {
                   2
                 </div>
                 <div>
-                  <p className="font-medium">Collect Questions</p>
-                  <p className="text-muted-foreground">Everyone adds questions they remember</p>
+                  <p className="font-medium">Fragen sammeln</p>
+                  <p className="text-muted-foreground">Jeder fügt Fragen hinzu, an die er sich erinnert</p>
                 </div>
               </div>
               <div className="flex items-start space-x-2">
@@ -271,8 +271,8 @@ const CollabSessions: React.FC = () => {
                   3
                 </div>
                 <div>
-                  <p className="font-medium">Review Together</p>
-                  <p className="text-muted-foreground">Verify and improve questions as a team</p>
+                  <p className="font-medium">Gemeinsam überprüfen</p>
+                  <p className="text-muted-foreground">Fragen als Team verifizieren und verbessern</p>
                 </div>
               </div>
               <div className="flex items-start space-x-2">
@@ -280,8 +280,8 @@ const CollabSessions: React.FC = () => {
                   4
                 </div>
                 <div>
-                  <p className="font-medium">Publish</p>
-                  <p className="text-muted-foreground">Save to your personal question bank</p>
+                  <p className="font-medium">Veröffentlichen</p>
+                  <p className="text-muted-foreground">In deiner persönlichen Fragenbank speichern</p>
                 </div>
               </div>
             </CardContent>

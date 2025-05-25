@@ -23,9 +23,9 @@ const CreateSession: React.FC = () => {
           onClick={() => navigate('/collab')} 
           className="mr-2"
         >
-          Back
+          Zurück
         </Button>
-        <h1 className="text-2xl font-bold">Create Collaborative Session</h1>
+        <h1 className="text-2xl font-bold">Neue Zusammenarbeitssitzung erstellen</h1>
       </div>
 
       <CreateSessionForm />
