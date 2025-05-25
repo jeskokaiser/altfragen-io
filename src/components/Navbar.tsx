@@ -7,11 +7,11 @@ import { LogOut, User, Home, BookOpen, Users } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Navbar: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     navigate('/auth');
   };
 
