@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award } from "lucide-react";
+import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award, Clock, Zap } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -143,6 +144,99 @@ const Index = () => {
             description="Teile Fragen mit anderen Studenten deiner Universität und profitiere von geteiltem Wissen." 
             color="violet" 
           />
+        </div>
+      </section>
+
+      {/* Real-time Collaboration Section */}
+      <section className="container mx-auto px-4 py-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-indigo-100">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-200 rounded-full text-indigo-700 text-sm font-medium mb-6">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Echtzeit-Zusammenarbeit
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
+                  Sammelt Fragen gemeinsam in Echtzeit
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Nach der Prüfung könnt ihr als Gruppe sofort eine Collaboration-Session starten und 
+                  alle erinnerten Fragen gemeinsam sammeln. Arbeitet zusammen, während die Erinnerung noch frisch ist.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Live-Synchronisation</h3>
+                      <p className="text-slate-600">Alle Teilnehmer sehen neue Fragen sofort, während sie erstellt werden</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Gemeinsame Überprüfung</h3>
+                      <p className="text-slate-600">Korrigiert und vervollständigt Fragen gemeinsam für beste Qualität</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Sofortige Veröffentlichung</h3>
+                      <p className="text-slate-600">Publiziert den kompletten Fragensatz direkt in eure Trainingssammlung</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">Live Collaboration</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-slate-600">4 Teilnehmer aktiv</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-slate-900">Max erstellt Frage...</span>
+                        <div className="flex items-center mt-1">
+                          <Clock className="w-3 h-3 text-blue-500 mr-1" />
+                          <span className="text-xs text-blue-600">Gerade eben</span>
+                        </div>
+                      </div>
+                      <div className="animate-pulse">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Frage 1: Anatomie - Herz</span>
+                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">Überprüft</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Frage 2: Physiologie - Atmung</span>
+                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">Entwurf</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <p className="text-xs text-slate-500 text-center">
+                      12 Fragen gesammelt • Session läuft seit 15 Min
+                    </p>
+                  </div>
+                </div>
+                {/* Floating elements */}
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-indigo-400 rounded-full opacity-20"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-400 rounded-full opacity-30"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
