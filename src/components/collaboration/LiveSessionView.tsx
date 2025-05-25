@@ -6,15 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExamSession, DraftQuestion } from '@/types/ExamSession';
+import { DraftQuestion } from '@/types/ExamSession';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
-import { useSessionState } from '@/hooks/useSessionState';
-import {
-  subscribeToSessionUpdates,
-  publishSessionQuestions,
-  closeCollaborationSession
-} from '@/services/CollaborationService';
-import { CollaborationServiceGuarded } from '@/services/CollaborationServiceGuarded';
+import { useSessionData } from '@/hooks/useSessionData';
 import QuickQuestionForm from './QuickQuestionForm';
 import { Users, Share2, CheckCircle, X, ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
@@ -26,16 +20,16 @@ const LiveSessionView: React.FC = () => {
   const { isReady, isAuthenticated, userId } = useAuthGuard();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [sessionState, sessionActions] = useSessionState(sessionId, userId);
-  const { 
-    session, 
-    participants, 
-    questions, 
-    isHost, 
-    hasJoined, 
-    isLoading, 
-    error 
-  } = sessionState;
+  const {
+    session,
+    participants,
+    questions,
+    isParticipant,
+    isHost,
+    isLoading,
+    error,
+    actions
+  } = useSessionData(sessionId, userId);
 
   // Redirect to auth if not authenticated
   useEffect(() => {
@@ -47,84 +41,36 @@ const LiveSessionView: React.FC = () => {
   // Load session data when auth is ready
   useEffect(() => {
     if (isAuthenticated && sessionId && userId) {
-      sessionActions.loadSessionData();
+      actions.loadData();
     }
   }, [isAuthenticated, sessionId, userId]);
 
-  // Set up real-time subscriptions when user has joined
-  useEffect(() => {
-    if (!sessionId || !hasJoined || !isAuthenticated) return;
-
-    console.log('Setting up real-time subscriptions for session:', sessionId);
-    
-    const cleanup = subscribeToSessionUpdates(
-      sessionId,
-      (updatedSession) => {
-        console.log('Session updated via real-time:', updatedSession);
-      },
-      (updatedParticipants) => {
-        console.log('Participants updated via real-time:', updatedParticipants);
-      },
-      (updatedQuestions) => {
-        console.log('Questions updated via real-time:', updatedQuestions);
-      }
-    );
-
-    return cleanup;
-  }, [sessionId, hasJoined, isAuthenticated]);
-
   const handleJoinSession = async () => {
-    const success = await sessionActions.joinSession();
+    const success = await actions.joinSession();
     if (success) {
       toast.success('Successfully joined the session!');
     }
   };
 
   const handleAddQuestion = async (questionData: any) => {
-    if (!sessionId || !userId) return;
-
     setIsSubmitting(true);
     try {
-      const result = await CollaborationServiceGuarded.addQuestionToSession(
-        sessionId, 
-        userId, 
-        questionData
-      );
-      
-      if (result) {
-        await sessionActions.refreshData();
-      }
+      await actions.addQuestion(questionData);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleReviewQuestion = async (questionId: string) => {
-    if (!sessionId || !userId) return;
-
-    const success = await CollaborationServiceGuarded.updateQuestionStatus(
-      questionId, 
-      sessionId, 
-      userId, 
-      'reviewed'
-    );
-    
-    if (success) {
-      await sessionActions.refreshData();
-    }
+    await actions.updateQuestionStatus(questionId, 'reviewed');
   };
 
   const handlePublishQuestions = async () => {
-    if (!sessionId || !userId) return;
-
-    await publishSessionQuestions(sessionId, userId, null);
-    await sessionActions.refreshData();
+    await actions.publishQuestions(null);
   };
 
   const handleCloseSession = async () => {
-    if (!sessionId || !userId) return;
-
-    const success = await closeCollaborationSession(sessionId, userId);
+    const success = await actions.closeSession();
     if (success) {
       navigate('/collab');
     }
@@ -136,7 +82,7 @@ const LiveSessionView: React.FC = () => {
   };
 
   const handleRetry = () => {
-    sessionActions.loadSessionData();
+    actions.loadData();
   };
 
   // Show loading state while auth is not ready
@@ -228,7 +174,7 @@ const LiveSessionView: React.FC = () => {
   }
 
   // Show join session view if not joined
-  if (!hasJoined) {
+  if (!isParticipant) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>

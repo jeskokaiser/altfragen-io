@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -7,10 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Users, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { ExamSession } from '@/types/ExamSession';
 import SessionCard from '@/components/collaboration/SessionCard';
-import { joinCollaborationSession } from '@/services/CollaborationService';
+import { CollaborationServiceUnified } from '@/services/CollaborationServiceUnified';
 
 const CollabSessions: React.FC = () => {
   const { user } = useAuth();
@@ -19,58 +17,48 @@ const CollabSessions: React.FC = () => {
 
   const { data: sessions, isLoading, refetch } = useQuery({
     queryKey: ['collaboration-sessions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('exam_sessions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as ExamSession[];
-    },
+    queryFn: () => CollaborationServiceUnified.getAllSessions(),
     enabled: !!user,
   });
 
   const { data: participantCounts } = useQuery({
     queryKey: ['session-participant-counts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('session_participants')
-        .select('session_id');
-
-      if (error) throw error;
-
+      if (!sessions) return {};
+      
       const counts: Record<string, number> = {};
-      data.forEach(p => {
-        counts[p.session_id] = (counts[p.session_id] || 0) + 1;
-      });
+      await Promise.all(
+        sessions.map(async (session) => {
+          const participants = await CollaborationServiceUnified.getParticipants(session.id);
+          counts[session.id] = participants.length;
+        })
+      );
       return counts;
     },
-    enabled: !!user,
+    enabled: !!user && !!sessions,
   });
 
   const { data: questionCounts } = useQuery({
     queryKey: ['session-question-counts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('draft_questions')
-        .select('session_id');
-
-      if (error) throw error;
-
+      if (!sessions) return {};
+      
       const counts: Record<string, number> = {};
-      data.forEach(q => {
-        counts[q.session_id] = (counts[q.session_id] || 0) + 1;
-      });
+      await Promise.all(
+        sessions.map(async (session) => {
+          const questions = await CollaborationServiceUnified.getQuestions(session.id);
+          counts[session.id] = questions.length;
+        })
+      );
       return counts;
     },
-    enabled: !!user,
+    enabled: !!user && !!sessions,
   });
 
   const handleJoinSession = async (sessionId: string) => {
     if (!user) return;
     
-    const success = await joinCollaborationSession(sessionId, user.id);
+    const success = await CollaborationServiceUnified.joinSession(sessionId, user.id);
     if (success) {
       navigate(`/collab-session/${sessionId}`);
     }
