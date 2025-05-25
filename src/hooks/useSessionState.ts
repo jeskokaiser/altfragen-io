@@ -47,27 +47,46 @@ export const useSessionState = (
     try {
       updateState({ isLoading: true, error: null });
 
-      // Load session
+      // Load session first
       const { data: sessionData, error: sessionError } = await supabase
         .from('exam_sessions')
         .select('*')
         .eq('id', sessionId)
         .single();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Session not found');
+      }
 
-      // Check if user is participant
-      const { data: participantData, error: participantError } = await supabase
-        .from('session_participants')
-        .select('*')
-        .eq('session_id', sessionId)
-        .eq('user_id', userId)
-        .maybeSingle();
+      // Try to check participation status with better error handling
+      let hasJoined = false;
+      let isHost = false;
+      let participantData = null;
 
-      if (participantError) throw participantError;
+      try {
+        const { data, error: participantError } = await supabase
+          .from('session_participants')
+          .select('*')
+          .eq('session_id', sessionId)
+          .eq('user_id', userId)
+          .maybeSingle();
 
-      const hasJoined = !!participantData;
-      const isHost = participantData?.role === 'host';
+        // If we get an RLS error, assume user is not a participant yet
+        if (participantError) {
+          console.warn('Participant check failed (likely RLS):', participantError);
+          hasJoined = false;
+          isHost = false;
+        } else {
+          participantData = data;
+          hasJoined = !!data;
+          isHost = data?.role === 'host';
+        }
+      } catch (error) {
+        console.warn('Participant check failed:', error);
+        hasJoined = false;
+        isHost = false;
+      }
 
       updateState({
         session: sessionData as ExamSession,
@@ -85,9 +104,8 @@ export const useSessionState = (
       console.error('Error loading session data:', error);
       updateState({ 
         isLoading: false, 
-        error: 'Failed to load session data' 
+        error: error instanceof Error ? error.message : 'Failed to load session data'
       });
-      toast.error('Failed to load session data');
     }
   }, [sessionId, userId]);
 
@@ -95,31 +113,48 @@ export const useSessionState = (
     if (!sessionId) return;
 
     try {
-      // Load participants
-      const { data: participantsData, error: participantsError } = await supabase
-        .from('session_participants')
-        .select('*')
-        .eq('session_id', sessionId);
+      // Try to load participants with error handling
+      let participantsData: SessionParticipant[] = [];
+      try {
+        const { data, error: participantsError } = await supabase
+          .from('session_participants')
+          .select('*')
+          .eq('session_id', sessionId);
 
-      if (participantsError) throw participantsError;
+        if (participantsError) {
+          console.warn('Failed to load participants:', participantsError);
+        } else {
+          participantsData = data as SessionParticipant[];
+        }
+      } catch (error) {
+        console.warn('Participants query failed:', error);
+      }
 
-      // Load questions
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('draft_questions')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: false });
+      // Try to load questions with error handling
+      let questionsData: DraftQuestion[] = [];
+      try {
+        const { data, error: questionsError } = await supabase
+          .from('draft_questions')
+          .select('*')
+          .eq('session_id', sessionId)
+          .order('created_at', { ascending: false });
 
-      if (questionsError) throw questionsError;
+        if (questionsError) {
+          console.warn('Failed to load questions:', questionsError);
+        } else {
+          questionsData = data as DraftQuestion[];
+        }
+      } catch (error) {
+        console.warn('Questions query failed:', error);
+      }
 
       updateState({
-        participants: participantsData as SessionParticipant[],
-        questions: questionsData as DraftQuestion[]
+        participants: participantsData,
+        questions: questionsData
       });
 
     } catch (error) {
       console.error('Error loading participants and questions:', error);
-      toast.error('Failed to load session details');
     }
   }, [sessionId]);
 
@@ -136,6 +171,7 @@ export const useSessionState = (
         });
 
       if (error && error.code !== '23505') { // Ignore duplicate key errors
+        console.error('Join session error:', error);
         throw error;
       }
 

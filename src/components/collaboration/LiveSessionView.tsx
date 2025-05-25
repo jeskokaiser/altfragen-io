@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ExamSession, DraftQuestion } from '@/types/ExamSession';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useSessionState } from '@/hooks/useSessionState';
@@ -15,7 +16,7 @@ import {
 } from '@/services/CollaborationService';
 import { CollaborationServiceGuarded } from '@/services/CollaborationServiceGuarded';
 import QuickQuestionForm from './QuickQuestionForm';
-import { Users, Share2, CheckCircle, X, ArrowLeft } from 'lucide-react';
+import { Users, Share2, CheckCircle, X, ArrowLeft, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -60,15 +61,12 @@ const LiveSessionView: React.FC = () => {
       sessionId,
       (updatedSession) => {
         console.log('Session updated via real-time:', updatedSession);
-        // Session updates are handled by the subscription
       },
       (updatedParticipants) => {
         console.log('Participants updated via real-time:', updatedParticipants);
-        // Participants updates are handled by the subscription
       },
       (updatedQuestions) => {
         console.log('Questions updated via real-time:', updatedQuestions);
-        // Questions updates are handled by the subscription
       }
     );
 
@@ -94,7 +92,6 @@ const LiveSessionView: React.FC = () => {
       );
       
       if (result) {
-        // Refresh questions to show the new addition
         await sessionActions.refreshData();
       }
     } finally {
@@ -141,8 +138,37 @@ const LiveSessionView: React.FC = () => {
   // Show loading state while auth is not ready
   if (!isReady || isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div>Loading session...</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center space-x-2 mb-6">
+          <Skeleton className="h-8 w-8" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-4 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-32 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -150,11 +176,24 @@ const LiveSessionView: React.FC = () => {
   // Show error state
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div className="text-red-500">Error: {error}</div>
-        <Button onClick={() => navigate('/collab')} className="mt-4">
-          Back to Sessions
-        </Button>
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Failed to Load Session</h2>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <div className="flex justify-center space-x-2">
+                <Button onClick={() => sessionActions.loadSessionData()} variant="outline">
+                  Try Again
+                </Button>
+                <Button onClick={() => navigate('/collab')}>
+                  Back to Sessions
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -162,11 +201,21 @@ const LiveSessionView: React.FC = () => {
   // Show session not found
   if (!session) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div>Session not found</div>
-        <Button onClick={() => navigate('/collab')} className="mt-4">
-          Back to Sessions
-        </Button>
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Session Not Found</h2>
+              <p className="text-muted-foreground mb-4">
+                This session may have been deleted or you don't have access to it.
+              </p>
+              <Button onClick={() => navigate('/collab')}>
+                Back to Sessions
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -259,21 +308,25 @@ const LiveSessionView: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {participants.map((participant) => (
-                <div key={participant.id} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="w-6 h-6">
-                      <AvatarFallback className="text-xs">
-                        {participant.user_id.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm">{participant.user_id.slice(0, 8)}...</span>
+              {participants.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Loading participants...</p>
+              ) : (
+                participants.map((participant) => (
+                  <div key={participant.id} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Avatar className="w-6 h-6">
+                        <AvatarFallback className="text-xs">
+                          {participant.user_id.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm">{participant.user_id.slice(0, 8)}...</span>
+                    </div>
+                    {participant.role === 'host' && (
+                      <Badge variant="outline" className="text-xs">Host</Badge>
+                    )}
                   </div>
-                  {participant.role === 'host' && (
-                    <Badge variant="outline" className="text-xs">Host</Badge>
-                  )}
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
 
