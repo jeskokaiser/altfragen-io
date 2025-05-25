@@ -22,7 +22,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center space-x-6">
             <Link to="/" className="flex items-center space-x-2">
               <BookOpen className="h-6 w-6" />
-              <span className="font-bold text-xl">QuestionBank</span>
+              <span className="font-bold text-xl">Altfragen.io</span>
             </Link>
             
             {user && (
@@ -36,7 +36,7 @@ const Navbar: React.FC = () => {
                 <Link to="/collab">
                   <Button variant="ghost" size="sm">
                     <Users className="h-4 w-4 mr-2" />
-                    Collaboration
+                    Zusammenarbeit
                   </Button>
                 </Link>
               </div>
@@ -54,13 +54,13 @@ const Navbar: React.FC = () => {
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  Abmelden
                 </Button>
               </div>
             ) : (
               <Link to="/auth">
                 <Button variant="default" size="sm">
-                  Sign In
+                  Anmelden
                 </Button>
               </Link>
             )}

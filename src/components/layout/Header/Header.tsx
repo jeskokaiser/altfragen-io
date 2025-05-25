@@ -51,7 +51,7 @@ const Header = () => {
   const navItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { label: 'Training', href: '/training', icon: <Book className="h-4 w-4 mr-2" /> },
-    { label: 'Collaboration', href: '/collab', icon: <UserPlus className="h-4 w-4 mr-2" /> },
+    { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="h-4 w-4 mr-2" /> },
     { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="h-4 w-4 mr-2" /> },
   ];
 
@@ -107,16 +107,16 @@ const Header = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <SettingsIcon className="mr-2 h-4 w-4" />
-                  Settings
+                  Einstellungen
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                  Abmelden
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => navigate('/auth')}>Login</Button>
+            <Button onClick={() => navigate('/auth')}>Anmelden</Button>
           )}
 
           {/* Mobile menu toggle */}
@@ -125,7 +125,7 @@ const Header = () => {
               variant="ghost"
               size="icon"
               onClick={toggleMenu}
-              aria-label="Toggle menu"
+              aria-label="Menü öffnen/schließen"
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
