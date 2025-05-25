@@ -138,11 +138,96 @@ const Index = () => {
             color="indigo" 
           />
           <FeatureCard 
-            icon={<Brain className="w-10 h-10" />} 
-            title="Aktives Lernen" 
-            description="Übersichtliche Statistiken über deinen Lernfortschritt und Entwicklung." 
+            icon={<Users className="w-10 h-10" />} 
+            title="Universitäts-Community" 
+            description="Teile Fragen mit anderen Studenten deiner Universität und profitiere von geteiltem Wissen." 
             color="violet" 
           />
+        </div>
+      </section>
+
+      {/* Question Sharing Feature Section */}
+      <section className="container mx-auto px-4 py-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
+                  <Users className="w-4 h-4 mr-2" />
+                  Community Feature
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
+                  Gemeinsam lernen, besser werden
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Verbinde dich mit anderen Studenten deiner Universität und teile deine Altfragen. 
+                  Profitiere von einer größeren Fragendatenbank und hilf anderen beim Lernen.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Automatische Universitätserkennung</h3>
+                      <p className="text-slate-600">Deine Universität wird automatisch anhand deiner E-Mail-Adresse erkannt</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Sichere Datenfreigabe</h3>
+                      <p className="text-slate-600">Nur Studenten deiner Universität können auf geteilte Fragen zugreifen</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Größere Fragendatenbank</h3>
+                      <p className="text-slate-600">Zugriff auf Fragen von anderen Studenten derselben Fächer</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">Geteilte Fragen</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="text-sm text-slate-600">Universität München</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Anatomie - Herz-Kreislauf</span>
+                      <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">42 Fragen</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Physiologie - Atmung</span>
+                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">28 Fragen</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Biochemie - Stoffwechsel</span>
+                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">35 Fragen</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <p className="text-xs text-slate-500 text-center">
+                      Insgesamt 105 geteilte Fragen verfügbar
+                    </p>
+                  </div>
+                </div>
+                {/* Floating elements */}
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-400 rounded-full opacity-20"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-400 rounded-full opacity-30"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
