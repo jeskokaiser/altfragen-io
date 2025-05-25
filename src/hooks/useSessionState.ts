@@ -47,7 +47,7 @@ export const useSessionState = (
     try {
       updateState({ isLoading: true, error: null });
 
-      // Load session first
+      // Load session first - this should always work regardless of participation
       const { data: sessionData, error: sessionError } = await supabase
         .from('exam_sessions')
         .select('*')
@@ -59,33 +59,41 @@ export const useSessionState = (
         throw new Error('Session not found');
       }
 
-      // Try to check participation status with better error handling
-      let hasJoined = false;
-      let isHost = false;
-      let participantData = null;
+      // Check if user is the creator (host)
+      const isCreator = sessionData.creator_id === userId;
+      
+      // Try to check if user is a participant - but handle RLS errors gracefully
+      let hasJoined = isCreator; // Creator is always considered joined
+      let isHost = isCreator;
 
-      try {
-        const { data, error: participantError } = await supabase
-          .from('session_participants')
-          .select('*')
-          .eq('session_id', sessionId)
-          .eq('user_id', userId)
-          .maybeSingle();
+      if (!isCreator) {
+        try {
+          // Use a simple count query to avoid RLS recursion issues
+          const { count, error: participantError } = await supabase
+            .from('session_participants')
+            .select('*', { count: 'exact', head: true })
+            .eq('session_id', sessionId)
+            .eq('user_id', userId);
 
-        // If we get an RLS error, assume user is not a participant yet
-        if (participantError) {
-          console.warn('Participant check failed (likely RLS):', participantError);
+          if (!participantError && count && count > 0) {
+            hasJoined = true;
+            
+            // Only check role if we know user is a participant
+            const { data: roleData } = await supabase
+              .from('session_participants')
+              .select('role')
+              .eq('session_id', sessionId)
+              .eq('user_id', userId)
+              .single();
+            
+            isHost = roleData?.role === 'host';
+          }
+        } catch (error) {
+          console.warn('Could not verify participation status:', error);
+          // Assume not joined if we can't verify
           hasJoined = false;
           isHost = false;
-        } else {
-          participantData = data;
-          hasJoined = !!data;
-          isHost = data?.role === 'host';
         }
-      } catch (error) {
-        console.warn('Participant check failed:', error);
-        hasJoined = false;
-        isHost = false;
       }
 
       updateState({
@@ -95,7 +103,7 @@ export const useSessionState = (
         isLoading: false
       });
 
-      // Only load additional data if user has joined
+      // Only load additional data if user has access
       if (hasJoined) {
         await loadParticipantsAndQuestions();
       }
@@ -113,39 +121,32 @@ export const useSessionState = (
     if (!sessionId) return;
 
     try {
-      // Try to load participants with error handling
-      let participantsData: SessionParticipant[] = [];
-      try {
-        const { data, error: participantsError } = await supabase
+      // Load participants and questions in parallel, with error handling
+      const [participantsResult, questionsResult] = await Promise.allSettled([
+        supabase
           .from('session_participants')
           .select('*')
-          .eq('session_id', sessionId);
-
-        if (participantsError) {
-          console.warn('Failed to load participants:', participantsError);
-        } else {
-          participantsData = data as SessionParticipant[];
-        }
-      } catch (error) {
-        console.warn('Participants query failed:', error);
-      }
-
-      // Try to load questions with error handling
-      let questionsData: DraftQuestion[] = [];
-      try {
-        const { data, error: questionsError } = await supabase
+          .eq('session_id', sessionId),
+        supabase
           .from('draft_questions')
           .select('*')
           .eq('session_id', sessionId)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+      ]);
 
-        if (questionsError) {
-          console.warn('Failed to load questions:', questionsError);
-        } else {
-          questionsData = data as DraftQuestion[];
-        }
-      } catch (error) {
-        console.warn('Questions query failed:', error);
+      let participantsData: SessionParticipant[] = [];
+      let questionsData: DraftQuestion[] = [];
+
+      if (participantsResult.status === 'fulfilled' && !participantsResult.value.error) {
+        participantsData = participantsResult.value.data as SessionParticipant[];
+      } else {
+        console.warn('Failed to load participants:', participantsResult);
+      }
+
+      if (questionsResult.status === 'fulfilled' && !questionsResult.value.error) {
+        questionsData = questionsResult.value.data as DraftQuestion[];
+      } else {
+        console.warn('Failed to load questions:', questionsResult);
       }
 
       updateState({

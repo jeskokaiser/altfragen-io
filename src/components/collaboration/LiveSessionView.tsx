@@ -16,7 +16,7 @@ import {
 } from '@/services/CollaborationService';
 import { CollaborationServiceGuarded } from '@/services/CollaborationServiceGuarded';
 import QuickQuestionForm from './QuickQuestionForm';
-import { Users, Share2, CheckCircle, X, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Users, Share2, CheckCircle, X, ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -135,6 +135,10 @@ const LiveSessionView: React.FC = () => {
     toast.success('Session link copied to clipboard');
   };
 
+  const handleRetry = () => {
+    sessionActions.loadSessionData();
+  };
+
   // Show loading state while auth is not ready
   if (!isReady || isLoading) {
     return (
@@ -181,13 +185,15 @@ const LiveSessionView: React.FC = () => {
           <CardContent className="pt-6">
             <div className="text-center">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Failed to Load Session</h2>
+              <h2 className="text-xl font-semibold mb-2">Cannot Access Session</h2>
               <p className="text-muted-foreground mb-4">{error}</p>
               <div className="flex justify-center space-x-2">
-                <Button onClick={() => sessionActions.loadSessionData()} variant="outline">
+                <Button onClick={handleRetry} variant="outline">
+                  <RefreshCw className="w-4 h-4 mr-2" />
                   Try Again
                 </Button>
                 <Button onClick={() => navigate('/collab')}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Sessions
                 </Button>
               </div>
@@ -211,6 +217,7 @@ const LiveSessionView: React.FC = () => {
                 This session may have been deleted or you don't have access to it.
               </p>
               <Button onClick={() => navigate('/collab')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Sessions
               </Button>
             </div>
