@@ -11,7 +11,7 @@ import Impressum from '@/pages/Impressum';
 import Tutorial from '@/pages/Tutorial';
 import UnclearQuestions from '@/pages/UnclearQuestions';
 import Changelog from '@/pages/Changelog';
-import Dashboard from '@/components/Dashboard';
+import Dashboard from '@/pages/Dashboard';
 import ArchivedDatasets from '@/pages/ArchivedDatasets';
 import CollabSessions from '@/pages/CollabSessions';
 import CreateSession from '@/pages/CreateSession';
