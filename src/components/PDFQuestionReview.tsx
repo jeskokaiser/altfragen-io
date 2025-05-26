@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from '@/components/ui/badge';
 import QuestionImage from './questions/QuestionImage';
+import ImageAssignment from './questions/ImageAssignment';
 
 interface PDFQuestionReviewProps {
   questions: Question[];
@@ -50,12 +50,32 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   const [batchSubject, setBatchSubject] = useState('');
   const [batchSemester, setBatchSemester] = useState('');
   const [batchYear, setBatchYear] = useState('');
+  const [activeTab, setActiveTab] = useState('review');
   
   const currentQuestion = questions[currentIndex];
   
   const updateQuestion = (index: number, updates: Partial<Question>) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = { ...updatedQuestions[index], ...updates };
+    setQuestions(updatedQuestions);
+  };
+  
+  const handleImageReassign = (fromQuestionIndex: number, toQuestionIndex: number) => {
+    const updatedQuestions = [...questions];
+    const imageKey = updatedQuestions[fromQuestionIndex].image_key;
+    
+    // Remove image from source question
+    updatedQuestions[fromQuestionIndex] = { 
+      ...updatedQuestions[fromQuestionIndex], 
+      image_key: null 
+    };
+    
+    // Add image to target question
+    updatedQuestions[toQuestionIndex] = { 
+      ...updatedQuestions[toQuestionIndex], 
+      image_key: imageKey 
+    };
+    
     setQuestions(updatedQuestions);
   };
   
@@ -129,6 +149,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       setValidationErrors(newValidationErrors);
       const firstErrorIndex = Object.keys(newValidationErrors)[0];
       setCurrentIndex(parseInt(firstErrorIndex));
+      setActiveTab('review'); // Switch back to review tab if there are errors
       return;
     }
     
@@ -208,9 +229,11 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
             <span>{isEditMode ? 'Bearbeite extrahierte Fragen' : 'Überprüfe extrahierte Fragen'}</span>
-            <span className="text-sm font-normal text-muted-foreground">
-              {currentIndex + 1} von {questions.length}
-            </span>
+            {activeTab === 'review' && (
+              <span className="text-sm font-normal text-muted-foreground">
+                {currentIndex + 1} von {questions.length}
+              </span>
+            )}
           </CardTitle>
           <CardDescription>
             <div className="space-y-2">
@@ -238,238 +261,254 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
         </CardHeader>
         
         <CardContent>
-          {validationErrors[currentIndex] && validationErrors[currentIndex].length > 0 && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <ul className="list-disc pl-5">
-                  {validationErrors[currentIndex].map((error, i) => (
-                    <li key={i}>{error}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="question">Frage</Label>
-              <Textarea
-                id="question"
-                value={currentQuestion.question}
-                onChange={(e) => updateQuestion(currentIndex, { question: e.target.value })}
-                rows={3}
-                className="mt-1"
-              />
-            </div>
-
-            {currentQuestion.image_key && (
-              <div className="relative">
-                <div className="flex justify-between items-center mb-2">
-                  <Label>Bild</Label>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-destructive" 
-                    onClick={handleRemoveImage}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Bild entfernen
-                  </Button>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="review">Fragen überprüfen</TabsTrigger>
+              <TabsTrigger value="images">Bilder zuordnen</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="review" className="space-y-6 mt-6">
+              {validationErrors[currentIndex] && validationErrors[currentIndex].length > 0 && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <ul className="list-disc pl-5">
+                      {validationErrors[currentIndex].map((error, i) => (
+                        <li key={i}>{error}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="question">Frage</Label>
+                  <Textarea
+                    id="question"
+                    value={currentQuestion.question}
+                    onChange={(e) => updateQuestion(currentIndex, { question: e.target.value })}
+                    rows={3}
+                    className="mt-1"
+                  />
                 </div>
-                <QuestionImage imageKey={currentQuestion.image_key} />
-              </div>
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="optionA">Option A</Label>
-                <Input
-                  id="optionA"
-                  value={currentQuestion.optionA}
-                  onChange={(e) => updateQuestion(currentIndex, { optionA: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="optionB">Option B</Label>
-                <Input
-                  id="optionB"
-                  value={currentQuestion.optionB}
-                  onChange={(e) => updateQuestion(currentIndex, { optionB: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="optionC">Option C</Label>
-                <Input
-                  id="optionC"
-                  value={currentQuestion.optionC}
-                  onChange={(e) => updateQuestion(currentIndex, { optionC: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="optionD">Option D</Label>
-                <Input
-                  id="optionD"
-                  value={currentQuestion.optionD}
-                  onChange={(e) => updateQuestion(currentIndex, { optionD: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="optionE">Option E</Label>
-                <Input
-                  id="optionE"
-                  value={currentQuestion.optionE}
-                  onChange={(e) => updateQuestion(currentIndex, { optionE: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label>Richtige Antwort</Label>
-                <RadioGroup
-                  value={currentQuestion.correctAnswer}
-                  onValueChange={(value) => updateQuestion(currentIndex, { correctAnswer: value })}
-                  className="flex space-x-4 mt-1"
-                >
-                  {['A', 'B', 'C', 'D', 'E'].map((option) => (
-                    <div key={option} className="flex items-center space-x-1">
-                      <RadioGroupItem value={option} id={`answer-${option}`} />
-                      <Label htmlFor={`answer-${option}`}>{option}</Label>
+
+                {currentQuestion.image_key && (
+                  <div className="relative">
+                    <div className="flex justify-between items-center mb-2">
+                      <Label>Bild</Label>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-destructive" 
+                        onClick={handleRemoveImage}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Bild entfernen
+                      </Button>
                     </div>
-                  ))}
-                </RadioGroup>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="subject">Fach</Label>
-                <Input
-                  id="subject"
-                  value={currentQuestion.subject}
-                  onChange={(e) => updateQuestion(currentIndex, { subject: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="difficulty">Schwierigkeitsgrad</Label>
-                <Select 
-                  value={currentQuestion.difficulty.toString()} 
-                  onValueChange={(value) => updateQuestion(currentIndex, { difficulty: parseInt(value) })}
-                >
-                  <SelectTrigger id="difficulty" className="mt-1">
-                    <SelectValue placeholder="Schwierigkeitsgrad auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 - Sehr einfach</SelectItem>
-                    <SelectItem value="2">2 - Einfach</SelectItem>
-                    <SelectItem value="3">3 - Mittel</SelectItem>
-                    <SelectItem value="4">4 - Schwer</SelectItem>
-                    <SelectItem value="5">5 - Sehr schwer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="md:col-span-2">
-                <Label htmlFor="comment">Kommentar (optional)</Label>
-                <Textarea
-                  id="comment"
-                  value={currentQuestion.comment || ''}
-                  onChange={(e) => updateQuestion(currentIndex, { comment: e.target.value })}
-                  className="mt-1"
-                  rows={2}
-                />
-              </div>
-            </div>
-            
-            <Accordion type="single" collapsible>
-              <AccordionItem value="additional-info">
-                <AccordionTrigger>Zusätzliche Informationen</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div>
-                      <Label htmlFor="semester">Semester (optional)</Label>
-                      <Input
-                        id="semester"
-                        value={currentQuestion.semester || ''}
-                        onChange={(e) => updateQuestion(currentIndex, { semester: e.target.value })}
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="year">Jahr (optional)</Label>
-                      <Input
-                        id="year"
-                        value={currentQuestion.year || ''}
-                        onChange={(e) => updateQuestion(currentIndex, { year: e.target.value })}
-                        className="mt-1"
-                      />
-                    </div>
+                    <QuestionImage imageKey={currentQuestion.image_key} />
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="batch-operations">
-                <AccordionTrigger>Massenbearbeitung</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Änderungen werden auf alle Fragen angewendet, wenn du auf "Anwenden" klickst.
-                    </p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="batch-subject">Fach</Label>
-                        <Input
-                          id="batch-subject"
-                          value={batchSubject}
-                          onChange={(e) => setBatchSubject(e.target.value)}
-                          placeholder="Für alle Fragen setzen"
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="batch-semester">Semester</Label>
-                        <Input
-                          id="batch-semester"
-                          value={batchSemester}
-                          onChange={(e) => setBatchSemester(e.target.value)}
-                          placeholder="Für alle Fragen setzen"
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="batch-year">Jahr</Label>
-                        <Input
-                          id="batch-year"
-                          value={batchYear}
-                          onChange={(e) => setBatchYear(e.target.value)}
-                          placeholder="Für alle Fragen setzen"
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button onClick={applyBatchChanges} variant="outline" size="sm">
-                      Massenänderungen anwenden
-                    </Button>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="optionA">Option A</Label>
+                    <Input
+                      id="optionA"
+                      value={currentQuestion.optionA}
+                      onChange={(e) => updateQuestion(currentIndex, { optionA: e.target.value })}
+                      className="mt-1"
+                    />
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
+                  
+                  <div>
+                    <Label htmlFor="optionB">Option B</Label>
+                    <Input
+                      id="optionB"
+                      value={currentQuestion.optionB}
+                      onChange={(e) => updateQuestion(currentIndex, { optionB: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="optionC">Option C</Label>
+                    <Input
+                      id="optionC"
+                      value={currentQuestion.optionC}
+                      onChange={(e) => updateQuestion(currentIndex, { optionC: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="optionD">Option D</Label>
+                    <Input
+                      id="optionD"
+                      value={currentQuestion.optionD}
+                      onChange={(e) => updateQuestion(currentIndex, { optionD: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="optionE">Option E</Label>
+                    <Input
+                      id="optionE"
+                      value={currentQuestion.optionE}
+                      onChange={(e) => updateQuestion(currentIndex, { optionE: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Richtige Antwort</Label>
+                    <RadioGroup
+                      value={currentQuestion.correctAnswer}
+                      onValueChange={(value) => updateQuestion(currentIndex, { correctAnswer: value })}
+                      className="flex space-x-4 mt-1"
+                    >
+                      {['A', 'B', 'C', 'D', 'E'].map((option) => (
+                        <div key={option} className="flex items-center space-x-1">
+                          <RadioGroupItem value={option} id={`answer-${option}`} />
+                          <Label htmlFor={`answer-${option}`}>{option}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="subject">Fach</Label>
+                    <Input
+                      id="subject"
+                      value={currentQuestion.subject}
+                      onChange={(e) => updateQuestion(currentIndex, { subject: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="difficulty">Schwierigkeitsgrad</Label>
+                    <Select 
+                      value={currentQuestion.difficulty.toString()} 
+                      onValueChange={(value) => updateQuestion(currentIndex, { difficulty: parseInt(value) })}
+                    >
+                      <SelectTrigger id="difficulty" className="mt-1">
+                        <SelectValue placeholder="Schwierigkeitsgrad auswählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 - Sehr einfach</SelectItem>
+                        <SelectItem value="2">2 - Einfach</SelectItem>
+                        <SelectItem value="3">3 - Mittel</SelectItem>
+                        <SelectItem value="4">4 - Schwer</SelectItem>
+                        <SelectItem value="5">5 - Sehr schwer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <Label htmlFor="comment">Kommentar (optional)</Label>
+                    <Textarea
+                      id="comment"
+                      value={currentQuestion.comment || ''}
+                      onChange={(e) => updateQuestion(currentIndex, { comment: e.target.value })}
+                      className="mt-1"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+                
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="additional-info">
+                    <AccordionTrigger>Zusätzliche Informationen</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div>
+                          <Label htmlFor="semester">Semester (optional)</Label>
+                          <Input
+                            id="semester"
+                            value={currentQuestion.semester || ''}
+                            onChange={(e) => updateQuestion(currentIndex, { semester: e.target.value })}
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="year">Jahr (optional)</Label>
+                          <Input
+                            id="year"
+                            value={currentQuestion.year || ''}
+                            onChange={(e) => updateQuestion(currentIndex, { year: e.target.value })}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="batch-operations">
+                    <AccordionTrigger>Massenbearbeitung</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4 pt-2">
+                        <p className="text-sm text-muted-foreground">
+                          Änderungen werden auf alle Fragen angewendet, wenn du auf "Anwenden" klickst.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label htmlFor="batch-subject">Fach</Label>
+                            <Input
+                              id="batch-subject"
+                              value={batchSubject}
+                              onChange={(e) => setBatchSubject(e.target.value)}
+                              placeholder="Für alle Fragen setzen"
+                              className="mt-1"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="batch-semester">Semester</Label>
+                            <Input
+                              id="batch-semester"
+                              value={batchSemester}
+                              onChange={(e) => setBatchSemester(e.target.value)}
+                              placeholder="Für alle Fragen setzen"
+                              className="mt-1"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="batch-year">Jahr</Label>
+                            <Input
+                              id="batch-year"
+                              value={batchYear}
+                              onChange={(e) => setBatchYear(e.target.value)}
+                              placeholder="Für alle Fragen setzen"
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button onClick={applyBatchChanges} variant="outline" size="sm">
+                          Massenänderungen anwenden
+                        </Button>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="images" className="mt-6">
+              <ImageAssignment 
+                questions={questions}
+                onImageReassign={handleImageReassign}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
         
         <CardFooter className="flex justify-between">
@@ -482,36 +521,42 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
               {isEditMode ? 'Fertig' : 'Abbrechen'}
             </Button>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleRemoveQuestion(currentIndex)}
-              disabled={questions.length <= 1}
-            >
-              Frage entfernen
-            </Button>
+            {activeTab === 'review' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleRemoveQuestion(currentIndex)}
+                disabled={questions.length <= 1}
+              >
+                Frage entfernen
+              </Button>
+            )}
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrevious}
-              disabled={currentIndex === 0}
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Zurück
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNext}
-              disabled={currentIndex === questions.length - 1}
-            >
-              Weiter
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
+            {activeTab === 'review' && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevious}
+                  disabled={currentIndex === 0}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Zurück
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNext}
+                  disabled={currentIndex === questions.length - 1}
+                >
+                  Weiter
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </>
+            )}
             
             <Button
               onClick={handleSave}
