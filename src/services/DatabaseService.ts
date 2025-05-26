@@ -164,7 +164,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
       .select('*')
       .eq('university_id', universityId)
       .eq('visibility', 'university')
-      .not('user_id', 'eq', userId)
       .order('created_at', { ascending: false });
 
     if (uniError) throw uniError;
