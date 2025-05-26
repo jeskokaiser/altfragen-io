@@ -46,7 +46,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
 }) => {
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [validationErrors, setValidationErrors] = useState<{[key: number]: string[]}>({});
   const [batchSubject, setBatchSubject] = useState('');
   const [batchSemester, setBatchSemester] = useState('');
   const [batchYear, setBatchYear] = useState('');
@@ -78,7 +77,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeTab, currentIndex, questions.length, validationErrors]);
+  }, [activeTab, currentIndex, questions.length]);
   
   const updateQuestion = (index: number, updates: Partial<Question>) => {
     const updatedQuestions = [...questions];
@@ -105,40 +104,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     setQuestions(updatedQuestions);
   };
   
-  const validateQuestion = (question: Question, index: number): string[] => {
-    const errors: string[] = [];
-    
-    if (!question.question || question.question.trim() === '') {
-      errors.push('Frage darf nicht leer sein');
-    }
-    
-    if (!question.correctAnswer || !['A', 'B', 'C', 'D', 'E'].includes(question.correctAnswer)) {
-      errors.push('Eine gültige Antwort muss ausgewählt sein (A-E)');
-    }
-    
-    if (!question.subject || question.subject.trim() === '') {
-      errors.push('Fach darf nicht leer sein');
-    }
-    
-    return errors;
-  };
-  
   const handleNext = () => {
-    const errors = validateQuestion(currentQuestion, currentIndex);
-    
-    if (errors.length > 0) {
-      setValidationErrors({
-        ...validationErrors,
-        [currentIndex]: errors
-      });
-      return;
-    }
-    
-    // Clear errors for this question
-    const newValidationErrors = { ...validationErrors };
-    delete newValidationErrors[currentIndex];
-    setValidationErrors(newValidationErrors);
-    
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
@@ -151,27 +117,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   };
   
   const handleSave = () => {
-    // Validate all questions
-    let allValid = true;
-    const newValidationErrors: {[key: number]: string[]} = {};
-    
-    questions.forEach((question, index) => {
-      const errors = validateQuestion(question, index);
-      if (errors.length > 0) {
-        newValidationErrors[index] = errors;
-        allValid = false;
-      }
-    });
-    
-    if (!allValid) {
-      setValidationErrors(newValidationErrors);
-      const firstErrorIndex = Object.keys(newValidationErrors)[0];
-      setCurrentIndex(parseInt(firstErrorIndex));
-      setActiveTab('review'); // Switch back to review tab if there are errors
-      return;
-    }
-    
-    // All questions are valid, proceed with save
+    // Save all questions without validation
     onSave(questions.map(q => ({
       ...q,
       visibility
@@ -194,21 +140,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     
     setQuestions(newQuestions);
     setCurrentIndex(newIndex);
-    
-    // Update validation errors
-    const newValidationErrors = { ...validationErrors };
-    delete newValidationErrors[index];
-    
-    // Shift error indices for questions after the removed one
-    Object.keys(newValidationErrors).forEach(key => {
-      const keyIndex = parseInt(key);
-      if (keyIndex > index) {
-        newValidationErrors[keyIndex - 1] = newValidationErrors[keyIndex];
-        delete newValidationErrors[keyIndex];
-      }
-    });
-    
-    setValidationErrors(newValidationErrors);
   };
 
   const handleRemoveImage = () => {
@@ -289,19 +220,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             </TabsList>
             
             <TabsContent value="review" className="space-y-6 mt-6">
-              {validationErrors[currentIndex] && validationErrors[currentIndex].length > 0 && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    <ul className="list-disc pl-5">
-                      {validationErrors[currentIndex].map((error, i) => (
-                        <li key={i}>{error}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
               <div className="space-y-6">
                 <div>
                   <Label htmlFor="question">Frage</Label>
