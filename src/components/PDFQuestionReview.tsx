@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2, Move } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Accordion,
@@ -50,6 +50,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   const [batchSemester, setBatchSemester] = useState('');
   const [batchYear, setBatchYear] = useState('');
   const [activeTab, setActiveTab] = useState('review');
+  const [selectedTargetQuestion, setSelectedTargetQuestion] = useState<number | null>(null);
   
   const currentQuestion = questions[currentIndex];
 
@@ -102,6 +103,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     };
     
     setQuestions(updatedQuestions);
+    setSelectedTargetQuestion(null);
   };
   
   const handleNext = () => {
@@ -144,6 +146,12 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
 
   const handleRemoveImage = () => {
     updateQuestion(currentIndex, { image_key: null });
+  };
+
+  const handleMoveImage = () => {
+    if (selectedTargetQuestion !== null) {
+      handleImageReassign(currentIndex, selectedTargetQuestion);
+    }
   };
 
   const applyBatchChanges = () => {
@@ -247,6 +255,44 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       </Button>
                     </div>
                     <QuestionImage imageKey={currentQuestion.image_key} />
+                    
+                    {/* Image movement controls directly below the image */}
+                    <div className="mt-4 p-4 border rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Move className="h-4 w-4" />
+                        <Label className="text-sm font-medium">Bild zu anderer Frage verschieben</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select 
+                          value={selectedTargetQuestion?.toString() || ""} 
+                          onValueChange={(value) => setSelectedTargetQuestion(parseInt(value))}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Zielfrage wählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {questions.map((item, index) => (
+                              <SelectItem 
+                                key={index} 
+                                value={index.toString()}
+                                disabled={index === currentIndex}
+                              >
+                                Frage {index + 1}: {item.question.substring(0, 50)}...
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          onClick={handleMoveImage}
+                          disabled={selectedTargetQuestion === null}
+                          size="sm"
+                          className="flex items-center gap-1"
+                        >
+                          <Move className="h-4 w-4" />
+                          Verschieben
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 )}
                 
