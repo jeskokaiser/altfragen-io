@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2, Move } from 'lucide-react';
+import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2, Move, Loader2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Accordion,
@@ -19,6 +19,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import QuestionImage from './questions/QuestionImage';
 import ImageAssignment from './questions/ImageAssignment';
+import { supabase } from '@/integrations/supabase/client';
+import { showToast } from '@/utils/toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PDFQuestionReviewProps {
   questions: Question[];
@@ -44,11 +47,13 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   stats,
   isEditMode = false
 }) => {
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [batchSubject, setBatchSubject] = useState('');
   const [activeTab, setActiveTab] = useState('review');
   const [selectedTargetQuestion, setSelectedTargetQuestion] = useState<number | null>(null);
+  const [subjectList, setSubjectList] = useState('');
+  const [isAssigningSubjects, setIsAssigningSubjects] = useState(false);
   
   const currentQuestion = questions[currentIndex];
 
@@ -168,6 +173,66 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     });
     
     setQuestions(updatedQuestions);
+  };
+  
+  const handleLLMSubjectAssignment = async () => {
+    if (!subjectList.trim()) {
+      showToast.error('Fehler', {
+        description: 'Bitte gib eine Liste von Fächern ein'
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      showToast.error('Fehler', {
+        description: 'Benutzer nicht authentifiziert'
+      });
+      return;
+    }
+
+    const availableSubjects = subjectList
+      .split(',')
+      .map(subject => subject.trim())
+      .filter(subject => subject.length > 0);
+
+    if (availableSubjects.length === 0) {
+      showToast.error('Fehler', {
+        description: 'Keine gültigen Fächer gefunden'
+      });
+      return;
+    }
+
+    setIsAssigningSubjects(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('assign-subjects', {
+        body: {
+          questions: questions,
+          availableSubjects: availableSubjects,
+          userId: user.id
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.success && data.updatedQuestions) {
+        setQuestions(data.updatedQuestions);
+        showToast.success('Fächer zugewiesen', {
+          description: data.message || `${data.updatedQuestions.length} Fragen wurden erfolgreich mit Fächern versehen`
+        });
+      } else {
+        throw new Error(data.error || 'Unbekannter Fehler');
+      }
+    } catch (error: any) {
+      console.error('Error assigning subjects:', error);
+      showToast.error('Fehler beim Zuweisen der Fächer', {
+        description: error.message || 'Bitte versuche es später erneut'
+      });
+    } finally {
+      setIsAssigningSubjects(false);
+    }
   };
   
   return (
@@ -424,28 +489,55 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                     </AccordionContent>
                   </AccordionItem>
                   
-                  <AccordionItem value="batch-operations">
-                    <AccordionTrigger>Massenbearbeitung</AccordionTrigger>
+                  <AccordionItem value="ai-subject-assignment">
+                    <AccordionTrigger className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      KI-Fach-Zuweisung
+                    </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4 pt-2">
                         <p className="text-sm text-muted-foreground">
-                          Änderungen werden auf alle Fragen angewendet, wenn du auf "Anwenden" klickst.
+                          Lass eine KI automatisch passende Fächer für alle Fragen auswählen. Gib eine kommagetrennte Liste möglicher Fächer ein.
                         </p>
                         
                         <div>
-                          <Label htmlFor="batch-subject">Fach</Label>
-                          <Input
-                            id="batch-subject"
-                            value={batchSubject}
-                            onChange={(e) => setBatchSubject(e.target.value)}
-                            placeholder="Für alle Fragen setzen"
+                          <Label htmlFor="subject-list">Verfügbare Fächer (kommagetrennt)</Label>
+                          <Textarea
+                            id="subject-list"
+                            value={subjectList}
+                            onChange={(e) => setSubjectList(e.target.value)}
+                            placeholder="z.B. Anatomie, Physiologie, Biochemie, Pharmakologie"
                             className="mt-1"
+                            rows={3}
                           />
                         </div>
                         
-                        <Button onClick={applyBatchChanges} variant="outline" size="sm">
-                          Massenänderungen anwenden
+                        <Button 
+                          onClick={handleLLMSubjectAssignment}
+                          disabled={isAssigningSubjects || !subjectList.trim()}
+                          className="flex items-center gap-2"
+                        >
+                          {isAssigningSubjects ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Weise Fächer zu...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4" />
+                              Fächer automatisch zuweisen
+                            </>
+                          )}
                         </Button>
+                        
+                        {isAssigningSubjects && (
+                          <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              Die KI analysiert jede Frage und weist das passende Fach zu. Dies kann einige Minuten dauern.
+                            </AlertDescription>
+                          </Alert>
+                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
