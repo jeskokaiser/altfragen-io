@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +43,7 @@ const Dashboard = () => {
     queryKey: ['all-questions', user?.id, universityId],
     queryFn: async () => {
       if (!user) return [];
+      console.log('Fetching questions for user:', user.id, 'university:', universityId);
       return fetchAllQuestions(user.id, universityId);
     },
     enabled: !!user
@@ -127,12 +129,23 @@ const Dashboard = () => {
   }, [questions, isDatasetArchived, selectedSemester, selectedYear, user?.id]);
 
   const universityQuestions = useMemo(() => {
-    if (!questions || !universityId) return [];
+    if (!questions || !universityId) {
+      console.log('No questions or university ID, returning empty array');
+      return [];
+    }
     
-    let filtered = questions.filter(q => 
-      q.visibility === 'university' && 
-      q.university_id === universityId
-    );
+    console.log('Processing university questions. Total questions:', questions.length);
+    console.log('Looking for questions with university_id:', universityId, 'and visibility: university');
+    
+    let filtered = questions.filter(q => {
+      const matches = q.visibility === 'university' && q.university_id === universityId;
+      if (matches) {
+        console.log('Found matching university question:', q.id, q.filename, q.exam_name);
+      }
+      return matches;
+    });
+    
+    console.log('Found', filtered.length, 'university questions before semester/year filters');
     
     if (uniSelectedSemester) {
       filtered = filtered.filter(q => q.semester === uniSelectedSemester);
@@ -141,6 +154,8 @@ const Dashboard = () => {
     if (uniSelectedYear) {
       filtered = filtered.filter(q => q.year === uniSelectedYear);
     }
+    
+    console.log('Final university questions after filters:', filtered.length);
     
     return filtered;
   }, [questions, universityId, uniSelectedSemester, uniSelectedYear]);
