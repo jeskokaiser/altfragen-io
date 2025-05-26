@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
@@ -155,24 +156,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     if (selectedTargetQuestion !== null) {
       handleImageReassign(currentIndex, selectedTargetQuestion);
     }
-  };
-
-  const applyBatchChanges = () => {
-    const updatedQuestions = [...questions];
-    
-    updatedQuestions.forEach((question, index) => {
-      const updates: Partial<Question> = {};
-      
-      if (batchSubject) {
-        updates.subject = batchSubject;
-      }
-      
-      if (Object.keys(updates).length > 0) {
-        updatedQuestions[index] = { ...question, ...updates };
-      }
-    });
-    
-    setQuestions(updatedQuestions);
   };
   
   const handleLLMSubjectAssignment = async () => {
