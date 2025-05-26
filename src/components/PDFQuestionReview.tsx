@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -53,6 +53,32 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   const [activeTab, setActiveTab] = useState('review');
   
   const currentQuestion = questions[currentIndex];
+
+  // Add keyboard navigation effect
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle arrow keys when on the review tab
+      if (activeTab !== 'review') return;
+      
+      // Don't handle if user is typing in an input/textarea
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handlePrevious();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleNext();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTab, currentIndex, questions.length, validationErrors]);
   
   const updateQuestion = (index: number, updates: Partial<Question>) => {
     const updatedQuestions = [...questions];
@@ -234,6 +260,9 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                   ? `Die PDF-Datei "${filename}" wurde verarbeitet und die Fragen wurden gespeichert. Du kannst sie hier bearbeiten.`
                   : `Die PDF-Datei "${filename}" wurde verarbeitet. Bitte überprüfe die extrahierten Fragen und korrigiere sie bei Bedarf.`
                 }
+              </p>
+              <p className="text-xs text-muted-foreground">
+                💡 Tipp: Verwende die Pfeiltasten ← → um zwischen den Fragen zu navigieren
               </p>
               
               {stats && (
