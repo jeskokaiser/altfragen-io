@@ -47,8 +47,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [batchSubject, setBatchSubject] = useState('');
-  const [batchSemester, setBatchSemester] = useState('');
-  const [batchYear, setBatchYear] = useState('');
   const [activeTab, setActiveTab] = useState('review');
   const [selectedTargetQuestion, setSelectedTargetQuestion] = useState<number | null>(null);
   
@@ -162,14 +160,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       
       if (batchSubject) {
         updates.subject = batchSubject;
-      }
-      
-      if (batchSemester) {
-        updates.semester = batchSemester;
-      }
-      
-      if (batchYear) {
-        updates.year = batchYear;
       }
       
       if (Object.keys(updates).length > 0) {
@@ -442,39 +432,15 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                           Änderungen werden auf alle Fragen angewendet, wenn du auf "Anwenden" klickst.
                         </p>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <Label htmlFor="batch-subject">Fach</Label>
-                            <Input
-                              id="batch-subject"
-                              value={batchSubject}
-                              onChange={(e) => setBatchSubject(e.target.value)}
-                              placeholder="Für alle Fragen setzen"
-                              className="mt-1"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="batch-semester">Semester</Label>
-                            <Input
-                              id="batch-semester"
-                              value={batchSemester}
-                              onChange={(e) => setBatchSemester(e.target.value)}
-                              placeholder="Für alle Fragen setzen"
-                              className="mt-1"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="batch-year">Jahr</Label>
-                            <Input
-                              id="batch-year"
-                              value={batchYear}
-                              onChange={(e) => setBatchYear(e.target.value)}
-                              placeholder="Für alle Fragen setzen"
-                              className="mt-1"
-                            />
-                          </div>
+                        <div>
+                          <Label htmlFor="batch-subject">Fach</Label>
+                          <Input
+                            id="batch-subject"
+                            value={batchSubject}
+                            onChange={(e) => setBatchSubject(e.target.value)}
+                            placeholder="Für alle Fragen setzen"
+                            className="mt-1"
+                          />
                         </div>
                         
                         <Button onClick={applyBatchChanges} variant="outline" size="sm">

@@ -20,8 +20,8 @@ import PDFQuestionReview from './PDFQuestionReview';
 
 const examMetadataSchema = z.object({
   examName: z.string().min(1, "Exam name is required"),
-  examYear: z.string().regex(/^\d{4}$/, "Please enter a valid year (e.g., 2024)").optional(),
-  examSemester: z.enum(["WS", "SS"]).optional()
+  examYear: z.string().min(1, "Jahr ist erforderlich").regex(/^\d{4}$/, "Bitte gib ein gültiges Jahr ein (z.B. 2024)"),
+  examSemester: z.enum(["WS", "SS"], { required_error: "Semester ist erforderlich" })
 });
 
 type ExamMetadataFormValues = z.infer<typeof examMetadataSchema>;
@@ -525,7 +525,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       name="examName"
                       render={({ field }) => (
                         <FormItem className="relative">
-                          <FormLabel>Prüfungsname</FormLabel>
+                          <FormLabel>Prüfungsname *</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <PopoverAnchor>
@@ -574,7 +574,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       name="examSemester"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Semester (Optional)</FormLabel>
+                          <FormLabel>Semester *</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
@@ -599,7 +599,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       name="examYear"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Jahr (Optional)</FormLabel>
+                          <FormLabel>Jahr *</FormLabel>
                           <FormControl>
                             <Input type="text" placeholder="z.B. 2024" {...field} />
                           </FormControl>
@@ -625,16 +625,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                   <p className="text-sm text-muted-foreground">
                     <strong>Name:</strong> {form.getValues().examName}
                   </p>
-                  {form.getValues().examSemester && (
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Semester:</strong> {form.getValues().examSemester === 'WS' ? 'Wintersemester' : 'Sommersemester'}
-                    </p>
-                  )}
-                  {form.getValues().examYear && (
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Jahr:</strong> {form.getValues().examYear}
-                    </p>
-                  )}
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Semester:</strong> {form.getValues().examSemester === 'WS' ? 'Wintersemester' : 'Sommersemester'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Jahr:</strong> {form.getValues().examYear}
+                  </p>
                   <Button 
                     variant="ghost" 
                     size="sm" 
