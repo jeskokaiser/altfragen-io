@@ -56,7 +56,7 @@ Please respond with ONLY the exact subject name from the list above that best ma
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
+            model: 'gpt-4.1-nano',
             messages: [
               { 
                 role: 'system', 
