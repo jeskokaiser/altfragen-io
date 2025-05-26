@@ -1,224 +1,121 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Define expected types for more safety
-interface BackendStatusResponse {
-  success: boolean;
-  status: 'processing' | 'completed' | 'error' | 'failed' | 'warning';
-  message?: string;
-  questions?: any[]; 
-  data?: any;
-  error?: string;
-  details?: string;
-}
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: corsHeaders
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // For GET requests, the task_id should be in the URL query parameters
-    if (req.method !== 'GET') {
-      return new Response(JSON.stringify({
-        error: 'Method not allowed'
-      }), {
-        status: 405,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-
-    // Extract task_id from the URL query parameters
-    const url = new URL(req.url);
-    const taskId = url.searchParams.get('task_id');
+    const { taskId } = await req.json();
+    
     if (!taskId) {
-      return new Response(JSON.stringify({
-        error: 'Missing task_id parameter'
-      }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
+      return new Response(
+        JSON.stringify({ error: 'Missing taskId parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Correct backend status endpoint
-    const BASE_API_URL = 'https://api.altfragen.io';
-    const statusEndpoint = `${BASE_API_URL}/status/${taskId}`;
+    console.log(`Attempting to fetch status from: https://api.altfragen.io/status/${taskId}`);
     
-    // Add safeguard for empty or "undefined" taskId string
-    if (taskId === "undefined" || taskId.trim() === "") {
-      console.error(`Invalid task_id parameter: "${taskId}"`);
-      return new Response(JSON.stringify({
-        success: false,
-        status: 'error',
-        error: 'Invalid task_id parameter',
-        details: 'The task_id cannot be "undefined" or empty'
-      }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
+    const statusResponse = await fetch(`https://api.altfragen.io/status/${taskId}`);
+    console.log(`Status check response from https://api.altfragen.io/status/${taskId}: ${statusResponse.status}`);
     
-    console.log(`Attempting to fetch status from: ${statusEndpoint}`);
-
-    let statusData: BackendStatusResponse | null = null;
-    let statusResponse: Response | null = null;
-
-    try {
-      statusResponse = await fetch(statusEndpoint, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      console.log(`Status check response from ${statusEndpoint}:`, statusResponse.status);
-
-      if (statusResponse.ok) {
-        statusData = await statusResponse.json() as BackendStatusResponse;
-      } else {
-         // Handle non-OK responses (e.g., 404 Not Found)
-         const errorText = await statusResponse.text();
-         console.error(`Error checking ${statusEndpoint}: ${statusResponse.status} - ${errorText}`);
-         return new Response(JSON.stringify({
-            success: false,
-            status: 'error',
-            error: `Failed to check task status: ${statusResponse.status}`,
-            details: errorText
-         }), {
-            status: statusResponse.status, // Return the actual status code from backend
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json'
-            }
-         });
-      }
-    } catch (error) {
-      console.error(`Network or fetch error checking ${statusEndpoint}:`, error.message);
-      console.error('Fetch error details:', error);
-
-      // Handle fetch errors (e.g., network issues)
-       return new Response(JSON.stringify({
-         success: false,
-         status: 'error',
-         error: 'Failed to check task status',
-         details: `Network error: ${error.message}`
-       }), {
-         status: 500, 
-         headers: {
-           ...corsHeaders,
-           'Content-Type': 'application/json'
-         }
-       });
+    if (!statusResponse.ok) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to check task status',
+          status: statusResponse.status,
+          statusText: statusResponse.statusText
+        }),
+        { status: statusResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // If statusData is still null after fetch (shouldn't happen with error handling above, but as a safeguard)
-    if (!statusData) {
-       return new Response(JSON.stringify({
-         success: false,
-         status: 'error',
-         error: 'Failed to retrieve task status data after fetch attempt.',
-         details: 'Unknown error during status retrieval'
-       }), {
-         status: 500,
-         headers: {
-           ...corsHeaders,
-           'Content-Type': 'application/json'
-         }
-       });
-    }
+    const taskData = await statusResponse.json();
+    console.log('Task status data:', JSON.stringify(taskData).substring(0, 200) + '...');
 
-    console.log(`Task status data:`, JSON.stringify(statusData).substring(0, 500) + '...');
-
-    // Process the backend response and forward it appropriately
-    if (statusData.status === 'completed') {
+    // If task is completed, perform post-processing to fix university_id
+    if (taskData.success && taskData.status === 'completed') {
       console.log('Task processing completed successfully');
-      // Backend already provides the correct format, so forward it directly
-      return new Response(JSON.stringify({
-        success: statusData.success ?? false, // Forward backend 'success', default false
-        status: 'completed', // Always 'completed' here
-        message: statusData.message || (statusData.success ? 'PDF processing completed and questions saved' : 'Processing completed with issues or questions could not be saved.'),
-        data: statusData.data || {},
-        error: statusData.error // Forward any error message from backend
-      }), {
-        status: 200, // OK, as the task is completed (even if success=false)
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
+      
+      // Initialize Supabase client for post-processing
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      // Post-process questions to fix university_id assignment
+      try {
+        // Get questions that were just created (within the last few minutes) with university visibility but no university_id
+        const { data: questionsToFix, error: fetchError } = await supabase
+          .from('questions')
+          .select('id, user_id, visibility')
+          .eq('visibility', 'university')
+          .is('university_id', null)
+          .gte('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString()); // Last 10 minutes
+
+        if (fetchError) {
+          console.error('Error fetching questions to fix:', fetchError);
+        } else if (questionsToFix && questionsToFix.length > 0) {
+          console.log(`Found ${questionsToFix.length} questions to fix university_id for`);
+
+          // Process each question
+          for (const question of questionsToFix) {
+            // Get user's university_id from profiles
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('university_id')
+              .eq('id', question.user_id)
+              .single();
+
+            if (profileError) {
+              console.error(`Error fetching profile for user ${question.user_id}:`, profileError);
+              continue;
+            }
+
+            if (profile?.university_id) {
+              // Update question with correct university_id
+              const { error: updateError } = await supabase
+                .from('questions')
+                .update({ university_id: profile.university_id })
+                .eq('id', question.id);
+
+              if (updateError) {
+                console.error(`Error updating question ${question.id}:`, updateError);
+              } else {
+                console.log(`Successfully updated question ${question.id} with university_id: ${profile.university_id}`);
+              }
+            } else {
+              console.warn(`User ${question.user_id} has no university_id in profile`);
+            }
+          }
         }
-      });
-    } else if (statusData.status === 'failed' || statusData.status === 'error') {
-      // Backend reported an error -> Status 'failed'
-      return new Response(JSON.stringify({
-        success: false,
-        status: 'failed', // Standardize to 'failed'
-        error: statusData.message || statusData.error || 'PDF processing failed',
-        details: statusData.details || 'Unknown error from backend'
-      }), {
-        status: 400, // Client or server-side error from backend
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    } else if (statusData.status === 'warning') {
-       // Handle 'warning' explicitly as 'completed' with success: false
-       console.log('Task processing completed with warnings');
-       return new Response(JSON.stringify({
-         success: false, // Treat warning as not completely successful
-         status: 'completed', // Task is completed
-         message: statusData.message || 'Processing completed with warnings (e.g., no questions found).',
-         data: statusData.data || {},
-         error: 'Processing completed with warnings.' // Set an error message
-       }), {
-         status: 200, // OK, task is completed
-         headers: {
-           ...corsHeaders,
-           'Content-Type': 'application/json'
-         }
-       });
-    } else {
-      // Still processing ('processing')
-      return new Response(JSON.stringify({
-        success: true, // Request was successful, task is still running
-        status: 'processing',
-        message: statusData.message || 'PDF is still being processed'
-      }), {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-  } catch (error) {
-    console.error('Unhandled error in status function:', error);
-    return new Response(JSON.stringify({
-      success: false,
-      status: 'error',
-      error: 'Internal server error in Edge Function',
-      details: error.message
-    }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
+      } catch (postProcessError) {
+        console.error('Error during post-processing:', postProcessError);
+        // Don't fail the main response if post-processing fails
       }
-    });
+    }
+
+    return new Response(
+      JSON.stringify(taskData),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error checking PDF status:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error.message 
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });
