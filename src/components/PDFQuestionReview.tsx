@@ -32,6 +32,7 @@ interface PDFQuestionReviewProps {
     total_questions: number;
     total_images: number;
   } | null;
+  isEditMode?: boolean;
 }
 
 const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({ 
@@ -40,7 +41,8 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   onSave, 
   onCancel,
   filename,
-  stats
+  stats,
+  isEditMode = false
 }) => {
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -205,14 +207,19 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
-            <span>Überprüfe extrahierte Fragen</span>
+            <span>{isEditMode ? 'Bearbeite extrahierte Fragen' : 'Überprüfe extrahierte Fragen'}</span>
             <span className="text-sm font-normal text-muted-foreground">
               {currentIndex + 1} von {questions.length}
             </span>
           </CardTitle>
           <CardDescription>
             <div className="space-y-2">
-              <p>Die PDF-Datei "{filename}" wurde verarbeitet. Bitte überprüfe die extrahierten Fragen und korrigiere sie bei Bedarf.</p>
+              <p>
+                {isEditMode 
+                  ? `Die PDF-Datei "${filename}" wurde verarbeitet und die Fragen wurden gespeichert. Du kannst sie hier bearbeiten.`
+                  : `Die PDF-Datei "${filename}" wurde verarbeitet. Bitte überprüfe die extrahierten Fragen und korrigiere sie bei Bedarf.`
+                }
+              </p>
               
               {stats && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -472,7 +479,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
               size="sm"
               onClick={onCancel}
             >
-              Abbrechen
+              {isEditMode ? 'Fertig' : 'Abbrechen'}
             </Button>
             
             <Button
@@ -510,7 +517,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
               onClick={handleSave}
             >
               <Save className="h-4 w-4 mr-1" />
-              Alle speichern
+              {isEditMode ? 'Änderungen speichern' : 'Alle speichern'}
             </Button>
           </div>
         </CardFooter>

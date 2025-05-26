@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,7 +17,6 @@ import { showToast } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import PDFQuestionReview from './PDFQuestionReview';
-import { saveQuestions } from '@/services/DatabaseService';
 
 const examMetadataSchema = z.object({
   examName: z.string().min(1, "Exam name is required"),
@@ -199,6 +197,47 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
     }
   };
 
+  const fetchSavedQuestions = async (filename: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('filename', filename)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      return data.map(q => ({
+        id: q.id,
+        question: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        optionC: q.option_c,
+        optionD: q.option_d,
+        optionE: q.option_e,
+        subject: q.subject,
+        correctAnswer: q.correct_answer,
+        comment: q.comment,
+        filename: q.filename,
+        difficulty: q.difficulty,
+        is_unclear: q.is_unclear,
+        marked_unclear_at: q.marked_unclear_at,
+        university_id: q.university_id,
+        visibility: (q.visibility as 'private' | 'university') || 'private',
+        user_id: q.user_id,
+        semester: q.exam_semester || null,
+        year: q.exam_year || null,
+        image_key: q.image_key || null,
+        show_image_after_answer: q.show_image_after_answer || false,
+        exam_name: q.exam_name || null
+      }));
+    } catch (error) {
+      console.error('Error fetching saved questions:', error);
+      return [];
+    }
+  };
+
   const checkTaskStatus = async (taskId: string) => {
     try {
       console.log(`Checking status for task: ${taskId}`);
@@ -225,12 +264,22 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
         setUploadProgress(100);
         setIsUploading(false);
         
-        if (data.success && data.questions) {
-          setExtractedQuestions(data.questions);
-          setProcessingStats(data.data);
-          showToast.success("PDF verarbeitet", {
-            description: "Bitte überprüfe die extrahierten Fragen"
-          });
+        if (data.success && selectedFile) {
+          // Fetch the questions that were saved to the database by the API
+          const savedQuestions = await fetchSavedQuestions(selectedFile.name);
+          
+          if (savedQuestions.length > 0) {
+            setExtractedQuestions(savedQuestions);
+            setProcessingStats(data.data);
+            showToast.success("PDF verarbeitet", {
+              description: "Bitte überprüfe die extrahierten Fragen"
+            });
+          } else {
+            showToast.info("Verarbeitung abgeschlossen", { 
+              description: "Keine Fragen wurden aus der PDF-Datei extrahiert"
+            });
+            resetState();
+          }
         } else {
           const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
           showToast.info("Verarbeitung abgeschlossen", { 
@@ -363,25 +412,55 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
 
   const handleReviewSave = async (reviewedQuestions: Question[]) => {
     try {
-      const savedQuestions = await saveQuestions(reviewedQuestions, user?.id || '', universityId);
-      onQuestionsLoaded(savedQuestions);
+      // Update questions in the database instead of creating new ones
+      for (const question of reviewedQuestions) {
+        const { error } = await supabase
+          .from('questions')
+          .update({
+            question: question.question,
+            option_a: question.optionA,
+            option_b: question.optionB,
+            option_c: question.optionC,
+            option_d: question.optionD,
+            option_e: question.optionE,
+            subject: question.subject,
+            correct_answer: question.correctAnswer,
+            comment: question.comment,
+            difficulty: question.difficulty,
+            visibility: question.visibility,
+            university_id: question.visibility === 'university' ? universityId : null,
+            exam_semester: question.semester,
+            exam_year: question.year,
+            exam_name: question.exam_name
+          })
+          .eq('id', question.id);
+
+        if (error) {
+          console.error('Error updating question:', error);
+          throw error;
+        }
+      }
       
-      showToast.success(`${reviewedQuestions.length} Fragen gespeichert`, {
-        description: "Die Fragen wurden erfolgreich in der Datenbank gespeichert"
+      onQuestionsLoaded(reviewedQuestions);
+      
+      showToast.success(`${reviewedQuestions.length} Fragen aktualisiert`, {
+        description: "Die Fragen wurden erfolgreich in der Datenbank aktualisiert"
       });
       
       resetState();
     } catch (error: any) {
-      console.error('Error saving questions:', error);
-      showToast.error("Fehler beim Speichern", {
-        description: error.message || "Die Fragen konnten nicht gespeichert werden"
+      console.error('Error updating questions:', error);
+      showToast.error("Fehler beim Aktualisieren", {
+        description: error.message || "Die Fragen konnten nicht aktualisiert werden"
       });
     }
   };
 
   const handleReviewCancel = () => {
-    setExtractedQuestions(null);
-    setProcessingStats(null);
+    // Questions are already saved, just notify parent about them
+    if (extractedQuestions) {
+      onQuestionsLoaded(extractedQuestions);
+    }
     resetState();
   };
 
@@ -404,6 +483,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
           onCancel={handleReviewCancel}
           filename={selectedFile?.name || 'PDF'}
           stats={processingStats}
+          isEditMode={true}
         />
       </div>
     );
