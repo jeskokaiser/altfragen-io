@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -107,12 +108,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   };
 
   const handlePDFQuestionsLoaded = (questions: Question[]) => {
-    const questionsWithVisibility = questions.map(q => ({
-      ...q,
-      visibility
-    }));
-    
-    onQuestionsLoaded(questionsWithVisibility);
+    // PDF questions already have visibility set in the review component
+    onQuestionsLoaded(questions);
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { showToast } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import PDFQuestionReview from './PDFQuestionReview';
+import { saveQuestions } from '@/services/DatabaseService';
 
 const examMetadataSchema = z.object({
   examName: z.string().min(1, "Exam name is required"),
@@ -42,6 +45,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   const [examNameSuggestions, setExamNameSuggestions] = useState<string[]>([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [extractedQuestions, setExtractedQuestions] = useState<Question[] | null>(null);
+  const [processingStats, setProcessingStats] = useState<any>(null);
   
   const taskIdRef = useRef<string | null>(null);
   const intervalIdRef = useRef<number | null>(null);
@@ -140,6 +145,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
     setSelectedFile(null);
     setShowMetadataForm(true);
     setActiveTask(null);
+    setExtractedQuestions(null);
+    setProcessingStats(null);
     taskIdRef.current = null;
     
     if (intervalIdRef.current) {
@@ -218,12 +225,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
         setUploadProgress(100);
         setIsUploading(false);
         
-        if (data.success) {
-          const successMessage = data.message || "PDF erfolgreich verarbeitet und Fragen gespeichert.";
-          showToast.success("Verarbeitung erfolgreich", {
-            description: successMessage
+        if (data.success && data.questions) {
+          setExtractedQuestions(data.questions);
+          setProcessingStats(data.data);
+          showToast.success("PDF verarbeitet", {
+            description: "Bitte überprüfe die extrahierten Fragen"
           });
-          resetState(); 
         } else {
           const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
           showToast.info("Verarbeitung abgeschlossen", { 
@@ -354,6 +361,30 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
     }
   };
 
+  const handleReviewSave = async (reviewedQuestions: Question[]) => {
+    try {
+      const savedQuestions = await saveQuestions(reviewedQuestions, user?.id || '', universityId);
+      onQuestionsLoaded(savedQuestions);
+      
+      showToast.success(`${reviewedQuestions.length} Fragen gespeichert`, {
+        description: "Die Fragen wurden erfolgreich in der Datenbank gespeichert"
+      });
+      
+      resetState();
+    } catch (error: any) {
+      console.error('Error saving questions:', error);
+      showToast.error("Fehler beim Speichern", {
+        description: error.message || "Die Fragen konnten nicht gespeichert werden"
+      });
+    }
+  };
+
+  const handleReviewCancel = () => {
+    setExtractedQuestions(null);
+    setProcessingStats(null);
+    resetState();
+  };
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const triggerFileInput = () => {
@@ -361,6 +392,22 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
       fileInputRef.current.click();
     }
   };
+
+  // If we have extracted questions, show the review interface
+  if (extractedQuestions) {
+    return (
+      <div className="flex flex-col items-center gap-6 w-full max-w-4xl mx-auto">
+        <PDFQuestionReview
+          questions={extractedQuestions}
+          visibility={visibility}
+          onSave={handleReviewSave}
+          onCancel={handleReviewCancel}
+          filename={selectedFile?.name || 'PDF'}
+          stats={processingStats}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-4xl mx-auto">
