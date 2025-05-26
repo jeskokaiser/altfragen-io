@@ -1,4 +1,6 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,8 +35,6 @@ serve(async (req) => {
     // Set the API endpoints - updated based on actual backend behavior
     const BASE_API_URL = 'https://api.altfragen.io';
     const UPLOAD_ENDPOINT = `${BASE_API_URL}/upload`;
-    // The API appears to use /api/tasks for status checks based on logs
-    const STATUS_ENDPOINT = `${BASE_API_URL}/api/tasks`;
     
     // Convert the File to a Blob
     const arrayBuffer = await pdfFile.arrayBuffer();
@@ -60,6 +60,28 @@ serve(async (req) => {
       examSemester,
       subject
     });
+
+    // Get user's university_id from Supabase if visibility is 'university'
+    let universityId = null;
+    if (visibility === 'university' && userId) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('university_id')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+      } else if (profile?.university_id) {
+        universityId = profile.university_id;
+        console.log('Retrieved university_id:', universityId);
+      }
+    }
 
     if (examName) {
       apiFormData.append('examName', examName);
@@ -87,7 +109,13 @@ serve(async (req) => {
       apiFormData.append('visibility', visibility.toLowerCase());
     }
 
-    console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject, userId, visibility });
+    // Add university_id to the API request if available
+    if (universityId) {
+      apiFormData.append('university_id', universityId);
+      console.log('Added university_id to API request:', universityId);
+    }
+
+    console.log('Sending request to API with metadata:', { examName, examYear, examSemester, subject, userId, visibility, universityId });
     console.log('Using API endpoint:', UPLOAD_ENDPOINT);
     console.log('PDF file name:', pdfFile.name, 'size:', pdfFile.size);
 
@@ -121,9 +149,10 @@ serve(async (req) => {
     // Log the sent form data for comparison
     console.log('Form data sent to API:', {
       userId: formData.get('userId'),
-      user_id: userId, // this should be the same
+      user_id: userId,
       visibility: formData.get('visibility'),
-      visibility_lowercase: visibility?.toLowerCase()
+      visibility_lowercase: visibility?.toLowerCase(),
+      university_id: universityId
     });
     
     if (!initialData.task_id) {
