@@ -86,14 +86,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       errors.push('Frage darf nicht leer sein');
     }
     
-    if (!question.optionA || question.optionA.trim() === '') {
-      errors.push('Option A darf nicht leer sein');
-    }
-    
-    if (!question.optionB || question.optionB.trim() === '') {
-      errors.push('Option B darf nicht leer sein');
-    }
-    
     if (!question.correctAnswer || !['A', 'B', 'C', 'D', 'E'].includes(question.correctAnswer)) {
       errors.push('Eine gültige Antwort muss ausgewählt sein (A-E)');
     }
