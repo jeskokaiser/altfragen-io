@@ -95,44 +95,6 @@ export type Database = {
           },
         ]
       }
-      ai_commentaries: {
-        Row: {
-          commentary_text: string
-          created_at: string
-          id: string
-          model_name: string
-          processing_status: string | null
-          question_id: string
-          updated_at: string
-        }
-        Insert: {
-          commentary_text: string
-          created_at?: string
-          id?: string
-          model_name: string
-          processing_status?: string | null
-          question_id: string
-          updated_at?: string
-        }
-        Update: {
-          commentary_text?: string
-          created_at?: string
-          id?: string
-          model_name?: string
-          processing_status?: string | null
-          question_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_commentaries_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ai_commentary_settings: {
         Row: {
           auto_trigger_enabled: boolean | null

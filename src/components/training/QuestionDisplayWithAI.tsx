@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,7 +28,7 @@ interface QuestionDisplayWithAIProps {
   currentIndex: number;
   onNext: () => void;
   onPrevious: () => void;
-  onAnswer: (answer: string) => void;
+  onAnswer: (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => void;
   userAnswer: string;
   onQuit: () => void;
   onQuestionUpdate?: (updatedQuestion: Question) => void;
@@ -52,7 +51,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'question' | 'ai-commentary'>('question');
+  const [showAICommentary, setShowAICommentary] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -93,15 +92,15 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setCurrentQuestion(questionData);
     setIsCorrect(false);
     setWrongAnswers([]);
-    setActiveTab('question');
+    setShowAICommentary(false);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
-  const handleAnswerSubmitted = (answer: string, correct: boolean) => {
-    onAnswer(answer);
+  const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
+    onAnswer(answer, wrongAnswers.length === 0, viewedSolution || false);
     setShowFeedback(true);
     setIsCorrect(correct);
     
@@ -109,9 +108,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       setWrongAnswers(prev => [...prev, answer]);
     }
     
+    // Show AI commentary after any answer submission
+    setShowAICommentary(true);
+    
     if (correct) {
-      // Show AI commentary after correct answer
-      setActiveTab('ai-commentary');
       setTimeout(() => {
         handleNext();
       }, 3000);
@@ -123,7 +123,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setSelectedAnswer('');
     setIsCorrect(false);
     setWrongAnswers([]);
-    setActiveTab('question');
+    setShowAICommentary(false);
     onNext();
   };
 
@@ -159,60 +159,90 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
   };
 
-  const renderAICommentaryTab = () => {
+  const renderAICommentary = () => {
+    if (!showAICommentary) return null;
+
     if (aiLoading) {
       return (
-        <div className="flex items-center justify-center py-8">
-          <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-          <span>Lade KI-Kommentare...</span>
-        </div>
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-4">
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+              <span>Lade KI-Kommentare...</span>
+            </div>
+          </CardContent>
+        </Card>
       );
     }
 
     if (aiError) {
       return (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Fehler beim Laden der KI-Kommentare. Bitte versuchen Sie es später erneut.
-          </AlertDescription>
-        </Alert>
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Fehler beim Laden der KI-Kommentare. Bitte versuchen Sie es später erneut.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
       );
     }
 
     if (!aiCommentary) {
       return (
-        <div className="text-center py-8 space-y-4">
-          <Brain className="h-12 w-12 mx-auto text-gray-400" />
-          <div>
-            <p className="text-gray-600 mb-4">
-              Für diese Frage sind noch keine KI-Kommentare verfügbar.
-            </p>
-            <Button 
-              onClick={() => queueForProcessing.mutate()}
-              disabled={queueForProcessing.isPending}
-              className="flex items-center gap-2"
-            >
-              <Brain className="h-4 w-4" />
-              {queueForProcessing.isPending ? 'Wird eingeplant...' : 'KI-Analyse anfordern'}
-            </Button>
-          </div>
-        </div>
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              KI-Kommentare
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4 space-y-4">
+              <Brain className="h-12 w-12 mx-auto text-gray-400" />
+              <div>
+                <p className="text-gray-600 mb-4">
+                  Für diese Frage sind noch keine KI-Kommentare verfügbar.
+                </p>
+                <Button 
+                  onClick={() => queueForProcessing.mutate()}
+                  disabled={queueForProcessing.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <Brain className="h-4 w-4" />
+                  {queueForProcessing.isPending ? 'Wird eingeplant...' : 'KI-Analyse anfordern'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       );
     }
 
     return (
-      <AICommentaryDisplay 
-        commentaryData={aiCommentary}
-        questionData={{
-          optionA: currentQuestion.optionA,
-          optionB: currentQuestion.optionB,
-          optionC: currentQuestion.optionC,
-          optionD: currentQuestion.optionD,
-          optionE: currentQuestion.optionE,
-          correctAnswer: currentQuestion.correctAnswer
-        }}
-      />
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5" />
+            KI-Kommentare
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AICommentaryDisplay 
+            commentaryData={aiCommentary}
+            questionData={{
+              optionA: currentQuestion.optionA,
+              optionB: currentQuestion.optionB,
+              optionC: currentQuestion.optionC,
+              optionD: currentQuestion.optionD,
+              optionE: currentQuestion.optionE,
+              correctAnswer: currentQuestion.correctAnswer
+            }}
+          />
+        </CardContent>
+      </Card>
     );
   };
 
@@ -272,46 +302,32 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'question' | 'ai-commentary')}>
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="question">Frage</TabsTrigger>
-            <TabsTrigger value="ai-commentary" className="flex items-center gap-2">
-              <Brain className="h-4 w-4" />
-              KI-Kommentare
-            </TabsTrigger>
-          </TabsList>
+        <QuestionContent
+          questionData={currentQuestion}
+          selectedAnswer={selectedAnswer}
+          onAnswerChange={handleAnswerChange}
+          onConfirmAnswer={() => {}}
+          showFeedback={showFeedback}
+          wrongAnswers={wrongAnswers}
+        />
 
-          <TabsContent value="question" className="space-y-4">
-            <QuestionContent
-              questionData={currentQuestion}
-              selectedAnswer={selectedAnswer}
-              onAnswerChange={handleAnswerChange}
-              onConfirmAnswer={() => {}}
-              showFeedback={showFeedback}
-              wrongAnswers={wrongAnswers}
-            />
+        <AnswerSubmission
+          currentQuestion={currentQuestion}
+          selectedAnswer={selectedAnswer}
+          user={user}
+          onAnswerSubmitted={handleAnswerSubmitted}
+        />
 
-            <AnswerSubmission
-              currentQuestion={currentQuestion}
-              selectedAnswer={selectedAnswer}
-              user={user}
-              onAnswerSubmitted={handleAnswerSubmitted}
-            />
+        <QuestionFeedback
+          showFeedback={showFeedback}
+          userAnswer={userAnswer}
+          correctAnswer={currentQuestion.correctAnswer}
+          comment={currentQuestion.comment}
+          isCorrect={isCorrect}
+          wrongAnswers={wrongAnswers}
+        />
 
-            <QuestionFeedback
-              showFeedback={showFeedback}
-              userAnswer={userAnswer}
-              correctAnswer={currentQuestion.correctAnswer}
-              comment={currentQuestion.comment}
-              isCorrect={isCorrect}
-              wrongAnswers={wrongAnswers}
-            />
-          </TabsContent>
-
-          <TabsContent value="ai-commentary">
-            {renderAICommentaryTab()}
-          </TabsContent>
-        </Tabs>
+        {renderAICommentary()}
       </Card>
 
       <NavigationButtons
