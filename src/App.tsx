@@ -1,5 +1,9 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { UserPreferencesProvider } from './contexts/UserPreferencesContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Home from './pages/Home';
 import DashboardPage from './pages/Dashboard';
 import Training from './pages/Training';
@@ -13,26 +17,34 @@ import ExamSessionCreatePage from './pages/ExamSessionCreatePage';
 import ProfilePage from './pages/ProfilePage';
 import UniversityPage from './pages/UniversityPage';
 import Admin from './pages/Admin';
+import Settings from './pages/Settings';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/training/:filename?" element={<Training />} />
-        <Route path="/upload" element={<Upload />} />
-        <Route path="/unclear/:filename" element={<UnclearQuestions />} />
-        <Route path="/exam-session/:sessionId" element={<ExamSessionPage />} />
-        <Route path="/exam-session/:sessionId/review" element={<ExamSessionReviewPage />} />
-        <Route path="/exam-session/:sessionId/start" element={<ExamSessionStartPage />} />
-        <Route path="/exam-session/join/:inviteCode?" element={<ExamSessionJoinPage />} />
-        <Route path="/exam-session/create" element={<ExamSessionCreatePage />} />
-        <Route path="/profile/:userId?" element={<ProfilePage />} />
-        <Route path="/university/:universityId" element={<UniversityPage />} />
-        <Route path="/admin" element={<Admin />} />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <AuthProvider>
+        <UserPreferencesProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/training/:filename?" element={<Training />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/unclear/:filename" element={<UnclearQuestions />} />
+              <Route path="/exam-session/:sessionId" element={<ExamSessionPage />} />
+              <Route path="/exam-session/:sessionId/review" element={<ExamSessionReviewPage />} />
+              <Route path="/exam-session/:sessionId/start" element={<ExamSessionStartPage />} />
+              <Route path="/exam-session/join/:inviteCode?" element={<ExamSessionJoinPage />} />
+              <Route path="/exam-session/create" element={<ExamSessionCreatePage />} />
+              <Route path="/profile/:userId?" element={<ProfilePage />} />
+              <Route path="/university/:universityId" element={<UniversityPage />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </Router>
+        </UserPreferencesProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
