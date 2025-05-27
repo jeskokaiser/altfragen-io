@@ -154,7 +154,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     // 1. Feedback is visible AND
     // 2. Either immediate feedback is enabled OR the user has answered incorrectly/seen solution
     const shouldShowAICommentary = showFeedback && (
-      preferences.immediateFeedback || 
+      preferences?.immediateFeedback || 
       !isCorrect || 
       wrongAnswers.length > 0
     );
