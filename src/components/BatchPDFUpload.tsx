@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -239,13 +240,19 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <Label className="text-xs">Semester</Label>
-                          <Input
+                          <Select
                             value={fileData.semester}
-                            onChange={(e) => updateFileProperty(index, 'semester', e.target.value)}
-                            placeholder="z.B. WS23/24"
-                            className="h-8 text-xs"
+                            onValueChange={(value) => updateFileProperty(index, 'semester', value)}
                             disabled={fileData.isProcessing || isUploading}
-                          />
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Semester" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="WS">Wintersemester</SelectItem>
+                              <SelectItem value="SS">Sommersemester</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">Jahr</Label>

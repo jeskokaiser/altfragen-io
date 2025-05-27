@@ -20,7 +20,7 @@ import PDFQuestionReview from './PDFQuestionReview';
 
 const examMetadataSchema = z.object({
   examName: z.string().min(1, "Exam name is required"),
-  examYear: z.string().min(1, "Jahr ist erforderlich").regex(/^\d{4}$/, "Bitte gib ein gültiges Jahr ein (z.B. 2024)"),
+  examYear: z.string().min(1, "Jahr ist erforderlich"),
   examSemester: z.enum(["WS", "SS"], { required_error: "Semester ist erforderlich" })
 });
 
@@ -48,6 +48,10 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   
   const taskIdRef = useRef<string | null>(null);
   const intervalIdRef = useRef<number | null>(null);
+
+  // Generate years from 2010 to current year
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2009 }, (_, i) => (currentYear - i).toString());
 
   const form = useForm<ExamMetadataFormValues>({
     resolver: zodResolver(examMetadataSchema),
@@ -600,9 +604,23 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Jahr *</FormLabel>
-                          <FormControl>
-                            <Input type="text" placeholder="z.B. 2024" {...field} />
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Jahr wählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {years.map((year) => (
+                                <SelectItem key={year} value={year}>
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
