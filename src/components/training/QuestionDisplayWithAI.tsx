@@ -217,27 +217,39 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
 
     return (
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
-            KI-Kommentare
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AICommentaryDisplay 
-            commentaryData={aiCommentary}
-            questionData={{
-              optionA: currentQuestion.optionA,
-              optionB: currentQuestion.optionB,
-              optionC: currentQuestion.optionC,
-              optionD: currentQuestion.optionD,
-              optionE: currentQuestion.optionE,
-              correctAnswer: currentQuestion.correctAnswer
-            }}
-          />
-        </CardContent>
-      </Card>
+      <div className="mt-6 space-y-4">
+        {/* Navigation buttons above AI commentary */}
+        <NavigationButtons
+          onPrevious={onPrevious}
+          onNext={handleNext}
+          isFirstQuestion={currentIndex === 0}
+          isLastQuestion={currentIndex === totalQuestions - 1}
+          hasUserAnswer={!!userAnswer && isCorrect}
+          wrongAttempts={wrongAnswers.length}
+        />
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              KI-Kommentare
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AICommentaryDisplay 
+              commentaryData={aiCommentary}
+              questionData={{
+                optionA: currentQuestion.optionA,
+                optionB: currentQuestion.optionB,
+                optionC: currentQuestion.optionC,
+                optionD: currentQuestion.optionD,
+                optionE: currentQuestion.optionE,
+                correctAnswer: currentQuestion.correctAnswer
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
     );
   };
 
