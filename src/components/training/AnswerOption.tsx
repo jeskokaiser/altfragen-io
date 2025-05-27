@@ -55,8 +55,8 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({
         classes += 'bg-red-100 border border-red-300 rounded-md p-2 ';
       } else if (isCorrect && shouldHighlightCorrect) {
         classes += 'bg-green-100 border border-green-300 rounded-md p-2 ';
-      } else if (isWrong) {
-        classes += 'border border-red-200 rounded-md p-2 ';
+      } else if (isWrong && !isFirstWrong) {
+        classes += 'border border-red-600 rounded-md p-2 ';
       } else {
         classes += 'border border-gray-200 rounded-md p-2 ';
       }
