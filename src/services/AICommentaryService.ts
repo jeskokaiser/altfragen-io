@@ -14,7 +14,11 @@ export class AICommentaryService {
       return null;
     }
 
-    return data;
+    // Type cast the models_enabled from Json to the expected type
+    return {
+      ...data,
+      models_enabled: data.models_enabled as { openai: boolean; claude: boolean; gemini: boolean; }
+    };
   }
 
   static async updateSettings(settings: Partial<AICommentarySettings>): Promise<boolean> {
