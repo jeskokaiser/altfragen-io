@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
@@ -160,7 +159,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
 
   let universityQuestions: any[] = [];
   if (universityId) {
-    console.log('Fetching university questions for university ID:', universityId);
     const { data: uniQuestions, error: uniError } = await supabase
       .from('questions')
       .select('*')
@@ -169,15 +167,10 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
       .order('created_at', { ascending: false });
 
     if (uniError) {
-      console.error('Error fetching university questions:', uniError);
       throw uniError;
     }
     
-    console.log('Fetched university questions:', uniQuestions?.length || 0, 'questions');
-    console.log('University questions data:', uniQuestions);
     universityQuestions = uniQuestions || [];
-  } else {
-    console.log('No university ID provided, skipping university questions fetch');
   }
 
   const allQuestionsIds = [...personalQuestions, ...universityQuestions].map(q => q.id);
@@ -226,10 +219,6 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     show_image_after_answer: q.show_image_after_answer || false,
     exam_name: q.exam_name || null
   }));
-
-  console.log('Total questions returned:', allQuestions.length);
-  console.log('Personal questions:', personalQuestions.length);
-  console.log('University questions:', universityQuestions.length);
 
   return allQuestions;
 };
