@@ -12,14 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const AICommentaryLogs: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [modelFilter, setModelFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { data: logs, isLoading, refetch } = useQuery({
-    queryKey: ['ai-commentary-logs', searchQuery, modelFilter, statusFilter],
+    queryKey: ['ai-commentary-logs', searchQuery, statusFilter],
     queryFn: async () => {
       let query = supabase
-        .from('ai_commentaries')
+        .from('ai_answer_comments')
         .select(`
           *,
           questions!inner(
@@ -29,10 +28,6 @@ const AICommentaryLogs: React.FC = () => {
           )
         `)
         .order('created_at', { ascending: false });
-
-      if (modelFilter !== 'all') {
-        query = query.eq('model_name', modelFilter);
-      }
 
       if (statusFilter !== 'all') {
         query = query.eq('processing_status', statusFilter);
@@ -48,6 +43,33 @@ const AICommentaryLogs: React.FC = () => {
       return data || [];
     },
     refetchInterval: 30000 // Refresh every 30 seconds
+  });
+
+  // Get summary logs as well
+  const { data: summaryLogs, isLoading: summaryLoading } = useQuery({
+    queryKey: ['ai-commentary-summary-logs', searchQuery],
+    queryFn: async () => {
+      let query = supabase
+        .from('ai_commentary_summaries')
+        .select(`
+          *,
+          questions!inner(
+            question,
+            subject,
+            filename
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (searchQuery) {
+        query = query.or(`questions.question.ilike.%${searchQuery}%, questions.subject.ilike.%${searchQuery}%, questions.filename.ilike.%${searchQuery}%`);
+      }
+
+      const { data, error } = await query.limit(50);
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 30000
   });
 
   const getStatusIcon = (status: string) => {
@@ -72,16 +94,7 @@ const AICommentaryLogs: React.FC = () => {
     }
   };
 
-  const getModelColor = (model: string) => {
-    switch (model.toLowerCase()) {
-      case 'openai': return 'bg-purple-100 text-purple-800';
-      case 'claude': return 'bg-orange-100 text-orange-800';
-      case 'gemini': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  if (isLoading) {
+  if (isLoading || summaryLoading) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -95,8 +108,10 @@ const AICommentaryLogs: React.FC = () => {
     );
   }
 
-  const errorLogs = logs?.filter(log => log.processing_status === 'failed') || [];
-  const successLogs = logs?.filter(log => log.processing_status === 'completed') || [];
+  const allLogs = logs || [];
+  const allSummaries = summaryLogs || [];
+  const errorLogs = allLogs.filter(log => log.processing_status === 'failed');
+  const successLogs = allLogs.filter(log => log.processing_status === 'completed');
 
   return (
     <div className="space-y-6">
@@ -104,21 +119,21 @@ const AICommentaryLogs: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Logs</CardTitle>
+            <CardTitle className="text-sm font-medium">Answer Comments</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{logs?.length || 0}</div>
+            <div className="text-2xl font-bold">{allLogs.length}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Successful</CardTitle>
+            <CardTitle className="text-sm font-medium">Summaries</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{successLogs.length}</div>
+            <div className="text-2xl font-bold text-green-600">{allSummaries.length}</div>
           </CardContent>
         </Card>
 
@@ -137,7 +152,7 @@ const AICommentaryLogs: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Processing Logs
+            AI Commentary Logs
             <Button 
               variant="outline" 
               size="sm"
@@ -150,7 +165,7 @@ const AICommentaryLogs: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="search">Search</Label>
               <div className="relative">
@@ -163,21 +178,6 @@ const AICommentaryLogs: React.FC = () => {
                   className="pl-10"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>AI Model</Label>
-              <Select value={modelFilter} onValueChange={setModelFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Models</SelectItem>
-                  <SelectItem value="openai">OpenAI</SelectItem>
-                  <SelectItem value="claude">Claude</SelectItem>
-                  <SelectItem value="gemini">Gemini</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
@@ -198,28 +198,25 @@ const AICommentaryLogs: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Logs List */}
+      {/* Answer Comments Logs */}
       <Card>
         <CardHeader>
-          <CardTitle>Processing History ({logs?.length || 0} entries)</CardTitle>
+          <CardTitle>Answer Comments ({allLogs.length} entries)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {logs?.length ? (
-              logs.map((log) => (
+            {allLogs.length ? (
+              allLogs.map((log) => (
                 <div key={log.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        {getStatusIcon(log.processing_status)}
-                        <Badge className={getModelColor(log.model_name)}>
-                          {log.model_name}
-                        </Badge>
-                        <Badge className={getStatusColor(log.processing_status)}>
-                          {log.processing_status}
+                        {getStatusIcon(log.processing_status || 'unknown')}
+                        <Badge className={getStatusColor(log.processing_status || 'unknown')}>
+                          {log.processing_status || 'unknown'}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(log.created_at).toLocaleString()}
+                          {new Date(log.created_at || '').toLocaleString()}
                         </span>
                       </div>
                       <p className="font-medium text-sm mb-1">
@@ -233,30 +230,33 @@ const AICommentaryLogs: React.FC = () => {
                     </div>
                   </div>
 
-                  {log.commentary_text && (
+                  {(log.openai_general_comment || log.claude_general_comment || log.gemini_general_comment) && (
                     <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
-                      <strong>Commentary:</strong>
-                      <p className="mt-1 line-clamp-3">{log.commentary_text}</p>
+                      <strong>Available Comments:</strong>
+                      <div className="mt-1 space-y-1">
+                        {log.openai_general_comment && <p>• OpenAI: General comment available</p>}
+                        {log.claude_general_comment && <p>• Claude: General comment available</p>}
+                        {log.gemini_general_comment && <p>• Gemini: General comment available</p>}
+                      </div>
                     </div>
                   )}
 
                   {log.processing_status === 'failed' && (
                     <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm">
-                      <strong className="text-red-800">Error:</strong>
-                      <p className="mt-1 text-red-700">{log.commentary_text}</p>
+                      <strong className="text-red-800">Processing Failed</strong>
+                      <p className="mt-1 text-red-700">Check the processing logs for more details.</p>
                     </div>
                   )}
                 </div>
               ))
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No logs found</p>
-                {(searchQuery || modelFilter !== 'all' || statusFilter !== 'all') && (
+                <p className="text-muted-foreground">No answer comments found</p>
+                {(searchQuery || statusFilter !== 'all') && (
                   <Button 
                     variant="link" 
                     onClick={() => {
                       setSearchQuery('');
-                      setModelFilter('all');
                       setStatusFilter('all');
                     }}
                     className="mt-2"
@@ -264,6 +264,62 @@ const AICommentaryLogs: React.FC = () => {
                     Clear filters
                   </Button>
                 )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Logs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Commentary Summaries ({allSummaries.length} entries)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {allSummaries.length ? (
+              allSummaries.map((summary) => (
+                <div key={summary.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <Badge className="bg-green-100 text-green-800">
+                          Summary Available
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(summary.created_at || '').toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="font-medium text-sm mb-1">
+                        Question: {summary.questions?.question?.substring(0, 100)}...
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Subject: {summary.questions?.subject}</span>
+                        <span>•</span>
+                        <span>File: {summary.questions?.filename}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {summary.summary_general_comment && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded text-sm">
+                      <strong>General Summary:</strong>
+                      <p className="mt-1 line-clamp-3">{summary.summary_general_comment}</p>
+                    </div>
+                  )}
+
+                  {summary.model_agreement_analysis && (
+                    <div className="mt-3 p-3 bg-purple-50 rounded text-sm">
+                      <strong>Model Agreement Analysis:</strong>
+                      <p className="mt-1 line-clamp-3">{summary.model_agreement_analysis}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No summaries found</p>
               </div>
             )}
           </div>
