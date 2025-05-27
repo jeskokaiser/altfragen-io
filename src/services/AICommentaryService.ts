@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AICommentary, AICommentarySummary, AICommentarySettings } from '@/types/AICommentary';
 import { AIAnswerComments, AICommentarySummaryExtended } from '@/types/AIAnswerComments';
@@ -63,7 +62,15 @@ export class AICommentaryService {
       return null;
     }
 
-    return data;
+    // Transform the data to match the expected interface
+    if (data) {
+      return {
+        ...data,
+        summary_text: data.summary_general_comment || '' // Map the field to match interface
+      };
+    }
+
+    return null;
   }
 
   // New methods for enhanced AI commentary
