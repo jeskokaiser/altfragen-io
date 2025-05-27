@@ -549,6 +549,10 @@ export type Database = {
         Args: { session_uuid: string; user_uuid: string }
         Returns: boolean
       }
+      should_auto_trigger_ai_commentary: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
