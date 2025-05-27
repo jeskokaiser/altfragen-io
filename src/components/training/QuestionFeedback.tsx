@@ -1,6 +1,5 @@
 
 import React from 'react';
-import FeedbackDisplay from './FeedbackDisplay';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface QuestionFeedbackProps {
@@ -32,13 +31,7 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   const shouldShowFeedback = isCorrect || wrongAnswers.length >= 4;
   if (!shouldShowFeedback) return null;
 
-  return (
-    <FeedbackDisplay 
-      isCorrect={isCorrect}
-      correctAnswer={correctAnswer}
-      comment={comment}
-    />
-  );
+ 
 };
 
 export default QuestionFeedback;
