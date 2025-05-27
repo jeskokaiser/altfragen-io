@@ -60,6 +60,39 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const pollTaskStatus = async (taskId: string): Promise<Question[] | null> => {
+    const maxAttempts = 30; // 5 minutes with 10-second intervals
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      try {
+        const { data, error } = await supabase.functions.invoke('check-pdf-status', {
+          body: { task_id: taskId }
+        });
+
+        if (error) {
+          console.error('Error checking task status:', error);
+          return null;
+        }
+
+        if (data.status === 'completed' && data.questions) {
+          return data.questions;
+        } else if (data.status === 'failed') {
+          throw new Error(data.message || 'PDF processing failed');
+        }
+
+        // Wait 10 seconds before next check
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        attempts++;
+      } catch (error) {
+        console.error('Error polling task status:', error);
+        return null;
+      }
+    }
+
+    throw new Error('Processing timeout - please try again');
+  };
+
   const handleBatchUpload = async () => {
     if (!user?.id) {
       showToast.error('Fehler', {
@@ -98,25 +131,36 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           formData.append('examSemester', fileData.semester);
           formData.append('userId', user.id);
 
-          // Upload PDF and process
-          const { data, error } = await supabase.functions.invoke('process-pdf', {
+          // Upload PDF and get task ID
+          const { data: uploadData, error: uploadError } = await supabase.functions.invoke('process-pdf', {
             body: formData
           });
 
-          if (error) {
-            throw new Error(error.message || 'Fehler beim Verarbeiten der PDF');
+          if (uploadError) {
+            throw new Error(uploadError.message || 'Fehler beim Verarbeiten der PDF');
           }
 
-          if (data.success && data.questions) {
-            allQuestions = [...allQuestions, ...data.questions];
+          if (!uploadData.success || !uploadData.task_id) {
+            throw new Error(uploadData.error || 'Unbekannter Fehler beim Upload');
+          }
+
+          showToast.success(`${fileData.file.name} hochgeladen`, {
+            description: 'Verarbeitung gestartet...'
+          });
+
+          // Poll for completion
+          const questions = await pollTaskStatus(uploadData.task_id);
+          
+          if (questions && questions.length > 0) {
+            allQuestions = [...allQuestions, ...questions];
             updateFileProperty(fileIndex, 'isCompleted', true);
             updateFileProperty(fileIndex, 'isProcessing', false);
             
             showToast.success(`${fileData.file.name} verarbeitet`, {
-              description: `${data.questions.length} Fragen extrahiert`
+              description: `${questions.length} Fragen extrahiert`
             });
           } else {
-            throw new Error(data.error || 'Unbekannter Fehler');
+            throw new Error('Keine Fragen aus der PDF extrahiert');
           }
         } catch (error: any) {
           console.error(`Error processing ${fileData.file.name}:`, error);
