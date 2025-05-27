@@ -143,6 +143,7 @@ const AnswerSubmission = ({
             isCorrect={lastSubmissionCorrect || false}
             correctAnswer={currentQuestion.correctAnswer}
             comment={currentQuestion.comment}
+            questionId={currentQuestion.id}
           />
         )}
       </div>
@@ -183,6 +184,7 @@ const AnswerSubmission = ({
           isCorrect={false}
           correctAnswer={currentQuestion.correctAnswer}
           comment={currentQuestion.comment}
+          questionId={currentQuestion.id}
         />
       )}
     </div>
