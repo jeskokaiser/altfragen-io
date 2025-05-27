@@ -85,15 +85,15 @@ const ToggleInfo = styled.button`
   }
 `;
 
-const ExplanationBody = styled.div`
-  max-height: ${props => props.show ? '500px' : '0'};
+const ExplanationBody = styled.div<{ $show: boolean }>`
+  max-height: ${props => props.$show ? '500px' : '0'};
   overflow: hidden;
   transition: max-height 0.3s ease;
   background: ${props => props.theme.colors.infoBg};
   border-radius: 6px;
   margin-top: 12px;
   
-  ${props => props.show && `
+  ${props => props.$show && `
     padding: 16px;
     border: 1px solid #ccc;
   `}
@@ -179,7 +179,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             <ToggleInfo onClick={() => setShowInfo(!showInfo)}>
               ℹ {showInfo ? 'Weniger' : 'Mehr'}
             </ToggleInfo>
-            <ExplanationBody show={showInfo}>
+            <ExplanationBody $show={showInfo}>
               <div dangerouslySetInnerHTML={{ __html: explanation }} />
             </ExplanationBody>
           </>
