@@ -23,7 +23,7 @@ serve(async (req) => {
 
     // Parse the request body to get the PDF data
     const formData = await req.formData();
-    const pdfFile = formData.get('pdf');
+    const pdfFile = formData.get('file'); // Changed from 'pdf' to 'file'
 
     if (!pdfFile || !(pdfFile instanceof File)) {
       return new Response(JSON.stringify({ error: 'No PDF file provided' }), {
