@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface BatchPDFFile {
   file: File;
+  examName: string;
   semester: string;
   year: string;
   isProcessing: boolean;
@@ -49,6 +50,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
       .filter(file => file.type === 'application/pdf')
       .map(file => ({
         file,
+        examName: '',
         semester: '',
         year: '',
         isProcessing: false,
@@ -79,10 +81,10 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
       return;
     }
 
-    const validFiles = files.filter(file => file.semester && file.year);
+    const validFiles = files.filter(file => file.examName && file.semester && file.year);
     if (validFiles.length === 0) {
       showToast.error('Fehler', {
-        description: 'Bitte fülle Semester und Jahr für alle Dateien aus'
+        description: 'Bitte fülle Prüfungsname, Semester und Jahr für alle Dateien aus'
       });
       return;
     }
@@ -104,6 +106,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           const formData = new FormData();
           formData.append('file', fileData.file);
           formData.append('visibility', visibility);
+          formData.append('examName', fileData.examName);
           formData.append('semester', fileData.semester);
           formData.append('year', fileData.year);
 
@@ -150,7 +153,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
     }
   };
 
-  const canUpload = files.length > 0 && files.every(file => file.semester && file.year) && !isUploading;
+  const canUpload = files.length > 0 && files.every(file => file.examName && file.semester && file.year) && !isUploading;
 
   return (
     <Card className="w-full">
@@ -160,7 +163,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           Batch PDF Upload
         </CardTitle>
         <CardDescription>
-          Lade mehrere PDF-Dateien gleichzeitig hoch und weise jeweils Semester und Jahr zu.
+          Lade mehrere PDF-Dateien gleichzeitig hoch und weise jeweils Prüfungsname, Semester und Jahr zu.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -235,43 +238,58 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
                       </Alert>
                     )}
 
-                    {/* Semester and Year Inputs */}
+                    {/* Exam Name, Semester and Year Inputs */}
                     {!fileData.isCompleted && !fileData.error && (
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-3">
+                        {/* Exam Name */}
                         <div className="space-y-1">
-                          <Label className="text-xs">Semester</Label>
-                          <Select
-                            value={fileData.semester}
-                            onValueChange={(value) => updateFileProperty(index, 'semester', value)}
+                          <Label className="text-xs">Prüfungsname</Label>
+                          <Input
+                            value={fileData.examName}
+                            onChange={(e) => updateFileProperty(index, 'examName', e.target.value)}
+                            placeholder="z.B. Anatomie Klausur"
+                            className="h-8 text-xs"
                             disabled={fileData.isProcessing || isUploading}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Semester" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="WS">Wintersemester</SelectItem>
-                              <SelectItem value="SS">Sommersemester</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">Jahr</Label>
-                          <Select
-                            value={fileData.year}
-                            onValueChange={(value) => updateFileProperty(index, 'year', value)}
-                            disabled={fileData.isProcessing || isUploading}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Jahr wählen" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {years.map((year) => (
-                                <SelectItem key={year} value={year}>
-                                  {year}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        
+                        {/* Semester and Year */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Semester</Label>
+                            <Select
+                              value={fileData.semester}
+                              onValueChange={(value) => updateFileProperty(index, 'semester', value)}
+                              disabled={fileData.isProcessing || isUploading}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Semester" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="WS">Wintersemester</SelectItem>
+                                <SelectItem value="SS">Sommersemester</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Jahr</Label>
+                            <Select
+                              value={fileData.year}
+                              onValueChange={(value) => updateFileProperty(index, 'year', value)}
+                              disabled={fileData.isProcessing || isUploading}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Jahr wählen" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {years.map((year) => (
+                                  <SelectItem key={year} value={year}>
+                                    {year}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </div>
                     )}
