@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
 import { AICommentaryData } from '@/types/AIAnswerComments';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -53,6 +53,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const { preferences } = useUserPreferences();
 
   // Fetch AI commentary data
   const { data: aiCommentary, isLoading: aiLoading, error: aiError } = useQuery({
@@ -149,8 +150,16 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const renderAICommentary = () => {
-    // Only show AI commentary when feedback is visible
-    if (!showFeedback) return null;
+    // Show AI commentary when:
+    // 1. Feedback is visible AND
+    // 2. Either immediate feedback is enabled OR the user has answered incorrectly/seen solution
+    const shouldShowAICommentary = showFeedback && (
+      preferences.immediateFeedback || 
+      !isCorrect || 
+      wrongAnswers.length > 0
+    );
+    
+    if (!shouldShowAICommentary) return null;
 
     if (aiLoading) {
       return (
