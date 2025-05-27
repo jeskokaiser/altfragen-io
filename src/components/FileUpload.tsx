@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -7,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
-import { AlertCircle, Lock, GraduationCap, FileText, FileUp } from 'lucide-react';
+import { AlertCircle, Lock, GraduationCap, FileText, FileUp, Files } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Select,
@@ -19,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PDFUpload from './PDFUpload';
+import BatchPDFUpload from './BatchPDFUpload';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -28,7 +28,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId, universityName } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'university'>('private');
-  const [uploadType, setUploadType] = useState<'csv' | 'pdf'>('csv');
+  const [uploadType, setUploadType] = useState<'csv' | 'pdf' | 'batch-pdf'>('csv');
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -128,8 +128,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </Alert>
       )}
 
-      <Tabs defaultValue="csv" className="w-full max-w-3xl">
-        <TabsList className="grid grid-cols-2">
+      <Tabs defaultValue="csv" className="w-full max-w-4xl">
+        <TabsList className="grid grid-cols-3">
           <TabsTrigger 
             value="csv" 
             onClick={() => setUploadType('csv')}
@@ -145,6 +145,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           >
             <FileUp className="h-4 w-4" />
             PDF-Datei
+          </TabsTrigger>
+          <TabsTrigger 
+            value="batch-pdf" 
+            onClick={() => setUploadType('batch-pdf')}
+            className="flex items-center gap-2"
+          >
+            <Files className="h-4 w-4" />
+            Batch PDF
           </TabsTrigger>
         </TabsList>
         
@@ -214,6 +222,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         
         <TabsContent value="pdf">
           <PDFUpload 
+            onQuestionsLoaded={handlePDFQuestionsLoaded} 
+            visibility={visibility}
+          />
+        </TabsContent>
+
+        <TabsContent value="batch-pdf">
+          <BatchPDFUpload 
             onQuestionsLoaded={handlePDFQuestionsLoaded} 
             visibility={visibility}
           />

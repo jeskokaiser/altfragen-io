@@ -32,7 +32,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   onClearFilters,
   title = "Filter",
 }) => {
-  // Extract unique semesters and years from questions, ensuring we don't include empty values
+  // Extract unique semesters from questions, ensuring we don't include empty values
   const uniqueSemesters = Array.from(
     new Set(
       questions
@@ -41,13 +41,9 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
     )
   ).sort();
   
-  const uniqueYears = Array.from(
-    new Set(
-      questions
-        .filter(q => q.year && q.year.trim() !== '')
-        .map(q => q.year)
-    )
-  ).sort((a, b) => (b || '').localeCompare(a || '')); // Sort years in descending order
+  // Generate years from 2010 to current year
+  const currentYear = new Date().getFullYear();
+  const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) => (currentYear - i).toString());
 
   const hasFilters = !!(selectedSemester || selectedYear);
 
@@ -59,7 +55,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
             <Label htmlFor="semester-filter">Semester</Label>
             <Select
               value={selectedSemester || undefined}
-              onValueChange={(value) => onSemesterChange(value || null)}
+              onValueChange={(value) => onSemesterChange(value === 'all' ? null : value)}
             >
               <SelectTrigger id="semester-filter" className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Alle Semester" />
@@ -79,15 +75,15 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
             <Label htmlFor="year-filter">Jahr</Label>
             <Select
               value={selectedYear || undefined}
-              onValueChange={(value) => onYearChange(value || null)}
+              onValueChange={(value) => onYearChange(value === 'all' ? null : value)}
             >
               <SelectTrigger id="year-filter" className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Alle Jahre" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle Jahre</SelectItem>
-                {uniqueYears.map((year) => (
-                  <SelectItem key={year} value={year || 'unknown'}>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year}>
                     {year}
                   </SelectItem>
                 ))}
