@@ -1,11 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PDFUpload from '@/components/PDFUpload';
 import BatchPDFUpload from '@/components/BatchPDFUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Question } from '@/types/Question';
+import { toast } from 'sonner';
 
 const Upload: React.FC = () => {
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  const handleQuestionsLoaded = (loadedQuestions: Question[]) => {
+    setQuestions(prev => [...prev, ...loadedQuestions]);
+    toast.success(`${loadedQuestions.length} questions loaded successfully`);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
@@ -13,6 +22,11 @@ const Upload: React.FC = () => {
         <p className="text-muted-foreground">
           Upload PDF files or CSV datasets to add questions to your training library
         </p>
+        {questions.length > 0 && (
+          <p className="text-sm text-green-600 mt-2">
+            {questions.length} questions loaded in this session
+          </p>
+        )}
       </div>
 
       <Tabs defaultValue="single" className="space-y-6">
@@ -27,7 +41,10 @@ const Upload: React.FC = () => {
               <CardTitle>Upload Single PDF</CardTitle>
             </CardHeader>
             <CardContent>
-              <PDFUpload />
+              <PDFUpload 
+                onQuestionsLoaded={handleQuestionsLoaded}
+                visibility="private"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -38,7 +55,10 @@ const Upload: React.FC = () => {
               <CardTitle>Batch Upload</CardTitle>
             </CardHeader>
             <CardContent>
-              <BatchPDFUpload />
+              <BatchPDFUpload 
+                onQuestionsLoaded={handleQuestionsLoaded}
+                visibility="private"
+              />
             </CardContent>
           </Card>
         </TabsContent>

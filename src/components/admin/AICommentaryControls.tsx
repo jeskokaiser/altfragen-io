@@ -40,7 +40,16 @@ const AICommentaryControls = () => {
         .single();
       
       if (error) throw error;
-      return data as AICommentarySettings;
+      
+      // Parse models_enabled from JSON
+      const modelsEnabled = typeof data.models_enabled === 'string' 
+        ? JSON.parse(data.models_enabled) 
+        : data.models_enabled;
+      
+      return {
+        ...data,
+        models_enabled: modelsEnabled
+      } as AICommentarySettings;
     }
   });
 
@@ -83,7 +92,7 @@ const AICommentaryControls = () => {
   const handleSettingUpdate = (key: keyof AICommentarySettings, value: any) => {
     if (!settings) return;
     
-    const updates: Partial<AICommentarySettings> = {};
+    const updates: Record<string, any> = {};
     updates[key] = value;
     updateSettingsMutation.mutate(updates);
   };
