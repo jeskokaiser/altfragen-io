@@ -50,7 +50,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
-  const [showAICommentary, setShowAICommentary] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -91,7 +90,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setCurrentQuestion(questionData);
     setIsCorrect(false);
     setWrongAnswers([]);
-    setShowAICommentary(false);
   }, [questionData]);
 
   const handleAnswerChange = (answer: string) => {
@@ -107,9 +105,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       setWrongAnswers(prev => [...prev, answer]);
     }
     
-    // Show AI commentary after any answer submission
-    setShowAICommentary(true);
-    
     // Remove automatic navigation - let user manually proceed
   };
 
@@ -118,7 +113,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setSelectedAnswer('');
     setIsCorrect(false);
     setWrongAnswers([]);
-    setShowAICommentary(false);
     onNext();
   };
 
@@ -155,7 +149,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const renderAICommentary = () => {
-    if (!showAICommentary) return null;
+    // Only show AI commentary when feedback is visible
+    if (!showFeedback) return null;
 
     if (aiLoading) {
       return (
