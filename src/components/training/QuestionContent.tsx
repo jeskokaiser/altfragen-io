@@ -14,6 +14,7 @@ interface QuestionContentProps {
   firstWrongAnswer?: string | null;
   correctAnswer?: string;
   isCorrect?: boolean;
+  showSolution?: boolean;
 }
 
 const QuestionContent: React.FC<QuestionContentProps> = ({
@@ -26,6 +27,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   firstWrongAnswer,
   correctAnswer,
   isCorrect,
+  showSolution,
 }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
 
@@ -69,6 +71,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'a'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
+          showSolution={showSolution}
         />
         <AnswerOption 
           value="B" 
@@ -79,6 +82,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'b'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
+          showSolution={showSolution}
         />
         <AnswerOption 
           value="C" 
@@ -89,6 +93,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'c'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
+          showSolution={showSolution}
         />
         <AnswerOption 
           value="D" 
@@ -99,6 +104,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'd'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
+          showSolution={showSolution}
         />
         <AnswerOption 
           value="E" 
@@ -109,6 +115,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'e'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
+          showSolution={showSolution}
         />
       </RadioGroup>
     </div>

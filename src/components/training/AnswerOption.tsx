@@ -14,6 +14,7 @@ interface AnswerOptionProps {
   isCorrect?: boolean;
   showFeedback?: boolean;
   shouldHighlightCorrect?: boolean;
+  showSolution?: boolean;
 }
 
 const AnswerOption: React.FC<AnswerOptionProps> = ({ 
@@ -24,7 +25,8 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({
   isFirstWrong, 
   isCorrect, 
   showFeedback,
-  shouldHighlightCorrect
+  shouldHighlightCorrect,
+  showSolution
 }) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const isMobile = useIsMobile();
@@ -41,7 +43,14 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({
   const getContainerClasses = () => {
     let classes = `flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} `;
     
-    if (showFeedback) {
+    if (showSolution) {
+      // When solution is shown, color all answers appropriately
+      if (isCorrect) {
+        classes += 'bg-green-100 border border-green-300 rounded-md p-2 ';
+      } else {
+        classes += 'bg-red-100 border border-red-300 rounded-md p-2 ';
+      }
+    } else if (showFeedback) {
       if (isFirstWrong) {
         classes += 'bg-red-100 border border-red-300 rounded-md p-2 ';
       } else if (isCorrect && shouldHighlightCorrect) {

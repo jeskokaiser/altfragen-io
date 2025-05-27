@@ -54,6 +54,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
   const [firstWrongAnswer, setFirstWrongAnswer] = useState<string | null>(null);
+  const [showSolution, setShowSolution] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -94,6 +95,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setShowFeedback(false);
     setCurrentQuestion(questionData);
     setIsCorrect(false);
+    setShowSolution(false);
     
     // Initialize state from userAnswerState if it exists
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
@@ -101,6 +103,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
       setShowFeedback(true);
       setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
+      
+      // Check if solution was viewed
+      if (userAnswerState.viewedSolution) {
+        setShowSolution(true);
+      }
     } else {
       setWrongAnswers([]);
       setFirstWrongAnswer(null);
@@ -115,6 +122,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, viewedSolution || false);
     setShowFeedback(true);
     setIsCorrect(correct);
+    
+    if (viewedSolution) {
+      setShowSolution(true);
+    }
     
     if (!correct) {
       if (!firstWrongAnswer) {
@@ -312,6 +323,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           firstWrongAnswer={firstWrongAnswer}
           correctAnswer={currentQuestion.correctAnswer}
           isCorrect={isCorrect}
+          showSolution={showSolution}
         />
 
         <AnswerSubmission
