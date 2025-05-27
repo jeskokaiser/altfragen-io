@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -17,12 +18,16 @@ import { BatchPDFFile, BatchPDFUploadProps } from './batch-upload/types';
 import FileSelector from './batch-upload/FileSelector';
 import BatchFileList from './batch-upload/BatchFileList';
 import UploadButton from './batch-upload/UploadButton';
+import PDFQuestionReview from './PDFQuestionReview';
 
 const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
   const { user, universityId, universityName } = useAuth();
   const [files, setFiles] = useState<BatchPDFFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'university'>(initialVisibility);
+  const [extractedQuestions, setExtractedQuestions] = useState<Question[] | null>(null);
+  const [processingStats, setProcessingStats] = useState<any>(null);
+  const [currentFilename, setCurrentFilename] = useState<string>('');
 
   // Generate years from 2010 to current year
   const currentYear = new Date().getFullYear();
@@ -241,9 +246,18 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
       }
 
       if (allQuestions.length > 0) {
-        onQuestionsLoaded(allQuestions);
+        // Show review interface instead of immediately calling onQuestionsLoaded
+        setExtractedQuestions(allQuestions);
+        setCurrentFilename(`${validFiles.length} PDF-Dateien`);
+        setProcessingStats({
+          exam_name: 'Batch Upload',
+          images_uploaded: 0,
+          total_questions: allQuestions.length,
+          total_images: 0
+        });
+        
         showToast.success('Batch-Upload abgeschlossen', {
-          description: `Insgesamt ${allQuestions.length} Fragen aus ${validFiles.length} PDFs extrahiert`
+          description: `Insgesamt ${allQuestions.length} Fragen aus ${validFiles.length} PDFs extrahiert. Bitte überprüfe die Fragen.`
         });
       }
 
@@ -251,6 +265,85 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
       setIsUploading(false);
     }
   };
+
+  const handleReviewSave = async (reviewedQuestions: Question[]) => {
+    try {
+      // Update questions in the database
+      for (const question of reviewedQuestions) {
+        const { error } = await supabase
+          .from('questions')
+          .update({
+            question: question.question,
+            option_a: question.optionA,
+            option_b: question.optionB,
+            option_c: question.optionC,
+            option_d: question.optionD,
+            option_e: question.optionE,
+            subject: question.subject,
+            correct_answer: question.correctAnswer,
+            comment: question.comment,
+            difficulty: question.difficulty,
+            visibility: question.visibility,
+            university_id: question.visibility === 'university' ? universityId : null,
+            exam_semester: question.semester,
+            exam_year: question.year,
+            exam_name: question.exam_name
+          })
+          .eq('id', question.id);
+
+        if (error) {
+          console.error('Error updating question:', error);
+          throw error;
+        }
+      }
+      
+      onQuestionsLoaded(reviewedQuestions);
+      
+      showToast.success(`${reviewedQuestions.length} Fragen aktualisiert`, {
+        description: "Die Fragen wurden erfolgreich in der Datenbank aktualisiert"
+      });
+      
+      // Reset state
+      setExtractedQuestions(null);
+      setProcessingStats(null);
+      setCurrentFilename('');
+      setFiles([]);
+    } catch (error: any) {
+      console.error('Error updating questions:', error);
+      showToast.error("Fehler beim Aktualisieren", {
+        description: error.message || "Die Fragen konnten nicht aktualisiert werden"
+      });
+    }
+  };
+
+  const handleReviewCancel = () => {
+    // Questions are already saved, just notify parent about them
+    if (extractedQuestions) {
+      onQuestionsLoaded(extractedQuestions);
+    }
+    // Reset state
+    setExtractedQuestions(null);
+    setProcessingStats(null);
+    setCurrentFilename('');
+    setFiles([]);
+  };
+
+  // If we have extracted questions, show the review interface
+  if (extractedQuestions) {
+    return (
+      <div className="flex flex-col items-center gap-6 w-full max-w-4xl mx-auto">
+        <PDFQuestionReview
+          questions={extractedQuestions}
+          visibility={visibility}
+          onSave={handleReviewSave}
+          onCancel={handleReviewCancel}
+          filename={currentFilename}
+          stats={processingStats}
+          isEditMode={false}
+        />
+      </div>
+    );
+  }
 
   const canUpload = files.length > 0 && files.every(file => file.examName && file.semester && file.year) && !isUploading;
 
