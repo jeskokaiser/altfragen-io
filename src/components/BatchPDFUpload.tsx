@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -60,33 +59,101 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const pollTaskStatus = async (taskId: string): Promise<Question[] | null> => {
+  const fetchSavedQuestions = async (filename: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('filename', filename)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      return data.map(q => ({
+        id: q.id,
+        question: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        optionC: q.option_c,
+        optionD: q.option_d,
+        optionE: q.option_e,
+        subject: q.subject,
+        correctAnswer: q.correct_answer,
+        comment: q.comment,
+        filename: q.filename,
+        difficulty: q.difficulty,
+        is_unclear: q.is_unclear,
+        marked_unclear_at: q.marked_unclear_at,
+        university_id: q.university_id,
+        visibility: (q.visibility as 'private' | 'university') || 'private',
+        user_id: q.user_id,
+        semester: q.exam_semester || null,
+        year: q.exam_year || null,
+        image_key: q.image_key || null,
+        show_image_after_answer: q.show_image_after_answer || false,
+        exam_name: q.exam_name || null
+      }));
+    } catch (error) {
+      console.error('Error fetching saved questions:', error);
+      return [];
+    }
+  };
+
+  const checkTaskStatus = async (taskId: string) => {
+    try {
+      console.log(`Checking status for task: ${taskId}`);
+      
+      const { data, error } = await supabase.functions.invoke(`check-pdf-status?task_id=${taskId}`, {
+        method: 'GET'
+      });
+
+      if (error) {
+        console.error('Error from edge function:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('Status check response:', data);
+      return data;
+    } catch (error: any) {
+      console.error('Error checking task status:', error);
+      throw error;
+    }
+  };
+
+  const pollTaskStatus = async (taskId: string, filename: string): Promise<Question[]> => {
     const maxAttempts = 30; // 5 minutes with 10-second intervals
     let attempts = 0;
 
     while (attempts < maxAttempts) {
       try {
-        const { data, error } = await supabase.functions.invoke('check-pdf-status', {
-          body: { task_id: taskId }
-        });
+        const data = await checkTaskStatus(taskId);
 
-        if (error) {
-          console.error('Error checking task status:', error);
-          return null;
-        }
-
-        if (data.status === 'completed' && data.questions) {
-          return data.questions;
+        if (data.status === 'completed') {
+          if (data.success) {
+            // Fetch the questions that were saved to the database by the API
+            const savedQuestions = await fetchSavedQuestions(filename);
+            
+            if (savedQuestions.length > 0) {
+              return savedQuestions;
+            } else {
+              throw new Error('Keine Fragen wurden aus der PDF-Datei extrahiert');
+            }
+          } else {
+            const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
+            throw new Error(errorMessage);
+          }
         } else if (data.status === 'failed') {
-          throw new Error(data.message || 'PDF processing failed');
+          const failMessage = data.error || data.details || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen";
+          throw new Error(failMessage);
         }
 
-        // Wait 10 seconds before next check
+        // Still processing, wait and try again
         await new Promise(resolve => setTimeout(resolve, 10000));
         attempts++;
       } catch (error) {
         console.error('Error polling task status:', error);
-        return null;
+        throw error;
       }
     }
 
@@ -148,8 +215,8 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
             description: 'Verarbeitung gestartet...'
           });
 
-          // Poll for completion
-          const questions = await pollTaskStatus(uploadData.task_id);
+          // Poll for completion and fetch saved questions
+          const questions = await pollTaskStatus(uploadData.task_id, fileData.file.name);
           
           if (questions && questions.length > 0) {
             allQuestions = [...allQuestions, ...questions];
