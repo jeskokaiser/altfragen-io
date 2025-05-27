@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -107,8 +106,8 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           formData.append('file', fileData.file);
           formData.append('visibility', visibility);
           formData.append('examName', fileData.examName);
-          formData.append('semester', fileData.semester);
-          formData.append('year', fileData.year);
+          formData.append('examYear', fileData.year);
+          formData.append('examSemester', fileData.semester);
 
           // Upload PDF and process
           const { data, error } = await supabase.functions.invoke('process-pdf', {
