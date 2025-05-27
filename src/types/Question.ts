@@ -23,6 +23,9 @@ export interface Question {
   image_key?: string | null;
   show_image_after_answer?: boolean;
   exam_name?: string | null;
+  ai_commentary_status?: 'pending' | 'processing' | 'completed' | 'failed';
+  ai_commentary_queued_at?: string;
+  ai_commentary_processed_at?: string;
 }
 
 export interface PdfProcessingTask {

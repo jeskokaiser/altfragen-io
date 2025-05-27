@@ -9,6 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_answer_comments: {
+        Row: {
+          claude_comment_a: string | null
+          claude_comment_b: string | null
+          claude_comment_c: string | null
+          claude_comment_d: string | null
+          claude_comment_e: string | null
+          claude_general_comment: string | null
+          created_at: string | null
+          gemini_comment_a: string | null
+          gemini_comment_b: string | null
+          gemini_comment_c: string | null
+          gemini_comment_d: string | null
+          gemini_comment_e: string | null
+          gemini_general_comment: string | null
+          id: string
+          openai_comment_a: string | null
+          openai_comment_b: string | null
+          openai_comment_c: string | null
+          openai_comment_d: string | null
+          openai_comment_e: string | null
+          openai_general_comment: string | null
+          processing_status: string | null
+          question_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          claude_comment_a?: string | null
+          claude_comment_b?: string | null
+          claude_comment_c?: string | null
+          claude_comment_d?: string | null
+          claude_comment_e?: string | null
+          claude_general_comment?: string | null
+          created_at?: string | null
+          gemini_comment_a?: string | null
+          gemini_comment_b?: string | null
+          gemini_comment_c?: string | null
+          gemini_comment_d?: string | null
+          gemini_comment_e?: string | null
+          gemini_general_comment?: string | null
+          id?: string
+          openai_comment_a?: string | null
+          openai_comment_b?: string | null
+          openai_comment_c?: string | null
+          openai_comment_d?: string | null
+          openai_comment_e?: string | null
+          openai_general_comment?: string | null
+          processing_status?: string | null
+          question_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          claude_comment_a?: string | null
+          claude_comment_b?: string | null
+          claude_comment_c?: string | null
+          claude_comment_d?: string | null
+          claude_comment_e?: string | null
+          claude_general_comment?: string | null
+          created_at?: string | null
+          gemini_comment_a?: string | null
+          gemini_comment_b?: string | null
+          gemini_comment_c?: string | null
+          gemini_comment_d?: string | null
+          gemini_comment_e?: string | null
+          gemini_general_comment?: string | null
+          id?: string
+          openai_comment_a?: string | null
+          openai_comment_b?: string | null
+          openai_comment_c?: string | null
+          openai_comment_d?: string | null
+          openai_comment_e?: string | null
+          openai_general_comment?: string | null
+          processing_status?: string | null
+          question_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_answer_comments_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_commentaries: {
         Row: {
           commentary_text: string
@@ -85,25 +171,43 @@ export type Database = {
       }
       ai_commentary_summaries: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
-          question_id: string
-          summary_text: string
-          updated_at: string
+          model_agreement_analysis: string | null
+          question_id: string | null
+          summary_comment_a: string | null
+          summary_comment_b: string | null
+          summary_comment_c: string | null
+          summary_comment_d: string | null
+          summary_comment_e: string | null
+          summary_general_comment: string | null
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
-          question_id: string
-          summary_text: string
-          updated_at?: string
+          model_agreement_analysis?: string | null
+          question_id?: string | null
+          summary_comment_a?: string | null
+          summary_comment_b?: string | null
+          summary_comment_c?: string | null
+          summary_comment_d?: string | null
+          summary_comment_e?: string | null
+          summary_general_comment?: string | null
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
-          question_id?: string
-          summary_text?: string
-          updated_at?: string
+          model_agreement_analysis?: string | null
+          question_id?: string | null
+          summary_comment_a?: string | null
+          summary_comment_b?: string | null
+          summary_comment_c?: string | null
+          summary_comment_d?: string | null
+          summary_comment_e?: string | null
+          summary_general_comment?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {

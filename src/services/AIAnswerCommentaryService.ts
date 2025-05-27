@@ -5,9 +5,9 @@ import { AIAnswerComments, AICommentarySummaryExtended, AICommentaryData } from 
 export class AIAnswerCommentaryService {
   static async getCommentaryForQuestion(questionId: string): Promise<AICommentaryData | null> {
     try {
-      // Fetch answer comments
+      // Fetch answer comments with type assertion since the table exists but types aren't updated
       const { data: answerComments, error: answerError } = await supabase
-        .from('ai_answer_comments')
+        .from('ai_answer_comments' as any)
         .select('*')
         .eq('question_id', questionId)
         .maybeSingle();
@@ -109,7 +109,7 @@ export class AIAnswerCommentaryService {
         .eq('ai_commentary_status', 'completed');
 
       const { data: commentedQuestions, error: commentedError } = await supabase
-        .from('ai_answer_comments')
+        .from('ai_answer_comments' as any)
         .select('question_id', { count: 'exact' });
 
       if (totalError || pendingError || processedError || commentedError) {

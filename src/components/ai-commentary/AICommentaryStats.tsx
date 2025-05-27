@@ -34,19 +34,19 @@ const AICommentaryStats: React.FC = () => {
   const { data: modelStats, isLoading: modelStatsLoading } = useQuery({
     queryKey: ['ai-commentary-model-stats'],
     queryFn: async () => {
-      // Count questions with different types of comments
+      // Count questions with different types of comments using type assertion
       const { data: openaiComments, error: openaiError } = await supabase
-        .from('ai_answer_comments')
+        .from('ai_answer_comments' as any)
         .select('id', { count: 'exact' })
         .not('openai_general_comment', 'is', null);
 
       const { data: claudeComments, error: claudeError } = await supabase
-        .from('ai_answer_comments')
+        .from('ai_answer_comments' as any)
         .select('id', { count: 'exact' })
         .not('claude_general_comment', 'is', null);
 
       const { data: geminiComments, error: geminiError } = await supabase
-        .from('ai_answer_comments')
+        .from('ai_answer_comments' as any)
         .select('id', { count: 'exact' })
         .not('gemini_general_comment', 'is', null);
 
