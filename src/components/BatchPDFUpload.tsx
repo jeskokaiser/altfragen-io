@@ -1,20 +1,29 @@
 
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { showToast } from '@/utils/toast';
 import { Question } from '@/types/Question';
-import { FileUp } from 'lucide-react';
+import { FileUp, Lock, GraduationCap } from 'lucide-react';
 import { BatchPDFFile, BatchPDFUploadProps } from './batch-upload/types';
 import FileSelector from './batch-upload/FileSelector';
 import BatchFileList from './batch-upload/BatchFileList';
 import UploadButton from './batch-upload/UploadButton';
 
-const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visibility }) => {
-  const { user } = useAuth();
+const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
+  const { user, universityId, universityName } = useAuth();
   const [files, setFiles] = useState<BatchPDFFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [visibility, setVisibility] = useState<'private' | 'university'>(initialVisibility);
 
   // Generate years from 2010 to current year
   const currentYear = new Date().getFullYear();
@@ -87,6 +96,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           formData.append('examName', fileData.examName);
           formData.append('examYear', fileData.year);
           formData.append('examSemester', fileData.semester);
+          formData.append('userId', user.id);
 
           // Upload PDF and process
           const { data, error } = await supabase.functions.invoke('process-pdf', {
@@ -133,6 +143,13 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
 
   const canUpload = files.length > 0 && files.every(file => file.examName && file.semester && file.year) && !isUploading;
 
+  const getUniversityContextMessage = () => {
+    if (!universityId) {
+      return "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.";
+    }
+    return `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.`;
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -143,8 +160,37 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
         <CardDescription>
           Lade mehrere PDF-Dateien gleichzeitig hoch und weise jeweils Prüfungsname, Semester und Jahr zu.
         </CardDescription>
+        <div className="text-sm text-muted-foreground">
+          {getUniversityContextMessage()}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label>Sichtbarkeit der Fragen</Label>
+          <Select 
+            value={visibility} 
+            onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sichtbarkeit wählen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="private">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  <span>Privat (nur für dich)</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="university" disabled={!universityId}>
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Universität (alle an deiner Uni)</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <FileSelector 
           onFileSelect={handleFileSelect}
           isUploading={isUploading}

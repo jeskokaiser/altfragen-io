@@ -1,4 +1,6 @@
 
+import { Question } from '@/types/Question';
+
 export interface BatchPDFFile {
   file: File;
   examName: string;
