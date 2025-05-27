@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -218,18 +217,20 @@ const Dashboard = () => {
     return grouped;
   }, [universityQuestions]);
 
-  const selectedUniversityDatasetsForDisplay = useMemo(() => {
+  // Show filtered university datasets only if specific datasets are selected
+  const displayedUniversityDatasets = useMemo(() => {
     if (selectedUniversityDatasets.length === 0) {
-      return {};
+      // Show all university datasets when none are specifically selected
+      return groupedUniversityQuestions;
     }
     
+    // Show only selected datasets
     return Object.entries(groupedUniversityQuestions)
       .filter(([key]) => selectedUniversityDatasets.includes(key))
       .reduce((acc, [key, questions]) => {
         acc[key] = questions;
         return acc;
       }, {} as Record<string, Question[]>);
-      
   }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
   const handleDatasetClick = (filename: string) => {
@@ -444,41 +445,20 @@ const Dashboard = () => {
           
           {hasUniversityQuestions ? (
             <>
-              {selectedUniversityDatasets.length > 0 ? (
-                <div className="space-y-4">
-                  <SelectedDatasetsDisplay 
-                    groupedQuestions={groupedUniversityQuestions}
-                    selectedDatasets={selectedUniversityDatasets}
-                    onRemoveDataset={handleRemoveDataset}
-                    onClearAll={handleClearAllSelectedDatasets}
-                  />
-                  <DatasetList
-                    groupedQuestions={selectedUniversityDatasetsForDisplay}
-                    selectedFilename={selectedFilename}
-                    onDatasetClick={handleDatasetClick}
-                    onStartTraining={handleStartTraining}
-                  />
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                    <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-                      Keine Datensätze ausgewählt
-                    </p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Klicke auf "Datensätze auswählen" um Datensätze auszuwählen
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleOpenDatasetSelector}
-                      className="flex items-center gap-2"
-                    >
-                      <ListPlus className="h-4 w-4" />
-                      Datensätze auswählen
-                    </Button>
-                  </CardContent>
-                </Card>
+              {selectedUniversityDatasets.length > 0 && (
+                <SelectedDatasetsDisplay 
+                  groupedQuestions={groupedUniversityQuestions}
+                  selectedDatasets={selectedUniversityDatasets}
+                  onRemoveDataset={handleRemoveDataset}
+                  onClearAll={handleClearAllSelectedDatasets}
+                />
               )}
+              <DatasetList
+                groupedQuestions={displayedUniversityDatasets}
+                selectedFilename={selectedFilename}
+                onDatasetClick={handleDatasetClick}
+                onStartTraining={handleStartTraining}
+              />
             </>
           ) : (
             <Card>
