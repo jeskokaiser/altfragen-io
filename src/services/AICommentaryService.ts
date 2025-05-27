@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { AICommentary, AICommentarySummary, AICommentarySettings } from '@/types/AICommentary';
 import { AIAnswerComments, AICommentarySummaryExtended } from '@/types/AIAnswerComments';
@@ -35,21 +36,6 @@ export class AICommentaryService {
     return true;
   }
 
-  static async getCommentariesForQuestion(questionId: string): Promise<AICommentary[]> {
-    const { data, error } = await supabase
-      .from('ai_commentaries')
-      .select('*')
-      .eq('question_id', questionId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching AI commentaries:', error);
-      return [];
-    }
-
-    return data || [];
-  }
-
   static async getSummaryForQuestion(questionId: string): Promise<AICommentarySummary | null> {
     const { data, error } = await supabase
       .from('ai_commentary_summaries')
@@ -74,7 +60,7 @@ export class AICommentaryService {
   }
 
   // New methods for enhanced AI commentary
-  static async getAnswerCommentsForQuestion(questionId: string): Promise<AIAnswerComments | null> {
+  static async getCommentaryForQuestion(questionId: string): Promise<AIAnswerComments | null> {
     const { data, error } = await supabase
       .from('ai_answer_comments')
       .select('*')
@@ -138,28 +124,6 @@ export class AICommentaryService {
 
     if (error) {
       console.error('Error updating question commentary status:', error);
-      return false;
-    }
-
-    return true;
-  }
-
-  static async addCommentary(
-    questionId: string,
-    modelName: string,
-    commentaryText: string
-  ): Promise<boolean> {
-    const { error } = await supabase
-      .from('ai_commentaries')
-      .insert({
-        question_id: questionId,
-        model_name: modelName,
-        commentary_text: commentaryText,
-        processing_status: 'completed'
-      });
-
-    if (error) {
-      console.error('Error adding AI commentary:', error);
       return false;
     }
 

@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,11 +110,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     // Show AI commentary after any answer submission
     setShowAICommentary(true);
     
-    if (correct) {
-      setTimeout(() => {
-        handleNext();
-      }, 3000);
-    }
+    // Remove automatic navigation - let user manually proceed
   };
 
   const handleNext = () => {
@@ -246,25 +241,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     );
   };
 
-  const getAIStatusBadge = () => {
-    if (aiCommentary) {
-      return (
-        <Badge variant="secondary" className="bg-green-100 text-green-800">
-          <Brain className="h-3 w-3 mr-1" />
-          KI-Kommentare verfügbar
-        </Badge>
-      );
-    } else if (currentQuestion.ai_commentary_status === 'pending') {
-      return (
-        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-          <RefreshCw className="h-3 w-3 mr-1" />
-          In Verarbeitung
-        </Badge>
-      );
-    }
-    return null;
-  };
-
   if (!currentQuestion) {
     return <div>Loading question...</div>;
   }
@@ -287,7 +263,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
             />
           </div>
           <div className="flex justify-end gap-2">
-            {getAIStatusBadge()}
             <Button
               variant="outline"
               size={isMobile ? "sm" : "default"}
