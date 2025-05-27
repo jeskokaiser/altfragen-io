@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
@@ -164,6 +165,7 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
       .select('*')
       .eq('university_id', universityId)
       .eq('visibility', 'university')
+      .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
       .order('created_at', { ascending: false });
 
     if (uniError) {
