@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import QuestionCard from '../training/QuestionCard';
+import { RadioGroup } from "@/components/ui/radio-group";
+import AnswerOption from '../training/AnswerOption';
 import { Question } from '@/types/Question';
 
 interface QuestionContentProps {
@@ -20,32 +21,41 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   showFeedback,
   wrongAnswers = [],
 }) => {
+  const [resetTrigger, setResetTrigger] = useState(0);
+
+  useEffect(() => {
+    setResetTrigger(prev => prev + 1);
+  }, [questionData]);
+
+  const highlightNicht = (text: string) => {
+    return text.split(/(nicht|falsch|keiner|keinen|keine|kein|wenigsten)/i).map((part, index) =>
+      ['nicht', 'falsch', 'keiner','keinen', 'keine', 'kein', 'wenigsten'].includes(part.toLowerCase()) ? (
+        <u key={index}>{part}</u>
+      ) : (
+        part
+      )
+    );
+  };
+
   if (!questionData) {
     return <div>Loading question...</div>;
   }
 
-  const answers = [
-    { key: 'A', text: questionData.optionA },
-    { key: 'B', text: questionData.optionB },
-    { key: 'C', text: questionData.optionC },
-    { key: 'D', text: questionData.optionD },
-    { key: 'E', text: questionData.optionE },
-  ];
-
-  const handleAnswerSelect = (key: string, isCorrect: boolean) => {
-    onAnswerChange(key);
-  };
-
   return (
-    <QuestionCard
-      question={questionData.question}
-      answers={answers}
-      correctKey={questionData.correctAnswer}
-      explanation={questionData.comment}
-      onAnswerSelect={handleAnswerSelect}
-      selectedAnswer={selectedAnswer}
-      wrongAnswers={wrongAnswers}
-    />
+    <div className="space-y-4">
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-white">
+          {highlightNicht(questionData.question)}
+        </h3>    
+      </div>
+      <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
+        <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('A')} />
+        <AnswerOption value="B" text={questionData.optionB} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('B')} />
+        <AnswerOption value="C" text={questionData.optionC} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('C')} />
+        <AnswerOption value="D" text={questionData.optionD} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('D')} />
+        <AnswerOption value="E" text={questionData.optionE} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('E')} />
+      </RadioGroup>
+    </div>
   );
 };
 
