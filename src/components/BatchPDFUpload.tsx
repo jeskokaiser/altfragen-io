@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -168,14 +167,17 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
         <div className="space-y-2">
           <Label>PDF-Dateien auswählen</Label>
           <div className="flex justify-center">
-            <label htmlFor="batch-pdf-upload">
+            <label htmlFor="batch-pdf-upload" className="cursor-pointer">
               <Button 
                 variant="outline" 
                 className="cursor-pointer"
                 disabled={isUploading}
+                asChild
               >
-                <FileUp className="h-4 w-4 mr-2" />
-                PDFs auswählen
+                <span>
+                  <FileUp className="h-4 w-4 mr-2" />
+                  PDFs auswählen
+                </span>
               </Button>
             </label>
             <input
