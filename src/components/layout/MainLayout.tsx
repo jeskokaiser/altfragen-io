@@ -16,6 +16,7 @@ import ArchivedDatasets from '@/pages/ArchivedDatasets';
 import CollabSessions from '@/pages/CollabSessions';
 import CreateSession from '@/pages/CreateSession';
 import SessionDetails from '@/pages/SessionDetails';
+import AICommentaryAdmin from '@/pages/AICommentaryAdmin';
 import Footer from '@/components/Footer';
 
 const MainLayout = () => {
@@ -45,6 +46,7 @@ const MainLayout = () => {
           <Route path="/collab" element={<CollabSessions />} />
           <Route path="/collab/create" element={<CreateSession />} />
           <Route path="/collab-session/:sessionId" element={<SessionDetails />} />
+          <Route path="/admin/ai-commentary" element={<AICommentaryAdmin />} />
           {/* Catch all other routes and redirect to index */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
