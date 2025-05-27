@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question } from '@/types/Question';
@@ -134,6 +133,7 @@ const Training = () => {
         onPrevious={handlePrevious}
         onAnswer={handleAnswer}
         userAnswer={userAnswers[currentQuestionIndex]?.value || ''}
+        userAnswerState={userAnswers[currentQuestionIndex]}
         onQuit={handleQuit}
         onQuestionUpdate={handleQuestionUpdate}
       />

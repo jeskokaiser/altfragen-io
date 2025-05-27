@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Question } from '@/types/Question';
+import { AnswerState } from '@/types/Answer';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './QuestionHeader';
 import QuestionContent from './QuestionContent';
@@ -29,6 +30,7 @@ interface QuestionDisplayWithAIProps {
   onPrevious: () => void;
   onAnswer: (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => void;
   userAnswer: string;
+  userAnswerState?: AnswerState;
   onQuit: () => void;
   onQuestionUpdate?: (updatedQuestion: Question) => void;
 }
@@ -41,6 +43,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   onPrevious,
   onAnswer,
   userAnswer,
+  userAnswerState,
   onQuit,
   onQuestionUpdate,
 }) => {
@@ -50,6 +53,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
+  const [firstWrongAnswer, setFirstWrongAnswer] = useState<string | null>(null);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -90,19 +94,32 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setShowFeedback(false);
     setCurrentQuestion(questionData);
     setIsCorrect(false);
-    setWrongAnswers([]);
-  }, [questionData]);
+    
+    // Initialize state from userAnswerState if it exists
+    if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
+      setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt !== questionData.correctAnswer));
+      setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt !== questionData.correctAnswer) || null);
+      setShowFeedback(true);
+      setIsCorrect(userAnswerState.value === questionData.correctAnswer);
+    } else {
+      setWrongAnswers([]);
+      setFirstWrongAnswer(null);
+    }
+  }, [questionData, userAnswerState]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
   const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
-    onAnswer(answer, wrongAnswers.length === 0, viewedSolution || false);
+    onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, viewedSolution || false);
     setShowFeedback(true);
     setIsCorrect(correct);
     
     if (!correct) {
+      if (!firstWrongAnswer) {
+        setFirstWrongAnswer(answer);
+      }
       setWrongAnswers(prev => [...prev, answer]);
     }
     
@@ -114,6 +131,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setSelectedAnswer('');
     setIsCorrect(false);
     setWrongAnswers([]);
+    setFirstWrongAnswer(null);
     onNext();
   };
 
@@ -156,7 +174,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     const shouldShowAICommentary = showFeedback && (
       preferences?.immediateFeedback || 
       !isCorrect || 
-      wrongAnswers.length > 0
+      wrongAnswers.length > 0 ||
+      !!firstWrongAnswer
     );
     
     if (!shouldShowAICommentary) return null;
@@ -222,16 +241,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
     return (
       <div className="mt-6 space-y-4">
-        {/* Navigation buttons above AI commentary */}
-        <NavigationButtons
-          onPrevious={onPrevious}
-          onNext={handleNext}
-          isFirstQuestion={currentIndex === 0}
-          isLastQuestion={currentIndex === totalQuestions - 1}
-          hasUserAnswer={!!userAnswer && isCorrect}
-          wrongAttempts={wrongAnswers.length}
-        />
-        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -300,6 +309,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           onConfirmAnswer={() => {}}
           showFeedback={showFeedback}
           wrongAnswers={wrongAnswers}
+          firstWrongAnswer={firstWrongAnswer}
+          correctAnswer={currentQuestion.correctAnswer}
+          isCorrect={isCorrect}
         />
 
         <AnswerSubmission

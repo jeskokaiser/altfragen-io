@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from './AnswerOption';
@@ -11,6 +10,9 @@ interface QuestionContentProps {
   onConfirmAnswer: () => void;
   showFeedback: boolean;
   wrongAnswers?: string[];
+  firstWrongAnswer?: string | null;
+  correctAnswer?: string;
+  isCorrect?: boolean;
 }
 
 const QuestionContent: React.FC<QuestionContentProps> = ({
@@ -20,6 +22,9 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   onConfirmAnswer,
   showFeedback,
   wrongAnswers = [],
+  firstWrongAnswer,
+  correctAnswer,
+  isCorrect,
 }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
 
@@ -49,11 +54,51 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
         </h3>
       </div>
       <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
-        <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('A')} />
-        <AnswerOption value="B" text={questionData.optionB} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('B')} />
-        <AnswerOption value="C" text={questionData.optionC} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('C')} />
-        <AnswerOption value="D" text={questionData.optionD} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('D')} />
-        <AnswerOption value="E" text={questionData.optionE} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('E')} />
+        <AnswerOption 
+          value="A" 
+          text={questionData.optionA} 
+          resetTrigger={resetTrigger} 
+          isWrong={wrongAnswers.includes('A')}
+          isFirstWrong={firstWrongAnswer === 'A'}
+          isCorrect={showFeedback && correctAnswer === 'A'}
+          showFeedback={showFeedback}
+        />
+        <AnswerOption 
+          value="B" 
+          text={questionData.optionB} 
+          resetTrigger={resetTrigger} 
+          isWrong={wrongAnswers.includes('B')}
+          isFirstWrong={firstWrongAnswer === 'B'}
+          isCorrect={showFeedback && correctAnswer === 'B'}
+          showFeedback={showFeedback}
+        />
+        <AnswerOption 
+          value="C" 
+          text={questionData.optionC} 
+          resetTrigger={resetTrigger} 
+          isWrong={wrongAnswers.includes('C')}
+          isFirstWrong={firstWrongAnswer === 'C'}
+          isCorrect={showFeedback && correctAnswer === 'C'}
+          showFeedback={showFeedback}
+        />
+        <AnswerOption 
+          value="D" 
+          text={questionData.optionD} 
+          resetTrigger={resetTrigger} 
+          isWrong={wrongAnswers.includes('D')}
+          isFirstWrong={firstWrongAnswer === 'D'}
+          isCorrect={showFeedback && correctAnswer === 'D'}
+          showFeedback={showFeedback}
+        />
+        <AnswerOption 
+          value="E" 
+          text={questionData.optionE} 
+          resetTrigger={resetTrigger} 
+          isWrong={wrongAnswers.includes('E')}
+          isFirstWrong={firstWrongAnswer === 'E'}
+          isCorrect={showFeedback && correctAnswer === 'E'}
+          showFeedback={showFeedback}
+        />
       </RadioGroup>
     </div>
   );

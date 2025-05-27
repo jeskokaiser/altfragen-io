@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -10,9 +9,12 @@ interface AnswerOptionProps {
   text: string;
   resetTrigger?: number;
   isWrong?: boolean;
+  isFirstWrong?: boolean;
+  isCorrect?: boolean;
+  showFeedback?: boolean;
 }
 
-const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, isWrong }) => {
+const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, isWrong, isFirstWrong, isCorrect, showFeedback }) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const isMobile = useIsMobile();
 
@@ -25,10 +27,26 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
     setIsStrikethrough(!isStrikethrough);
   };
 
+  const getContainerClasses = () => {
+    let classes = `flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} `;
+    
+    if (showFeedback) {
+      if (isFirstWrong) {
+        classes += 'bg-red-100 border border-red-300 rounded-md p-2 ';
+      } else if (isCorrect) {
+        classes += 'bg-green-100 border border-green-300 rounded-md p-2 ';
+      } else if (isWrong) {
+        classes += 'border border-red-200 rounded-md p-2 ';
+      } else {
+        classes += 'border border-gray-200 rounded-md p-2 ';
+      }
+    }
+    
+    return classes;
+  };
+
   return (
-    <div className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} ${
-      isWrong ? 'border border-[#ea384c] rounded-md p-2' : ''
-    }`}>
+    <div className={getContainerClasses()}>
       <RadioGroupItem value={value} id={value} />
       <Label htmlFor={value} className="flex items-center flex-1">
         <span className="font-semibold mr-2">{value})</span>
