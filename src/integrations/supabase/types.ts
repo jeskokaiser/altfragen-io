@@ -9,112 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      ai_commentaries: {
-        Row: {
-          commentary_text: string
-          created_at: string
-          id: string
-          model_name: string
-          processing_status: string | null
-          question_id: string
-          updated_at: string
-        }
-        Insert: {
-          commentary_text: string
-          created_at?: string
-          id?: string
-          model_name: string
-          processing_status?: string | null
-          question_id: string
-          updated_at?: string
-        }
-        Update: {
-          commentary_text?: string
-          created_at?: string
-          id?: string
-          model_name?: string
-          processing_status?: string | null
-          question_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_commentaries_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_commentary_settings: {
-        Row: {
-          auto_trigger_enabled: boolean | null
-          batch_size: number | null
-          created_at: string
-          feature_enabled: boolean | null
-          id: string
-          models_enabled: Json | null
-          processing_delay_minutes: number | null
-          rate_limit_per_user_per_day: number | null
-          updated_at: string
-        }
-        Insert: {
-          auto_trigger_enabled?: boolean | null
-          batch_size?: number | null
-          created_at?: string
-          feature_enabled?: boolean | null
-          id?: string
-          models_enabled?: Json | null
-          processing_delay_minutes?: number | null
-          rate_limit_per_user_per_day?: number | null
-          updated_at?: string
-        }
-        Update: {
-          auto_trigger_enabled?: boolean | null
-          batch_size?: number | null
-          created_at?: string
-          feature_enabled?: boolean | null
-          id?: string
-          models_enabled?: Json | null
-          processing_delay_minutes?: number | null
-          rate_limit_per_user_per_day?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      ai_commentary_summaries: {
-        Row: {
-          created_at: string
-          id: string
-          question_id: string
-          summary_text: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          question_id: string
-          summary_text: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          question_id?: string
-          summary_text?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_commentary_summaries_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       draft_questions: {
         Row: {
           comment: string | null
@@ -232,27 +126,21 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
-          is_admin: boolean | null
           is_email_verified: boolean | null
-          is_premium: boolean | null
           university_id: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
           id: string
-          is_admin?: boolean | null
           is_email_verified?: boolean | null
-          is_premium?: boolean | null
           university_id?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
-          is_admin?: boolean | null
           is_email_verified?: boolean | null
-          is_premium?: boolean | null
           university_id?: string | null
         }
         Relationships: [
@@ -267,9 +155,6 @@ export type Database = {
       }
       questions: {
         Row: {
-          ai_commentary_processed_at: string | null
-          ai_commentary_queued_at: string | null
-          ai_commentary_status: string | null
           comment: string | null
           correct_answer: string
           created_at: string
@@ -295,9 +180,6 @@ export type Database = {
           visibility: string | null
         }
         Insert: {
-          ai_commentary_processed_at?: string | null
-          ai_commentary_queued_at?: string | null
-          ai_commentary_status?: string | null
           comment?: string | null
           correct_answer: string
           created_at?: string
@@ -323,9 +205,6 @@ export type Database = {
           visibility?: string | null
         }
         Update: {
-          ai_commentary_processed_at?: string | null
-          ai_commentary_queued_at?: string | null
-          ai_commentary_status?: string | null
           comment?: string | null
           correct_answer?: string
           created_at?: string

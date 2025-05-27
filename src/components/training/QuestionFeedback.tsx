@@ -10,7 +10,6 @@ interface QuestionFeedbackProps {
   comment?: string;
   isCorrect: boolean;
   wrongAnswers: string[];
-  questionId?: string;
 }
 
 const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
@@ -20,7 +19,6 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   comment,
   isCorrect,
   wrongAnswers,
-  questionId,
 }) => {
   const { preferences } = useUserPreferences();
   
@@ -35,7 +33,6 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
       isCorrect={isCorrect}
       correctAnswer={correctAnswer}
       comment={comment}
-      questionId={questionId}
     />
   );
 };

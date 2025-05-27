@@ -49,21 +49,9 @@ serve(async (req) => {
       // Process each question in the current batch
       for (const question of batch) {
         try {
-          // Build complete question text with all answer options
-          const fullQuestionText = `Question: "${question.question}"
+          const prompt = `You are a subject classifier for academic questions. Given the following question and list of available subjects, select the most appropriate subject.
 
-Answer options:
-A) ${question.optionA}
-B) ${question.optionB}
-C) ${question.optionC}
-D) ${question.optionD}
-E) ${question.optionE}
-
-Correct answer: ${question.correctAnswer}`;
-
-          const prompt = `You are a subject classifier for academic questions. Given the following question with its answer options and list of available subjects, select the most appropriate subject.
-
-${fullQuestionText}
+Question: "${question.question}"
 
 Available subjects: ${availableSubjects.join(', ')}
 
