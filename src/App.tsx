@@ -21,10 +21,10 @@ import Settings from './pages/Settings';
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <UserPreferencesProvider>
-          <Router>
+    <Router>
+      <ThemeProvider>
+        <AuthProvider>
+          <UserPreferencesProvider>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/dashboard" element={<DashboardPage />} />
@@ -41,10 +41,10 @@ function App() {
               <Route path="/admin" element={<Admin />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
-          </Router>
-        </UserPreferencesProvider>
-      </AuthProvider>
-    </ThemeProvider>
+          </UserPreferencesProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 
