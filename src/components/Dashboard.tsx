@@ -33,10 +33,10 @@ const Dashboard = () => {
   const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
 
   useEffect(() => {
-    if (preferences.selectedUniversityDatasets) {
+    if (preferences?.selectedUniversityDatasets) {
       setSelectedUniversityDatasets(preferences.selectedUniversityDatasets);
     }
-  }, [preferences.selectedUniversityDatasets]);
+  }, [preferences?.selectedUniversityDatasets]);
 
   const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['all-questions', user?.id, universityId],
@@ -107,7 +107,7 @@ const Dashboard = () => {
   });
 
   const filteredQuestions = useMemo(() => {
-    if (!questions) return [];
+    if (!questions || !preferences) return [];
     
     let filtered = questions.filter(q => 
       !isDatasetArchived(q.filename) && 
@@ -124,7 +124,7 @@ const Dashboard = () => {
     }
     
     return filtered;
-  }, [questions, isDatasetArchived, selectedSemester, selectedYear, user?.id]);
+  }, [questions, preferences, isDatasetArchived, selectedSemester, selectedYear, user?.id]);
 
   const universityQuestions = useMemo(() => {
     if (!questions || !universityId) {
@@ -265,6 +265,23 @@ const Dashboard = () => {
 
   if (!user) {
     return <div>Loading...</div>;
+  }
+  
+  // Show loading while preferences are being fetched
+  if (!preferences) {
+    return (
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+          <div className="h-60 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    );
   }
   
   if (isQuestionsLoading) {
