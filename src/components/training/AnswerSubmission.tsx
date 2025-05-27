@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +40,7 @@ const AnswerSubmission = ({
     if (!selectedAnswer || !user || isSubmitting) return;
 
     setIsSubmitting(true);
+    // Compare only the first letter, case insensitive
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {

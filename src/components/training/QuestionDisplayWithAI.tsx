@@ -97,10 +97,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     
     // Initialize state from userAnswerState if it exists
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
-      setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt !== questionData.correctAnswer));
-      setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt !== questionData.correctAnswer) || null);
+      setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()));
+      setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
       setShowFeedback(true);
-      setIsCorrect(userAnswerState.value === questionData.correctAnswer);
+      setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
     } else {
       setWrongAnswers([]);
       setFirstWrongAnswer(null);

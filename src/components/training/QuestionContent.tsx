@@ -66,7 +66,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('A')}
           isFirstWrong={firstWrongAnswer === 'A'}
-          isCorrect={correctAnswer === 'A'}
+          isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'a'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
         />
@@ -76,7 +76,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('B')}
           isFirstWrong={firstWrongAnswer === 'B'}
-          isCorrect={correctAnswer === 'B'}
+          isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'b'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
         />
@@ -86,7 +86,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('C')}
           isFirstWrong={firstWrongAnswer === 'C'}
-          isCorrect={correctAnswer === 'C'}
+          isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'c'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
         />
@@ -96,7 +96,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('D')}
           isFirstWrong={firstWrongAnswer === 'D'}
-          isCorrect={correctAnswer === 'D'}
+          isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'd'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
         />
@@ -106,7 +106,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('E')}
           isFirstWrong={firstWrongAnswer === 'E'}
-          isCorrect={correctAnswer === 'E'}
+          isCorrect={correctAnswer?.charAt(0).toLowerCase() === 'e'}
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
         />
