@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AIAnswerComments, AICommentarySummaryExtended, AICommentaryData } from '@/types/AIAnswerComments';
 
@@ -32,51 +31,41 @@ interface AIAnswerCommentsRow {
 export class AIAnswerCommentaryService {
   static async getCommentaryForQuestion(questionId: string): Promise<AICommentaryData | null> {
     try {
-      // Direct query to ai_answer_comments table with proper error handling
+      // Try to get answer comments - using the more direct approach first
       let answerComments: AIAnswerCommentsRow | null = null;
       
       try {
         const { data: answerCommentsData, error: answerError } = await supabase
-          .from('questions')
-          .select(`
-            ai_answer_comments!inner(*)
-          `)
-          .eq('id', questionId)
-          .single();
+          .from('ai_answer_comments')
+          .select('*')
+          .eq('question_id', questionId)
+          .maybeSingle();
 
-        if (!answerError && answerCommentsData?.ai_answer_comments) {
-          answerComments = answerCommentsData.ai_answer_comments as unknown as AIAnswerCommentsRow;
+        if (!answerError && answerCommentsData) {
+          answerComments = answerCommentsData as AIAnswerCommentsRow;
         }
-      } catch (joinError) {
-        console.log('Join query failed, trying direct approach');
-        
-        // Fallback: try to get answer comments directly by question_id
-        try {
-          const { data: directData, error: directError } = await supabase
-            .from('questions')
-            .select('*')
-            .eq('id', questionId)
-            .single();
-          
-          if (!directError && directData) {
-            // Since we can't access ai_answer_comments directly, we'll return null for now
-            // This will be handled gracefully by the UI
-            console.log('Question found but no direct access to ai_answer_comments table');
-          }
-        } catch (directError) {
-          console.log('Direct query also failed:', directError);
-        }
+      } catch (answerError) {
+        console.log('Direct answer comments query failed:', answerError);
       }
 
-      // Fetch summary comments
-      const { data: summary, error: summaryError } = await supabase
-        .from('ai_commentary_summaries')
-        .select('*')
-        .eq('question_id', questionId)
-        .maybeSingle();
+      // Fetch summary comments - get the most recent one to avoid multiple rows error
+      let summary: AICommentarySummaryExtended | null = null;
+      try {
+        const { data: summaryData, error: summaryError } = await supabase
+          .from('ai_commentary_summaries')
+          .select('*')
+          .eq('question_id', questionId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (summaryError) {
-        console.error('Error fetching summary comments:', summaryError);
+        if (!summaryError && summaryData) {
+          summary = summaryData as AICommentarySummaryExtended;
+        } else if (summaryError) {
+          console.error('Error fetching summary comments:', summaryError);
+        }
+      } catch (summaryError) {
+        console.error('Summary query failed:', summaryError);
       }
 
       if (!answerComments && !summary) {
