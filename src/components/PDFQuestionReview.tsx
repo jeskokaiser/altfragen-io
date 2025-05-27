@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2, Move, Loader2, Sparkles } from 'lucide-react';
+import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2, Move, Loader2, Sparkles, LoaderCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Accordion,
@@ -55,6 +55,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   const [selectedTargetQuestion, setSelectedTargetQuestion] = useState<number | null>(null);
   const [subjectList, setSubjectList] = useState('');
   const [isAssigningSubjects, setIsAssigningSubjects] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const currentQuestion = questions[currentIndex];
 
@@ -122,12 +123,21 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     }
   };
   
-  const handleSave = () => {
-    // Save all questions without validation
-    onSave(questions.map(q => ({
-      ...q,
-      visibility
-    })));
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Add a small delay to show the loading state
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Save all questions without validation
+      onSave(questions.map(q => ({
+        ...q,
+        visibility
+      })));
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const handleRemoveQuestion = (index: number) => {
@@ -543,6 +553,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
               variant="outline"
               size="sm"
               onClick={onCancel}
+              disabled={isSaving}
             >
               {isEditMode ? 'Fertig' : 'Abbrechen'}
             </Button>
@@ -552,7 +563,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => handleRemoveQuestion(currentIndex)}
-                disabled={questions.length <= 1}
+                disabled={questions.length <= 1 || isSaving}
               >
                 Frage entfernen
               </Button>
@@ -566,7 +577,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handlePrevious}
-                  disabled={currentIndex === 0}
+                  disabled={currentIndex === 0 || isSaving}
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Zurück
@@ -576,7 +587,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handleNext}
-                  disabled={currentIndex === questions.length - 1}
+                  disabled={currentIndex === questions.length - 1 || isSaving}
                 >
                   Weiter
                   <ArrowRight className="h-4 w-4 ml-1" />
@@ -586,9 +597,20 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             
             <Button
               onClick={handleSave}
+              disabled={isSaving}
+              className="relative"
             >
-              <Save className="h-4 w-4 mr-1" />
-              {isEditMode ? 'Änderungen speichern' : 'Alle speichern'}
+              {isSaving ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
+                  Speichere...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-1" />
+                  {isEditMode ? 'Änderungen speichern' : 'Alle speichern'}
+                </>
+              )}
             </Button>
           </div>
         </CardFooter>
