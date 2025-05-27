@@ -15,11 +15,12 @@ export const useAICommentary = (questionId?: string) => {
     setLoading(true);
     try {
       const [commentariesData, summaryData] = await Promise.all([
-        AICommentaryService.getCommentariesForQuestion(questionId),
+        AICommentaryService.getCommentaryForQuestion(questionId),
         AICommentaryService.getSummaryForQuestion(questionId)
       ]);
       
-      setCommentaries(commentariesData);
+      // Convert the single commentary response to an array format for compatibility
+      setCommentaries(commentariesData ? [commentariesData as any] : []);
       setSummary(summaryData);
     } catch (error) {
       console.error('Error loading AI commentaries:', error);
