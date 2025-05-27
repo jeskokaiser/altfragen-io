@@ -6,6 +6,7 @@ import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { XCircle, Eye } from 'lucide-react';
+import FeedbackDisplay from './FeedbackDisplay';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { showToast } from '@/utils/toast';
 
@@ -138,8 +139,13 @@ const AnswerSubmission = ({
           </Button>
         )}
         
-        {showSolution
-        }
+        {showSolution && (
+          <FeedbackDisplay
+            isCorrect={lastSubmissionCorrect || false}
+            correctAnswer={currentQuestion.correctAnswer}
+            comment={currentQuestion.comment}
+          />
+        )}
       </div>
     );
   }
@@ -174,8 +180,13 @@ const AnswerSubmission = ({
         </div>
       )}
 
-      {showSolution
-      }
+      {showSolution && (
+        <FeedbackDisplay
+          isCorrect={false}
+          correctAnswer={currentQuestion.correctAnswer}
+          comment={currentQuestion.comment}
+        />
+      )}
     </div>
   );
 };

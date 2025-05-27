@@ -12,8 +12,7 @@ interface QuestionContentProps {
   wrongAnswers?: string[];
   firstWrongAnswer?: string | null;
   correctAnswer?: string;
-  isOverallCorrect?: boolean;
-  allOtherOptionsAttemptedAndWrong?: boolean;
+  isCorrect?: boolean;
 }
 
 const QuestionContent: React.FC<QuestionContentProps> = ({
@@ -25,8 +24,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   wrongAnswers = [],
   firstWrongAnswer,
   correctAnswer,
-  isOverallCorrect,
-  allOtherOptionsAttemptedAndWrong,
+  isCorrect,
 }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
 
@@ -60,56 +58,46 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           value="A" 
           text={questionData.optionA} 
           resetTrigger={resetTrigger} 
-          isSelected={selectedAnswer === 'A'}
           isWrong={wrongAnswers.includes('A')}
           isFirstWrong={firstWrongAnswer === 'A'}
-          isOptionCorrect={correctAnswer === 'A'}
+          isCorrect={showFeedback && correctAnswer === 'A'}
           showFeedback={showFeedback}
-          allOtherOptionsAttemptedAndWrong={allOtherOptionsAttemptedAndWrong}
         />
         <AnswerOption 
           value="B" 
           text={questionData.optionB} 
           resetTrigger={resetTrigger} 
-          isSelected={selectedAnswer === 'B'}
           isWrong={wrongAnswers.includes('B')}
           isFirstWrong={firstWrongAnswer === 'B'}
-          isOptionCorrect={correctAnswer === 'B'}
+          isCorrect={showFeedback && correctAnswer === 'B'}
           showFeedback={showFeedback}
-          allOtherOptionsAttemptedAndWrong={allOtherOptionsAttemptedAndWrong}
         />
         <AnswerOption 
           value="C" 
           text={questionData.optionC} 
           resetTrigger={resetTrigger} 
-          isSelected={selectedAnswer === 'C'}
           isWrong={wrongAnswers.includes('C')}
           isFirstWrong={firstWrongAnswer === 'C'}
-          isOptionCorrect={correctAnswer === 'C'}
+          isCorrect={showFeedback && correctAnswer === 'C'}
           showFeedback={showFeedback}
-          allOtherOptionsAttemptedAndWrong={allOtherOptionsAttemptedAndWrong}
         />
         <AnswerOption 
           value="D" 
           text={questionData.optionD} 
           resetTrigger={resetTrigger} 
-          isSelected={selectedAnswer === 'D'}
           isWrong={wrongAnswers.includes('D')}
           isFirstWrong={firstWrongAnswer === 'D'}
-          isOptionCorrect={correctAnswer === 'D'}
+          isCorrect={showFeedback && correctAnswer === 'D'}
           showFeedback={showFeedback}
-          allOtherOptionsAttemptedAndWrong={allOtherOptionsAttemptedAndWrong}
         />
         <AnswerOption 
           value="E" 
           text={questionData.optionE} 
           resetTrigger={resetTrigger} 
-          isSelected={selectedAnswer === 'E'}
           isWrong={wrongAnswers.includes('E')}
           isFirstWrong={firstWrongAnswer === 'E'}
-          isOptionCorrect={correctAnswer === 'E'}
+          isCorrect={showFeedback && correctAnswer === 'E'}
           showFeedback={showFeedback}
-          allOtherOptionsAttemptedAndWrong={allOtherOptionsAttemptedAndWrong}
         />
       </RadioGroup>
     </div>

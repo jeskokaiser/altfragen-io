@@ -10,13 +10,11 @@ interface AnswerOptionProps {
   resetTrigger?: number;
   isWrong?: boolean;
   isFirstWrong?: boolean;
-  isOptionCorrect?: boolean;
+  isCorrect?: boolean;
   showFeedback?: boolean;
-  isSelected?: boolean;
-  allOtherOptionsAttemptedAndWrong?: boolean;
 }
 
-const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, isWrong, isFirstWrong, isOptionCorrect, showFeedback, isSelected, allOtherOptionsAttemptedAndWrong }) => {
+const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, isWrong, isFirstWrong, isCorrect, showFeedback }) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const isMobile = useIsMobile();
 
@@ -30,22 +28,18 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
   };
 
   const getContainerClasses = () => {
-    let classes = `flex items-center space-x-2 rounded-md p-2 ${isMobile ? 'text-sm' : ''} `;
+    let classes = `flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} `;
     
     if (showFeedback) {
       if (isFirstWrong) {
-        classes += 'bg-red-100 border border-red-400';
-      } else if (isOptionCorrect && (isSelected || allOtherOptionsAttemptedAndWrong)) {
-        classes += 'bg-green-100 border border-green-400';
-      } else if (isSelected && isWrong) {
-        classes += 'bg-red-50 border border-red-300';
-      } else if (isOptionCorrect) {
-        classes += 'border border-gray-300';
+        classes += 'bg-red-100 border border-red-300 rounded-md p-2 ';
+      } else if (isCorrect) {
+        classes += 'bg-green-100 border border-green-300 rounded-md p-2 ';
+      } else if (isWrong) {
+        classes += 'border border-red-200 rounded-md p-2 ';
       } else {
-        classes += 'border border-gray-300';
+        classes += 'border border-gray-200 rounded-md p-2 ';
       }
-    } else {
-      classes += 'border border-gray-300 hover:bg-gray-50';
     }
     
     return classes;
