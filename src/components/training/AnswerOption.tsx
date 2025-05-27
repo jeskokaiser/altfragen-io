@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -12,9 +13,19 @@ interface AnswerOptionProps {
   isFirstWrong?: boolean;
   isCorrect?: boolean;
   showFeedback?: boolean;
+  shouldHighlightCorrect?: boolean;
 }
 
-const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, isWrong, isFirstWrong, isCorrect, showFeedback }) => {
+const AnswerOption: React.FC<AnswerOptionProps> = ({ 
+  value, 
+  text, 
+  resetTrigger, 
+  isWrong, 
+  isFirstWrong, 
+  isCorrect, 
+  showFeedback,
+  shouldHighlightCorrect
+}) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const isMobile = useIsMobile();
 
@@ -33,7 +44,7 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
     if (showFeedback) {
       if (isFirstWrong) {
         classes += 'bg-red-100 border border-red-300 rounded-md p-2 ';
-      } else if (isCorrect) {
+      } else if (isCorrect && shouldHighlightCorrect) {
         classes += 'bg-green-100 border border-green-300 rounded-md p-2 ';
       } else if (isWrong) {
         classes += 'border border-red-200 rounded-md p-2 ';

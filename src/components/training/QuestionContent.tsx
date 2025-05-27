@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from './AnswerOption';
@@ -32,7 +33,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
     setResetTrigger(prev => prev + 1);
   }, [questionData]);
 
-   const highlightNicht = (text: string) => {
+  const highlightNicht = (text: string) => {
     return text.split(/(nicht|falsch|kein|keine)/i).map((part, index) =>
       ['nicht', 'falsch', 'kein', 'keine'].includes(part.toLowerCase()) ? (
         <u key={index}>{part}</u>
@@ -45,6 +46,11 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   if (!questionData) {
     return <div>Loading question...</div>;
   }
+
+  // Show green highlight for correct answer only when:
+  // 1. The correct answer was clicked, OR
+  // 2. All wrong answers have been tried (4 wrong attempts)
+  const shouldHighlightCorrect = showFeedback && (isCorrect || wrongAnswers.length >= 4);
 
   return (
     <div className="space-y-4">
@@ -60,8 +66,9 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('A')}
           isFirstWrong={firstWrongAnswer === 'A'}
-          isCorrect={showFeedback && correctAnswer === 'A'}
+          isCorrect={correctAnswer === 'A'}
           showFeedback={showFeedback}
+          shouldHighlightCorrect={shouldHighlightCorrect}
         />
         <AnswerOption 
           value="B" 
@@ -69,8 +76,9 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('B')}
           isFirstWrong={firstWrongAnswer === 'B'}
-          isCorrect={showFeedback && correctAnswer === 'B'}
+          isCorrect={correctAnswer === 'B'}
           showFeedback={showFeedback}
+          shouldHighlightCorrect={shouldHighlightCorrect}
         />
         <AnswerOption 
           value="C" 
@@ -78,8 +86,9 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('C')}
           isFirstWrong={firstWrongAnswer === 'C'}
-          isCorrect={showFeedback && correctAnswer === 'C'}
+          isCorrect={correctAnswer === 'C'}
           showFeedback={showFeedback}
+          shouldHighlightCorrect={shouldHighlightCorrect}
         />
         <AnswerOption 
           value="D" 
@@ -87,8 +96,9 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('D')}
           isFirstWrong={firstWrongAnswer === 'D'}
-          isCorrect={showFeedback && correctAnswer === 'D'}
+          isCorrect={correctAnswer === 'D'}
           showFeedback={showFeedback}
+          shouldHighlightCorrect={shouldHighlightCorrect}
         />
         <AnswerOption 
           value="E" 
@@ -96,8 +106,9 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           resetTrigger={resetTrigger} 
           isWrong={wrongAnswers.includes('E')}
           isFirstWrong={firstWrongAnswer === 'E'}
-          isCorrect={showFeedback && correctAnswer === 'E'}
+          isCorrect={correctAnswer === 'E'}
           showFeedback={showFeedback}
+          shouldHighlightCorrect={shouldHighlightCorrect}
         />
       </RadioGroup>
     </div>

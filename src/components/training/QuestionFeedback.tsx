@@ -26,7 +26,8 @@ const QuestionFeedback: React.FC<QuestionFeedbackProps> = ({
   // 1. No feedback should be shown
   // 2. No user answer
   // 3. Immediate feedback is enabled (handled by AnswerSubmission)
-  if (!showFeedback || !userAnswer || preferences?.immediateFeedback) return null;
+  // 4. No comment to display
+  if (!showFeedback || !userAnswer || preferences?.immediateFeedback || !comment) return null;
 
   // Show feedback when either answer is correct OR when all wrong answers have been tried
   const shouldShowFeedback = isCorrect || wrongAnswers.length >= 4;
