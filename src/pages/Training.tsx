@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
-import QuestionView from '@/components/questions/QuestionView';
+import QuestionDisplayWithAI from '@/components/training/QuestionDisplayWithAI';
 import Results from '@/components/Results';
 import TrainingConfig from '@/components/training/TrainingConfig';
 
@@ -126,14 +126,14 @@ const Training = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <QuestionView
+      <QuestionDisplayWithAI
         questionData={selectedQuestions[currentQuestionIndex]}
         totalQuestions={selectedQuestions.length}
         currentIndex={currentQuestionIndex}
         onNext={handleNext}
         onPrevious={handlePrevious}
         onAnswer={handleAnswer}
-        userAnswer={userAnswers[currentQuestionIndex]}
+        userAnswer={userAnswers[currentQuestionIndex]?.value || ''}
         onQuit={handleQuit}
         onQuestionUpdate={handleQuestionUpdate}
       />
