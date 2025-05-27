@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { AICommentary, AICommentarySummary, AICommentarySettings } from '@/types/AICommentary';
+import { AIAnswerComments, AICommentarySummaryExtended } from '@/types/AIAnswerComments';
 
 export class AICommentaryService {
   static async getSettings(): Promise<AICommentarySettings | null> {
@@ -59,6 +60,37 @@ export class AICommentaryService {
 
     if (error) {
       console.error('Error fetching AI commentary summary:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  // New methods for enhanced AI commentary
+  static async getAnswerCommentsForQuestion(questionId: string): Promise<AIAnswerComments | null> {
+    const { data, error } = await supabase
+      .from('ai_answer_comments')
+      .select('*')
+      .eq('question_id', questionId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching AI answer comments:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  static async getExtendedSummaryForQuestion(questionId: string): Promise<AICommentarySummaryExtended | null> {
+    const { data, error } = await supabase
+      .from('ai_commentary_summaries')
+      .select('*')
+      .eq('question_id', questionId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching extended summary:', error);
       return null;
     }
 
@@ -157,5 +189,53 @@ export class AICommentaryService {
     }
 
     return data || [];
+  }
+
+  // Enhanced stats including answer comments
+  static async getEnhancedStats() {
+    try {
+      // Get basic question stats
+      const { data: totalQuestions, error: totalError } = await supabase
+        .from('questions')
+        .select('id', { count: 'exact' });
+
+      const { data: pendingQuestions, error: pendingError } = await supabase
+        .from('questions')
+        .select('id', { count: 'exact' })
+        .eq('ai_commentary_status', 'pending');
+
+      const { data: completedQuestions, error: completedError } = await supabase
+        .from('questions')
+        .select('id', { count: 'exact' })
+        .eq('ai_commentary_status', 'completed');
+
+      // Get answer comments stats
+      const { data: answerComments, error: answerError } = await supabase
+        .from('ai_answer_comments')
+        .select('question_id', { count: 'exact' });
+
+      // Get summary stats
+      const { data: summaries, error: summaryError } = await supabase
+        .from('ai_commentary_summaries')
+        .select('question_id', { count: 'exact' });
+
+      if (totalError || pendingError || completedError || answerError || summaryError) {
+        console.error('Error fetching enhanced stats:', { 
+          totalError, pendingError, completedError, answerError, summaryError 
+        });
+        return null;
+      }
+
+      return {
+        total: totalQuestions?.length || 0,
+        pending: pendingQuestions?.length || 0,
+        completed: completedQuestions?.length || 0,
+        withAnswerComments: answerComments?.length || 0,
+        withSummaries: summaries?.length || 0
+      };
+    } catch (error) {
+      console.error('Error getting enhanced stats:', error);
+      return null;
+    }
   }
 }

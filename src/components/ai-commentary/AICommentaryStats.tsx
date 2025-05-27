@@ -2,68 +2,75 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Activity, CheckCircle, Clock, XCircle, Users, Zap } from 'lucide-react';
+import { BarChart3, Brain, Clock, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
+import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
+import { supabase } from '@/integrations/supabase/client';
 
 const AICommentaryStats: React.FC = () => {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['ai-commentary-stats'],
-    queryFn: async () => {
-      // Get question status counts
-      const { data: questionStats } = await supabase
-        .from('questions')
-        .select('ai_commentary_status')
-        .not('ai_commentary_status', 'is', null);
-
-      // Get recent processing activity
-      const { data: recentActivity } = await supabase
-        .from('ai_commentaries')
-        .select('created_at, processing_status, model_name')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false });
-
-      // Get commentary counts by model
-      const { data: modelStats } = await supabase
-        .from('ai_commentaries')
-        .select('model_name, processing_status')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
-      // Process the data
-      const statusCounts = questionStats?.reduce((acc, q) => {
-        acc[q.ai_commentary_status] = (acc[q.ai_commentary_status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>) || {};
-
-      const modelCounts = modelStats?.reduce((acc, c) => {
-        if (!acc[c.model_name]) acc[c.model_name] = { total: 0, successful: 0 };
-        acc[c.model_name].total++;
-        if (c.processing_status === 'completed') acc[c.model_name].successful++;
-        return acc;
-      }, {} as Record<string, { total: number; successful: number }>) || {};
-
-      return {
-        statusCounts,
-        recentActivity: recentActivity || [],
-        modelCounts,
-        totalProcessed: statusCounts.completed || 0,
-        totalPending: statusCounts.pending || 0,
-        totalFailed: statusCounts.failed || 0,
-        totalProcessing: statusCounts.processing || 0
-      };
-    },
-    refetchInterval: 30000 // Refresh every 30 seconds
+  const { data: enhancedStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['ai-commentary-enhanced-stats'],
+    queryFn: () => AIAnswerCommentaryService.getProcessingStats(),
+    refetchInterval: 30000
   });
 
-  if (isLoading) {
+  const { data: recentActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ['ai-commentary-recent-activity'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('ai_commentary_processed_at, ai_commentary_status, subject')
+        .not('ai_commentary_processed_at', 'is', null)
+        .order('ai_commentary_processed_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 60000
+  });
+
+  const { data: modelStats, isLoading: modelStatsLoading } = useQuery({
+    queryKey: ['ai-commentary-model-stats'],
+    queryFn: async () => {
+      // Count questions with different types of comments
+      const { data: openaiComments, error: openaiError } = await supabase
+        .from('ai_answer_comments')
+        .select('id', { count: 'exact' })
+        .not('openai_general_comment', 'is', null);
+
+      const { data: claudeComments, error: claudeError } = await supabase
+        .from('ai_answer_comments')
+        .select('id', { count: 'exact' })
+        .not('claude_general_comment', 'is', null);
+
+      const { data: geminiComments, error: geminiError } = await supabase
+        .from('ai_answer_comments')
+        .select('id', { count: 'exact' })
+        .not('gemini_general_comment', 'is', null);
+
+      if (openaiError || claudeError || geminiError) {
+        throw new Error('Error fetching model stats');
+      }
+
+      return {
+        openai: openaiComments?.length || 0,
+        claude: claudeComments?.length || 0,
+        gemini: geminiComments?.length || 0
+      };
+    },
+    refetchInterval: 60000
+  });
+
+  if (statsLoading || activityLoading || modelStatsLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
           <Card key={i}>
             <CardContent className="pt-6">
-              <div className="animate-pulse space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                 <div className="h-8 bg-gray-200 rounded w-1/2"></div>
               </div>
             </CardContent>
@@ -73,144 +80,169 @@ const AICommentaryStats: React.FC = () => {
     );
   }
 
-  const totalQuestions = (stats?.totalProcessed || 0) + (stats?.totalPending || 0) + 
-                        (stats?.totalFailed || 0) + (stats?.totalProcessing || 0);
-  const successRate = totalQuestions > 0 ? ((stats?.totalProcessed || 0) / totalQuestions) * 100 : 0;
+  const getCompletionRate = () => {
+    if (!enhancedStats || enhancedStats.total === 0) return 0;
+    return Math.round((enhancedStats.withComments / enhancedStats.total) * 100);
+  };
+
+  const getProcessingRate = () => {
+    if (!enhancedStats || enhancedStats.total === 0) return 0;
+    return Math.round((enhancedStats.processed / enhancedStats.total) * 100);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Main Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalPending || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Questions awaiting processing
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Gesamte Fragen</p>
+                <p className="text-2xl font-bold">{enhancedStats?.total || 0}</p>
+              </div>
+              <BarChart3 className="h-8 w-8 text-muted-foreground" />
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Processing</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalProcessing || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently being processed
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">In Warteschlange</p>
+                <p className="text-2xl font-bold text-yellow-600">{enhancedStats?.pending || 0}</p>
+              </div>
+              <Clock className="h-8 w-8 text-yellow-600" />
+            </div>
+            {enhancedStats && enhancedStats.total > 0 && (
+              <Progress 
+                value={(enhancedStats.pending / enhancedStats.total) * 100} 
+                className="mt-3"
+              />
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalProcessed || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Successfully processed
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Mit KI-Kommentaren</p>
+                <p className="text-2xl font-bold text-green-600">{enhancedStats?.withComments || 0}</p>
+                <p className="text-xs text-muted-foreground">{getCompletionRate()}% abgeschlossen</p>
+              </div>
+              <Brain className="h-8 w-8 text-green-600" />
+            </div>
+            {enhancedStats && enhancedStats.total > 0 && (
+              <Progress 
+                value={getCompletionRate()} 
+                className="mt-3"
+              />
+            )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failed</CardTitle>
-            <XCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalFailed || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Processing failures
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Verarbeitet</p>
+                <p className="text-2xl font-bold text-blue-600">{enhancedStats?.processed || 0}</p>
+                <p className="text-xs text-muted-foreground">{getProcessingRate()}% verarbeitet</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-blue-600" />
+            </div>
+            {enhancedStats && enhancedStats.total > 0 && (
+              <Progress 
+                value={getProcessingRate()} 
+                className="mt-3"
+              />
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Success Rate */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Processing Success Rate
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span>Overall Success Rate</span>
-              <span>{successRate.toFixed(1)}%</span>
+      {/* Model Performance Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">OpenAI GPT-4o-mini</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold text-green-600">{modelStats?.openai || 0}</p>
+                <p className="text-sm text-muted-foreground">Kommentierte Fragen</p>
+              </div>
+              <Badge className="bg-green-100 text-green-800">Aktiv</Badge>
             </div>
-            <Progress value={successRate} className="w-full" />
-            <p className="text-xs text-muted-foreground">
-              Based on {totalQuestions} total questions processed
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Model Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Model Performance (Last 7 Days)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Object.entries(stats?.modelCounts || {}).map(([model, data]) => {
-              const modelSuccessRate = data.total > 0 ? (data.successful / data.total) * 100 : 0;
-              return (
-                <div key={model} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{model}</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {data.successful}/{data.total} successful
-                      </span>
-                    </div>
-                    <span className="text-sm font-medium">{modelSuccessRate.toFixed(1)}%</span>
-                  </div>
-                  <Progress value={modelSuccessRate} className="h-2" />
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Claude Sonnet 4</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold text-blue-600">{modelStats?.claude || 0}</p>
+                <p className="text-sm text-muted-foreground">Kommentierte Fragen</p>
+              </div>
+              <Badge className="bg-blue-100 text-blue-800">Aktiv</Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Gemini 2.5 Pro</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold text-purple-600">{modelStats?.gemini || 0}</p>
+                <p className="text-sm text-muted-foreground">Kommentierte Fragen</p>
+              </div>
+              <Badge className="bg-purple-100 text-purple-800">Aktiv</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity (Last 24 Hours)</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Letzte Aktivität
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {stats?.recentActivity.length ? (
-              stats.recentActivity.slice(0, 10).map((activity, index) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={activity.processing_status === 'completed' ? 'default' : 'destructive'}>
-                      {activity.model_name}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {activity.processing_status}
-                    </span>
+          {recentActivity && recentActivity.length > 0 ? (
+            <div className="space-y-3">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium">KI-Kommentare generiert</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(activity.ai_commentary_processed_at).toLocaleString('de-DE')}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(activity.created_at).toLocaleTimeString()}
-                  </span>
+                  <Badge variant="outline">{activity.subject}</Badge>
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No recent activity</p>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <AlertCircle className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-muted-foreground">Keine aktuelle Aktivität</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
