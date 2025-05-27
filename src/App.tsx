@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -19,31 +20,36 @@ import UniversityPage from './pages/UniversityPage';
 import Admin from './pages/Admin';
 import Settings from './pages/Settings';
 
+// Create a client
+const queryClient = new QueryClient();
+
 function App() {
   return (
     <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <UserPreferencesProvider>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/training/:filename?" element={<Training />} />
-              <Route path="/upload" element={<Upload />} />
-              <Route path="/unclear/:filename" element={<UnclearQuestions />} />
-              <Route path="/exam-session/:sessionId" element={<ExamSessionPage />} />
-              <Route path="/exam-session/:sessionId/review" element={<ExamSessionReviewPage />} />
-              <Route path="/exam-session/:sessionId/start" element={<ExamSessionStartPage />} />
-              <Route path="/exam-session/join/:inviteCode?" element={<ExamSessionJoinPage />} />
-              <Route path="/exam-session/create" element={<ExamSessionCreatePage />} />
-              <Route path="/profile/:userId?" element={<ProfilePage />} />
-              <Route path="/university/:universityId" element={<UniversityPage />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </UserPreferencesProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <UserPreferencesProvider>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/training/:filename?" element={<Training />} />
+                <Route path="/upload" element={<Upload />} />
+                <Route path="/unclear/:filename" element={<UnclearQuestions />} />
+                <Route path="/exam-session/:sessionId" element={<ExamSessionPage />} />
+                <Route path="/exam-session/:sessionId/review" element={<ExamSessionReviewPage />} />
+                <Route path="/exam-session/:sessionId/start" element={<ExamSessionStartPage />} />
+                <Route path="/exam-session/join/:inviteCode?" element={<ExamSessionJoinPage />} />
+                <Route path="/exam-session/create" element={<ExamSessionCreatePage />} />
+                <Route path="/profile/:userId?" element={<ProfilePage />} />
+                <Route path="/university/:universityId" element={<UniversityPage />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </UserPreferencesProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </Router>
   );
 }
