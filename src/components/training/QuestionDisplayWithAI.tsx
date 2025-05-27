@@ -59,6 +59,22 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const queryClient = useQueryClient();
   const { preferences } = useUserPreferences();
 
+  // Determine number of actual options for the current question
+  const getNumberOfOptions = (question: Question | undefined) => {
+    if (!question) return 5; // Default or handle as error/loading
+    let count = 0;
+    if (question.optionA) count++;
+    if (question.optionB) count++;
+    if (question.optionC) count++;
+    if (question.optionD) count++;
+    if (question.optionE) count++;
+    return count > 0 ? count : 1; // Ensure at least 1 to avoid division by zero or negative in logic
+  };
+  const numOptions = getNumberOfOptions(currentQuestion);
+
+  // True if all other options besides the correct one have been attempted and were wrong.
+  const allOtherOptionsAttemptedAndWrong = wrongAnswers.length >= numOptions - 1 && !isCorrect && numOptions > 1;
+
   // Fetch AI commentary data
   const { data: aiCommentary, isLoading: aiLoading, error: aiError } = useQuery({
     queryKey: ['ai-commentary', currentQuestion.id],
@@ -120,7 +136,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       if (!firstWrongAnswer) {
         setFirstWrongAnswer(answer);
       }
-      setWrongAnswers(prev => [...prev, answer]);
+      // Store unique wrong answers
+      setWrongAnswers(prev => prev.includes(answer) ? prev : [...prev, answer]);
     }
     
     // Remove automatic navigation - let user manually proceed
@@ -311,7 +328,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           wrongAnswers={wrongAnswers}
           firstWrongAnswer={firstWrongAnswer}
           correctAnswer={currentQuestion.correctAnswer}
-          isCorrect={isCorrect}
+          isOverallCorrect={isCorrect}
+          allOtherOptionsAttemptedAndWrong={allOtherOptionsAttemptedAndWrong}
         />
 
         <AnswerSubmission
