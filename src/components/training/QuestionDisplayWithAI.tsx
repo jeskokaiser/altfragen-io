@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -185,15 +186,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const renderAICommentary = () => {
-    // Show AI commentary when:
-    // 1. Feedback is visible AND
-    // 2. Either immediate feedback is enabled OR the user has answered incorrectly/seen solution
-    const shouldShowAICommentary = showFeedback && (
-      preferences?.immediateFeedback || 
-      !isCorrect || 
-      wrongAnswers.length > 0 ||
-      !!firstWrongAnswer
-    );
+    // Show AI commentary ONLY when the user has answered correctly
+    const shouldShowAICommentary = showFeedback && isCorrect;
     
     if (!shouldShowAICommentary) return null;
 
@@ -417,3 +411,4 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 };
 
 export default QuestionDisplayWithAI;
+
