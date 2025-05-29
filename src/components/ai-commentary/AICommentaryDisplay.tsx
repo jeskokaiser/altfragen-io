@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown } from 'lucide-react';
+import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown, Eye } from 'lucide-react';
 import { AICommentaryData, ModelName, AnswerOption } from '@/types/AIAnswerComments';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -24,7 +24,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   commentaryData,
   questionData
 }) => {
-  const { canAccessAIComments } = usePremiumFeatures();
+  const { canAccessAIComments, isFreeTier, remainingFreeViews, dailyUsage, DAILY_LIMIT } = usePremiumFeatures();
   const { createCheckoutSession } = useSubscription();
   const [expandedAnswers, setExpandedAnswers] = useState<Set<AnswerOption>>(new Set());
 
@@ -34,9 +34,14 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
       <div className="text-center py-6 space-y-4">
         <Crown className="h-16 w-16 mx-auto text-blue-500" />
         <div>
-          <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            {isFreeTier ? 'Tägliches Limit erreicht' : 'Premium Feature'}
+          </h3>
           <p className="text-gray-600 mb-4">
-            KI-Kommentare sind nur für Premium-Abonnenten verfügbar.
+            {isFreeTier 
+              ? `Du hast heute bereits ${dailyUsage}/${DAILY_LIMIT} kostenlose KI-Kommentare verwendet. Upgraden für unbegrenzten Zugang!`
+              : 'KI-Kommentare sind nur für Premium-Abonnenten verfügbar.'
+            }
           </p>
           <Button 
             onClick={createCheckoutSession}
@@ -49,6 +54,30 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
       </div>
     );
   }
+
+  // Show usage info for free tier users
+  const renderUsageInfo = () => {
+    if (!isFreeTier) return null;
+
+    return (
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center gap-2 text-sm text-blue-700">
+          <Eye className="h-4 w-4" />
+          <span>
+            Kostenlose Nutzung: {remainingFreeViews} von {DAILY_LIMIT} verbleibend heute
+          </span>
+        </div>
+        {remainingFreeViews <= 3 && remainingFreeViews > 0 && (
+          <p className="text-xs text-blue-600 mt-1">
+            Nur noch wenige kostenlose KI-Kommentare übrig! 
+            <Button variant="link" className="p-0 h-auto ml-1 text-blue-600" onClick={createCheckoutSession}>
+              Jetzt upgraden
+            </Button>
+          </p>
+        )}
+      </div>
+    );
+  };
 
   const toggleAnswer = (option: AnswerOption) => {
     const newExpanded = new Set(expandedAnswers);
@@ -231,6 +260,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
 
   return (
     <div className="space-y-6">
+      {renderUsageInfo()}
       {renderSummaryView()}
     </div>
   );

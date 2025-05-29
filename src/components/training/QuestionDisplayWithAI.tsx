@@ -62,7 +62,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { preferences } = useUserPreferences();
-  const { isPremium, canAccessAIComments, loading: premiumLoading } = usePremiumFeatures();
+  const { isPremium, canAccessAIComments, loading: premiumLoading, requirePremiumForAI } = usePremiumFeatures();
   const { createCheckoutSession } = useSubscription();
 
   // Fetch AI commentary data
@@ -196,7 +196,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     
     if (!shouldShowAICommentary) return null;
 
-    // Check if user has premium access
+    // Check if user has access to AI comments (either premium or free views remaining)
     if (!canAccessAIComments) {
       return (
         <Card className="mt-6">
@@ -211,10 +211,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
             <div className="text-center py-6 space-y-4">
               <Crown className="h-16 w-16 mx-auto text-blue-500" />
               <div>
-                <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
+                <h3 className="text-lg font-semibold mb-2">Tägliches Limit erreicht</h3>
                 <p className="text-gray-600 mb-4">
-                  KI-Kommentare sind nur für Premium-Abonnenten verfügbar. 
-                  Erhalte detaillierte Erklärungen zu jeder Antwort für besseres Verständnis.
+                  Du hast heute alle kostenlosen KI-Kommentare verwendet. 
+                  Upgraden für unbegrenzten Zugang!
                 </p>
                 <Button 
                   onClick={createCheckoutSession}
