@@ -50,12 +50,12 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "eur",
             product_data: { 
-              name: "Premium Subscription",
-              description: "Access to premium features including unlimited questions and advanced analytics"
+              name: "Altfragen.io Premium",
+              description: "Zugang zu KI-Kommentaren für besseres Verständnis der Fragen und Antworten"
             },
-            unit_amount: 999, // $9.99
+            unit_amount: 399, // €3.99
             recurring: { interval: "month" },
           },
           quantity: 1,

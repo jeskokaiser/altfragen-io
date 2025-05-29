@@ -7,21 +7,21 @@ export const usePremiumFeatures = () => {
   const { user } = useAuth();
 
   const isPremium = user && subscribed;
-  const canAccessPremiumFeatures = isPremium;
+  const canAccessAIComments = isPremium;
   
-  const requirePremium = (callback: () => void) => {
-    if (canAccessPremiumFeatures) {
+  const requirePremiumForAI = (callback: () => void) => {
+    if (canAccessAIComments) {
       callback();
     } else {
       // Could trigger a subscription modal or redirect
-      console.log('Premium subscription required');
+      console.log('Premium-Abonnement für KI-Kommentare erforderlich');
     }
   };
 
   return {
     isPremium,
-    canAccessPremiumFeatures,
-    requirePremium,
+    canAccessAIComments,
+    requirePremiumForAI,
     loading,
   };
 };
