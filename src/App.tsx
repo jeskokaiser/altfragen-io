@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Toaster } from "sonner";
 import MainLayout from "@/components/layout/MainLayout";
@@ -19,18 +20,20 @@ function App() {
     <Router>
       <ThemeProvider>
         <AuthProvider>
-          <UserPreferencesProvider>
-            <QueryClientProvider client={queryClient}>
-              <div className="min-h-screen bg-background">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/*" element={<MainLayout />} />
-                </Routes>
-                <Toaster />
-              </div>
-            </QueryClientProvider>
-          </UserPreferencesProvider>
+          <SubscriptionProvider>
+            <UserPreferencesProvider>
+              <QueryClientProvider client={queryClient}>
+                <div className="min-h-screen bg-background">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/*" element={<MainLayout />} />
+                  </Routes>
+                  <Toaster />
+                </div>
+              </QueryClientProvider>
+            </UserPreferencesProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>

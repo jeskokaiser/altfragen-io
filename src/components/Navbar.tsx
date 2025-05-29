@@ -3,8 +3,10 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User, Home, BookOpen, Users, Settings } from 'lucide-react';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { LogOut, User, Home, BookOpen, Users, Settings, Crown } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import PremiumBadge from '@/components/subscription/PremiumBadge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,7 @@ import {
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
+  const { subscribed } = useSubscription();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -47,6 +50,13 @@ const Navbar: React.FC = () => {
                     Zusammenarbeit
                   </Button>
                 </Link>
+                <Link to="/subscription">
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Crown className={`h-4 w-4 mr-2 ${subscribed ? 'text-yellow-600' : ''}`} />
+                    Premium
+                    {subscribed && <PremiumBadge className="ml-2" />}
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
@@ -60,6 +70,7 @@ const Navbar: React.FC = () => {
                   <Button variant="ghost" size="sm">
                     <User className="h-4 w-4 mr-2" />
                     {user.email?.split('@')[0]}
+                    {subscribed && <PremiumBadge className="ml-2" />}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -67,6 +78,10 @@ const Navbar: React.FC = () => {
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/subscription')}>
+                    <Crown className="mr-2 h-4 w-4" />
+                    Premium
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/settings')}>
                     <Settings className="mr-2 h-4 w-4" />
                     Einstellungen
