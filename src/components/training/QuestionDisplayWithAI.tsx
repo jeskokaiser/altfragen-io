@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,11 +59,12 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
   const [firstWrongAnswer, setFirstWrongAnswer] = useState<string | null>(null);
   const [showSolution, setShowSolution] = useState(false);
+  const [hasIncrementedUsageForQuestion, setHasIncrementedUsageForQuestion] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { preferences } = useUserPreferences();
-  const { isPremium, canAccessAIComments, loading: premiumLoading, requirePremiumForAI } = usePremiumFeatures();
+  const { isPremium, canAccessAIComments, loading: premiumLoading, requirePremiumForAI, isFreeTier, incrementUsage } = usePremiumFeatures();
   const { createCheckoutSession } = useSubscription();
 
   // Fetch AI commentary data
@@ -103,6 +103,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setCurrentQuestion(questionData);
     setIsCorrect(false);
     setShowSolution(false);
+    setHasIncrementedUsageForQuestion(false); // Reset for new question
     
     // Initialize state from userAnswerState if it exists
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
@@ -150,6 +151,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setIsCorrect(false);
     setWrongAnswers([]);
     setFirstWrongAnswer(null);
+    setHasIncrementedUsageForQuestion(false); // Reset for next question
     onNext();
   };
 
@@ -284,6 +286,13 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       );
     }
 
+    // Increment usage when AI comments are first shown for this question
+    if (isFreeTier && !hasIncrementedUsageForQuestion && aiCommentary) {
+      incrementUsage().then(() => {
+        setHasIncrementedUsageForQuestion(true);
+      });
+    }
+
     return (
       <div className="mt-6 space-y-4">
         {/* Duplicate Navigation Buttons Above AI Comments */}
@@ -411,4 +420,3 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 };
 
 export default QuestionDisplayWithAI;
-
