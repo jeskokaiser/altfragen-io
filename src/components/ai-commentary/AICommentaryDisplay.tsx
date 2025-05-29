@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +25,19 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   commentaryData,
   questionData
 }) => {
-  const { canAccessAIComments, isFreeTier, remainingFreeViews, dailyUsage, DAILY_LIMIT } = usePremiumFeatures();
+  const { canAccessAIComments, isFreeTier, remainingFreeViews, dailyUsage, DAILY_LIMIT, incrementUsage } = usePremiumFeatures();
   const { createCheckoutSession } = useSubscription();
   const [expandedAnswers, setExpandedAnswers] = useState<Set<AnswerOption>>(new Set());
+  const [hasIncrementedUsage, setHasIncrementedUsage] = useState(false);
+
+  // Increment usage for free tier users when component mounts
+  useEffect(() => {
+    if (isFreeTier && !hasIncrementedUsage && canAccessAIComments) {
+      incrementUsage().then(() => {
+        setHasIncrementedUsage(true);
+      });
+    }
+  }, [isFreeTier, hasIncrementedUsage, canAccessAIComments, incrementUsage]);
 
   // Premium gate - this is a fallback in case the component is rendered without proper gating
   if (!canAccessAIComments) {
@@ -59,15 +70,19 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   const renderUsageInfo = () => {
     if (!isFreeTier) return null;
 
+    // Adjust the display to account for the usage that was just incremented
+    const adjustedRemaining = hasIncrementedUsage ? remainingFreeViews - 1 : remainingFreeViews;
+    const adjustedUsage = hasIncrementedUsage ? dailyUsage + 1 : dailyUsage;
+
     return (
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="flex items-center gap-2 text-sm text-blue-700">
           <Eye className="h-4 w-4" />
           <span>
-            Kostenlose Nutzung: {remainingFreeViews} von {DAILY_LIMIT} verbleibend heute
+            Kostenlose Nutzung: {adjustedRemaining} von {DAILY_LIMIT} verbleibend heute
           </span>
         </div>
-        {remainingFreeViews <= 3 && remainingFreeViews > 0 && (
+        {adjustedRemaining <= 3 && adjustedRemaining > 0 && (
           <p className="text-xs text-blue-600 mt-1">
             Nur noch wenige kostenlose KI-Kommentare übrig! 
             <Button variant="link" className="p-0 h-auto ml-1 text-blue-600" onClick={createCheckoutSession}>
