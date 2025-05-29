@@ -188,8 +188,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const renderAICommentary = () => {
-    // Show AI commentary ONLY when the user has answered correctly
-    const shouldShowAICommentary = showFeedback && isCorrect;
+    // Show AI commentary when the user has answered correctly OR when solution is shown
+    const shouldShowAICommentary = showFeedback && (isCorrect || showSolution);
     
     if (!shouldShowAICommentary) return null;
 
