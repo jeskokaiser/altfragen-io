@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -291,6 +292,17 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
     return (
       <div className="mt-6 space-y-4">
+        {/* Duplicate Navigation Buttons Above AI Comments */}
+        <NavigationButtons
+          onPrevious={onPrevious}
+          onNext={handleNext}
+          isFirstQuestion={currentIndex === 0}
+          isLastQuestion={currentIndex === totalQuestions - 1}
+          hasUserAnswer={!!userAnswer && isCorrect}
+          wrongAttempts={wrongAnswers.length}
+          showSolution={showSolution}
+        />
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -391,6 +403,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         isLastQuestion={currentIndex === totalQuestions - 1}
         hasUserAnswer={!!userAnswer && isCorrect}
         wrongAttempts={wrongAnswers.length}
+        showSolution={showSolution}
       />
 
       <EditQuestionModal

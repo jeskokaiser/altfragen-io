@@ -556,6 +556,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_ai_comment_usage: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          updated_at?: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           archived_datasets: string[] | null

@@ -24,7 +24,7 @@ export const useAICommentUsage = () => {
         .select('usage_count')
         .eq('user_id', user.id)
         .eq('date', today)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error checking daily usage:', error);
