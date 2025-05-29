@@ -13,7 +13,8 @@ import AnswerSubmission from './AnswerSubmission';
 import DifficultyControls from './DifficultyControls';
 import QuestionFeedback from './QuestionFeedback';
 import AICommentaryDisplay from '@/components/ai-commentary/AICommentaryDisplay';
-import { AlertCircle, Brain, RefreshCw } from 'lucide-react';
+import PremiumBadge from '@/components/subscription/PremiumBadge';
+import { AlertCircle, Brain, RefreshCw, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -21,6 +22,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
 import { AICommentaryData } from '@/types/AIAnswerComments';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -59,6 +62,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { preferences } = useUserPreferences();
+  const { isPremium, canAccessAIComments, loading: premiumLoading } = usePremiumFeatures();
+  const { createCheckoutSession } = useSubscription();
 
   // Fetch AI commentary data
   const { data: aiCommentary, isLoading: aiLoading, error: aiError } = useQuery({
@@ -190,6 +195,40 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     );
     
     if (!shouldShowAICommentary) return null;
+
+    // Check if user has premium access
+    if (!canAccessAIComments) {
+      return (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              KI-Kommentare
+              <PremiumBadge />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-6 space-y-4">
+              <Crown className="h-16 w-16 mx-auto text-blue-500" />
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
+                <p className="text-gray-600 mb-4">
+                  KI-Kommentare sind nur für Premium-Abonnenten verfügbar. 
+                  Erhalte detaillierte Erklärungen zu jeder Antwort für besseres Verständnis.
+                </p>
+                <Button 
+                  onClick={createCheckoutSession}
+                  className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <Crown className="h-4 w-4" />
+                  Premium für €3,99/Monat
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
 
     if (aiLoading) {
       return (

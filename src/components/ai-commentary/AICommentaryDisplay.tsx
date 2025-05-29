@@ -1,11 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Brain, Users, BarChart3 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown } from 'lucide-react';
 import { AICommentaryData, ModelName, AnswerOption } from '@/types/AIAnswerComments';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 interface AICommentaryDisplayProps {
   commentaryData: AICommentaryData;
@@ -23,7 +24,31 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   commentaryData,
   questionData
 }) => {
+  const { canAccessAIComments } = usePremiumFeatures();
+  const { createCheckoutSession } = useSubscription();
   const [expandedAnswers, setExpandedAnswers] = useState<Set<AnswerOption>>(new Set());
+
+  // Premium gate - this is a fallback in case the component is rendered without proper gating
+  if (!canAccessAIComments) {
+    return (
+      <div className="text-center py-6 space-y-4">
+        <Crown className="h-16 w-16 mx-auto text-blue-500" />
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
+          <p className="text-gray-600 mb-4">
+            KI-Kommentare sind nur für Premium-Abonnenten verfügbar.
+          </p>
+          <Button 
+            onClick={createCheckoutSession}
+            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Crown className="h-4 w-4" />
+            Premium für €3,99/Monat
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const toggleAnswer = (option: AnswerOption) => {
     const newExpanded = new Set(expandedAnswers);

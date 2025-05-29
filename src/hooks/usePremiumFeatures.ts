@@ -6,6 +6,7 @@ export const usePremiumFeatures = () => {
   const { subscribed, loading } = useSubscription();
   const { user } = useAuth();
 
+  // User must be logged in AND have an active subscription
   const isPremium = user && subscribed;
   const canAccessAIComments = isPremium;
   
@@ -19,8 +20,8 @@ export const usePremiumFeatures = () => {
   };
 
   return {
-    isPremium,
-    canAccessAIComments,
+    isPremium: !!isPremium,
+    canAccessAIComments: !!canAccessAIComments,
     requirePremiumForAI,
     loading,
   };
