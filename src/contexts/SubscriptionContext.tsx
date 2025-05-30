@@ -155,13 +155,20 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       console.log('Customer portal session created:', data);
       if (data?.url) {
         window.open(data.url, '_blank');
+      } else if (data?.configurationRequired) {
+        showToast.error('Customer portal is not configured. Please contact support.');
       } else {
         throw new Error('No portal URL received');
       }
     } catch (error) {
       console.error('Failed to open customer portal:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showToast.error(`Failed to open subscription management: ${errorMessage}`);
+      
+      if (errorMessage.includes('No configuration provided')) {
+        showToast.error('Customer portal not configured. Please contact support to manage your subscription.');
+      } else {
+        showToast.error(`Failed to open subscription management: ${errorMessage}`);
+      }
     }
   };
 
