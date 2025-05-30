@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown, Eye } from 'lucide-react';
+import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown, Eye, AlertTriangle } from 'lucide-react';
 import { AICommentaryData, ModelName, AnswerOption } from '@/types/AIAnswerComments';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -31,7 +32,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   // Premium gate - this is a fallback in case the component is rendered without proper gating
   if (!canAccessAIComments) {
     return (
-      <div className="text-center py-6 space-y-4">
+      <div className="text-center py-8 space-y-4">
         <Crown className="h-16 w-16 mx-auto text-blue-500" />
         <div>
           <h3 className="text-lg font-semibold mb-2">
@@ -60,7 +61,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     if (!isFreeTier) return null;
 
     return (
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
         <div className="flex items-center gap-2 text-sm text-blue-700">
           <Eye className="h-4 w-4" />
           <span>
@@ -130,20 +131,20 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     const models = Object.keys(commentaryData.models) as ModelName[];
     
     return (
-      <div className="mt-3 space-y-2">
+      <div className="mt-4 space-y-3">
         {models.map(model => {
           const comment = commentaryData.models[model].answers[option];
           if (!comment) return null;
 
           return (
-            <div key={model} className="p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
+            <div key={model} className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
                 <Badge className={getModelColor(model)}>
                   {getModelIcon(model)}
                   <span className="ml-1 capitalize">{model}</span>
                 </Badge>
               </div>
-              <p className="text-sm text-gray-700">{comment}</p>
+              <p className="text-gray-700 leading-relaxed">{comment}</p>
             </div>
           );
         })}
@@ -154,39 +155,33 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   const renderSummaryView = () => {
     if (!commentaryData.summary) {
       return (
-        <Card>
-          <CardContent className="pt-6 text-center text-gray-500">
-            Keine Zusammenfassung verfügbar
-          </CardContent>
-        </Card>
+        <div className="text-center text-gray-500 py-8">
+          Keine Zusammenfassung verfügbar
+        </div>
       );
     }
 
     const summary = commentaryData.summary;
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* General Summary */}
         {summary.summary_general_comment && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Allgemeine Zusammenfassung
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700">{summary.summary_general_comment}</p>
-            </CardContent>
-          </Card>
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <h3 className="text-lg font-semibold">Allgemeine Zusammenfassung</h3>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-4">
+              <p className="text-gray-800 leading-relaxed">{summary.summary_general_comment}</p>
+            </div>
+          </div>
         )}
 
         {/* Answer Options with Summary and Expandable Individual Comments */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Antwortoptionen</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Antwortoptionen</h3>
+          <div className="space-y-4">
             {(['a', 'b', 'c', 'd', 'e'] as AnswerOption[]).map(option => {
               const summaryField = `summary_comment_${option}` as keyof typeof summary;
               const summaryText = summary[summaryField] as string;
@@ -195,12 +190,12 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
               if (!summaryText && !hasIndividualComments) return null;
 
               return (
-                <div key={option} className="border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant={isCorrectAnswer(option) ? "default" : "outline"}>
+                <div key={option} className="bg-white rounded-lg border border-gray-200 p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Badge variant={isCorrectAnswer(option) ? "default" : "outline"} className="text-sm">
                       {getAnswerLabel(option)}
                     </Badge>
-                    <span className="text-sm text-gray-600">{getAnswerText(option)}</span>
+                    <span className="text-gray-700 font-medium">{getAnswerText(option)}</span>
                     {isCorrectAnswer(option) && (
                       <Badge variant="secondary" className="bg-green-100 text-green-800">
                         Korrekt
@@ -210,7 +205,9 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                   
                   {/* Summary Text */}
                   {summaryText && (
-                    <p className="text-gray-700 mb-3">{summaryText}</p>
+                    <div className="mb-4">
+                      <p className="text-gray-800 leading-relaxed">{summaryText}</p>
+                    </div>
                   )}
                   
                   {/* Expandable Individual Model Comments */}
@@ -220,8 +217,8 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                       onOpenChange={() => toggleAnswer(option)}
                     >
                       <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="w-full justify-between p-2">
-                          <span className="text-sm">Einzelne KI-Modell Kommentare anzeigen</span>
+                        <Button variant="ghost" size="sm" className="w-full justify-between p-3 hover:bg-gray-50">
+                          <span className="text-sm font-medium">Einzelne KI-Modell Kommentare anzeigen</span>
                           {expandedAnswers.has(option) ? (
                             <ChevronUp className="h-4 w-4" />
                           ) : (
@@ -237,23 +234,36 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                 </div>
               );
             })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Model Agreement Analysis */}
         {summary.model_agreement_analysis && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Modell-Übereinstimmungsanalyse
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700">{summary.model_agreement_analysis}</p>
-            </CardContent>
-          </Card>
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="h-5 w-5 text-purple-600" />
+              <h3 className="text-lg font-semibold">Modell-Übereinstimmungsanalyse</h3>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4">
+              <p className="text-gray-800 leading-relaxed">{summary.model_agreement_analysis}</p>
+            </div>
+          </div>
         )}
+
+        {/* AI Disclaimer */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-amber-800 mb-1">Wichtiger Hinweis</h4>
+              <p className="text-sm text-amber-700 leading-relaxed">
+                KI-Modelle können Fehler machen und unvollständige oder ungenaue Informationen liefern. 
+                Bitte überprüfen Sie alle Antworten und Erklärungen sorgfältig und konsultieren Sie bei 
+                wichtigen Entscheidungen zusätzliche Quellen oder Fachexperten.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
