@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { showToast } from '@/utils/toast';
 
 interface SubscriptionContextType {
   subscribed: boolean;
@@ -41,16 +41,22 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
 
     try {
-      console.log('Checking subscription status...');
+      console.log('Checking subscription status for user:', user.id);
+      
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.session.access_token}`,
         },
       });
 
       if (error) {
-        console.error('Error checking subscription:', error);
-        throw error;
+        console.error('Subscription check error:', error);
+        throw new Error(error.message || 'Failed to check subscription');
       }
 
       console.log('Subscription check result:', data);
@@ -59,7 +65,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setSubscriptionEnd(data.subscription_end || null);
     } catch (error) {
       console.error('Failed to check subscription:', error);
-      toast.error('Failed to check subscription status');
+      showToast.error('Failed to check subscription status');
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
@@ -70,59 +76,76 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
   const createCheckoutSession = async () => {
     if (!user) {
-      toast.error('Please log in to subscribe');
+      showToast.error('Please log in to subscribe');
       return;
     }
 
     try {
-      console.log('Creating checkout session...');
+      console.log('Creating checkout session for user:', user.id);
+      
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.session.access_token}`,
         },
       });
 
       if (error) {
-        console.error('Error creating checkout session:', error);
-        throw error;
+        console.error('Checkout creation error:', error);
+        throw new Error(error.message || 'Failed to create checkout session');
       }
 
       console.log('Checkout session created:', data);
       if (data.url) {
-        window.open(data.url, '_blank');
+        // Redirect in same tab for better UX
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Failed to create checkout session:', error);
-      toast.error('Failed to start checkout process');
+      showToast.error('Failed to start checkout process');
     }
   };
 
   const openCustomerPortal = async () => {
     if (!user) {
-      toast.error('Please log in to manage subscription');
+      showToast.error('Please log in to manage subscription');
       return;
     }
 
     try {
-      console.log('Opening customer portal...');
+      console.log('Opening customer portal for user:', user.id);
+      
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.session.access_token}`,
         },
       });
 
       if (error) {
-        console.error('Error opening customer portal:', error);
-        throw error;
+        console.error('Customer portal error:', error);
+        throw new Error(error.message || 'Failed to open customer portal');
       }
 
       console.log('Customer portal session created:', data);
       if (data.url) {
         window.open(data.url, '_blank');
+      } else {
+        throw new Error('No portal URL received');
       }
     } catch (error) {
       console.error('Failed to open customer portal:', error);
-      toast.error('Failed to open subscription management');
+      showToast.error('Failed to open subscription management');
     }
   };
 
@@ -133,6 +156,26 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setLoading(false);
     }
   }, [user]);
+
+  // Check for successful checkout
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('checkout') === 'success') {
+      showToast.success('Subscription activated successfully!');
+      // Remove the checkout parameter from URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      // Refresh subscription status
+      setTimeout(() => {
+        checkSubscription();
+      }, 2000);
+    } else if (urlParams.get('checkout') === 'cancelled') {
+      showToast.info('Checkout was cancelled');
+      // Remove the checkout parameter from URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
 
   return (
     <SubscriptionContext.Provider value={{
