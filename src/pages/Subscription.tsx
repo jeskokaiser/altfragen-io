@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -7,7 +7,18 @@ import { Card } from '@/components/ui/card';
 import { Check, X, Brain, Shield, Upload, FileText, Zap } from 'lucide-react';
 
 const Subscription = () => {
-  const { subscribed } = useSubscription();
+  const { subscribed, checkSubscription, loading } = useSubscription();
+
+  // Ensure subscription status is checked when component mounts
+  useEffect(() => {
+    console.log('Subscription page mounted, checking subscription status');
+    checkSubscription();
+  }, [checkSubscription]);
+
+  // Add debugging logs
+  useEffect(() => {
+    console.log('Subscription status updated:', { subscribed, loading });
+  }, [subscribed, loading]);
 
   const features = [
     { name: 'Werbefrei und ohne Tracking', free: true, premium: true, icon: Shield },
