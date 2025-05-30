@@ -55,7 +55,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     );
   }
 
-  // Show usage info for free tier users
+  // Show usage info for free tier users - only display remaining views, no increment logic here
   const renderUsageInfo = () => {
     if (!isFreeTier) return null;
 

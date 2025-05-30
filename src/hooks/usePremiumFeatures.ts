@@ -6,7 +6,14 @@ import { useAICommentUsage } from './useAICommentUsage';
 export const usePremiumFeatures = () => {
   const { subscribed, loading } = useSubscription();
   const { user } = useAuth();
-  const { canViewAIComments: canViewFree, incrementUsage, remainingFreeViews, dailyUsage, DAILY_LIMIT } = useAICommentUsage();
+  const { 
+    canViewAIComments: canViewFree, 
+    incrementUsage, 
+    remainingFreeViews, 
+    dailyUsage, 
+    DAILY_LIMIT,
+    isIncrementing 
+  } = useAICommentUsage();
 
   // User must be logged in AND (have an active subscription OR have free views remaining)
   const isPremium = user && subscribed;
@@ -16,15 +23,17 @@ export const usePremiumFeatures = () => {
     if (subscribed) {
       // Premium user - unlimited access
       callback();
-    } else if (canViewFree) {
-      // Free user with remaining views
+    } else if (canViewFree && !isIncrementing) {
+      // Free user with remaining views - increment usage first
       const success = await incrementUsage();
       if (success) {
         callback();
+      } else {
+        console.log('Failed to increment AI comment usage');
       }
     } else {
-      // Free user who has exceeded daily limit
-      console.log('Tägliches Limit für kostenlose KI-Kommentare erreicht');
+      // Free user who has exceeded daily limit or is currently incrementing
+      console.log('Tägliches Limit für kostenlose KI-Kommentare erreicht oder Verarbeitung läuft');
     }
   };
 
@@ -37,6 +46,7 @@ export const usePremiumFeatures = () => {
     remainingFreeViews,
     dailyUsage,
     DAILY_LIMIT,
-    incrementUsage
+    incrementUsage,
+    isIncrementing
   };
 };

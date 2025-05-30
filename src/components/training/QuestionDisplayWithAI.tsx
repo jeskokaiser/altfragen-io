@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,12 +58,20 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [wrongAnswers, setWrongAnswers] = useState<string[]>([]);
   const [firstWrongAnswer, setFirstWrongAnswer] = useState<string | null>(null);
   const [showSolution, setShowSolution] = useState(false);
-  const [hasIncrementedUsageForQuestion, setHasIncrementedUsageForQuestion] = useState(false);
+  const [usageIncrementedForQuestion, setUsageIncrementedForQuestion] = useState<string | null>(null);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { preferences } = useUserPreferences();
-  const { isPremium, canAccessAIComments, loading: premiumLoading, requirePremiumForAI, isFreeTier, incrementUsage } = usePremiumFeatures();
+  const { 
+    isPremium, 
+    canAccessAIComments, 
+    loading: premiumLoading, 
+    requirePremiumForAI, 
+    isFreeTier, 
+    incrementUsage,
+    isIncrementing 
+  } = usePremiumFeatures();
   const { createCheckoutSession } = useSubscription();
 
   // Fetch AI commentary data
@@ -103,7 +110,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setCurrentQuestion(questionData);
     setIsCorrect(false);
     setShowSolution(false);
-    setHasIncrementedUsageForQuestion(false); // Reset for new question
+    setUsageIncrementedForQuestion(null); // Reset for new question
     
     // Initialize state from userAnswerState if it exists
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
@@ -121,6 +128,29 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       setFirstWrongAnswer(null);
     }
   }, [questionData, userAnswerState]);
+
+  // Handle usage increment when AI comments should be shown for free tier users
+  useEffect(() => {
+    const shouldShowAICommentary = showFeedback && (isCorrect || showSolution);
+    const shouldIncrementUsage = shouldShowAICommentary && 
+                                 isFreeTier && 
+                                 aiCommentary && 
+                                 canAccessAIComments &&
+                                 !isIncrementing &&
+                                 usageIncrementedForQuestion !== currentQuestion.id;
+
+    if (shouldIncrementUsage) {
+      console.log(`Incrementing usage for question ${currentQuestion.id}`);
+      incrementUsage().then((success) => {
+        if (success) {
+          setUsageIncrementedForQuestion(currentQuestion.id);
+          console.log(`Usage incremented successfully for question ${currentQuestion.id}`);
+        }
+      }).catch((error) => {
+        console.error('Failed to increment usage:', error);
+      });
+    }
+  }, [showFeedback, isCorrect, showSolution, isFreeTier, aiCommentary, canAccessAIComments, incrementUsage, currentQuestion.id, usageIncrementedForQuestion, isIncrementing]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
@@ -151,7 +181,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setIsCorrect(false);
     setWrongAnswers([]);
     setFirstWrongAnswer(null);
-    setHasIncrementedUsageForQuestion(false); // Reset for next question
+    setUsageIncrementedForQuestion(null); // Reset for next question
     onNext();
   };
 
@@ -227,13 +257,13 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       );
     }
 
-    if (aiLoading) {
+    if (aiLoading || isIncrementing) {
       return (
         <Card className="mt-6">
           <CardContent className="pt-6">
             <div className="flex items-center justify-center py-4">
               <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-              <span>Lade KI-Kommentare...</span>
+              <span>{isIncrementing ? 'Verarbeite Nutzung...' : 'Lade KI-Kommentare...'}</span>
             </div>
           </CardContent>
         </Card>
@@ -284,13 +314,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           </CardContent>
         </Card>
       );
-    }
-
-    // Increment usage when AI comments are first shown for this question
-    if (isFreeTier && !hasIncrementedUsageForQuestion && aiCommentary) {
-      incrementUsage().then(() => {
-        setHasIncrementedUsageForQuestion(true);
-      });
     }
 
     return (
