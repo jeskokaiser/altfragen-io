@@ -11,7 +11,7 @@ const Subscription = () => {
 
   const features = [
     { name: 'Werbefrei und ohne Tracking', free: true, premium: true, icon: Shield },
-    { name: 'Ihre Daten gehören Ihnen', free: true, premium: true, icon: Shield },
+    { name: 'Deine Daten gehören dir', free: true, premium: true, icon: Shield },
     { name: 'Unbegrenzte Fragenerstellung und -beantwortung', free: true, premium: true, icon: Upload },
     { name: 'Unbegrenzte PDF-Verarbeitung', free: true, premium: true, icon: FileText },
     { name: 'KI-kommentierte Fragen (10 pro Tag)', free: true, premium: false, icon: Brain },
@@ -63,7 +63,7 @@ const Subscription = () => {
             </div>
             <p className="text-blue-700 text-sm">
               Drei verschiedene Modelle sorgen für höhere Genauigkeit bei schwierigen Fragen. 
-              Sie sparen Zeit und Geld im Vergleich zum Einzelkauf und Setup der Modelle.
+              Du sparst Zeit und Geld im Vergleich zum Einzelkauf und Setup der Modelle.
             </p>
           </div>
         </Card>
@@ -157,7 +157,7 @@ const Subscription = () => {
           <h3 className="text-lg font-semibold">Warum drei KI-Modelle?</h3>
           <p className="text-sm text-muted-foreground">
             Verschiedene KI-Modelle haben unterschiedliche Stärken. Durch die Kombination von ChatGPT o4-mini, 
-            Claude Sonnet 4 und Gemini 2.5 Pro erhalten Sie präzisere und umfassendere Antworten, 
+            Claude Sonnet 4 und Gemini 2.5 Pro erhältst du präzisere und umfassendere Antworten, 
             besonders bei komplexen medizinischen Fragen. Eine erweiterte KI erstellt zusätzlich eine 
             Zusammenfassung aller Erkenntnisse.
           </p>
