@@ -51,10 +51,9 @@ const Navbar: React.FC = () => {
                   </Button>
                 </Link>
                 <Link to="/subscription">
-                  <Button variant="ghost" size="sm" className="relative">
+                  <Button variant="ghost" size="sm">
                     <Crown className={`h-4 w-4 mr-2 ${subscribed ? 'text-yellow-600' : ''}`} />
                     Premium
-                    {subscribed && <PremiumBadge className="ml-2" />}
                   </Button>
                 </Link>
               </div>
