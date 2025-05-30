@@ -69,7 +69,6 @@ const Navbar: React.FC = () => {
                   <Button variant="ghost" size="sm">
                     <User className="h-4 w-4 mr-2" />
                     {user.email?.split('@')[0]}
-                    {subscribed && <PremiumBadge className="ml-2" />}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
