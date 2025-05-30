@@ -18,68 +18,77 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Use service role key for database writes
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
   try {
     logStep("Function started");
 
+    // Check environment variables
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY is not configured");
+
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey || !stripeKey) {
+      logStep("Missing environment variables", { 
+        hasUrl: !!supabaseUrl, 
+        hasServiceKey: !!supabaseServiceKey, 
+        hasAnonKey: !!supabaseAnonKey, 
+        hasStripeKey: !!stripeKey 
+      });
+      throw new Error("Missing required environment variables");
     }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      logStep("No authorization header");
       throw new Error("No authorization header provided");
     }
 
     const token = authHeader.replace("Bearer ", "");
     
     // Use anon key client to verify user token
-    const anonClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey);
+    logStep("Authenticating user with anon client");
     
     const { data: userData, error: userError } = await anonClient.auth.getUser(token);
     if (userError) {
+      logStep("Authentication failed", { error: userError.message });
       throw new Error(`Authentication error: ${userError.message}`);
     }
     const user = userData.user;
     if (!user?.email) {
+      logStep("No user or email found");
       throw new Error("User not authenticated or email not available");
     }
 
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated successfully", { userId: user.id, email: user.email });
+
+    // Use service role key for database writes
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, { 
+      auth: { persistSession: false } 
+    });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    
+    logStep("Checking for Stripe customer");
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
-      await supabaseClient.from("subscribers").upsert({
-        email: user.email,
-        user_id: user.id,
-        stripe_customer_id: null,
-        subscribed: false,
-        subscription_tier: null,
-        subscription_end: null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
-
-      // Update profiles table if it exists
-      const { error: profileError } = await supabaseClient
-        .from("profiles")
-        .update({ is_premium: false })
-        .eq("id", user.id);
       
-      if (profileError) {
-        logStep("Profile update failed (table may not exist)", { error: profileError.message });
+      try {
+        await supabaseClient.from("subscribers").upsert({
+          email: user.email,
+          user_id: user.id,
+          stripe_customer_id: null,
+          subscribed: false,
+          subscription_tier: null,
+          subscription_end: null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'email' });
+        logStep("Database updated successfully");
+      } catch (dbError) {
+        logStep("Database update failed", { error: dbError });
+        // Continue anyway, don't fail the whole request
       }
 
       return new Response(JSON.stringify({ subscribed: false }), {
@@ -91,11 +100,13 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    logStep("Checking for active subscriptions");
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
       limit: 1,
     });
+    
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionTier = null;
     let subscriptionEnd = null;
@@ -117,30 +128,42 @@ serve(async (req) => {
         subscriptionTier = "Enterprise";
       }
       logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
+    } else {
+      logStep("No active subscription found");
     }
 
     // Update subscribers table
-    await supabaseClient.from("subscribers").upsert({
-      email: user.email,
-      user_id: user.id,
-      stripe_customer_id: customerId,
-      subscribed: hasActiveSub,
-      subscription_tier: subscriptionTier,
-      subscription_end: subscriptionEnd,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' });
-
-    // Update profiles table if it exists
-    const { error: profileError } = await supabaseClient
-      .from("profiles")
-      .update({ is_premium: hasActiveSub })
-      .eq("id", user.id);
-    
-    if (profileError) {
-      logStep("Profile update failed (table may not exist)", { error: profileError.message });
+    try {
+      await supabaseClient.from("subscribers").upsert({
+        email: user.email,
+        user_id: user.id,
+        stripe_customer_id: customerId,
+        subscribed: hasActiveSub,
+        subscription_tier: subscriptionTier,
+        subscription_end: subscriptionEnd,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
+      logStep("Database updated successfully", { subscribed: hasActiveSub, subscriptionTier });
+    } catch (dbError) {
+      logStep("Database update failed", { error: dbError });
+      // Continue anyway, don't fail the whole request
     }
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
+    // Try to update profiles table if it exists
+    try {
+      const { error: profileError } = await supabaseClient
+        .from("profiles")
+        .update({ is_premium: hasActiveSub })
+        .eq("id", user.id);
+      
+      if (profileError) {
+        logStep("Profile update failed (table may not exist)", { error: profileError.message });
+      } else {
+        logStep("Profile updated successfully");
+      }
+    } catch (profileError) {
+      logStep("Profile update failed", { error: profileError });
+    }
     
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
@@ -152,7 +175,11 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in check-subscription", { message: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+    logStep("ERROR in check-subscription", { 
+      message: errorMessage, 
+      stack: error instanceof Error ? error.stack : undefined 
+    });
+    
     return new Response(JSON.stringify({ 
       error: errorMessage,
       details: "Check edge function logs for more information"

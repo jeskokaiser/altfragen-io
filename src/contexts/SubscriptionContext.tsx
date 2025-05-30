@@ -33,6 +33,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
   const checkSubscription = async () => {
     if (!user) {
+      console.log('No user found, setting unsubscribed state');
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
@@ -42,12 +43,15 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
     try {
       console.log('Checking subscription status for user:', user.id);
+      setLoading(true);
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.access_token) {
+        console.error('No valid session found');
         throw new Error('No valid session found');
       }
 
+      console.log('Invoking check-subscription function');
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.session.access_token}`,
@@ -55,17 +59,26 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       });
 
       if (error) {
-        console.error('Subscription check error:', error);
+        console.error('Subscription check error details:', error);
         throw new Error(error.message || 'Failed to check subscription');
       }
 
       console.log('Subscription check result:', data);
-      setSubscribed(data.subscribed || false);
-      setSubscriptionTier(data.subscription_tier || null);
-      setSubscriptionEnd(data.subscription_end || null);
+      
+      if (data) {
+        setSubscribed(data.subscribed || false);
+        setSubscriptionTier(data.subscription_tier || null);
+        setSubscriptionEnd(data.subscription_end || null);
+      } else {
+        // Handle case where data is null/undefined
+        setSubscribed(false);
+        setSubscriptionTier(null);
+        setSubscriptionEnd(null);
+      }
     } catch (error) {
       console.error('Failed to check subscription:', error);
-      showToast.error('Failed to check subscription status');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showToast.error(`Failed to check subscription status: ${errorMessage}`);
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
@@ -88,6 +101,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         throw new Error('No valid session found');
       }
 
+      console.log('Invoking create-checkout function');
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         headers: {
           Authorization: `Bearer ${session.session.access_token}`,
@@ -95,12 +109,12 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       });
 
       if (error) {
-        console.error('Checkout creation error:', error);
+        console.error('Checkout creation error details:', error);
         throw new Error(error.message || 'Failed to create checkout session');
       }
 
       console.log('Checkout session created:', data);
-      if (data.url) {
+      if (data?.url) {
         // Redirect in same tab for better UX
         window.location.href = data.url;
       } else {
@@ -108,7 +122,8 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       }
     } catch (error) {
       console.error('Failed to create checkout session:', error);
-      showToast.error('Failed to start checkout process');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showToast.error(`Failed to start checkout process: ${errorMessage}`);
     }
   };
 
@@ -133,19 +148,20 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       });
 
       if (error) {
-        console.error('Customer portal error:', error);
+        console.error('Customer portal error details:', error);
         throw new Error(error.message || 'Failed to open customer portal');
       }
 
       console.log('Customer portal session created:', data);
-      if (data.url) {
+      if (data?.url) {
         window.open(data.url, '_blank');
       } else {
         throw new Error('No portal URL received');
       }
     } catch (error) {
       console.error('Failed to open customer portal:', error);
-      showToast.error('Failed to open subscription management');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showToast.error(`Failed to open subscription management: ${errorMessage}`);
     }
   };
 
@@ -165,7 +181,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       // Remove the checkout parameter from URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
-      // Refresh subscription status
+      // Refresh subscription status after a short delay
       setTimeout(() => {
         checkSubscription();
       }, 2000);
