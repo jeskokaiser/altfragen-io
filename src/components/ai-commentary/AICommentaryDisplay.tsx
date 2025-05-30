@@ -35,10 +35,10 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
       <div className="text-center py-8 space-y-4">
         <Crown className="h-16 w-16 mx-auto text-blue-500" />
         <div>
-          <h3 className="text-lg font-semibold mb-2">
+          <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
             {isFreeTier ? 'Tägliches Limit erreicht' : 'Premium Feature'}
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             {isFreeTier 
               ? `Du hast heute bereits ${dailyUsage}/${DAILY_LIMIT} kostenlose KI-Kommentare verwendet. Upgraden für unbegrenzten Zugang!`
               : 'KI-Kommentare sind nur für Premium-Abonnenten verfügbar.'
@@ -46,7 +46,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           </p>
           <Button 
             onClick={createCheckoutSession}
-            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2"
           >
             <Crown className="h-4 w-4" />
             Premium für €3,99/Monat
@@ -61,17 +61,17 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     if (!isFreeTier) return null;
 
     return (
-      <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-        <div className="flex items-center gap-2 text-sm text-blue-700">
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-600 rounded-r-lg">
+        <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
           <Eye className="h-4 w-4" />
           <span>
             Kostenlose Nutzung: {remainingFreeViews} von {DAILY_LIMIT} verbleibend heute
           </span>
         </div>
         {remainingFreeViews <= 3 && remainingFreeViews > 0 && (
-          <p className="text-xs text-blue-600 mt-1">
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
             Nur noch wenige kostenlose KI-Kommentare übrig! 
-            <Button variant="link" className="p-0 h-auto ml-1 text-blue-600" onClick={createCheckoutSession}>
+            <Button variant="link" className="p-0 h-auto ml-1 text-blue-600 dark:text-blue-400" onClick={createCheckoutSession}>
               Jetzt upgraden
             </Button>
           </p>
@@ -92,9 +92,9 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
 
   const getModelColor = (model: ModelName): string => {
     switch (model) {
-      case 'openai': return 'bg-green-100 text-green-800';
-      case 'claude': return 'bg-blue-100 text-blue-800';
-      case 'gemini': return 'bg-purple-100 text-purple-800';
+      case 'openai': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'claude': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'gemini': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
     }
   };
 
@@ -137,14 +137,14 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           if (!comment) return null;
 
           return (
-            <div key={model} className="bg-gray-50 rounded-lg p-4">
+            <div key={model} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Badge className={getModelColor(model)}>
                   {getModelIcon(model)}
                   <span className="ml-1 capitalize">{model}</span>
                 </Badge>
               </div>
-              <p className="text-gray-700 leading-relaxed">{comment}</p>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
             </div>
           );
         })}
@@ -155,7 +155,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   const renderSummaryView = () => {
     if (!commentaryData.summary) {
       return (
-        <div className="text-center text-gray-500 py-8">
+        <div className="text-center text-gray-500 dark:text-gray-400 py-8">
           Keine Zusammenfassung verfügbar
         </div>
       );
@@ -164,23 +164,23 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     const summary = commentaryData.summary;
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* General Summary */}
         {summary.summary_general_comment && (
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-semibold">Allgemeine Zusammenfassung</h3>
+              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Allgemeine Zusammenfassung</h3>
             </div>
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-gray-800 leading-relaxed">{summary.summary_general_comment}</p>
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+              <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summary.summary_general_comment}</p>
             </div>
           </div>
         )}
 
         {/* Answer Options with Summary and Expandable Individual Comments */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Antwortoptionen</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Antwortoptionen</h3>
           <div className="space-y-4">
             {(['a', 'b', 'c', 'd', 'e'] as AnswerOption[]).map(option => {
               const summaryField = `summary_comment_${option}` as keyof typeof summary;
@@ -190,14 +190,14 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
               if (!summaryText && !hasIndividualComments) return null;
 
               return (
-                <div key={option} className="bg-white rounded-lg border border-gray-200 p-5">
+                <div key={option} className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
                   <div className="flex items-center gap-3 mb-4">
                     <Badge variant={isCorrectAnswer(option) ? "default" : "outline"} className="text-sm">
                       {getAnswerLabel(option)}
                     </Badge>
-                    <span className="text-gray-700 font-medium">{getAnswerText(option)}</span>
+                    <span className="text-gray-700 dark:text-gray-200 font-medium">{getAnswerText(option)}</span>
                     {isCorrectAnswer(option) && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                         Korrekt
                       </Badge>
                     )}
@@ -206,7 +206,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                   {/* Summary Text */}
                   {summaryText && (
                     <div className="mb-4">
-                      <p className="text-gray-800 leading-relaxed">{summaryText}</p>
+                      <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summaryText}</p>
                     </div>
                   )}
                   
@@ -217,7 +217,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                       onOpenChange={() => toggleAnswer(option)}
                     >
                       <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="w-full justify-between p-3 hover:bg-gray-50">
+                        <Button variant="ghost" size="sm" className="w-full justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
                           <span className="text-sm font-medium">Einzelne KI-Modell Kommentare anzeigen</span>
                           {expandedAnswers.has(option) ? (
                             <ChevronUp className="h-4 w-4" />
@@ -241,22 +241,22 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         {summary.model_agreement_analysis && (
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Users className="h-5 w-5 text-purple-600" />
-              <h3 className="text-lg font-semibold">Modell-Übereinstimmungsanalyse</h3>
+              <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Modell-Übereinstimmungsanalyse</h3>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4">
-              <p className="text-gray-800 leading-relaxed">{summary.model_agreement_analysis}</p>
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+              <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summary.model_agreement_analysis}</p>
             </div>
           </div>
         )}
 
         {/* AI Disclaimer */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-amber-800 mb-1">Wichtiger Hinweis</h4>
-              <p className="text-sm text-amber-700 leading-relaxed">
+              <h4 className="font-medium text-amber-800 dark:text-amber-300 mb-1">Wichtiger Hinweis</h4>
+              <p className="text-sm text-amber-700 dark:text-amber-200 leading-relaxed">
                 KI-Modelle können Fehler machen und unvollständige oder ungenaue Informationen liefern. 
                 Bitte überprüfen Sie alle Antworten und Erklärungen sorgfältig und konsultieren Sie bei 
                 wichtigen Entscheidungen zusätzliche Quellen oder Fachexperten.
