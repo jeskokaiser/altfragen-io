@@ -41,11 +41,11 @@ const Subscription = () => {
             </p>
             <div className="grid md:grid-cols-3 gap-4 mt-4">
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">ChatGPT o1-mini</h4>
+                <h4 className="font-semibold text-gray-900">ChatGPT o4-mini</h4>
                 <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
               </div>
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">Claude Sonnet 3.5</h4>
+                <h4 className="font-semibold text-gray-900">Claude Sonnet 4</h4>
                 <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
               </div>
               <div className="bg-white p-4 rounded-lg border">
@@ -156,8 +156,8 @@ const Subscription = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Warum drei KI-Modelle?</h3>
           <p className="text-sm text-muted-foreground">
-            Verschiedene KI-Modelle haben unterschiedliche Stärken. Durch die Kombination von ChatGPT o1-mini, 
-            Claude Sonnet 3.5 und Gemini 2.5 Pro erhalten Sie präzisere und umfassendere Antworten, 
+            Verschiedene KI-Modelle haben unterschiedliche Stärken. Durch die Kombination von ChatGPT o4-mini, 
+            Claude Sonnet 4 und Gemini 2.5 Pro erhalten Sie präzisere und umfassendere Antworten, 
             besonders bei komplexen medizinischen Fragen. Eine erweiterte KI erstellt zusätzlich eine 
             Zusammenfassung aller Erkenntnisse.
           </p>
