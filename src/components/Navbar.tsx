@@ -76,6 +76,24 @@ const Navbar: React.FC = () => {
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  
+                  {/* Mobile navigation items - only show on smaller screens */}
+                  <div className="md:hidden">
+                    <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                      <Home className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/collab')}>
+                      <Users className="mr-2 h-4 w-4" />
+                      Zusammenarbeit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/subscription')}>
+                      <Crown className="mr-2 h-4 w-4" />
+                      Premium
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </div>
+                  
                   <DropdownMenuItem onClick={() => navigate('/subscription')}>
                     <Crown className="mr-2 h-4 w-4" />
                     Premium
