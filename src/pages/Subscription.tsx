@@ -1,13 +1,13 @@
-
 import React from 'react';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Check, X, Brain, Shield, Upload, FileText, Zap, Tag } from 'lucide-react';
 
 const Subscription = () => {
-  const { subscribed } = useSubscription();
+  const { subscribed, createCheckoutSession } = useSubscription();
 
   const features = [
     { name: 'Werbefrei und ohne Tracking', free: true, premium: true, icon: Shield },
@@ -35,6 +35,14 @@ const Subscription = () => {
           <p className="text-sm text-muted-foreground mt-2">
             Limitiertes Einführungsangebot für die ersten 100 Nutzer
           </p>
+          {!subscribed && (
+            <Button 
+              onClick={createCheckoutSession} 
+              className="mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold"
+            >
+              🔥 Jetzt für €1,99/Monat sichern
+            </Button>
+          )}
         </div>
       </div>
 
