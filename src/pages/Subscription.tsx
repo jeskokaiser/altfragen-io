@@ -4,7 +4,7 @@ import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Card } from '@/components/ui/card';
-import { Check, X, Brain, Shield, Upload, FileText, Zap } from 'lucide-react';
+import { Check, X, Brain, Shield, Upload, FileText, Zap, Tag } from 'lucide-react';
 
 const Subscription = () => {
   const { subscribed } = useSubscription();
@@ -26,6 +26,16 @@ const Subscription = () => {
         <p className="text-muted-foreground">
           Verbessere dein Lernen mit KI-gestützten Kommentaren von drei Premium-KI-Modellen
         </p>
+        {/* Early Bird Discount Banner */}
+        <div className="max-w-md mx-auto mt-4">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
+            <Tag className="h-4 w-4" />
+            <span className="font-semibold">🎉 Early Bird Angebot: 50% Rabatt!</span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Limitiertes Einführungsangebot für die ersten 100 Nutzer
+          </p>
+        </div>
       </div>
 
       {/* AI Models Value Proposition */}
@@ -58,7 +68,10 @@ const Subscription = () => {
                 💰 Einzelkauf aller drei Modelle: ~€60/Monat
               </p>
               <p className="text-blue-700 text-sm mt-1">
-                Mit Altfragen.io Premium: Nur €3,99/Monat + automatische Zusammenfassung durch erweiterte KI
+                <span className="line-through">Mit Altfragen.io Premium: Nur €3,99/Monat</span>
+              </p>
+              <p className="text-green-700 font-semibold text-lg mt-1">
+                🎉 Early Bird Preis: Nur €1,99/Monat + automatische Zusammenfassung durch erweiterte KI
               </p>
             </div>
             <p className="text-blue-700 text-sm">
@@ -100,10 +113,17 @@ const Subscription = () => {
         </Card>
 
         {/* Premium Plan */}
-        <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400' : ''}`}>
+        <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400' : 'border-2 border-green-500'}`}>
           {subscribed && (
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <PremiumBadge />
+            </div>
+          )}
+          {!subscribed && (
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                🔥 Early Bird
+              </div>
             </div>
           )}
           
@@ -112,7 +132,11 @@ const Subscription = () => {
               <Brain className="h-6 w-6 text-blue-600" />
               <h3 className="text-xl font-semibold">Premium</h3>
             </div>
-            <div className="text-3xl font-bold">€3,99<span className="text-sm font-normal">/Monat</span></div>
+            <div className="space-y-2">
+              <div className="text-3xl font-bold text-green-600">€1,99<span className="text-sm font-normal">/Monat</span></div>
+              <div className="text-lg text-gray-500 line-through">€3,99<span className="text-sm">/Monat</span></div>
+              <div className="text-xs text-green-600 font-medium">50% Rabatt für die ersten 100 Nutzer</div>
+            </div>
             <p className="text-sm text-muted-foreground">Drei Premium-KI-Modelle für unbegrenzte Insights</p>
           </div>
           
@@ -160,6 +184,14 @@ const Subscription = () => {
             Claude Sonnet 4 und Gemini 2.5 Pro erhältst du präzisere und umfassendere Antworten, 
             besonders bei komplexen medizinischen Fragen. Eine erweiterte KI erstellt zusätzlich eine 
             Zusammenfassung aller Erkenntnisse.
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">🎯 Early Bird Angebot</h3>
+          <p className="text-sm text-muted-foreground">
+            Als einer der ersten 100 Nutzer erhältst du dauerhaft 50% Rabatt auf Altfragen.io Premium. 
+            Dieses Angebot ist limitiert und gilt solange du dein Abonnement nicht kündigst.
           </p>
         </div>
       </div>

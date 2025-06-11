@@ -74,7 +74,7 @@ serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") || req.headers.get("referer") || "https://ynzxzhpivcmkpipanltd.supabase.co";
-    logStep("Creating checkout session", { origin });
+    logStep("Creating checkout session with early bird pricing", { origin });
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -84,10 +84,10 @@ serve(async (req) => {
           price_data: {
             currency: "eur",
             product_data: { 
-              name: "Altfragen.io Premium",
-              description: "Zugang zu KI-Kommentaren für besseres Verständnis der Fragen und Antworten"
+              name: "Altfragen.io Premium - Early Bird",
+              description: "Early Bird Angebot: 50% Rabatt für die ersten 100 Nutzer. Zugang zu KI-Kommentaren von drei Premium-Modellen für besseres Verständnis der Fragen und Antworten"
             },
-            unit_amount: 399, // €3.99
+            unit_amount: 199, // €1.99 (Early Bird price - 50% off)
             recurring: { interval: "month" },
           },
           quantity: 1,
@@ -98,9 +98,16 @@ serve(async (req) => {
       cancel_url: `${origin}/subscription?checkout=cancelled`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
+      subscription_data: {
+        metadata: {
+          early_bird: "true",
+          original_price: "399",
+          discount_percent: "50"
+        }
+      }
     });
 
-    logStep("Checkout session created successfully", { sessionId: session.id, url: session.url });
+    logStep("Checkout session created successfully with early bird pricing", { sessionId: session.id, url: session.url });
 
     return new Response(JSON.stringify({ 
       url: session.url,

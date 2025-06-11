@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { Crown, Check, Loader2, Brain } from 'lucide-react';
+import { Crown, Check, Loader2, Brain, Tag } from 'lucide-react';
 
 const SubscriptionCard: React.FC = () => {
   const { 
@@ -29,17 +29,23 @@ const SubscriptionCard: React.FC = () => {
   }
 
   return (
-    <Card className={`p-6 ${subscribed ? 'border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50' : ''}`}>
+    <Card className={`p-6 ${subscribed ? 'border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50' : 'border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50'}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Brain className={`h-5 w-5 ${subscribed ? 'text-yellow-600' : 'text-gray-400'}`} />
+            <Brain className={`h-5 w-5 ${subscribed ? 'text-yellow-600' : 'text-green-600'}`} />
             <h3 className="text-lg font-semibold">
               {subscribed ? 'Altfragen.io Premium' : 'Premium KI-Kommentare'}
             </h3>
             {subscribed && (
               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                 Aktiv
+              </Badge>
+            )}
+            {!subscribed && (
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Tag className="h-3 w-3 mr-1" />
+                50% Rabatt
               </Badge>
             )}
           </div>
@@ -61,9 +67,14 @@ const SubscriptionCard: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Erhalte KI-gestützte Kommentare für nur €3,99/Monat
-              </p>
+              <div className="bg-green-100 p-3 rounded-lg">
+                <p className="text-sm font-semibold text-green-800">
+                  🎉 Early Bird Angebot: Nur €1,99/Monat (statt €3,99)
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  Limitiert auf die ersten 100 Nutzer
+                </p>
+              </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm">
                   <Brain className="h-4 w-4 text-blue-600" />
@@ -89,8 +100,8 @@ const SubscriptionCard: React.FC = () => {
             Abonnement verwalten
           </Button>
         ) : (
-          <Button onClick={createCheckoutSession} className="bg-blue-600 hover:bg-blue-700">
-            Premium für €3,99/Monat
+          <Button onClick={createCheckoutSession} className="bg-green-600 hover:bg-green-700">
+            🔥 Premium für €1,99/Monat
           </Button>
         )}
         <Button onClick={checkSubscription} variant="ghost" size="sm">
