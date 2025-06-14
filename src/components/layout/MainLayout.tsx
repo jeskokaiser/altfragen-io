@@ -1,9 +1,10 @@
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Import pages
 import DashboardPage from '@/pages/Dashboard';
@@ -26,6 +27,21 @@ import WiderrufPage from '@/pages/Widerruf';
 
 const MainLayout: React.FC = () => {
   const { isReady, isAuthenticated } = useAuthGuard();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (isAuthenticated && user && location.pathname !== '/tutorial') {
+      const hasSeenTutorialKey = `hasSeenTutorial_${user.id}`;
+      const hasSeenTutorial = localStorage.getItem(hasSeenTutorialKey);
+
+      if (!hasSeenTutorial) {
+        localStorage.setItem(hasSeenTutorialKey, 'true');
+        navigate('/tutorial', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate, location.pathname]);
 
   if (!isReady) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
