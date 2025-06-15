@@ -45,13 +45,19 @@ const Navbar: React.FC = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const navItems = [
+  const mainNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { label: 'Training', href: '/training', icon: <Book className="h-4 w-4 mr-2" /> },
-    { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="h-4 w-4 mr-2" /> },
-    { label: 'Premium', href: '/subscription', icon: <Crown className={`h-4 w-4 mr-2 ${subscribed ? 'text-yellow-600' : ''}`} /> },
-    { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="h-4 w-4 mr-2" /> },
   ];
+  
+  const userMenuItems = [
+      { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="mr-2 h-4 w-4" /> },
+      { label: 'Premium', href: '/subscription', icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} /> },
+      { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
+  ];
+
+  const allNavItems = [...mainNavItems, ...userMenuItems];
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -70,7 +76,7 @@ const Navbar: React.FC = () => {
 
         {user && !isMobile && (
           <nav className="flex items-center gap-6 text-sm">
-            {navItems.map((item) => (
+            {mainNavItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
@@ -100,6 +106,13 @@ const Navbar: React.FC = () => {
                   <DropdownMenuLabel>
                     {user.email}
                   </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {userMenuItems.map((item) => (
+                    <DropdownMenuItem key={item.href} onClick={() => navigate(item.href)}>
+                      {item.icon}
+                      {item.label}
+                    </DropdownMenuItem>
+                  ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/settings')}>
                     <SettingsIcon className="mr-2 h-4 w-4" />
@@ -132,7 +145,7 @@ const Navbar: React.FC = () => {
       {user && isMobile && isMenuOpen && (
         <div className="container py-4 border-t bg-background">
           <nav className="flex flex-col space-y-4">
-            {navItems.map((item) => (
+            {allNavItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
