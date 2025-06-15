@@ -1,12 +1,12 @@
 
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { LogOut, User, Home, BookOpen, Users, Settings, Crown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import PremiumBadge from '@/components/subscription/PremiumBadge';
+import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,60 +15,85 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 
 const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, universityId, universityName } = useAuth();
   const { subscribed } = useSubscription();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleSignOut = async () => {
-    await logout();
-    navigate('/auth');
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Du wurdest erfolgreich abgemeldet');
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Fehler beim Abmelden');
+    }
   };
 
-  return (
-    <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <Link to="/" className="flex items-center space-x-2">
-              <BookOpen className="h-6 w-6" />
-              <span className="font-bold text-xl">Altfragen.io</span>
-            </Link>
-            
-            {user && (
-              <div className="hidden md:flex items-center space-x-4">
-                <Link to="/dashboard">
-                  <Button variant="ghost" size="sm">
-                    <Home className="h-4 w-4 mr-2" />
-                    Dashboard
-                  </Button>
-                </Link>
-                <Link to="/collab">
-                  <Button variant="ghost" size="sm">
-                    <Users className="h-4 w-4 mr-2" />
-                    Zusammenarbeit
-                  </Button>
-                </Link>
-                <Link to="/subscription">
-                  <Button variant="ghost" size="sm">
-                    <Crown className={`h-4 w-4 mr-2 ${subscribed ? 'text-yellow-600' : ''}`} />
-                    Premium
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            
-            {user ? (
+  const navItems = [
+    { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
+    { label: 'Training', href: '/training', icon: <Book className="h-4 w-4 mr-2" /> },
+    { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="h-4 w-4 mr-2" /> },
+    { label: 'Premium', href: '/subscription', icon: <Crown className={`h-4 w-4 mr-2 ${subscribed ? 'text-yellow-600' : ''}`} /> },
+    { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="h-4 w-4 mr-2" /> },
+  ];
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center">
+          <Link to="/" className="font-bold text-xl flex items-center gap-2">
+            <GraduationCap className="h-6 w-6" />
+            Altfragen.io
+          </Link>
+          {user && universityId && universityName && (
+            <Badge variant="outline" className="ml-2 hidden md:flex">
+              {universityName}
+            </Badge>
+          )}
+        </div>
+
+        {user && !isMobile && (
+          <nav className="flex items-center gap-6 text-sm">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`flex items-center transition-colors hover:text-foreground/80 ${
+                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+
+          {user ? (
+            <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <User className="h-4 w-4 mr-2" />
-                    {user.email?.split('@')[0]}
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -76,49 +101,53 @@ const Navbar: React.FC = () => {
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  
-                  {/* Mobile navigation items - only show on smaller screens */}
-                  <div className="md:hidden">
-                    <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                      <Home className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/collab')}>
-                      <Users className="mr-2 h-4 w-4" />
-                      Zusammenarbeit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/subscription')}>
-                      <Crown className="mr-2 h-4 w-4" />
-                      Premium
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </div>
-                  
-                  <DropdownMenuItem onClick={() => navigate('/tutorial')}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Tutorial
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/settings')}>
-                    <Settings className="mr-2 h-4 w-4" />
+                    <SettingsIcon className="mr-2 h-4 w-4" />
                     Einstellungen
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSignOut}>
+                  <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Abmelden
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Link to="/auth">
-                <Button variant="default" size="sm">
-                  Anmelden
+
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleMenu}
+                  aria-label="Menü öffnen/schließen"
+                >
+                  {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
-              </Link>
-            )}
-          </div>
+              )}
+            </>
+          ) : (
+            <Button onClick={() => navigate('/auth')}>Anmelden</Button>
+          )}
         </div>
       </div>
-    </nav>
+
+      {user && isMobile && isMenuOpen && (
+        <div className="container py-4 border-t bg-background">
+          <nav className="flex flex-col space-y-4">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`flex items-center py-2 ${
+                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
+    </header>
   );
 };
 
