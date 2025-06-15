@@ -19,6 +19,7 @@ import {
   University,
   Sparkles,
   Search,
+  ArrowRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -158,6 +159,18 @@ const Tutorial = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Large Continue Button */}
+      <div className="flex justify-center pt-8 pb-4">
+        <Button 
+          size="lg" 
+          onClick={() => navigate('/dashboard')}
+          className="text-lg px-8 py-6 h-auto flex items-center gap-3 shadow-lg hover:shadow-xl transition-all"
+        >
+          Zum Dashboard fortfahren
+          <ArrowRight className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   );
 };
