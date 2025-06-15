@@ -46,11 +46,11 @@ const Navbar: React.FC = () => {
 
   const mainNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
+    { label: 'Premium', href: '/subscription', icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} /> },
   ];
   
   const userMenuItems = [
       { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="mr-2 h-4 w-4" /> },
-      { label: 'Premium', href: '/subscription', icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} /> },
       { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
   ];
 
