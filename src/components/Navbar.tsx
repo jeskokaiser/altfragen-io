@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +46,6 @@ const Navbar: React.FC = () => {
 
   const mainNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
-    { label: 'Training', href: '/training', icon: <Book className="h-4 w-4 mr-2" /> },
   ];
   
   const userMenuItems = [
@@ -67,11 +65,6 @@ const Navbar: React.FC = () => {
             <GraduationCap className="h-6 w-6" />
             Altfragen.io
           </Link>
-          {user && universityId && universityName && (
-            <Badge variant="outline" className="ml-2 hidden md:flex">
-              {universityName}
-            </Badge>
-          )}
         </div>
 
         {user && !isMobile && (
