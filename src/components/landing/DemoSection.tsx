@@ -1,19 +1,57 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Rocket } from 'lucide-react';
-import { demoQuestions, demoAiCommentaries } from '@/data/demo-data';
+import { fetchPublicQuestions } from '@/services/DatabaseService';
+import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
+import { toast } from 'sonner';
 
 const DemoSection = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleStartDemo = () => {
-    localStorage.setItem('trainingQuestions', JSON.stringify(demoQuestions));
-    localStorage.setItem('demoAiCommentaries', JSON.stringify(demoAiCommentaries));
-    localStorage.setItem('isDemoSession', 'true');
-    navigate('/training');
+  const handleStartDemo = async () => {
+    setIsLoading(true);
+    try {
+      const publicQuestions = await fetchPublicQuestions(5);
+
+      if (publicQuestions.length === 0) {
+        toast.info("Demo nicht verfügbar", {
+          description: "Derzeit sind keine öffentlichen Fragen für eine Demo verfügbar."
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const questionIds = publicQuestions.map(q => q.id);
+      const commentaries: Record<string, any> = {};
+
+      await Promise.all(questionIds.map(async (id) => {
+        try {
+          const commentary = await AIAnswerCommentaryService.getCommentaryForQuestion(id);
+          if (commentary) {
+            commentaries[id] = commentary;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch commentary for question ${id}`, error);
+        }
+      }));
+
+      localStorage.setItem('trainingQuestions', JSON.stringify(publicQuestions));
+      localStorage.setItem('demoAiCommentaries', JSON.stringify(commentaries));
+      localStorage.setItem('isDemoSession', 'true');
+      navigate('/training');
+
+    } catch (error) {
+      console.error("Error starting demo:", error);
+      toast.error("Fehler beim Starten der Demo", {
+        description: "Es gab ein Problem beim Laden der Demo-Fragen. Bitte versuche es später erneut."
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -35,8 +73,9 @@ const DemoSection = () => {
               onClick={handleStartDemo}
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-7 text-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group rounded-xl"
+              disabled={isLoading}
             >
-              Demo starten
+              {isLoading ? 'Lade...' : 'Demo starten'}
               <Rocket className="ml-3 group-hover:rotate-12 transition-transform" />
             </Button>
           </div>
