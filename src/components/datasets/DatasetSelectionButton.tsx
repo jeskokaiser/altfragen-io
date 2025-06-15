@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ListPlus } from 'lucide-react';
+import { Settings, ListPlus, Check } from 'lucide-react';
 
 interface DatasetSelectionButtonProps {
   onClick: () => void;
@@ -14,19 +14,31 @@ const DatasetSelectionButton: React.FC<DatasetSelectionButtonProps> = ({
   totalCount,
   selectedCount
 }) => {
+  const isAllSelected = selectedCount === totalCount;
+  const hasSelection = selectedCount > 0;
+  
   return (
     <Button 
-      variant="outline" 
+      variant={hasSelection ? "default" : "outline"} 
       size="sm" 
       onClick={onClick}
       className="flex items-center gap-2"
     >
-      <ListPlus className="h-4 w-4" />
+      {hasSelection ? (
+        <Settings className="h-4 w-4" />
+      ) : (
+        <ListPlus className="h-4 w-4" />
+      )}
       <span>
         {selectedCount === 0 
-          ? `Datensätze auswählen (${totalCount})` 
-          : `${selectedCount} ausgewählt`}
+          ? `Datensätze wählen (${totalCount})` 
+          : isAllSelected
+          ? `Alle ${totalCount} ausgewählt`
+          : `${selectedCount}/${totalCount} ausgewählt`}
       </span>
+      {hasSelection && !isAllSelected && (
+        <Check className="h-3 w-3" />
+      )}
     </Button>
   );
 };
