@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award, Clock, Zap } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import DemoSection from "@/components/landing/DemoSection";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -429,6 +429,8 @@ const Index = () => {
           </Button>
         </div>
       </section>
+
+      <DemoSection />
     </div>
   );
 };

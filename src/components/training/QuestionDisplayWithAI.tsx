@@ -63,9 +63,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { preferences } = useUserPreferences();
+  const isDemoMode = questionData.id.startsWith('demo-');
+
   const { 
     isPremium, 
-    canAccessAIComments, 
+    canAccessAIComments: canAccessHook, 
     loading: premiumLoading, 
     requirePremiumForAI, 
     isFreeTier, 
@@ -73,11 +75,19 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     isIncrementing 
   } = usePremiumFeatures();
   const { createCheckoutSession } = useSubscription();
+  
+  const canAccessAIComments = isDemoMode || canAccessHook;
 
   // Fetch AI commentary data
   const { data: aiCommentary, isLoading: aiLoading, error: aiError } = useQuery({
     queryKey: ['ai-commentary', currentQuestion.id],
-    queryFn: () => AIAnswerCommentaryService.getCommentaryForQuestion(currentQuestion.id),
+    queryFn: () => {
+      if (isDemoMode) {
+        const demoCommentaries = JSON.parse(localStorage.getItem('demoAiCommentaries') || '{}');
+        return Promise.resolve(demoCommentaries[currentQuestion.id] || null);
+      }
+      return AIAnswerCommentaryService.getCommentaryForQuestion(currentQuestion.id);
+    },
     enabled: !!currentQuestion.id
   });
 
@@ -137,7 +147,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                                  aiCommentary && 
                                  canAccessAIComments &&
                                  !isIncrementing &&
-                                 usageIncrementedForQuestion !== currentQuestion.id;
+                                 usageIncrementedForQuestion !== currentQuestion.id &&
+                                 !isDemoMode; // Do not increment usage for demo
 
     if (shouldIncrementUsage) {
       console.log(`Incrementing usage for question ${currentQuestion.id}`);
@@ -150,7 +161,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         console.error('Failed to increment usage:', error);
       });
     }
-  }, [showFeedback, isCorrect, showSolution, isFreeTier, aiCommentary, canAccessAIComments, incrementUsage, currentQuestion.id, usageIncrementedForQuestion, isIncrementing]);
+  }, [showFeedback, isCorrect, showSolution, isFreeTier, aiCommentary, canAccessAIComments, incrementUsage, currentQuestion.id, usageIncrementedForQuestion, isIncrementing, isDemoMode]);
 
   const handleAnswerChange = (answer: string) => {
     setSelectedAnswer(answer);
@@ -257,13 +268,13 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       );
     }
 
-    if (aiLoading || isIncrementing) {
+    if (aiLoading || (isIncrementing && !isDemoMode)) {
       return (
         <Card className="mt-6">
           <CardContent className="pt-6">
             <div className="flex items-center justify-center py-4">
               <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-              <span>{isIncrementing ? 'Verarbeite Nutzung...' : 'Lade KI-Kommentare...'}</span>
+              <span>{isIncrementing && !isDemoMode ? 'Verarbeite Nutzung...' : 'Lade KI-Kommentare...'}</span>
             </div>
           </CardContent>
         </Card>
@@ -286,6 +297,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
 
     if (!aiCommentary) {
+      // In demo mode, commentary should always be available. This part is for real questions.
       return (
         <Card className="mt-6">
           <CardHeader>
@@ -303,7 +315,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                 </p>
                 <Button 
                   onClick={() => queueForProcessing.mutate()}
-                  disabled={queueForProcessing.isPending}
+                  disabled={queueForProcessing.isPending || isDemoMode}
                   className="flex items-center gap-2"
                 >
                   <Brain className="h-4 w-4" />
@@ -373,6 +385,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
               questionId={currentQuestion.id}
               difficulty={currentQuestion.difficulty || 3}
               onEditClick={() => setIsEditModalOpen(true)}
+              disabled={isDemoMode}
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -381,7 +394,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
               size={isMobile ? "sm" : "default"}
               onClick={handleMarkUnclear}
               className="flex items-center gap-2 hover:bg-gray-100"
-              disabled={currentQuestion.is_unclear}
+              disabled={currentQuestion.is_unclear || isDemoMode}
             >
               <AlertCircle className="h-4 w-4" />
               <span className="hidden sm:inline">Unklar</span>
