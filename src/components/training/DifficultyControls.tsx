@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -11,12 +10,14 @@ interface DifficultyControlsProps {
   questionId: string;
   difficulty: number;
   onEditClick?: () => void;
+  disabled?: boolean;
 }
 
 const DifficultyControls: React.FC<DifficultyControlsProps> = ({
   questionId,
   difficulty,
   onEditClick,
+  disabled = false,
 }) => {
   const [currentDifficulty, setCurrentDifficulty] = useState(difficulty);
   const [attemptsCount, setAttemptsCount] = useState(0);
@@ -24,6 +25,13 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
   const { user } = useAuth();
 
   useEffect(() => {
+    if (disabled) {
+      setCurrentDifficulty(difficulty);
+      setIsUserSpecificDifficulty(false);
+      setAttemptsCount(0);
+      return;
+    }
+    
     const fetchUserProgress = async () => {
       if (!user) return;
 
@@ -57,9 +65,11 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
     };
 
     fetchUserProgress();
-  }, [questionId, difficulty, user]);
+  }, [questionId, difficulty, user, disabled]);
 
   const handleDifficultyChange = async (value: string) => {
+    if (disabled) return;
+
     const newDifficulty = parseInt(value);
     if (isNaN(newDifficulty) || newDifficulty < 1 || newDifficulty > 5) return;
 
@@ -116,12 +126,13 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
           attemptsCount={attemptsCount}
           isPersonalized={isUserSpecificDifficulty}
         />
-        {onEditClick && <EditButton onClick={onEditClick} />}
+        {onEditClick && !disabled && <EditButton onClick={onEditClick} />}
       </div>
       
       <DifficultyToggle 
         value={currentDifficulty.toString()}
         onValueChange={handleDifficultyChange}
+        disabled={disabled}
       />
     </div>
   );

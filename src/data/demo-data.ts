@@ -1,4 +1,3 @@
-
 import { Question } from '@/types/Question';
 import { AICommentaryData } from '@/types/AIAnswerComments';
 
@@ -73,33 +72,57 @@ export const demoQuestions: Question[] = [
 
 export const demoAiCommentaries: Record<string, AICommentaryData> = {
   'demo-1': {
-    main_comment: "This question tests basic knowledge of European capitals. Paris is a major global center for art, fashion, gastronomy and culture.",
-    option_A_comment: "Berlin is the capital of Germany.",
-    option_B_comment: "Madrid is the capital of Spain.",
-    option_C_comment: "Correct. Paris has been the capital of France for more than 1,500 years.",
-    option_D_comment: "Rome is the capital of Italy.",
-    option_E_comment: null,
-    correct_option_letter: 'C',
-    correct_option_comment: "The correct answer is indeed Paris. It's one of the most famous capital cities in the world."
+    summary: {
+      id: 'demo-summary-1',
+      question_id: 'demo-1',
+      summary_general_comment: "This question tests basic knowledge of European capitals. Paris is a major global center for art, fashion, gastronomy and culture.",
+      summary_comment_a: "Berlin is the capital of Germany.",
+      summary_comment_b: "Madrid is the capital of Spain.",
+      summary_comment_c: "Correct. Paris has been the capital of France for more than 1,500 years.",
+      summary_comment_d: "Rome is the capital of Italy.",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    models: {
+      openai: { answers: {} },
+      claude: { answers: {} },
+      gemini: { answers: {} },
+    }
   },
   'demo-2': {
-    main_comment: "This question is about the planets in our solar system. The distinct color of Mars makes this a common knowledge question in astronomy.",
-    option_A_comment: "Earth is known as the 'Blue Planet' due to its vast oceans.",
-    option_B_comment: "Correct. Mars is called the Red Planet because of the prevalence of iron oxide (rust) on its surface, which gives it a reddish hue.",
-    option_C_comment: "Jupiter is a gas giant, known for its Great Red Spot, but it is not called the Red Planet.",
-    option_D_comment: "Saturn is known for its prominent ring system.",
-    option_E_comment: null,
-    correct_option_letter: 'B',
-    correct_option_comment: "Mars is correctly identified as the Red Planet. This is a fundamental fact in planetary science."
+    summary: {
+      id: 'demo-summary-2',
+      question_id: 'demo-2',
+      summary_general_comment: "This question is about the planets in our solar system. The distinct color of Mars makes this a common knowledge question in astronomy.",
+      summary_comment_a: "Earth is known as the 'Blue Planet' due to its vast oceans.",
+      summary_comment_b: "Correct. Mars is called the Red Planet because of the prevalence of iron oxide (rust) on its surface, which gives it a reddish hue.",
+      summary_comment_c: "Jupiter is a gas giant, known for its Great Red Spot, but it is not called the Red Planet.",
+      summary_comment_d: "Saturn is known for its prominent ring system.",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    models: {
+      openai: { answers: {} },
+      claude: { answers: {} },
+      gemini: { answers: {} },
+    }
   },
   'demo-3': {
-    main_comment: "This question assesses knowledge of animal superlatives. It requires distinguishing between large land mammals and marine mammals.",
-    option_A_comment: "The African Elephant is the largest land animal, but not the largest mammal overall.",
-    option_B_comment: "Correct. The Blue Whale is the largest animal on Earth, both in terms of length and weight.",
-    option_C_comment: "The Giraffe is the tallest land animal, but not the largest in terms of mass.",
-    option_D_comment: "The Great White Shark is a large fish, but not a mammal.",
-    option_E_comment: null,
-    correct_option_letter: 'B',
-    correct_option_comment: "The Blue Whale is the correct answer. It surpasses all other mammals, including dinosaurs, in size."
+    summary: {
+      id: 'demo-summary-3',
+      question_id: 'demo-3',
+      summary_general_comment: "This question assesses knowledge of animal superlatives. It requires distinguishing between large land mammals and marine mammals.",
+      summary_comment_a: "The African Elephant is the largest land animal, but not the largest mammal overall.",
+      summary_comment_b: "Correct. The Blue Whale is the largest animal on Earth, both in terms of length and weight.",
+      summary_comment_c: "The Giraffe is the tallest land animal, but not the largest in terms of mass.",
+      summary_comment_d: "The Great White Shark is a large fish, but not a mammal.",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    models: {
+      openai: { answers: {} },
+      claude: { answers: {} },
+      gemini: { answers: {} },
+    }
   }
 };
