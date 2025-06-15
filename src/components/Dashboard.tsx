@@ -207,8 +207,8 @@ const Dashboard = () => {
   // Show filtered university datasets only if specific datasets are selected
   const displayedUniversityDatasets = useMemo(() => {
     if (selectedUniversityDatasets.length === 0) {
-      // Show all university datasets when none are specifically selected
-      return groupedUniversityQuestions;
+      // Show no university datasets when none are specifically selected
+      return {};
     }
     
     // Show only selected datasets
@@ -448,22 +448,37 @@ const Dashboard = () => {
           )}
           
           {hasUniversityQuestions ? (
-            <>
-              {selectedUniversityDatasets.length > 0 && (
+            selectedUniversityDatasets.length > 0 ? (
+              <>
                 <SelectedDatasetsDisplay 
                   groupedQuestions={groupedUniversityQuestions}
                   selectedDatasets={selectedUniversityDatasets}
                   onRemoveDataset={handleRemoveDataset}
                   onClearAll={handleClearAllSelectedDatasets}
                 />
-              )}
-              <DatasetList
-                groupedQuestions={displayedUniversityDatasets}
-                selectedFilename={selectedFilename}
-                onDatasetClick={handleDatasetClick}
-                onStartTraining={handleStartTraining}
-              />
-            </>
+                <DatasetList
+                  groupedQuestions={displayedUniversityDatasets}
+                  selectedFilename={selectedFilename}
+                  onDatasetClick={handleDatasetClick}
+                  onStartTraining={handleStartTraining}
+                />
+              </>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
+                    Keine Datensätze ausgewählt
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Wähle Datensätze aus, um sie dauerhaft im Dashboard anzuzeigen.
+                  </p>
+                  <Button onClick={handleOpenDatasetSelector}>
+                    <ListPlus className="mr-2 h-4 w-4" />
+                    Datensätze wählen
+                  </Button>
+                </CardContent>
+              </Card>
+            )
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 text-center">
