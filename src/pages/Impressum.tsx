@@ -11,8 +11,11 @@ const Impressum = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">Angaben gemäß § 5 TMG</h2>
+              <h2 className="text-xl font-semibold">Angaben gemäß DDG</h2>
+              <p>Altfragen.io</p>
               <p>Jesko Kaiser</p>
+              <p>Kegelhofstraße 17</p>
+              <p>20251 Hamburg</p>
               <p>info@jeskokaiser.de</p>
             </section>
             <section className="space-y-2">
