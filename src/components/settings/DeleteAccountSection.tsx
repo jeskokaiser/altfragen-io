@@ -119,8 +119,8 @@ const DeleteAccountSection: React.FC = () => {
                 {isDeleting ? 'Lösche...' : 'Konto endgültig löschen'}
               </AlertDialogAction>
             </AlertDialogFooter>
-          </AlertDialog>
-        </Card>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
