@@ -30,11 +30,11 @@ const DeleteAccountSection: React.FC = () => {
         await logout();
         window.location.href = '/';
       } else {
-        toast.error('Fehler beim Löschen des Kontos. Bitte versuchen Sie es erneut.');
+        toast.error('Fehler beim Löschen des Kontos. Bitte kontaktieren Sie hallo@altfragen.io');
       }
     } catch (error) {
       console.error('Error deleting account:', error);
-      toast.error('Fehler beim Löschen des Kontos. Bitte versuchen Sie es erneut.');
+      toast.error('Fehler beim Löschen des Kontos. Bitte kontaktieren Sie hallo@altfragen.io');
     } finally {
       setIsDeleting(false);
       setIsDialogOpen(false);
@@ -74,6 +74,9 @@ const DeleteAccountSection: React.FC = () => {
           <ul className="text-sm text-red-600 list-disc list-inside">
             <li>Öffentliche Fragen (anonymisiert)</li>
           </ul>
+          <p className="text-sm text-red-600">
+            Bei Problemen kontaktieren Sie uns unter: hallo@altfragen.io
+          </p>
         </div>
 
         <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -116,8 +119,8 @@ const DeleteAccountSection: React.FC = () => {
                 {isDeleting ? 'Lösche...' : 'Konto endgültig löschen'}
               </AlertDialogAction>
             </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          </AlertDialog>
+        </Card>
       </CardContent>
     </Card>
   );

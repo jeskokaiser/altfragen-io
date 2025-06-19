@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Privacy = () => {
@@ -23,8 +22,10 @@ const Privacy = () => {
               <h2 className="text-xl font-semibold">2. Verantwortlicher</h2>
               <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
               <p>
-                [PLATZHALTER: VOLLSTÄNDIGE FIRMENADRESSE]<br />
-                E-Mail: info@jeskokaiser.de
+                Jesko Kaiser<br />
+                Kegelhofstr. 17<br />
+                20251 Hamburg<br />
+                E-Mail: hallo@altfragen.io
               </p>
             </section>
 
@@ -156,7 +157,7 @@ const Privacy = () => {
                 <li>Recht auf Beschwerde bei einer Aufsichtsbehörde (Art. 77 DSGVO)</li>
               </ul>
               <p>
-                Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: info@jeskokaiser.de
+                Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: hallo@altfragen.io
               </p>
             </section>
 
@@ -168,7 +169,7 @@ const Privacy = () => {
                 Die aktuelle Version ist stets auf unserer Website verfügbar.
               </p>
               <p>
-                Stand: [PLATZHALTER: DATUM]
+                Stand: Dezember 2024
               </p>
             </section>
           </CardContent>

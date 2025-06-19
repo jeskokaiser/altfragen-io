@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const AGB = () => {
@@ -14,12 +13,15 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 1 Geltungsbereich</h2>
               <p>
-                Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") gelten für alle Verträge zwischen [PLATZHALTER: FIRMENNAME] (nachfolgend "Anbieter") und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen Premium-Dienste.
+                Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") gelten für alle Verträge zwischen Altfragen.io, Jesko Kaiser (nachfolgend "Anbieter") und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen Premium-Dienste.
               </p>
               <p>
                 Anbieter:<br />
-                [PLATZHALTER: VOLLSTÄNDIGE FIRMENADRESSE]<br />
-                E-Mail: info@jeskokaiser.de
+                Altfragen.io<br />
+                Jesko Kaiser<br />
+                Kegelhofstr. 17<br />
+                20251 Hamburg<br />
+                E-Mail: hallo@altfragen.io
               </p>
             </section>
 
@@ -69,7 +71,7 @@ const AGB = () => {
                 Das Abonnement läuft auf unbestimmte Zeit mit einer monatlichen Kündigungsfrist von einem Monat zum Monatsende.
               </p>
               <p>
-                Die Kündigung kann jederzeit über das Stripe Customer Portal in Ihrem Benutzerkonto oder per E-Mail an info@jeskokaiser.de erfolgen.
+                Die Kündigung kann jederzeit über das Stripe Customer Portal in Ihrem Benutzerkonto oder per E-Mail an hallo@altfragen.io erfolgen.
               </p>
               <p>
                 Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.
@@ -152,13 +154,13 @@ const AGB = () => {
                 Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts.
               </p>
               <p>
-                Für Streitigkeiten aus diesem Vertrag ist der Gerichtsstand [PLATZHALTER: GERICHTSSTAND].
+                Für Streitigkeiten aus diesem Vertrag ist der Gerichtsstand Hamburg.
               </p>
               <p>
                 Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, berührt dies die Wirksamkeit der übrigen Bestimmungen nicht.
               </p>
               <p>
-                Stand: [PLATZHALTER: DATUM]
+                Stand: Dezember 2024
               </p>
             </section>
 
