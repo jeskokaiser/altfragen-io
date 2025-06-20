@@ -36,7 +36,7 @@ const Index = () => {
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-8">
               <Star className="w-4 h-4 mr-2" />
-              Die intelligente Lernplattform für Studenten
+              Die intelligente Lernplattform für Student:innen
             </div>
             
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
@@ -67,7 +67,7 @@ const Index = () => {
             <div className="flex items-center justify-center mt-12 space-x-8 text-slate-500">
               <div className="flex items-center">
                 <Users className="w-5 h-5 mr-2" />
-                <span className="text-sm">Über 1,000+ Fragen</span>
+                <span className="text-sm">Über 10.000+ Fragen</span>
               </div>
               <div className="flex items-center">
                 <Award className="w-5 h-5 mr-2" />
@@ -156,7 +156,7 @@ const Index = () => {
                   Gemeinsam lernen, besser werden
                 </h2>
                 <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Verbinde dich mit anderen Studenten deiner Universität und teile deine Altfragen. 
+                  Verbinde dich mit anderen Student:innen deiner Universität und teile deine Altfragen. 
                   Profitiere von einer größeren Fragendatenbank und hilf anderen beim Lernen.
                 </p>
                 <div className="space-y-4">
@@ -175,7 +175,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">Sichere Datenfreigabe</h3>
-                      <p className="text-slate-600">Nur Studenten deiner Universität können auf geteilte Fragen zugreifen</p>
+                      <p className="text-slate-600">Nur Student:innen deiner Universität können auf geteilte Fragen zugreifen</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -184,7 +184,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">Größere Fragendatenbank</h3>
-                      <p className="text-slate-600">Zugriff auf Fragen von anderen Studenten derselben Fächer</p>
+                      <p className="text-slate-600">Zugriff auf Fragen von anderen Student:innen derselben Fächer</p>
                     </div>
                   </div>
                 </div>
@@ -195,26 +195,26 @@ const Index = () => {
                     <h4 className="font-semibold text-slate-900">Geteilte Fragen</h4>
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="text-sm text-slate-600">Universität München</span>
+                      <span className="text-sm text-slate-600">Universität Hamburg</span>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Anatomie - Herz-Kreislauf</span>
-                      <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">42 Fragen</span>
+                      <span className="text-sm font-medium text-slate-900">Modul D1</span>
+                      <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">422 Fragen</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Physiologie - Atmung</span>
-                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">28 Fragen</span>
+                      <span className="text-sm font-medium text-slate-900">Modul B2</span>
+                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">653 Fragen</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Biochemie - Stoffwechsel</span>
-                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">35 Fragen</span>
+                      <span className="text-sm font-medium text-slate-900">Modul F3</span>
+                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">1011 Fragen</span>
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-200">
                     <p className="text-xs text-slate-500 text-center">
-                      Insgesamt 105 geteilte Fragen verfügbar
+                      Insgesamt 8005 geteilte Fragen verfügbar
                     </p>
                   </div>
                 </div>
