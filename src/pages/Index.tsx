@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -160,9 +159,9 @@ const Index = () => {
                     <Zap className="w-4 h-4 mr-2" />
                     Echtzeit-Zusammenarbeit
                   </div>
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+                  <div className="inline-flex items-center px-4 py-2 bg-amber-100 border border-amber-200 rounded-full text-amber-800 text-sm font-medium">
                     bald verfügbar
-                  </Badge>
+                  </div>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
                   Sammelt Fragen gemeinsam in Echtzeit
