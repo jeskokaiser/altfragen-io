@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -376,7 +375,6 @@ const Index = () => {
                     </p>
                   </div>
                 </div>
-                {/* Floating elements */}
                 <div className="absolute -top-4 -right-4 w-8 h-8 bg-emerald-400 rounded-full opacity-20"></div>
                 <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-teal-400 rounded-full opacity-30"></div>
               </div>
@@ -470,7 +468,7 @@ const Index = () => {
                 <GraduationCap className="w-12 h-12 text-blue-600" />
               </div>
               <blockquote className="text-2xl md:text-3xl font-medium text-slate-700 mb-8 leading-relaxed">
-                Altfragen.io hat meine Art mich auf Prüfungen vorzubereiten revolutioniert. 
+                Altfragen.io hat meine Art mich auf Prüfungen vorzubereiten revolutioniert.
                 Die Plattform ist intuitiv und hat mir geholfen, meine Noten deutlich zu verbessern.
               </blockquote>
               <cite className="text-slate-500 font-semibold text-lg">
