@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +7,7 @@ import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, Trend
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import DemoSection from "@/components/landing/DemoSection";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -153,9 +155,14 @@ const Index = () => {
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-indigo-100">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-200 rounded-full text-indigo-700 text-sm font-medium mb-6">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Echtzeit-Zusammenarbeit
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-200 rounded-full text-indigo-700 text-sm font-medium">
+                    <Zap className="w-4 h-4 mr-2" />
+                    Echtzeit-Zusammenarbeit
+                  </div>
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+                    bald verfügbar
+                  </Badge>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
                   Sammelt Fragen gemeinsam in Echtzeit
