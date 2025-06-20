@@ -26,7 +26,7 @@ serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
@@ -66,10 +66,13 @@ serve(async (req) => {
       logStep("Stripe portal creation error", { error: stripeError.message });
       
       // Handle specific Stripe configuration error
-      if (stripeError.message?.includes("No configuration provided")) {
+      if (stripeError.message?.includes("No configuration provided") || 
+          stripeError.message?.includes("customer portal") ||
+          stripeError.code === 'billing_portal_configuration_not_found') {
         return new Response(JSON.stringify({ 
           error: "Customer portal not configured in Stripe. Please set up your customer portal configuration in the Stripe Dashboard.",
-          configurationRequired: true 
+          configurationRequired: true,
+          setupUrl: "https://dashboard.stripe.com/settings/billing/portal"
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -156,7 +155,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       if (data?.url) {
         window.open(data.url, '_blank');
       } else if (data?.configurationRequired) {
-        showToast.error('Customer portal is not configured. Please contact support.');
+        showToast.error('Customer portal is not configured in Stripe. Please configure it in your Stripe Dashboard under Settings > Billing > Customer Portal.');
+        if (data.setupUrl) {
+          console.log('Setup URL:', data.setupUrl);
+        }
       } else {
         throw new Error('No portal URL received');
       }
@@ -164,8 +166,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       console.error('Failed to open customer portal:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
-      if (errorMessage.includes('No configuration provided')) {
-        showToast.error('Customer portal not configured. Please contact support to manage your subscription.');
+      if (errorMessage.includes('No configuration provided') || 
+          errorMessage.includes('customer portal') ||
+          errorMessage.includes('configuration')) {
+        showToast.error('Customer portal not configured. Please set up the customer portal in your Stripe Dashboard (Settings > Billing > Customer Portal) to manage subscriptions.');
       } else {
         showToast.error(`Failed to open subscription management: ${errorMessage}`);
       }
