@@ -140,7 +140,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Real-time Collaboration Section */}
+      
       
       {/* Question Sharing Feature Section */}
       <section className="container mx-auto px-4 py-24">
@@ -227,39 +227,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How it Works Section with enhanced styling */}
-      <section className="relative py-24">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-blue-50/50"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900">
-              So einfach geht's
-            </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              In nur drei einfachen Schritten zu deiner optimalen Prüfungsvorbereitung
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            <StepCard 
-              number="1" 
-              title="Registrieren" 
-              description="Erstelle kostenlos dein persönliches Konto in wenigen Sekunden" 
-            />
-            <StepCard 
-              number="2" 
-              title="Fragen hochladen" 
-              description="Lade deine Altfragen als CSV Datei hoch und organisiere sie nach Themen" 
-            />
-            <StepCard 
-              number="3" 
-              title="Lernen & Verbessern" 
-              description="Tracke deinen Fortschritt und optimiere gezielt dein Wissen" 
-            />
-          </div>
-        </div>
-      </section>
-
+      {/* Real-time Collaboration Section */}
       <section className="container mx-auto px-4 py-24">
         <div className="max-w-6xl mx-auto">
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-indigo-100">
@@ -271,7 +239,7 @@ const Index = () => {
                     Echtzeit-Zusammenarbeit
                   </div>
                   <div className="inline-flex items-center px-4 py-2 bg-amber-100 border border-amber-200 rounded-full text-amber-800 text-sm font-medium">
-                    bald verfügbar
+                    Bald verfügbar!
                   </div>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
@@ -353,6 +321,40 @@ const Index = () => {
                 <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-400 rounded-full opacity-30"></div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* How it Works Section with enhanced styling */}
+      <section className="relative py-24">
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-blue-50/50"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900">
+              So einfach geht's
+            </h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              In nur drei einfachen Schritten zu deiner optimalen Prüfungsvorbereitung
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+            <StepCard 
+              number="1" 
+              title="Registrieren" 
+              description="Erstelle kostenlos dein persönliches Konto in wenigen Sekunden" 
+            />
+            <StepCard 
+              number="2" 
+              title="Fragen hochladen" 
+              description="Lade deine Altfragen als CSV Datei hoch und organisiere sie nach Themen" 
+            />
+            <StepCard 
+              number="3" 
+              title="Lernen & Verbessern" 
+              description="Tracke deinen Fortschritt und optimiere gezielt dein Wissen" 
+            />
           </div>
         </div>
       </section>
