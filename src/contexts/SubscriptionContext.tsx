@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -136,59 +135,14 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       console.log('Opening customer portal for user:', user.id);
       
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.access_token) {
-        throw new Error('No valid session found');
-      }
-
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: {
-          Authorization: `Bearer ${session.session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error('Customer portal error details:', error);
-        throw new Error(error.message || 'Failed to open customer portal');
-      }
-
-      console.log('Customer portal session created:', data);
-      if (data?.url) {
-        // Try to open in new tab, with fallback for popup blockers
-        const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
-        
-        if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-          // Popup was blocked, offer alternative
-          showToast.info('Popup wurde blockiert. Klicken Sie hier um das Kundenportal zu öffnen.');
-          
-          // Create a clickable link as fallback
-          const link = document.createElement('a');
-          link.href = data.url;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          link.click();
-        } else {
-          showToast.success('Kundenportal wurde geöffnet');
-        }
-      } else if (data?.configurationRequired) {
-        showToast.error('Customer portal is not configured in Stripe. Please configure it in your Stripe Dashboard under Settings > Billing > Customer Portal.');
-        if (data.setupUrl) {
-          console.log('Setup URL:', data.setupUrl);
-        }
-      } else {
-        throw new Error('No portal URL received');
-      }
+      // Direct redirect to Stripe customer portal
+      const portalUrl = 'https://billing.stripe.com/p/login/eVqbJ0aDy6gQ7Yi6ykcAo00';
+      window.open(portalUrl, '_blank', 'noopener,noreferrer');
+      showToast.success('Kundenportal wurde geöffnet');
     } catch (error) {
       console.error('Failed to open customer portal:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      
-      if (errorMessage.includes('No configuration provided') || 
-          errorMessage.includes('customer portal') ||
-          errorMessage.includes('configuration')) {
-        showToast.error('Customer portal not configured. Please set up the customer portal in your Stripe Dashboard (Settings > Billing > Customer Portal) to manage subscriptions.');
-      } else {
-        showToast.error(`Failed to open subscription management: ${errorMessage}`);
-      }
+      showToast.error(`Failed to open subscription management: ${errorMessage}`);
     }
   };
 
