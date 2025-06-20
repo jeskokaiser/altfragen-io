@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award, Clock, Zap } from "lucide-react";
+import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award, Clock, Zap, MessageSquare, Lightbulb, Target } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +60,14 @@ const Index = () => {
                 {user ? "Zum Dashboard" : "Jetzt kostenlos starten"} 
                 <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" />
               </Button>
-    
+              <Button 
+                onClick={() => navigate("/tutorial")} 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 px-10 py-7 text-xl font-semibold rounded-xl"
+              >
+                Wie es funktioniert
+              </Button>
             </div>
 
             {/* Social Proof */}
@@ -140,93 +147,6 @@ const Index = () => {
         </div>
       </section>
 
-      
-      
-      {/* Question Sharing Feature Section */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
-                  <Users className="w-4 h-4 mr-2" />
-                  Community Feature
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  Gemeinsam lernen, besser werden
-                </h2>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Verbinde dich mit anderen Studenten deiner Universität und teile deine Altfragen. 
-                  Profitiere von einer größeren Fragendatenbank und hilf anderen beim Lernen.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Automatische Universitätserkennung</h3>
-                      <p className="text-slate-600">Deine Universität wird automatisch anhand deiner E-Mail-Adresse erkannt</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Sichere Datenfreigabe</h3>
-                      <p className="text-slate-600">Nur Studenten deiner Universität können auf geteilte Fragen zugreifen</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Größere Fragendatenbank</h3>
-                      <p className="text-slate-600">Zugriff auf Fragen von anderen Studenten derselben Fächer</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900">Geteilte Fragen</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="text-sm text-slate-600">Universität München</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Anatomie - Herz-Kreislauf</span>
-                      <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">42 Fragen</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Physiologie - Atmung</span>
-                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">28 Fragen</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Biochemie - Stoffwechsel</span>
-                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">35 Fragen</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <p className="text-xs text-slate-500 text-center">
-                      Insgesamt 105 geteilte Fragen verfügbar
-                    </p>
-                  </div>
-                </div>
-                {/* Floating elements */}
-                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-400 rounded-full opacity-20"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-400 rounded-full opacity-30"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Real-time Collaboration Section */}
       <section className="container mx-auto px-4 py-24">
         <div className="max-w-6xl mx-auto">
@@ -239,7 +159,7 @@ const Index = () => {
                     Echtzeit-Zusammenarbeit
                   </div>
                   <div className="inline-flex items-center px-4 py-2 bg-amber-100 border border-amber-200 rounded-full text-amber-800 text-sm font-medium">
-                    Bald verfügbar!
+                    bald verfügbar
                   </div>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
@@ -325,6 +245,185 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Question Sharing Feature Section */}
+      <section className="container mx-auto px-4 py-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
+                  <Users className="w-4 h-4 mr-2" />
+                  Community Feature
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
+                  Gemeinsam lernen, besser werden
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Verbinde dich mit anderen Studenten deiner Universität und teile deine Altfragen. 
+                  Profitiere von einer größeren Fragendatenbank und hilf anderen beim Lernen.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Automatische Universitätserkennung</h3>
+                      <p className="text-slate-600">Deine Universität wird automatisch anhand deiner E-Mail-Adresse erkannt</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Sichere Datenfreigabe</h3>
+                      <p className="text-slate-600">Nur Studenten deiner Universität können auf geteilte Fragen zugreifen</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Größere Fragendatenbank</h3>
+                      <p className="text-slate-600">Zugriff auf Fragen von anderen Studenten derselben Fächer</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">Geteilte Fragen</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <span className="text-sm text-slate-600">Universität München</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Anatomie - Herz-Kreislauf</span>
+                      <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">42 Fragen</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Physiologie - Atmung</span>
+                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">28 Fragen</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">Biochemie - Stoffwechsel</span>
+                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">35 Fragen</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <p className="text-xs text-slate-500 text-center">
+                      Insgesamt 105 geteilte Fragen verfügbar
+                    </p>
+                  </div>
+                </div>
+                {/* Floating elements */}
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-400 rounded-full opacity-20"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-400 rounded-full opacity-30"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Comments Feature Section */}
+      <section className="container mx-auto px-4 py-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-xl border border-emerald-100">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">KI-Kommentare</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                      <span className="text-sm text-slate-600">Automatisch generiert</span>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-emerald-50 rounded-lg border-l-4 border-emerald-400">
+                      <div className="flex items-start space-x-3">
+                        <MessageSquare className="w-5 h-5 text-emerald-600 mt-1" />
+                        <div>
+                          <h5 className="font-medium text-slate-900 mb-1">Allgemeine Erklärung</h5>
+                          <p className="text-sm text-slate-600">Diese Frage testet das Verständnis der Herzphysiologie, insbesondere den Einfluss des Sympathikus auf die Kontraktilität...</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Target className="w-4 h-4 text-red-600" />
+                        <span className="text-sm font-medium text-red-700">Antwort A: Falsch</span>
+                      </div>
+                      <p className="text-xs text-slate-600">Der Sympathikus erhöht die Kontraktilität, reduziert sie nicht.</p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-700">Antwort B: Richtig</span>
+                      </div>
+                      <p className="text-xs text-slate-600">Korrekt! Noradrenalin verstärkt die Herzkontraktion über β1-Rezeptoren.</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <p className="text-xs text-slate-500 text-center">
+                      Powered by OpenAI, Claude & Gemini
+                    </p>
+                  </div>
+                </div>
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-emerald-400 rounded-full opacity-20"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-teal-400 rounded-full opacity-30"></div>
+              </div>
+              <div>
+                <div className="inline-flex items-center px-4 py-2 bg-emerald-100 border border-emerald-200 rounded-full text-emerald-700 text-sm font-medium mb-6">
+                  <Brain className="w-4 h-4 mr-2" />
+                  KI-gestützte Erklärungen
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
+                  Verstehe jede Frage im Detail
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Unsere KI analysiert jede Frage und Antwort und erstellt detaillierte Erklärungen. 
+                  Verstehe nicht nur die richtige Antwort, sondern auch warum die anderen falsch sind.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Drei KI-Modelle im Vergleich</h3>
+                      <p className="text-slate-600">OpenAI, Claude und Gemini analysieren jede Frage für umfassende Erklärungen</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Detaillierte Antwortanalyse</h3>
+                      <p className="text-slate-600">Jede Antwortoption wird einzeln erklärt - verstehe warum sie richtig oder falsch ist</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 mb-1">Automatische Generierung</h3>
+                      <p className="text-slate-600">Kommentare werden automatisch für alle Fragen erstellt - kein manueller Aufwand</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* How it Works Section with enhanced styling */}
       <section className="relative py-24">
@@ -359,7 +458,6 @@ const Index = () => {
         </div>
       </section>
 
-
       {/* Enhanced Testimonial Section */}
       <section className="container mx-auto px-4 py-24">
         <div className="max-w-4xl mx-auto">
@@ -370,7 +468,7 @@ const Index = () => {
                 <GraduationCap className="w-12 h-12 text-blue-600" />
               </div>
               <blockquote className="text-2xl md:text-3xl font-medium text-slate-700 mb-8 leading-relaxed">
-                Altfragen.io hat meine Art mich auf Prüfungen vorzubereiten revolutioniert. 
+                Altfragen.io hat meine Art mich auf Prüfungen vorzubereiten revolutioniert.
                 Die Plattform ist intuitiv und hat mir geholfen, meine Noten deutlich zu verbessern.
               </blockquote>
               <cite className="text-slate-500 font-semibold text-lg">
