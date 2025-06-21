@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ import { AICommentaryData } from '@/types/AIAnswerComments';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useUnclearQuestions } from '@/hooks/use-unclear-questions';
+import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
