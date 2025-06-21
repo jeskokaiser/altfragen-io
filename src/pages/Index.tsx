@@ -6,6 +6,7 @@ import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, Trend
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -140,8 +141,6 @@ const Index = () => {
         </div>
       </section>
 
-      
-      
       {/* Question Sharing Feature Section */}
       <section className="container mx-auto px-4 py-24">
         <div className="max-w-6xl mx-auto">
@@ -156,7 +155,7 @@ const Index = () => {
                   Gemeinsam lernen, besser werden
                 </h2>
                 <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Verbinde dich mit anderen Student:innen deiner Universität und teile deine Altfragen. 
+                  Verbinde dich mit anderen Studenten deiner Universität und teile deine Altfragen. 
                   Profitiere von einer größeren Fragendatenbank und hilf anderen beim Lernen.
                 </p>
                 <div className="space-y-4">
@@ -184,7 +183,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">Größere Fragendatenbank</h3>
-                      <p className="text-slate-600">Zugriff auf Fragen von anderen Student:innen derselben Fächer</p>
+                      <p className="text-slate-600">Zugriff auf Fragen von anderen Studenten derselben Fächer</p>
                     </div>
                   </div>
                 </div>
@@ -227,7 +226,7 @@ const Index = () => {
         </div>
       </section>
 
-    {/* AI Comments Feature Section */}
+      {/* AI Comments Feature Section */}
       <section className="container mx-auto px-4 py-24">
         <div className="max-w-6xl mx-auto">
           <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-xl border border-emerald-100">
@@ -321,7 +320,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
 
       {/* Real-time Collaboration Section */}
       <section className="container mx-auto px-4 py-24">
@@ -421,7 +419,6 @@ const Index = () => {
         </div>
       </section>
 
-
       {/* How it Works Section with enhanced styling */}
       <section className="relative py-24">
         <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-blue-50/50"></div>
@@ -454,7 +451,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
 
       {/* Enhanced Testimonial Section */}
       <section className="container mx-auto px-4 py-24">
@@ -527,6 +523,8 @@ const Index = () => {
           </Button>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };
