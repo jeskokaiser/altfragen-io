@@ -17,7 +17,8 @@ export class UnclearQuestionsService {
         return { error: 'User not authenticated' };
       }
 
-      const { error } = await supabase
+      // Use any type to bypass TypeScript errors until types are regenerated
+      const { error } = await (supabase as any)
         .from('user_unclear_questions')
         .upsert({
           user_id: user.id,
@@ -40,7 +41,7 @@ export class UnclearQuestionsService {
         return { error: 'User not authenticated' };
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_unclear_questions')
         .delete()
         .eq('user_id', user.id)
@@ -61,7 +62,7 @@ export class UnclearQuestionsService {
         return { error: 'User not authenticated' };
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_unclear_questions')
         .select('*')
         .eq('user_id', targetUserId);
@@ -77,7 +78,7 @@ export class UnclearQuestionsService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('user_unclear_questions')
         .select('id')
         .eq('user_id', user.id)

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { FormValues } from './types/FormValues';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
 import FilterForm from './FilterForm';
 import { toast } from 'sonner';
+import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -18,7 +20,7 @@ interface TrainingConfigProps {
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
   const { user } = useAuth();
-  const { userPreferences } = useUserPreferences();
+  const { preferences } = useUserPreferences();
 
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
@@ -49,8 +51,15 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       questionResults.set(progress.question_id, progress.is_correct);
     });
     
-    // Pass the questionResults to filterQuestions
-    const filteredQuestions = filterQuestions(questions, values, questionResults);
+    // Get user's unclear questions and filter them out
+    const { data: unclearQuestions } = await UnclearQuestionsService.getUserUnclearQuestions();
+    const unclearQuestionIds = new Set(unclearQuestions?.map(uq => uq.question_id) || []);
+    
+    // Filter out unclear questions first
+    const questionsWithoutUnclear = questions.filter(q => !unclearQuestionIds.has(q.id));
+    
+    // Apply other filters
+    const filteredQuestions = filterQuestions(questionsWithoutUnclear, values, questionResults);
 
     if (filteredQuestions.length === 0) {
       toast.error("Keine Fragen verfügbar", {
@@ -118,6 +127,9 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           </ul>
           </li>
         </ul>
+        <p className="mt-2 text-orange-600">
+          <strong>Hinweis:</strong> Als unklar markierte Fragen werden automatisch ausgeblendet.
+        </p>
       </div>
     </div>
   );

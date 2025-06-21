@@ -46,7 +46,6 @@ const QuestionContainer: React.FC<QuestionContainerProps> = ({
       <QuestionControls
         question={question}
         onEditClick={onEditClick}
-        onMarkUnclear={onMarkUnclear}
       />
 
       {shouldShowImage && <QuestionImage imageKey={question.image_key} />}
