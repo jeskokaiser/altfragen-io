@@ -20,8 +20,8 @@ interface QuestionContainerProps {
   wrongAnswers: string[];
   user: User | null;
   onAnswerSubmitted: (answer: string, correct: boolean, showSolution?: boolean) => void;
-  onEditClick?: () => void;
-  onMarkUnclear?: () => void; // This prop is no longer needed since it's handled internally
+  onEditClick: () => void;
+  onMarkUnclear: () => void;
 }
 
 const QuestionContainer: React.FC<QuestionContainerProps> = ({
@@ -35,7 +35,7 @@ const QuestionContainer: React.FC<QuestionContainerProps> = ({
   user,
   onAnswerSubmitted,
   onEditClick,
-  // onMarkUnclear - removed since it's handled internally now
+  onMarkUnclear,
 }) => {
   const isMobile = useIsMobile();
   const shouldShowImage = question.image_key && 
