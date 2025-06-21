@@ -51,6 +51,15 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
     }
   };
 
+  const handleToggleUnclear = async () => {
+    try {
+      await toggleUnclear();
+    } catch (error) {
+      console.error('Error toggling unclear status:', error);
+      showToast.error('Fehler beim Ändern des Status');
+    }
+  };
+
   const getVisibilityIcon = () => {
     switch (question.visibility) {
       case 'university':
@@ -94,7 +103,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
         <Button 
           variant={isUnclear ? "default" : "outline"} 
           size="sm" 
-          onClick={toggleUnclear} 
+          onClick={handleToggleUnclear} 
           className="flex items-center gap-2"
           disabled={isLoading}
         >

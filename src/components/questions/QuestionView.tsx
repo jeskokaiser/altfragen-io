@@ -7,8 +7,6 @@ import QuestionHeader from './QuestionHeader';
 import NavigationButtons from '../training/NavigationButtons';
 import EditQuestionModal from '../training/EditQuestionModal';
 import QuestionContainer from './QuestionContainer';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuestionViewProps {
@@ -83,30 +81,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   };
 
-  const handleMarkUnclear = async () => {
-    try {
-      const { error } = await supabase
-        .from('questions')
-        .update({
-          is_unclear: true,
-          marked_unclear_at: new Date().toISOString(),
-        })
-        .eq('id', currentQuestion.id);
-
-      if (error) throw error;
-
-      toast.info('Frage als unklar markiert');
-      setCurrentQuestion({
-        ...currentQuestion,
-        is_unclear: true,
-        marked_unclear_at: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Error marking question as unclear:', error);
-      toast.error('Fehler beim Markieren der Frage');
-    }
-  };
-
   // Check if user can edit the question - user owns the question or it's shared with their university
   const canEditQuestion = user && (
     user.id === currentQuestion.user_id || 
@@ -137,7 +111,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         user={user}
         onAnswerSubmitted={handleAnswerSubmitted}
         onEditClick={canEditQuestion ? () => setIsEditModalOpen(true) : undefined}
-        onMarkUnclear={handleMarkUnclear}
       />
 
       <NavigationButtons
