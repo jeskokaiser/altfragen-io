@@ -1,18 +1,24 @@
 
 import { Question } from '@/types/Question';
 import { FormValues } from '@/components/training/types/FormValues';
+import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
 
-export const filterQuestions = (
+export const filterQuestions = async (
   questions: Question[],
   values: FormValues,
   questionResults?: Map<string, boolean>
-): Question[] => {
+): Promise<Question[]> => {
+  // Get user's unclear questions and filter them out
+  const { data: unclearQuestions } = await UnclearQuestionsService.getUserUnclearQuestions();
+  const unclearQuestionIds = new Set(unclearQuestions?.map(uq => uq.question_id) || []);
+  
+  // Filter out unclear questions first
+  let filteredQuestions = questions.filter(q => !unclearQuestionIds.has(q.id));
+  
   // If random selection is enabled, skip filtering by subject and difficulty
   if (values.isRandomSelection) {
-    return [...questions];
+    return [...filteredQuestions];
   }
-  
-  let filteredQuestions = [...questions];
   
   // Filter wrong questions first if enabled
   if (values.wrongQuestionsOnly && questionResults) {

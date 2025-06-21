@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Copy, GraduationCap, Lock } from 'lucide-react';
@@ -6,17 +7,20 @@ import { showToast } from '@/utils/toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Question } from '@/types/Question';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
+
 interface QuestionControlsProps {
   question: Question;
   onEditClick?: () => void;
-  onMarkUnclear: () => void;
 }
+
 const QuestionControls: React.FC<QuestionControlsProps> = ({
   question,
-  onEditClick,
-  onMarkUnclear
+  onEditClick
 }) => {
   const isMobile = useIsMobile();
+  const { isUnclear, isLoading, toggleUnclear } = useUnclearQuestions(question.id);
+
   const handleCopyToClipboard = async () => {
     const prompt = `Du unterstützt mich als Experte mit 20+ Jahren Erfahrung in medizinischen Prüfungen als Tutor bei der Lösung einer Multiple-Choice-Frage aus einer medizinischen Prüfung, die aus den Gedächtnisprotokollen anderer Studierender stammt. Analysiere die Frage und beantworte folgende Punkte:
 
@@ -46,6 +50,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
       showToast.error("Fehler beim Kopieren in die Zwischenablage");
     }
   };
+
   const getVisibilityIcon = () => {
     switch (question.visibility) {
       case 'university':
@@ -54,6 +59,7 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
         return <Lock className="h-4 w-4 text-gray-500" />;
     }
   };
+
   const getVisibilityTooltip = () => {
     switch (question.visibility) {
       case 'university':
@@ -62,14 +68,18 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
         return "Privat (nur für dich)";
     }
   };
-  return <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
+
+  return (
+    <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
       <div className="flex-grow">
         <DifficultyControls questionId={question.id} difficulty={question.difficulty || 3} onEditClick={onEditClick} />
       </div>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            
+            <div className="flex items-center">
+              {getVisibilityIcon()}
+            </div>
           </TooltipTrigger>
           <TooltipContent>
             <p>{getVisibilityTooltip()}</p>
@@ -81,12 +91,20 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
           <Copy className="h-4 w-4" />
           <span className="hidden sm:inline">KI-Kopieren</span>
         </Button>
-        <Button variant="outline" size="sm" onClick={onMarkUnclear} className="flex items-center gap-2" disabled={question.is_unclear}>
+        <Button 
+          variant={isUnclear ? "default" : "outline"} 
+          size="sm" 
+          onClick={toggleUnclear} 
+          className="flex items-center gap-2"
+          disabled={isLoading}
+        >
           <AlertCircle className="h-4 w-4" />
-          <span className="hidden sm:inline">Unklar</span>
+          <span className="hidden sm:inline">{isUnclear ? "Klar" : "Unklar"}</span>
           <span className="sm:hidden">?!</span>
         </Button>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default QuestionControls;

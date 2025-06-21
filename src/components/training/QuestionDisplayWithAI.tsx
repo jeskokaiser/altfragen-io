@@ -24,6 +24,7 @@ import { AICommentaryData } from '@/types/AIAnswerComments';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useUnclearQuestions } from '@/hooks/use-unclear-questions';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -204,28 +205,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
   };
 
+  const { isUnclear, isLoading: unclearLoading, toggleUnclear } = useUnclearQuestions(currentQuestion.id);
+
   const handleMarkUnclear = async () => {
-    try {
-      const { error } = await supabase
-        .from('questions')
-        .update({
-          is_unclear: true,
-          marked_unclear_at: new Date().toISOString(),
-        })
-        .eq('id', currentQuestion.id);
-
-      if (error) throw error;
-
-      toast.info('Frage als unklar markiert');
-      setCurrentQuestion({
-        ...currentQuestion,
-        is_unclear: true,
-        marked_unclear_at: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Error marking question as unclear:', error);
-      toast.error('Fehler beim Markieren der Frage');
-    }
+    await toggleUnclear();
   };
 
   const renderAICommentary = () => {
@@ -390,14 +373,14 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           </div>
           <div className="flex justify-end gap-2">
             <Button
-              variant="outline"
+              variant={isUnclear ? "default" : "outline"}
               size={isMobile ? "sm" : "default"}
               onClick={handleMarkUnclear}
               className="flex items-center gap-2 hover:bg-gray-100"
-              disabled={currentQuestion.is_unclear || isDemoMode}
+              disabled={unclearLoading || isDemoMode}
             >
               <AlertCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Unklar</span>
+              <span className="hidden sm:inline">{isUnclear ? "Klar" : "Unklar"}</span>
               <span className="sm:hidden">?!</span>
             </Button>
           </div>

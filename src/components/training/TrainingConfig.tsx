@@ -1,12 +1,15 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Question } from '@/types/Question';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import FilterForm from './FilterForm';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { FormValues } from './types/FormValues';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
-import { showToast } from '@/utils/toast';
+import FilterForm from './FilterForm';
+import { toast } from 'sonner';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -15,6 +18,7 @@ interface TrainingConfigProps {
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
   const { user } = useAuth();
+  const { userPreferences } = useUserPreferences();
 
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
@@ -49,7 +53,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     const filteredQuestions = filterQuestions(questions, values, questionResults);
 
     if (filteredQuestions.length === 0) {
-      showToast.error("Keine Fragen verfügbar", {
+      toast.error("Keine Fragen verfügbar", {
         description: "Mit den gewählten Filtereinstellungen sind keine Fragen verfügbar. Bitte passe deine Auswahl an."
       });
       return;
