@@ -33,6 +33,35 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2009 }, (_, i) => (currentYear - i).toString());
 
+  // Function to extract semester and year from filename
+  const extractSemesterAndYear = (filename: string) => {
+    // Remove file extension
+    const nameWithoutExt = filename.replace(/\.(pdf|docx)$/i, '');
+    
+    // Look for patterns like SS14, WS21, SS2014, WS2021
+    const semesterYearMatch = nameWithoutExt.match(/(SS|WS)(\d{2,4})/i);
+    
+    if (semesterYearMatch) {
+      const semester = semesterYearMatch[1].toUpperCase();
+      let year = semesterYearMatch[2];
+      
+      // Convert 2-digit year to 4-digit year
+      if (year.length === 2) {
+        const twoDigitYear = parseInt(year);
+        // Assume years 00-30 are 2000s, 31-99 are 1900s
+        if (twoDigitYear <= 30) {
+          year = `20${year}`;
+        } else {
+          year = `19${year}`;
+        }
+      }
+      
+      return { semester, year };
+    }
+    
+    return { semester: '', year: '' };
+  };
+
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
     if (!selectedFiles) return;
@@ -47,14 +76,18 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
         
         return isPDF || isDOCX || isDocxByExtension;
       })
-      .map(file => ({
-        file,
-        examName: '',
-        semester: '',
-        year: '',
-        isProcessing: false,
-        isCompleted: false
-      }));
+      .map(file => {
+        const { semester, year } = extractSemesterAndYear(file.name);
+        
+        return {
+          file,
+          examName: '',
+          semester,
+          year,
+          isProcessing: false,
+          isCompleted: false
+        };
+      });
 
     console.log('Filtered files:', newFiles.length, 'out of', selectedFiles.length);
     
