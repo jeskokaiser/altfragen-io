@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -127,6 +128,8 @@ serve(async (req) => {
   try {
     const { examName, universityId, onlyNullSubjects, availableSubjects } = await req.json();
     
+    console.log('Request body:', { examName, universityId, onlyNullSubjects, availableSubjects });
+    
     if (!examName || !availableSubjects) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: examName, availableSubjects' }),
@@ -153,12 +156,13 @@ serve(async (req) => {
       .select('*')
       .eq('exam_name', examName);
 
-    if (universityId) {
+    if (universityId && universityId !== 'all') {
       query = query.eq('university_id', universityId);
     }
 
     // Add filter for null subjects if requested
-    if (onlyNullSubjects) {
+    if (onlyNullSubjects === true) {
+      console.log('Filtering for null subjects only');
       query = query.is('subject', null);
     }
 
@@ -167,7 +171,7 @@ serve(async (req) => {
     if (questionsError) {
       console.error('Error fetching questions:', questionsError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch questions' }),
+        JSON.stringify({ error: 'Failed to fetch questions', details: questionsError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
