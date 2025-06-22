@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
-import QuestionView from '@/components/questions/QuestionView';
+import QuestionDisplayWithAI from '@/components/training/QuestionDisplayWithAI';
 import Results from '@/components/Results';
 import TrainingConfig from '@/components/training/TrainingConfig';
 
@@ -15,14 +15,33 @@ const Training = () => {
   const [userAnswers, setUserAnswers] = useState<AnswerState[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [configurationComplete, setConfigurationComplete] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
+    const demoFlag = localStorage.getItem('isDemoSession');
+    const isDemoSession = demoFlag === 'true';
+    setIsDemo(isDemoSession);
+
     const storedQuestions = localStorage.getItem('trainingQuestions');
     if (!storedQuestions) {
       navigate('/dashboard');
       return;
     }
-    setAllQuestions(JSON.parse(storedQuestions));
+    const parsedQuestions = JSON.parse(storedQuestions);
+    setAllQuestions(parsedQuestions);
+
+    if (isDemoSession) {
+      setSelectedQuestions(parsedQuestions);
+      setConfigurationComplete(true);
+    }
+    
+    return () => {
+      if (isDemoSession) {
+        localStorage.removeItem('isDemoSession');
+        localStorage.removeItem('demoAiCommentaries');
+        localStorage.removeItem('trainingQuestions');
+      }
+    };
   }, [navigate]);
 
   const handleStartTraining = (questions: Question[]) => {
@@ -83,7 +102,9 @@ const Training = () => {
     setCurrentQuestionIndex(0);
     setUserAnswers([]);
     setShowResults(false);
-    setConfigurationComplete(false);
+    if (!isDemo) {
+      setConfigurationComplete(false);
+    }
   };
 
   const handleQuit = () => {
@@ -126,14 +147,15 @@ const Training = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <QuestionView
+      <QuestionDisplayWithAI
         questionData={selectedQuestions[currentQuestionIndex]}
         totalQuestions={selectedQuestions.length}
         currentIndex={currentQuestionIndex}
         onNext={handleNext}
         onPrevious={handlePrevious}
         onAnswer={handleAnswer}
-        userAnswer={userAnswers[currentQuestionIndex]}
+        userAnswer={userAnswers[currentQuestionIndex]?.value || ''}
+        userAnswerState={userAnswers[currentQuestionIndex]}
         onQuit={handleQuit}
         onQuestionUpdate={handleQuestionUpdate}
       />

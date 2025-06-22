@@ -1,18 +1,22 @@
 
 import { Question } from '@/types/Question';
 import { FormValues } from '@/components/training/types/FormValues';
+import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
 
 export const filterQuestions = (
   questions: Question[],
   values: FormValues,
   questionResults?: Map<string, boolean>
 ): Question[] => {
+  console.log('Starting filterQuestions with', questions.length, 'questions');
+  
+  // Start with all questions
+  let filteredQuestions = [...questions];
+  
   // If random selection is enabled, skip filtering by subject and difficulty
   if (values.isRandomSelection) {
-    return [...questions];
+    return filteredQuestions;
   }
-  
-  let filteredQuestions = [...questions];
   
   // Filter wrong questions first if enabled
   if (values.wrongQuestionsOnly && questionResults) {
@@ -33,6 +37,18 @@ export const filterQuestions = (
     filteredQuestions = filteredQuestions.filter(q => q.subject === values.subject);
     console.log('After subject filter:', filteredQuestions.length);
   }
+  
+  // Apply year range filter
+  const [minYear, maxYear] = values.yearRange;
+  console.log('Filtering by year range:', minYear, 'to', maxYear);
+  filteredQuestions = filteredQuestions.filter(q => {
+    // Skip questions with no year data
+    if (!q.year) return false;
+    
+    const questionYear = parseInt(q.year);
+    return !isNaN(questionYear) && questionYear >= minYear && questionYear <= maxYear;
+  });
+  console.log('After year range filter:', filteredQuestions.length);
   
   // Finally apply difficulty filter
   if (values.difficulty !== 'all') {

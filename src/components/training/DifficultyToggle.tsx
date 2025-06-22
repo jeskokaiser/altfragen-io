@@ -1,11 +1,13 @@
+
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface DifficultyToggleProps {
   value: string;
   onValueChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-const DifficultyToggle: React.FC<DifficultyToggleProps> = ({ value, onValueChange }) => {
+const DifficultyToggle: React.FC<DifficultyToggleProps> = ({ value, onValueChange, disabled = false }) => {
   const getDifficultyColor = (difficulty: number) => {
     switch (difficulty) {
       case 1: return 'bg-green-100 text-green-800';
@@ -23,6 +25,7 @@ const DifficultyToggle: React.FC<DifficultyToggleProps> = ({ value, onValueChang
       value={value}
       onValueChange={onValueChange}
       className="justify-start"
+      disabled={disabled}
     >
       {[1, 2, 3, 4, 5].map((level) => (
         <ToggleGroupItem 

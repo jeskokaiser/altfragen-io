@@ -1,48 +1,72 @@
 
-import React from 'react';
-import { useLocation, Routes, Route, Navigate } from 'react-router-dom';
-import Header from './Header/Header';
-import Settings from '@/pages/Settings';
-import Training from '@/pages/Training';
-import Index from '@/pages/Index';
-import Auth from '@/pages/Auth';
-import Terms from '@/pages/Terms';
-import Impressum from '@/pages/Impressum';
-import Tutorial from '@/pages/Tutorial';
-import UnclearQuestions from '@/pages/UnclearQuestions';
-import Changelog from '@/pages/Changelog';
-import Dashboard from '@/components/Dashboard';
-import ArchivedDatasets from '@/pages/ArchivedDatasets';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/contexts/AuthContext';
 
-const MainLayout = () => {
+// Import pages
+import DashboardPage from '@/pages/Dashboard';
+import TrainingPage from '@/pages/Training';
+import CollabSessionsPage from '@/pages/CollabSessions';
+import CreateSessionPage from '@/pages/CreateSession';
+import SessionDetailsPage from '@/pages/SessionDetails';
+import SettingsPage from '@/pages/Settings';
+import SubscriptionPage from '@/pages/Subscription';
+import UnclearQuestionsPage from '@/pages/UnclearQuestions';
+import ArchivedDatasetsPage from '@/pages/ArchivedDatasets';
+import AICommentaryAdminPage from '@/pages/AICommentaryAdmin';
+import TutorialPage from '@/pages/Tutorial';
+import ChangelogPage from '@/pages/Changelog';
+
+const MainLayout: React.FC = () => {
+  const { isReady, isAuthenticated } = useAuthGuard();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  const isLandingPage = location.pathname === '/';
-  const isAuthPage = location.pathname === '/auth';
-  const isTrainingPage = location.pathname === '/training';
-  const shouldShowFooter = !isTrainingPage && !location.pathname.includes('/results');
+
+  useEffect(() => {
+    if (isAuthenticated && user && location.pathname !== '/tutorial') {
+      const hasSeenTutorialKey = `hasSeenTutorial_${user.id}`;
+      const hasSeenTutorial = localStorage.getItem(hasSeenTutorialKey);
+
+      if (!hasSeenTutorial) {
+        localStorage.setItem(hasSeenTutorialKey, 'true');
+        navigate('/tutorial', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate, location.pathname]);
+
+  if (!isReady) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!isLandingPage && !isAuthPage && <Header />}
+      <Navbar />
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/training" element={<Training />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/impressum" element={<Impressum />} />
-          <Route path="/tutorial" element={<Tutorial />} />
-          <Route path="/unclear-questions/:filename" element={<UnclearQuestions />} />
-          <Route path="/changelog" element={<Changelog />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/archived" element={<ArchivedDatasets />} />
-          {/* Catch all other routes and redirect to index */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/training" element={<TrainingPage />} />
+          <Route path="/collab" element={<CollabSessionsPage />} />
+          <Route path="/create-session" element={<CreateSessionPage />} />
+          <Route path="/session/:sessionId" element={<SessionDetailsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/subscription" element={<SubscriptionPage />} />
+          <Route path="/unclear-questions/:filename" element={<UnclearQuestionsPage />} />
+          <Route path="/archived-datasets" element={<ArchivedDatasetsPage />} />
+          <Route path="/ai-commentary" element={<AICommentaryAdminPage />} />
+          <Route path="/tutorial" element={<TutorialPage />} />
+          <Route path="/changelog" element={<ChangelogPage />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
-      {shouldShowFooter && <Footer />}
+      <Footer />
     </div>
   );
 };

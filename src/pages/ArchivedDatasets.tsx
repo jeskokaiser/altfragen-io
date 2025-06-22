@@ -11,7 +11,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
-import { toast } from 'sonner';
 
 const ArchivedDatasets = () => {
   const { user } = useAuth();
@@ -45,7 +44,8 @@ const ArchivedDatasets = () => {
         created_at: q.created_at,
         difficulty: q.difficulty,
         is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at
+        marked_unclear_at: q.marked_unclear_at,
+        exam_name: q.exam_name
       })) as Question[];
     },
   });
@@ -57,16 +57,18 @@ const ArchivedDatasets = () => {
 
   const groupedQuestions = useMemo(() => {
     return archivedQuestions.reduce((acc, question) => {
-      if (!acc[question.filename]) {
-        acc[question.filename] = [];
+      // Use exam_name as the grouping key instead of filename
+      const key = question.exam_name || question.filename;
+      if (!acc[key]) {
+        acc[key] = [];
       }
-      acc[question.filename].push(question);
+      acc[key].push(question);
       return acc;
     }, {} as Record<string, Question[]>);
   }, [archivedQuestions]);
 
-  const handleDatasetClick = (filename: string) => {
-    setSelectedFilename(selectedFilename === filename ? null : filename);
+  const handleDatasetClick = (key: string) => {
+    setSelectedFilename(selectedFilename === key ? null : key);
   };
 
   const handleStartTraining = (questions: Question[]) => {

@@ -7,4 +7,5 @@ export interface FormValues {
   sortByAttempts: boolean;
   sortDirection: 'asc' | 'desc';
   wrongQuestionsOnly: boolean;
+  yearRange: [number, number]; // Year range from min to max
 }

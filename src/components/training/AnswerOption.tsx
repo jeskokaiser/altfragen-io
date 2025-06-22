@@ -10,9 +10,24 @@ interface AnswerOptionProps {
   text: string;
   resetTrigger?: number;
   isWrong?: boolean;
+  isFirstWrong?: boolean;
+  isCorrect?: boolean;
+  showFeedback?: boolean;
+  shouldHighlightCorrect?: boolean;
+  showSolution?: boolean;
 }
 
-const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, isWrong }) => {
+const AnswerOption: React.FC<AnswerOptionProps> = ({ 
+  value, 
+  text, 
+  resetTrigger, 
+  isWrong, 
+  isFirstWrong, 
+  isCorrect, 
+  showFeedback,
+  shouldHighlightCorrect,
+  showSolution
+}) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const isMobile = useIsMobile();
 
@@ -25,10 +40,33 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
     setIsStrikethrough(!isStrikethrough);
   };
 
+  const getContainerClasses = () => {
+    let classes = `flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} `;
+    
+    if (showSolution) {
+      // When solution is shown, color all answers appropriately with dark mode support
+      if (isCorrect) {
+        classes += 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-md p-2 text-green-900 dark:text-green-100 ';
+      } else {
+        classes += 'bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-md p-2 text-red-900 dark:text-red-100 ';
+      }
+    } else if (showFeedback) {
+      if (isFirstWrong) {
+        classes += 'bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-md p-2 text-red-900 dark:text-red-100 ';
+      } else if (isCorrect && shouldHighlightCorrect) {
+        classes += 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-md p-2 text-green-900 dark:text-green-100 ';
+      } else if (isWrong && !isFirstWrong) {
+        classes += 'border border-red-600 dark:border-red-400 rounded-md p-2 ';
+      } else {
+        classes += 'border border-gray-200 dark:border-gray-700 rounded-md p-2 ';
+      }
+    }
+    
+    return classes;
+  };
+
   return (
-    <div className={`flex items-center space-x-2 ${isMobile ? 'text-sm' : ''} ${
-      isWrong ? 'border border-[#ea384c] rounded-md p-2' : ''
-    }`}>
+    <div className={getContainerClasses()}>
       <RadioGroupItem value={value} id={value} />
       <Label htmlFor={value} className="flex items-center flex-1">
         <span className="font-semibold mr-2">{value})</span>
@@ -38,10 +76,10 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({ value, text, resetTrigger, 
       </Label>
       <button
         onClick={handleStrikethrough}
-        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
         aria-label="Toggle strike-through"
       >
-        <X className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-gray-500`} />
+        <X className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-gray-500 dark:text-gray-400`} />
       </button>
     </div>
   );

@@ -3,6 +3,7 @@ import React, { memo } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -22,6 +23,7 @@ interface DatasetCardProps {
   onDatasetClick: (filename: string) => void;
   onStartTraining: (questions: Question[]) => void;
   isArchived?: boolean;
+  displayName?: string;
 }
 
 const DatasetCard: React.FC<DatasetCardProps> = memo(({
@@ -31,8 +33,10 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   onDatasetClick,
   onStartTraining,
   isArchived = false,
+  displayName,
 }) => {
   const { archiveDataset, restoreDataset } = useUserPreferences();
+  const navigate = useNavigate();
 
   const handleArchive = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -43,6 +47,12 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
     e.stopPropagation();
     await restoreDataset(filename);
   };
+
+  const handleUnclearQuestions = () => {
+    navigate(`/unclear-questions/${encodeURIComponent(filename)}`);
+  };
+
+  const displayTitle = displayName || filename;
 
   return (
     <Card className={`w-full transition-all duration-200 ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}>
@@ -55,6 +65,8 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
           onArchive={handleArchive}
           onRestore={handleRestore}
           isArchived={isArchived}
+          displayName={displayTitle}
+          onUnclearQuestions={handleUnclearQuestions}
         />
       </CardHeader>
 

@@ -11,13 +11,16 @@ const Impressum = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">Angaben gemäß § 5 TMG</h2>
+              <h2 className="text-xl font-semibold">Angaben gemäß DDG</h2>
+              <p>Altfragen.io</p>
               <p>Jesko Kaiser</p>
-              <p>info@jeskokaiser.de</p>
+              <p>Kegelhofstr. 17</p>
+              <p>20251 Hamburg</p>
+              <p>hallo@altfragen.io</p>
             </section>
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">Kontakt</h2>
-              <p>E-Mail: info@jeskokaiser.de</p>
+              <p>E-Mail: hallo@altfragen.io</p>
             </section>
           </CardContent>
         </Card>
@@ -42,7 +45,9 @@ const Impressum = () => {
               <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
               <p>
                 Jesko Kaiser<br />
-                E-Mail: info@jeskokaiser.de
+                Kegelhofstr. 17<br />
+                20251 Hamburg<br />
+                E-Mail: hallo@altfragen.io
               </p>
             </section>
 
@@ -105,7 +110,7 @@ const Impressum = () => {
                 <li>Die Übertragung Ihrer Daten zu einem anderen Anbieter zu verlangen</li>
               </ul>
               <p>
-                Zur Ausübung dieser Rechte können Sie sich jederzeit an uns wenden: info@jeskokaiser.de
+                Zur Ausübung dieser Rechte können Sie sich jederzeit an uns wenden: hallo@altfragen.io
               </p>
             </section>
 
@@ -125,7 +130,9 @@ const Impressum = () => {
               </p>
               <p>
                 Jesko Kaiser<br />
-                E-Mail: info@jeskokaiser.de
+                Kegelhofstr. 17<br />
+                20251 Hamburg<br />
+                E-Mail: hallo@altfragen.io
               </p>
             </section>
           </CardContent>

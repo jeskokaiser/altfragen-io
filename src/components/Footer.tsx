@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { Github } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -9,12 +10,23 @@ const Footer = () => {
           <Link to="/impressum" className="hover:text-foreground transition-colors">
             Impressum
           </Link>
+          <Link to="/privacy" className="hover:text-foreground transition-colors">
+            Datenschutz
+          </Link>
           <Link to="/terms" className="hover:text-foreground transition-colors">
             Nutzungsbedingungen
-            </Link>
-          <Link to="/changelog" className="hover:text-foreground transition-colors">                   
-            Changelog
           </Link>
+          <Link to="/agb" className="hover:text-foreground transition-colors">
+            AGB
+          </Link>
+          <Link to="/widerruf" className="hover:text-foreground transition-colors">
+            Widerrufsrecht
+          </Link>
+          
+          <a href="https://github.com/jeskokaiser/altfragen-io" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center" aria-label="GitHub Repository">
+            <Github size={16} className="mr-1" />
+            <span>GitHub</span>
+          </a>
         </div>
       </div>
     </footer>

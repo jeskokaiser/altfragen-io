@@ -9,6 +9,7 @@ interface DatasetListProps {
   onDatasetClick: (filename: string) => void;
   onStartTraining: (questions: Question[]) => void;
   isArchived?: boolean;
+  groupBy?: 'filename' | 'examName';
 }
 
 const DatasetList = ({
@@ -17,18 +18,20 @@ const DatasetList = ({
   onDatasetClick,
   onStartTraining,
   isArchived = false,
+  groupBy = 'examName',
 }: DatasetListProps) => {
   return (
     <div className="grid gap-4">
-      {Object.entries(groupedQuestions).map(([filename, questions]) => (
+      {Object.entries(groupedQuestions).map(([key, questions]) => (
         <DatasetCard
-          key={filename}
-          filename={filename}
+          key={key}
+          filename={key}
           questions={questions}
-          isSelected={selectedFilename === filename}
+          isSelected={selectedFilename === key}
           onDatasetClick={onDatasetClick}
           onStartTraining={onStartTraining}
           isArchived={isArchived}
+          displayName={groupBy === 'examName' ? key : questions[0]?.exam_name || key}
         />
       ))}
     </div>

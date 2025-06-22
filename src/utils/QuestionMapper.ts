@@ -1,3 +1,4 @@
+
 import { Question } from '@/types/Question';
 
 export const mapRowsToQuestions = (rows: any[], headers: string[], filename: string): Question[] => {
@@ -14,6 +15,9 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       console.log(`Row ${index + 2} skipped - Missing question or answer:`, rowData);
     }
 
+    // Parse year as string if available (to match the Question type)
+    const year = rowData['Jahr'] ? String(rowData['Jahr']) : null;
+
     return {
       id: crypto.randomUUID(),
       question: rowData['Frage'] || '',
@@ -26,7 +30,10 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       correctAnswer: rowData['Antwort'] || '',
       comment: rowData['Kommentar'] || '',
       filename: filename,
-      difficulty: parseInt(rowData['Schwierigkeit']) || 3 // Default to 3 if not provided
+      difficulty: parseInt(rowData['Schwierigkeit']) || 3, // Default to 3 if not provided
+      visibility: 'private' as const,  // Explicitly type as 'private'
+      semester: rowData['Semester'] || null,
+      year: year
     };
   });
 

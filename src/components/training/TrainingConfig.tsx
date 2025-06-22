@@ -1,12 +1,17 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Question } from '@/types/Question';
-import { supabase } from '@/integrations/supabase/client';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useAuth } from '@/contexts/AuthContext';
-import FilterForm from './FilterForm';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { FormValues } from './types/FormValues';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
-import { showToast } from '@/utils/toast';
+import FilterForm from './FilterForm';
+import { toast } from 'sonner';
+import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -15,10 +20,20 @@ interface TrainingConfigProps {
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
   const { user } = useAuth();
+  const { preferences } = useUserPreferences();
 
   const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
     a.localeCompare(b, 'de')
   );
+  
+  // Extract unique years from questions
+  const years = Array.from(
+    new Set(
+      questions
+        .filter(q => q.year)
+        .map(q => q.year || '')
+    )
+  ).sort((a, b) => b.localeCompare(a)); // Sort years in descending order
 
   const handleSubmit = async (values: FormValues) => {
     console.log('Form values:', values);
@@ -36,11 +51,18 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       questionResults.set(progress.question_id, progress.is_correct);
     });
     
-    // Pass the questionResults to filterQuestions
-    const filteredQuestions = filterQuestions(questions, values, questionResults);
+    // Get user's unclear questions and filter them out
+    const { data: unclearQuestions } = await UnclearQuestionsService.getUserUnclearQuestions();
+    const unclearQuestionIds = new Set(unclearQuestions?.map(uq => uq.question_id) || []);
+    
+    // Filter out unclear questions first
+    const questionsWithoutUnclear = questions.filter(q => !unclearQuestionIds.has(q.id));
+    
+    // Apply other filters
+    const filteredQuestions = filterQuestions(questionsWithoutUnclear, values, questionResults);
 
     if (filteredQuestions.length === 0) {
-      showToast.error("Keine Fragen verfügbar", {
+      toast.error("Keine Fragen verfügbar", {
         description: "Mit den gewählten Filtereinstellungen sind keine Fragen verfügbar. Bitte passe deine Auswahl an."
       });
       return;
@@ -75,6 +97,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       
       <FilterForm 
         subjects={subjects}
+        years={years}
         onSubmit={handleSubmit}
       />
       <br />
@@ -91,7 +114,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           Du kannst die Auswahl anpassen durch:
         </p>
         <ul className="list-disc ml-4 space-y-1">
-         <li>Filtern nach Fach und Schwierigkeitsgrad</li>
+         <li>Filtern nach Fach, Schwierigkeitsgrad und Jahr</li>
           <li>Nur falsch beantwortete Fragen</li>
          <li>Nach Anzahl der Versuche sortieren
             <ul>
@@ -104,6 +127,9 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           </ul>
           </li>
         </ul>
+        <p className="mt-2 text-orange-600">
+          <strong>Hinweis:</strong> Als unklar markierte Fragen werden automatisch ausgeblendet.
+        </p>
       </div>
     </div>
   );

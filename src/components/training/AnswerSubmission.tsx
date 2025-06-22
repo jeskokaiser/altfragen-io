@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +40,7 @@ const AnswerSubmission = ({
     if (!selectedAnswer || !user || isSubmitting) return;
 
     setIsSubmitting(true);
+    // Compare only the first letter, case insensitive
     const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
 
     try {
@@ -71,7 +71,7 @@ const AnswerSubmission = ({
           .update({
             user_answer: selectedAnswer,
             attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: isCorrect ? (preferences.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
+            is_correct: isCorrect ? (preferences?.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
@@ -86,7 +86,7 @@ const AnswerSubmission = ({
           }
         } else {
           if (isCorrect) {
-            if (preferences.immediateFeedback || wrongAnswers.length === 0) {
+            if (preferences?.immediateFeedback || wrongAnswers.length === 0) {
               showToast.success("Super! Die Frage ist jetzt als richtig markiert.");
             } else {
               showToast.info("Richtig! Die Frage bleibt aber als falsch markiert, da es nicht der erste Versuch war.");
@@ -97,7 +97,7 @@ const AnswerSubmission = ({
         }
       }
 
-      if (!isCorrect && !preferences.immediateFeedback) {
+      if (!isCorrect && !preferences?.immediateFeedback) {
         setHasSubmittedWrong(true);
         if (!wrongAnswers.includes(selectedAnswer)) {
           setWrongAnswers(prev => [...prev, selectedAnswer]);
@@ -105,9 +105,9 @@ const AnswerSubmission = ({
       }
 
       setLastSubmissionCorrect(isCorrect);
-      onAnswerSubmitted(selectedAnswer, isCorrect, preferences.immediateFeedback && !isCorrect);
+      onAnswerSubmitted(selectedAnswer, isCorrect, preferences?.immediateFeedback && !isCorrect);
 
-      if (preferences.immediateFeedback) {
+      if (preferences?.immediateFeedback) {
         setShowSolution(true);
       }
 
@@ -122,10 +122,11 @@ const AnswerSubmission = ({
   const handleShowSolution = () => {
     if (!user) return;
     setShowSolution(true);
+    setLastSubmissionCorrect(false);
     onAnswerSubmitted('solution_viewed', false, true);
   };
 
-  if (preferences.immediateFeedback) {
+  if (preferences?.immediateFeedback) {
     return (
       <div className="mt-4 space-y-4">
         {!showSolution && (
@@ -159,7 +160,7 @@ const AnswerSubmission = ({
         {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
       </Button>
       
-      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && wrongAnswers.length < 4 && (
+      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && wrongAnswers.length < 4 && !showSolution && (
         <div className="space-y-4">
           <Alert variant="destructive">
             <div className="flex items-center gap-2">
@@ -168,13 +169,14 @@ const AnswerSubmission = ({
             </div>
           </Alert>
           
-          <button
+          <Button
+            variant="outline"
             onClick={handleShowSolution}
-            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 flex items-center justify-center gap-1 transition-colors w-full"
+            className="w-full flex items-center justify-center gap-2"
           >
             <Eye className="h-4 w-4" />
             <span>Lösung anzeigen</span>
-          </button>
+          </Button>
         </div>
       )}
 
