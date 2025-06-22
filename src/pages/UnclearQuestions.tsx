@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import { ChevronLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import EditQuestionModal from '@/components/training/EditQuestionModal';
+import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
 
 const UnclearQuestions = () => {
   const { filename } = useParams();
@@ -21,42 +23,80 @@ const UnclearQuestions = () => {
   const { data: questions, isLoading } = useQuery({
     queryKey: ['unclear-questions', filename, user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('filename', decodeURIComponent(filename || ''))
-        .eq('is_unclear', true);
+      if (!user || !filename) return [];
 
-      if (error) throw error;
+      // Get unclear questions for this user and filename
+      const { data: unclearData, error: unclearError } = await supabase
+        .from('user_unclear_questions')
+        .select(`
+          id,
+          question_id,
+          marked_unclear_at,
+          questions:question_id (
+            id,
+            question,
+            option_a,
+            option_b,
+            option_c,
+            option_d,
+            option_e,
+            subject,
+            correct_answer,
+            comment,
+            filename,
+            difficulty,
+            created_at,
+            user_id,
+            visibility,
+            university_id,
+            semester,
+            year,
+            image_key,
+            show_image_after_answer,
+            exam_name
+          )
+        `)
+        .eq('user_id', user.id);
 
-      return data.map(q => ({
-        id: q.id,
-        question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
-        optionD: q.option_d,
-        optionE: q.option_e,
-        subject: q.subject,
-        correctAnswer: q.correct_answer,
-        comment: q.comment,
-        filename: q.filename,
-        is_unclear: q.is_unclear,
-        difficulty: q.difficulty,
-        marked_unclear_at: q.marked_unclear_at
-      })) as Question[];
+      if (unclearError) throw unclearError;
+
+      // Filter by filename and map to Question format
+      const filteredQuestions = unclearData
+        ?.filter(item => item.questions && item.questions.filename === decodeURIComponent(filename))
+        .map(item => ({
+          id: item.questions.id,
+          question: item.questions.question,
+          optionA: item.questions.option_a,
+          optionB: item.questions.option_b,
+          optionC: item.questions.option_c,
+          optionD: item.questions.option_d,
+          optionE: item.questions.option_e,
+          subject: item.questions.subject,
+          correctAnswer: item.questions.correct_answer,
+          comment: item.questions.comment,
+          filename: item.questions.filename,
+          difficulty: item.questions.difficulty || 3,
+          created_at: item.questions.created_at,
+          user_id: item.questions.user_id,
+          visibility: item.questions.visibility,
+          university_id: item.questions.university_id,
+          semester: item.questions.semester,
+          year: item.questions.year,
+          image_key: item.questions.image_key,
+          show_image_after_answer: item.questions.show_image_after_answer,
+          exam_name: item.questions.exam_name,
+          is_unclear: true,
+          marked_unclear_at: item.marked_unclear_at
+        })) || [];
+
+      return filteredQuestions as Question[];
     },
     enabled: !!user && !!filename
   });
 
   const handleRemoveUnclear = async (questionId: string) => {
     try {
-      const { error } = await supabase
-        .from('questions')
-        .update({ is_unclear: false, marked_unclear_at: null })
-        .eq('id', questionId);
-
+      const { error } = await UnclearQuestionsService.unmarkQuestionUnclear(questionId);
       if (error) throw error;
 
       toast.success('Frage wurde aus der Liste entfernt');
