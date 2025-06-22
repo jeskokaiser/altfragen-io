@@ -8,8 +8,9 @@ import AICommentarySettings from '@/components/ai-commentary/AICommentarySetting
 import AICommentaryQueue from '@/components/ai-commentary/AICommentaryQueue';
 import AICommentaryStats from '@/components/ai-commentary/AICommentaryStats';
 import AICommentaryLogs from '@/components/ai-commentary/AICommentaryLogs';
+import CronJobMonitor from '@/components/ai-commentary/CronJobMonitor';
 import SubjectReassignmentPanel from '@/components/admin/SubjectReassignmentPanel';
-import { Settings, BarChart3, Clock, FileText, RefreshCw, AlertCircle } from 'lucide-react';
+import { Settings, BarChart3, Clock, FileText, RefreshCw, AlertCircle, Timer } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AICommentaryAdmin: React.FC = () => {
@@ -45,10 +46,13 @@ const AICommentaryAdmin: React.FC = () => {
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <div className="text-sm text-muted-foreground">
+          Cron job runs every 5 minutes
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="gri w-full grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Overview
@@ -61,13 +65,17 @@ const AICommentaryAdmin: React.FC = () => {
             <Clock className="h-4 w-4" />
             Queue
           </TabsTrigger>
+          <TabsTrigger value="cron" className="flex items-center gap-2">
+            <Timer className="h-4 w-4" />
+            Cron Monitor
+          </TabsTrigger>
           <TabsTrigger value="logs" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Logs
           </TabsTrigger>
           <TabsTrigger value="subjects" className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
-            Subject Reassignment
+            Subjects
           </TabsTrigger>
         </TabsList>
 
@@ -81,6 +89,10 @@ const AICommentaryAdmin: React.FC = () => {
 
         <TabsContent value="queue" className="space-y-6">
           <AICommentaryQueue />
+        </TabsContent>
+
+        <TabsContent value="cron" className="space-y-6">
+          <CronJobMonitor />
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-6">
