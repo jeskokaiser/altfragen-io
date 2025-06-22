@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -38,7 +37,15 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
     if (!selectedFiles) return;
 
     const newFiles: BatchPDFFile[] = Array.from(selectedFiles)
-      .filter(file => file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+      .filter(file => {
+        const isPDF = file.type === 'application/pdf';
+        const isDOCX = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        const isDocxByExtension = file.name.toLowerCase().endsWith('.docx');
+        
+        console.log('File:', file.name, 'Type:', file.type, 'isPDF:', isPDF, 'isDOCX:', isDOCX, 'isDocxByExtension:', isDocxByExtension);
+        
+        return isPDF || isDOCX || isDocxByExtension;
+      })
       .map(file => ({
         file,
         examName: '',
@@ -47,6 +54,15 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
         isProcessing: false,
         isCompleted: false
       }));
+
+    console.log('Filtered files:', newFiles.length, 'out of', selectedFiles.length);
+    
+    if (newFiles.length === 0) {
+      showToast.error('Fehler', {
+        description: 'Bitte wähle nur PDF- oder DOCX-Dateien aus'
+      });
+      return;
+    }
 
     setFiles(prev => [...prev, ...newFiles]);
     
@@ -142,14 +158,14 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
             if (savedQuestions.length > 0) {
               return savedQuestions;
             } else {
-              throw new Error('Keine Fragen wurden aus der PDF-Datei extrahiert');
+              throw new Error('Keine Fragen wurden aus der Datei extrahiert');
             }
           } else {
-            const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
+            const errorMessage = data.message || data.error || "Keine Fragen konnten aus der Datei extrahiert werden oder ein Problem ist aufgetreten.";
             throw new Error(errorMessage);
           }
         } else if (data.status === 'failed') {
-          const failMessage = data.error || data.details || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen";
+          const failMessage = data.error || data.details || "Die Verarbeitung der Datei ist fehlgeschlagen";
           throw new Error(failMessage);
         }
 
