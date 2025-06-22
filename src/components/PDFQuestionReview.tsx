@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2, Move, Loader2, Sparkles, LoaderCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { 
   Accordion,
   AccordionContent,
@@ -55,6 +55,12 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   const [selectedTargetQuestion, setSelectedTargetQuestion] = useState<number | null>(null);
   const [subjectList, setSubjectList] = useState('');
   const [isAssigningSubjects, setIsAssigningSubjects] = useState(false);
+  const [assignmentProgress, setAssignmentProgress] = useState<{
+    processed: number;
+    total: number;
+    currentChunk: number;
+    totalChunks: number;
+  } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   const currentQuestion = questions[currentIndex];
@@ -196,6 +202,17 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     }
 
     setIsAssigningSubjects(true);
+    setAssignmentProgress({
+      processed: 0,
+      total: questions.length,
+      currentChunk: 0,
+      totalChunks: Math.ceil(questions.length / 20) // Estimated chunks
+    });
+    
+    // Show initial progress toast
+    showToast.info('KI-Fach-Zuweisung gestartet', {
+      description: `Verarbeitung von ${questions.length} Fragen wird gestartet...`
+    });
     
     try {
       const { data, error } = await supabase.functions.invoke('assign-subjects', {
@@ -214,17 +231,37 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
         // Update the questions state with the AI-assigned subjects
         setQuestions(data.updatedQuestions);
         
-        showToast.success('Fächer zugewiesen', {
-          description: data.message || `${data.updatedQuestions.length} Fragen wurden erfolgreich mit Fächern versehen`
+        // Show detailed completion stats
+        const stats = data.stats || {};
+        const successRate = stats.successful ? Math.round((stats.successful / stats.total) * 100) : 100;
+        
+        showToast.success('Fächer erfolgreich zugewiesen', {
+          description: `${stats.successful || data.updatedQuestions.length} von ${stats.total || questions.length} Fragen (${successRate}%) erfolgreich verarbeitet${stats.errors > 0 ? `. ${stats.errors} Fragen verwendeten Fallback-Fächer.` : ''}`,
+          duration: 6000
         });
+        
+        // Show progress completion
+        setAssignmentProgress({
+          processed: stats.total || questions.length,
+          total: stats.total || questions.length,
+          currentChunk: stats.totalChunks || 1,
+          totalChunks: stats.totalChunks || 1
+        });
+        
+        // Clear progress after a short delay
+        setTimeout(() => {
+          setAssignmentProgress(null);
+        }, 2000);
       } else {
         throw new Error(data.error || 'Unbekannter Fehler');
       }
     } catch (error: any) {
       console.error('Error assigning subjects:', error);
       showToast.error('Fehler beim Zuweisen der Fächer', {
-        description: error.message || 'Bitte versuche es später erneut'
+        description: error.message || 'Bitte versuche es später erneut',
+        duration: 6000
       });
+      setAssignmentProgress(null);
     } finally {
       setIsAssigningSubjects(false);
     }
@@ -507,10 +544,24 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                           />
                         </div>
                         
+                        {/* Progress display */}
+                        {assignmentProgress && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm text-muted-foreground">
+                              <span>Fortschritt: {assignmentProgress.processed} von {assignmentProgress.total} Fragen</span>
+                              <span>Chunk {assignmentProgress.currentChunk} von {assignmentProgress.totalChunks}</span>
+                            </div>
+                            <Progress 
+                              value={assignmentProgress.total > 0 ? (assignmentProgress.processed / assignmentProgress.total) * 100 : 0} 
+                              className="w-full"
+                            />
+                          </div>
+                        )}
+                        
                         <Button 
                           onClick={handleLLMSubjectAssignment}
                           disabled={isAssigningSubjects || !subjectList.trim()}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-2 w-full"
                         >
                           {isAssigningSubjects ? (
                             <>
@@ -529,7 +580,15 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                           <Alert>
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>
-                              Die KI analysiert jede Frage und weist das passende Fach zu. Dies kann einige Minuten dauern.
+                              Die KI analysiert jede Frage und weist das passende Fach zu. 
+                              {assignmentProgress && (
+                                <div className="mt-2">
+                                  <strong>Verarbeitung läuft:</strong> {assignmentProgress.processed} von {assignmentProgress.total} Fragen bearbeitet
+                                  {assignmentProgress.totalChunks > 1 && (
+                                    <span> (Chunk {assignmentProgress.currentChunk} von {assignmentProgress.totalChunks})</span>
+                                  )}
+                                </div>
+                              )}
                             </AlertDescription>
                           </Alert>
                         )}
