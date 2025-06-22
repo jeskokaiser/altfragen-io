@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,14 +127,20 @@ const Dashboard = () => {
     return filtered;
   }, [questions, preferences, isDatasetArchived, selectedSemester, selectedYear, user?.id]);
 
-  const universityQuestions = useMemo(() => {
+  // All university questions (unfiltered) - for the selector
+  const allUniversityQuestions = useMemo(() => {
     if (!questions || !universityId) {
       return [];
     }
     
-    let filtered = questions.filter(q => {
+    return questions.filter(q => {
       return q.visibility === 'university' && q.university_id === universityId;
     });
+  }, [questions, universityId]);
+
+  // Filtered university questions - for display
+  const universityQuestions = useMemo(() => {
+    let filtered = allUniversityQuestions;
     
     if (uniSelectedSemester) {
       filtered = filtered.filter(q => q.semester === uniSelectedSemester);
@@ -144,7 +151,7 @@ const Dashboard = () => {
     }
     
     return filtered;
-  }, [questions, universityId, uniSelectedSemester, uniSelectedYear]);
+  }, [allUniversityQuestions, uniSelectedSemester, uniSelectedYear]);
 
   const groupedQuestions = useMemo(() => {
     const grouped = filteredQuestions.reduce((acc, question) => {
@@ -175,7 +182,38 @@ const Dashboard = () => {
     return grouped;
   }, [filteredQuestions]);
 
-  // Group university questions by exam_name instead of filename
+  // All university questions grouped (unfiltered) - for the selector
+  const allGroupedUniversityQuestions = useMemo(() => {
+    const grouped = allUniversityQuestions.reduce((acc, question) => {
+      // Use exam_name as the primary key for grouping university questions
+      const key = question.exam_name || question.filename;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(question);
+      return acc;
+    }, {} as Record<string, Question[]>);
+    
+    Object.keys(grouped).forEach(key => {
+      grouped[key].sort((a, b) => {
+        if (a.year && b.year && a.year !== b.year) {
+          return b.year.localeCompare(a.year);
+        }
+        
+        if (a.semester && b.semester && a.semester !== b.semester) {
+          const semA = a.semester.startsWith('WS') ? 1 : 2;
+          const semB = b.semester.startsWith('WS') ? 1 : 2;
+          return semA - semB;
+        }
+        
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+    });
+    
+    return grouped;
+  }, [allUniversityQuestions]);
+
+  // Group university questions by exam_name instead of filename (filtered for display)
   const groupedUniversityQuestions = useMemo(() => {
     const grouped = universityQuestions.reduce((acc, question) => {
       // Use exam_name as the primary key for grouping university questions
@@ -315,7 +353,7 @@ const Dashboard = () => {
 
   const hasSemesterOrYearData = filteredQuestions.some(q => q.semester || q.year);
   const hasUniSemesterOrYearData = universityQuestions.some(q => q.semester || q.year);
-  const hasUniversityQuestions = Object.keys(groupedUniversityQuestions).length > 0;
+  const hasUniversityQuestions = Object.keys(allGroupedUniversityQuestions).length > 0;
 
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
@@ -427,13 +465,13 @@ const Dashboard = () => {
               <span className="text-sm text-muted-foreground">
                 {selectedUniversityDatasets.length > 0
                   ? `${Object.values(displayedUniversityDatasets).reduce((sum, questions) => sum + questions.length, 0)} Fragen ausgewählt`
-                  : `${universityQuestions?.length || 0} Fragen verfügbar`
+                  : `${allUniversityQuestions?.length || 0} Fragen verfügbar`
                 }
               </span>
               {hasUniversityQuestions && (
                 <DatasetSelectionButton 
                   onClick={handleOpenDatasetSelector}
-                  totalCount={Object.keys(groupedUniversityQuestions).length}
+                  totalCount={Object.keys(allGroupedUniversityQuestions).length}
                   selectedCount={selectedUniversityDatasets.length}
                 />
               )}
@@ -456,7 +494,7 @@ const Dashboard = () => {
             selectedUniversityDatasets.length > 0 ? (
               <>
                 <SelectedDatasetsDisplay 
-                  groupedQuestions={groupedUniversityQuestions}
+                  groupedQuestions={allGroupedUniversityQuestions}
                   selectedDatasets={selectedUniversityDatasets}
                   onRemoveDataset={handleRemoveDataset}
                   onClearAll={handleClearAllSelectedDatasets}
@@ -503,7 +541,7 @@ const Dashboard = () => {
           <UniversityDatasetSelector 
             open={isDatasetSelectorOpen}
             onOpenChange={setIsDatasetSelectorOpen}
-            groupedQuestions={groupedUniversityQuestions}
+            groupedQuestions={allGroupedUniversityQuestions}
             selectedDatasets={selectedUniversityDatasets}
             onSelectedDatasetsChange={handleSelectedDatasetsChange}
           />
