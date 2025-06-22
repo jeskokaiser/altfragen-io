@@ -19,11 +19,6 @@ import ArchivedDatasetsPage from '@/pages/ArchivedDatasets';
 import AICommentaryAdminPage from '@/pages/AICommentaryAdmin';
 import TutorialPage from '@/pages/Tutorial';
 import ChangelogPage from '@/pages/Changelog';
-import TermsPage from '@/pages/Terms';
-import ImpressumPage from '@/pages/Impressum';
-import PrivacyPage from '@/pages/Privacy';
-import AGBPage from '@/pages/AGB';
-import WiderrufPage from '@/pages/Widerruf';
 
 const MainLayout: React.FC = () => {
   const { isReady, isAuthenticated } = useAuthGuard();
@@ -68,11 +63,6 @@ const MainLayout: React.FC = () => {
           <Route path="/ai-commentary" element={<AICommentaryAdminPage />} />
           <Route path="/tutorial" element={<TutorialPage />} />
           <Route path="/changelog" element={<ChangelogPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/impressum" element={<ImpressumPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/agb" element={<AGBPage />} />
-          <Route path="/widerruf" element={<WiderrufPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
