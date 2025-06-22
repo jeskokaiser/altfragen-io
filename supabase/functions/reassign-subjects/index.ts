@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -136,15 +137,17 @@ serve(async (req) => {
     
     console.log('Request body:', { examName, universityId, onlyNullSubjects, availableSubjects });
     
-    if (!examName || !availableSubjects) {
+    if (!examName || !availableSubjects || !Array.isArray(availableSubjects) || availableSubjects.length === 0) {
+      console.error('Missing or invalid required fields');
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: examName, availableSubjects' }),
+        JSON.stringify({ error: 'Missing required fields: examName, availableSubjects (must be non-empty array)' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -163,6 +166,7 @@ serve(async (req) => {
       .eq('exam_name', examName);
 
     if (universityId && universityId !== 'all') {
+      console.log('Adding university filter:', universityId);
       query = query.eq('university_id', universityId);
     }
 
@@ -172,6 +176,7 @@ serve(async (req) => {
       query = query.is('subject', null);
     }
 
+    console.log('About to execute query...');
     const { data: questions, error: questionsError } = await query;
 
     if (questionsError) {
@@ -181,6 +186,8 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`Query executed successfully, found ${questions?.length || 0} questions`);
 
     if (!questions || questions.length === 0) {
       return new Response(
