@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DatasetList from './datasets/DatasetList';
@@ -17,6 +16,20 @@ import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useQuestionFiltering } from '@/hooks/useQuestionFiltering';
 import { useQuestionGrouping } from '@/hooks/useQuestionGrouping';
+
+interface QuestionSummary {
+  id: string;
+  filename: string;
+  subject: string;
+  difficulty: number;
+  visibility: 'private' | 'university' | 'public';
+  user_id: string | null;
+  university_id: string | null;
+  semester: string | null;
+  year: string | null;
+  exam_name: string | null;
+  created_at: string;
+}
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
@@ -90,7 +103,7 @@ const Dashboard = () => {
       .reduce((acc, [key, questions]) => {
         acc[key] = questions;
         return acc;
-      }, {} as Record<string, any[]>);
+      }, {} as Record<string, QuestionSummary[]>);
   }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
   // Memoized event handlers
@@ -98,8 +111,10 @@ const Dashboard = () => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
   }, [selectedFilename]);
 
-  const handleStartTraining = useCallback((questions: Question[]) => {
-    localStorage.setItem('trainingQuestions', JSON.stringify(questions));
+  const handleStartTraining = useCallback((questions: QuestionSummary[]) => {
+    // For training, we'll need to fetch the full questions
+    // For now, store the question IDs and let the training page handle the full fetch
+    localStorage.setItem('trainingQuestionIds', JSON.stringify(questions.map(q => q.id)));
     navigate('/training');
   }, [navigate]);
 
