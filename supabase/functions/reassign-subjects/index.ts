@@ -160,7 +160,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Build query for existing questions
+    // Build query for existing questions - using a different approach for null subjects
     let query = supabase
       .from('questions')
       .select('*')
@@ -171,15 +171,8 @@ serve(async (req) => {
       query = query.eq('university_id', universityId);
     }
 
-    // Add filter for null subjects if requested - try multiple approaches
-    if (onlyNullSubjects === true) {
-      console.log('Filtering for null subjects only');
-      // Try both null and empty string checks
-      query = query.or('subject.is.null,subject.eq.');
-    }
-
     console.log('About to execute query...');
-    const { data: questions, error: questionsError } = await query;
+    const { data: allQuestions, error: questionsError } = await query;
 
     if (questionsError) {
       console.error('Error fetching questions:', questionsError);
@@ -189,11 +182,22 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Query executed successfully, found ${questions?.length || 0} questions`);
+    console.log(`Query executed successfully, found ${allQuestions?.length || 0} total questions`);
 
-    if (!questions || questions.length === 0) {
+    // Filter for null subjects on the client side if requested
+    let questions = allQuestions || [];
+    if (onlyNullSubjects === true) {
+      console.log('Filtering for null subjects only on client side');
+      questions = questions.filter(q => !q.subject || q.subject.trim() === '');
+      console.log(`After filtering for null subjects: ${questions.length} questions`);
+    }
+
+    if (questions.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'No questions found matching the criteria' }),
+        JSON.stringify({
+          error: 'No questions found matching the criteria',
+          details: `Found ${allQuestions?.length || 0} total questions, ${questions.length} after filtering`
+        }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
