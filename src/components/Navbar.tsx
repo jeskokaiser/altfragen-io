@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown } from 'lucide-react';
+import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -20,6 +22,7 @@ import { toast } from 'sonner';
 const Navbar: React.FC = () => {
   const { user, logout, universityId, universityName } = useAuth();
   const { subscribed } = useSubscription();
+  const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -47,6 +50,7 @@ const Navbar: React.FC = () => {
   const mainNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { label: 'Premium', href: '/subscription', icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} /> },
+    ...(isAdmin ? [{ label: 'Admin', href: '/ai-commentary', icon: <Shield className="mr-2 h-4 w-4 text-red-600" /> }] : []),
   ];
   
   const userMenuItems = [
@@ -55,7 +59,6 @@ const Navbar: React.FC = () => {
   ];
 
   const allNavItems = [...mainNavItems, ...userMenuItems];
-
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -111,6 +114,12 @@ const Navbar: React.FC = () => {
                     <SettingsIcon className="mr-2 h-4 w-4" />
                     Einstellungen
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/ai-commentary')}>
+                      <Shield className="mr-2 h-4 w-4 text-red-600" />
+                      Admin Panel
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Abmelden

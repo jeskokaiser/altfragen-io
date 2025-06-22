@@ -1,26 +1,40 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminRole } from '@/hooks/useAdminRole';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import AICommentarySettings from '@/components/ai-commentary/AICommentarySettings';
 import AICommentaryQueue from '@/components/ai-commentary/AICommentaryQueue';
 import AICommentaryStats from '@/components/ai-commentary/AICommentaryStats';
 import AICommentaryLogs from '@/components/ai-commentary/AICommentaryLogs';
-import { Settings, BarChart3, Clock, FileText } from 'lucide-react';
+import SubjectReassignmentPanel from '@/components/admin/SubjectReassignmentPanel';
+import { Settings, BarChart3, Clock, FileText, RefreshCw, AlertCircle } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const AICommentaryAdmin: React.FC = () => {
-  const { user } = useAuth();
+  const { isAdmin, loading } = useAdminRole();
 
-  // For now, we'll check if user exists. In a real app, you'd check admin role
-  if (!user) {
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
     return (
       <div className="container mx-auto py-8">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center text-gray-500">
-              Please log in to access the admin panel.
-            </div>
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Access denied. You need administrator privileges to access this panel.
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </Card>
       </div>
@@ -30,18 +44,18 @@ const AICommentaryAdmin: React.FC = () => {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">AI Commentary Administration</h1>
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Overview
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Settings
+            AI Settings
           </TabsTrigger>
           <TabsTrigger value="queue" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
@@ -50,6 +64,10 @@ const AICommentaryAdmin: React.FC = () => {
           <TabsTrigger value="logs" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Logs
+          </TabsTrigger>
+          <TabsTrigger value="subjects" className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Subject Reassignment
           </TabsTrigger>
         </TabsList>
 
@@ -67,6 +85,10 @@ const AICommentaryAdmin: React.FC = () => {
 
         <TabsContent value="logs" className="space-y-6">
           <AICommentaryLogs />
+        </TabsContent>
+
+        <TabsContent value="subjects" className="space-y-6">
+          <SubjectReassignmentPanel />
         </TabsContent>
       </Tabs>
     </div>
