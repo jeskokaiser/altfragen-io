@@ -1,8 +1,21 @@
 
 import { useMemo } from 'react';
-import { Question } from '@/types/Question';
 
-export const useQuestionGrouping = (questions: Question[]) => {
+interface QuestionSummary {
+  id: string;
+  filename: string;
+  subject: string;
+  difficulty: number;
+  visibility: 'private' | 'university' | 'public';
+  user_id: string | null;
+  university_id: string | null;
+  semester: string | null;
+  year: string | null;
+  exam_name: string | null;
+  created_at: string;
+}
+
+export const useQuestionGrouping = (questions: QuestionSummary[]) => {
   return useMemo(() => {
     const grouped = questions.reduce((acc, question) => {
       const key = question.exam_name || question.filename;
@@ -11,7 +24,7 @@ export const useQuestionGrouping = (questions: Question[]) => {
       }
       acc[key].push(question);
       return acc;
-    }, {} as Record<string, Question[]>);
+    }, {} as Record<string, QuestionSummary[]>);
     
     // Sort questions within each group
     Object.keys(grouped).forEach(key => {

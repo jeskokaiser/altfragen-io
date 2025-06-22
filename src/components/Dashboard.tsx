@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -34,15 +33,17 @@ const Dashboard = () => {
   const [isDatasetSelectorOpen, setIsDatasetSelectorOpen] = useState(false);
   const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
 
-  // Fetch all dashboard data
+  // Fetch optimized dashboard data
   const {
-    questions,
+    personalQuestions,
+    universityQuestions,
     isQuestionsLoading,
     questionsError,
     todayNewCount,
     todayPracticeCount,
     totalAnsweredCount,
     totalAttemptsCount,
+    isStatsLoading
   } = useDashboardData(user?.id, universityId);
 
   // Update selected university datasets when preferences change
@@ -54,7 +55,7 @@ const Dashboard = () => {
 
   // Filter questions for personal datasets
   const filteredQuestions = useQuestionFiltering({
-    questions,
+    questions: personalQuestions,
     userId: user?.id,
     universityId,
     selectedSemester,
@@ -64,8 +65,8 @@ const Dashboard = () => {
   });
 
   // Filter questions for university datasets
-  const universityQuestions = useQuestionFiltering({
-    questions,
+  const filteredUniversityQuestions = useQuestionFiltering({
+    questions: universityQuestions,
     userId: user?.id,
     universityId,
     selectedSemester: uniSelectedSemester,
@@ -76,7 +77,7 @@ const Dashboard = () => {
 
   // Group questions
   const groupedQuestions = useQuestionGrouping(filteredQuestions);
-  const groupedUniversityQuestions = useQuestionGrouping(universityQuestions);
+  const groupedUniversityQuestions = useQuestionGrouping(filteredUniversityQuestions);
 
   // Display filtered university datasets only if specific datasets are selected
   const displayedUniversityDatasets = useMemo(() => {
@@ -89,7 +90,7 @@ const Dashboard = () => {
       .reduce((acc, [key, questions]) => {
         acc[key] = questions;
         return acc;
-      }, {} as Record<string, Question[]>);
+      }, {} as Record<string, any[]>);
   }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
   // Memoized event handlers
@@ -143,8 +144,8 @@ const Dashboard = () => {
   );
   
   const hasUniSemesterOrYearData = useMemo(() => 
-    universityQuestions.some(q => q.semester || q.year), 
-    [universityQuestions]
+    filteredUniversityQuestions.some(q => q.semester || q.year), 
+    [filteredUniversityQuestions]
   );
   
   const hasUniversityQuestions = useMemo(() => 
@@ -173,7 +174,7 @@ const Dashboard = () => {
     );
   }
   
-  if (isQuestionsLoading) {
+  if (isQuestionsLoading || isStatsLoading) {
     return (
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="animate-pulse space-y-4">
