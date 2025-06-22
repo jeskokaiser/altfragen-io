@@ -1,5 +1,4 @@
 
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -7,20 +6,70 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
 };
 
 // Configuration for robust processing
 const CONFIG = {
-  BATCH_SIZE: 3,
+  BATCH_SIZE: 2,
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
-  REQUEST_DELAY: 800,
-  CHUNK_SIZE: 20,
-  CHUNK_DELAY: 2000,
+  REQUEST_DELAY: 1200,
+  CHUNK_SIZE: 15,
+  CHUNK_DELAY: 3000,
 };
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Job tracking interface
+interface JobProgress {
+  id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  total: number;
+  errors: number;
+  message: string;
+  created_at: string;
+  updated_at: string;
+  result?: any;
+}
+
+async function createJobProgress(supabase: any, jobId: string, total: number): Promise<void> {
+  const { error } = await supabase
+    .from('job_progress')
+    .insert({
+      id: jobId,
+      status: 'pending',
+      progress: 0,
+      total,
+      errors: 0,
+      message: 'Job queued for processing',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+
+  if (error) {
+    console.error('Error creating job progress:', error);
+  }
+}
+
+async function updateJobProgress(
+  supabase: any, 
+  jobId: string, 
+  updates: Partial<JobProgress>
+): Promise<void> {
+  const { error } = await supabase
+    .from('job_progress')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', jobId);
+
+  if (error) {
+    console.error('Error updating job progress:', error);
+  }
+}
 
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
@@ -128,9 +177,165 @@ Bitte antworte NUR mit dem exakten Fachgebiet-Namen aus der obigen Liste, der am
   }
 }
 
+async function processQuestionsInBackground(
+  jobId: string,
+  questions: any[],
+  availableSubjects: string[],
+  openAIApiKey: string,
+  supabase: any,
+  examName: string,
+  onlyNullSubjects: boolean
+) {
+  console.log(`Starting background processing for job ${jobId} with ${questions.length} questions`);
+  
+  let processed = 0;
+  let errors = 0;
+  const updatedQuestions = [];
+
+  try {
+    await updateJobProgress(supabase, jobId, {
+      status: 'processing',
+      message: `Processing ${questions.length} questions for exam: ${examName}${onlyNullSubjects ? ' (null subjects only)' : ''}`
+    });
+
+    // Process questions in chunks with memory management
+    for (let chunkStart = 0; chunkStart < questions.length; chunkStart += CONFIG.CHUNK_SIZE) {
+      const chunk = questions.slice(chunkStart, chunkStart + CONFIG.CHUNK_SIZE);
+      console.log(`Processing chunk ${Math.floor(chunkStart / CONFIG.CHUNK_SIZE) + 1}/${Math.ceil(questions.length / CONFIG.CHUNK_SIZE)} (${chunk.length} questions)`);
+
+      const chunkResults = [];
+
+      for (let i = 0; i < chunk.length; i += CONFIG.BATCH_SIZE) {
+        const batch = chunk.slice(i, i + CONFIG.BATCH_SIZE);
+        
+        const batchPromises = batch.map(async (question, index) => {
+          await sleep(index * 300);
+          return assignSubjectToQuestion(question, availableSubjects, openAIApiKey, supabase);
+        });
+
+        const batchResults = await Promise.allSettled(batchPromises);
+        
+        for (const result of batchResults) {
+          if (result.status === 'fulfilled') {
+            chunkResults.push(result.value);
+            if (!result.value.success) errors++;
+          } else {
+            console.error('Batch processing error:', result.reason);
+            errors++;
+            const failedQuestion = batch[batchResults.indexOf(result)];
+            chunkResults.push({
+              ...failedQuestion,
+              subject: availableSubjects[0],
+              success: false,
+              error: result.reason?.message || 'Unknown error'
+            });
+          }
+          processed++;
+        }
+
+        // Update progress more frequently
+        await updateJobProgress(supabase, jobId, {
+          progress: processed,
+          errors,
+          message: `Processed ${processed}/${questions.length} questions (${errors} errors)`
+        });
+
+        console.log(`Progress: ${processed}/${questions.length} questions processed (${errors} errors)`);
+
+        if (i + CONFIG.BATCH_SIZE < chunk.length) {
+          await sleep(CONFIG.REQUEST_DELAY);
+        }
+      }
+
+      // Add processed chunk results and clear memory
+      updatedQuestions.push(...chunkResults);
+      
+      if (chunkStart + CONFIG.CHUNK_SIZE < questions.length) {
+        console.log(`Completed chunk, waiting ${CONFIG.CHUNK_DELAY}ms before next chunk...`);
+        await sleep(CONFIG.CHUNK_DELAY);
+      }
+    }
+
+    const successCount = updatedQuestions.filter(q => q.success !== false).length;
+    
+    console.log(`Completed processing: ${successCount}/${questions.length} questions successfully updated, ${errors} errors`);
+
+    // Final progress update
+    await updateJobProgress(supabase, jobId, {
+      status: 'completed',
+      progress: processed,
+      errors,
+      message: `Successfully processed ${successCount} out of ${questions.length} questions${errors > 0 ? ` (${errors} questions had errors and used fallback subjects)` : ''}${onlyNullSubjects ? ' (filtered for null subjects only)' : ''}`,
+      result: {
+        total: questions.length,
+        successful: successCount,
+        errors: errors,
+        processed: processed
+      }
+    });
+
+  } catch (error) {
+    console.error(`Fatal error in background processing for job ${jobId}:`, error);
+    
+    await updateJobProgress(supabase, jobId, {
+      status: 'failed',
+      progress: processed,
+      errors: errors + 1,
+      message: `Processing failed: ${error.message}`,
+      result: {
+        error: error.message,
+        processed,
+        errors
+      }
+    });
+  }
+}
+
+// Handle graceful shutdown
+addEventListener('beforeunload', (ev) => {
+  console.log('Function shutdown detected due to:', ev.detail?.reason);
+  // The job progress will remain in the database with the last known state
+});
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Handle status check requests
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    const jobId = url.searchParams.get('jobId');
+    
+    if (!jobId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing jobId parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: jobProgress, error } = await supabase
+      .from('job_progress')
+      .select('*')
+      .eq('id', jobId)
+      .single();
+
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: 'Job not found', details: error.message }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify(jobProgress),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
@@ -160,7 +365,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Build query for existing questions - using a different approach for null subjects
+    // Build query for existing questions
     let query = supabase
       .from('questions')
       .select('*')
@@ -202,74 +407,32 @@ serve(async (req) => {
       );
     }
 
-    const totalQuestions = questions.length;
-    const updatedQuestions = [];
-    let processed = 0;
-    let errors = 0;
+    // Generate unique job ID
+    const jobId = crypto.randomUUID();
 
-    console.log(`Starting to process ${totalQuestions} questions for exam: ${examName}${onlyNullSubjects ? ' (null subjects only)' : ''}`);
+    // Create job progress tracking
+    await createJobProgress(supabase, jobId, questions.length);
 
-    // Process questions in chunks
-    for (let chunkStart = 0; chunkStart < totalQuestions; chunkStart += CONFIG.CHUNK_SIZE) {
-      const chunk = questions.slice(chunkStart, chunkStart + CONFIG.CHUNK_SIZE);
-      console.log(`Processing chunk ${Math.floor(chunkStart / CONFIG.CHUNK_SIZE) + 1}/${Math.ceil(totalQuestions / CONFIG.CHUNK_SIZE)} (${chunk.length} questions)`);
+    // Start background processing
+    EdgeRuntime.waitUntil(
+      processQuestionsInBackground(
+        jobId,
+        questions,
+        availableSubjects,
+        openAIApiKey,
+        supabase,
+        examName,
+        onlyNullSubjects
+      )
+    );
 
-      for (let i = 0; i < chunk.length; i += CONFIG.BATCH_SIZE) {
-        const batch = chunk.slice(i, i + CONFIG.BATCH_SIZE);
-        
-        const batchPromises = batch.map(async (question, index) => {
-          await sleep(index * 200);
-          return assignSubjectToQuestion(question, availableSubjects, openAIApiKey, supabase);
-        });
-
-        const batchResults = await Promise.allSettled(batchPromises);
-        
-        for (const result of batchResults) {
-          if (result.status === 'fulfilled') {
-            updatedQuestions.push(result.value);
-            if (!result.value.success) errors++;
-          } else {
-            console.error('Batch processing error:', result.reason);
-            errors++;
-            const failedQuestion = batch[batchResults.indexOf(result)];
-            updatedQuestions.push({
-              ...failedQuestion,
-              subject: availableSubjects[0],
-              success: false,
-              error: result.reason?.message || 'Unknown error'
-            });
-          }
-          processed++;
-        }
-
-        console.log(`Progress: ${processed}/${totalQuestions} questions processed (${errors} errors)`);
-
-        if (i + CONFIG.BATCH_SIZE < chunk.length) {
-          await sleep(CONFIG.REQUEST_DELAY);
-        }
-      }
-
-      if (chunkStart + CONFIG.CHUNK_SIZE < totalQuestions) {
-        console.log(`Completed chunk, waiting ${CONFIG.CHUNK_DELAY}ms before next chunk...`);
-        await sleep(CONFIG.CHUNK_DELAY);
-      }
-    }
-
-    const successCount = updatedQuestions.filter(q => q.success !== false).length;
-    
-    console.log(`Completed processing: ${successCount}/${totalQuestions} questions successfully updated, ${errors} errors`);
-
+    // Return immediate response with job ID
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        updatedQuestions,
-        stats: {
-          total: totalQuestions,
-          successful: successCount,
-          errors: errors,
-          processed: processed
-        },
-        message: `Successfully processed ${successCount} out of ${totalQuestions} questions${errors > 0 ? ` (${errors} questions had errors and used fallback subjects)` : ''}${onlyNullSubjects ? ' (filtered for null subjects only)' : ''}`
+        success: true,
+        jobId,
+        message: `Started processing ${questions.length} questions. Use the jobId to check progress.`,
+        totalQuestions: questions.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -280,10 +443,9 @@ serve(async (req) => {
       JSON.stringify({ 
         error: 'Internal server error', 
         details: error.message,
-        suggestion: 'Try reducing the batch size or check your API limits'
+        suggestion: 'Check the logs for more details'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
-
