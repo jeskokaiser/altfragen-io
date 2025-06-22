@@ -1,3 +1,4 @@
+
 import React from 'react';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
@@ -40,7 +41,7 @@ const Subscription = () => {
               onClick={createCheckoutSession} 
               className="mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold"
             >
-              🔥 Jetzt für €1,99/Monat sichern
+              🔥 Jetzt für €2,99/Monat sichern
             </Button>
           )}
         </div>
@@ -76,10 +77,10 @@ const Subscription = () => {
                 💰 Einzelkauf aller drei Modelle: ~€60/Monat
               </p>
               <p className="text-blue-700 text-sm mt-1">
-                <span className="line-through">Mit Altfragen.io Premium: Nur €3,99/Monat</span>
+                <span className="line-through">Mit Altfragen.io Premium: Nur €5,99/Monat</span>
               </p>
               <p className="text-green-700 font-semibold text-lg mt-1">
-                🎉 Early Bird Preis: Nur €1,99/Monat + automatische Zusammenfassung durch erweiterte KI
+                🎉 Early Bird Preis: Nur €2,99/Monat + automatische Zusammenfassung durch erweiterte KI
               </p>
             </div>
             <p className="text-blue-700 text-sm">
@@ -141,8 +142,8 @@ const Subscription = () => {
               <h3 className="text-xl font-semibold">Premium</h3>
             </div>
             <div className="space-y-2">
-              <div className="text-3xl font-bold text-green-600">€1,99<span className="text-sm font-normal">/Monat</span></div>
-              <div className="text-lg text-gray-500 line-through">€3,99<span className="text-sm">/Monat</span></div>
+              <div className="text-3xl font-bold text-green-600">€2,99<span className="text-sm font-normal">/Monat</span></div>
+              <div className="text-lg text-gray-500 line-through">€5,99<span className="text-sm">/Monat</span></div>
               <div className="text-xs text-green-600 font-medium">50% Rabatt für die ersten 100 Nutzer</div>
             </div>
             <p className="text-sm text-muted-foreground">Drei Premium-KI-Modelle für unbegrenzte Insights</p>

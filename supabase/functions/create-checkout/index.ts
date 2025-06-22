@@ -87,7 +87,7 @@ serve(async (req) => {
               name: "Altfragen.io Premium - Early Bird",
               description: "Early Bird Angebot: 50% Rabatt für die ersten 100 Nutzer. Zugang zu KI-Kommentaren von drei Premium-Modellen für besseres Verständnis der Fragen und Antworten"
             },
-            unit_amount: 199, // €1.99 (Early Bird price - 50% off)
+            unit_amount: 299, // €2.99 (Early Bird price - 50% off from €5.99)
             recurring: { interval: "month" },
           },
           quantity: 1,
@@ -101,7 +101,7 @@ serve(async (req) => {
       subscription_data: {
         metadata: {
           early_bird: "true",
-          original_price: "399",
+          original_price: "599",
           discount_percent: "50"
         }
       }

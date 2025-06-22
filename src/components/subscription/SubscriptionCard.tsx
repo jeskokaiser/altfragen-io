@@ -69,7 +69,7 @@ const SubscriptionCard: React.FC = () => {
             <div className="space-y-3">
               <div className="bg-green-100 p-3 rounded-lg">
                 <p className="text-sm font-semibold text-green-800">
-                  🎉 Early Bird Angebot: Nur €1,99/Monat (statt €3,99)
+                  🎉 Early Bird Angebot: Nur €2,99/Monat (statt €5,99)
                 </p>
                 <p className="text-xs text-green-700 mt-1">
                   Limitiert auf die ersten 100 Nutzer
@@ -101,7 +101,7 @@ const SubscriptionCard: React.FC = () => {
           </Button>
         ) : (
           <Button onClick={createCheckoutSession} className="bg-green-600 hover:bg-green-700">
-            🔥 Premium für €1,99/Monat
+            🔥 Premium für €2,99/Monat
           </Button>
         )}
         <Button onClick={checkSubscription} variant="ghost" size="sm">
