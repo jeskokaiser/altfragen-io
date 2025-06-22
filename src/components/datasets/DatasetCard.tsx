@@ -3,6 +3,7 @@ import React, { memo } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -35,6 +36,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   displayName,
 }) => {
   const { archiveDataset, restoreDataset } = useUserPreferences();
+  const navigate = useNavigate();
 
   const handleArchive = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -44,6 +46,10 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
   const handleRestore = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await restoreDataset(filename);
+  };
+
+  const handleUnclearQuestions = () => {
+    navigate(`/unclear-questions/${encodeURIComponent(filename)}`);
   };
 
   const displayTitle = displayName || filename;
@@ -60,6 +66,7 @@ const DatasetCard: React.FC<DatasetCardProps> = memo(({
           onRestore={handleRestore}
           isArchived={isArchived}
           displayName={displayTitle}
+          onUnclearQuestions={handleUnclearQuestions}
         />
       </CardHeader>
 

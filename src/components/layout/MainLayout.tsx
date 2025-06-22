@@ -58,7 +58,7 @@ const MainLayout: React.FC = () => {
           <Route path="/session/:sessionId" element={<SessionDetailsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/subscription" element={<SubscriptionPage />} />
-          <Route path="/unclear-questions" element={<UnclearQuestionsPage />} />
+          <Route path="/unclear-questions/:filename" element={<UnclearQuestionsPage />} />
           <Route path="/archived-datasets" element={<ArchivedDatasetsPage />} />
           <Route path="/ai-commentary" element={<AICommentaryAdminPage />} />
           <Route path="/tutorial" element={<TutorialPage />} />
