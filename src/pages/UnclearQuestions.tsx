@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -49,8 +50,8 @@ const UnclearQuestions = () => {
             user_id,
             visibility,
             university_id,
-            semester,
-            year,
+            exam_semester,
+            exam_year,
             image_key,
             show_image_after_answer,
             exam_name
@@ -80,8 +81,8 @@ const UnclearQuestions = () => {
           user_id: item.questions.user_id,
           visibility: item.questions.visibility,
           university_id: item.questions.university_id,
-          semester: item.questions.semester,
-          year: item.questions.year,
+          semester: item.questions.exam_semester,
+          year: item.questions.exam_year,
           image_key: item.questions.image_key,
           show_image_after_answer: item.questions.show_image_after_answer,
           exam_name: item.questions.exam_name,
@@ -199,3 +200,4 @@ const UnclearQuestions = () => {
 };
 
 export default UnclearQuestions;
+
