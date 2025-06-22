@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -144,7 +145,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
             className="flex items-center gap-2"
           >
             <FileUp className="h-4 w-4" />
-            PDF-Datei
+            PDF/DOCX-Datei
           </TabsTrigger>
           <TabsTrigger 
             value="batch-pdf" 
@@ -152,7 +153,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
             className="flex items-center gap-2"
           >
             <Files className="h-4 w-4" />
-            Batch PDF
+            Batch Dokumente
           </TabsTrigger>
         </TabsList>
         
