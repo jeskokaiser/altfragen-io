@@ -292,46 +292,88 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
 
   const handleReviewSave = async (reviewedQuestions: Question[]) => {
     try {
-      // Update questions in the database
-      for (const question of reviewedQuestions) {
-        const { error } = await supabase
-          .from('questions')
-          .update({
-            question: question.question,
-            option_a: question.optionA,
-            option_b: question.optionB,
-            option_c: question.optionC,
-            option_d: question.optionD,
-            option_e: question.optionE,
-            subject: question.subject,
-            correct_answer: question.correctAnswer,
-            comment: question.comment,
-            difficulty: question.difficulty,
-            visibility: question.visibility,
-            university_id: question.visibility === 'university' ? universityId : null,
-            exam_semester: question.semester,
-            exam_year: question.year,
-            exam_name: question.exam_name
-          })
-          .eq('id', question.id);
+      // Show loading state for large batches
+      if (reviewedQuestions.length > 50) {
+        showToast.success("Verarbeitung gestartet", {
+          description: `${reviewedQuestions.length} Fragen werden verarbeitet. Dies kann einige Minuten dauern.`
+        });
+      }
 
-        if (error) {
-          console.error('Error updating question:', error);
-          throw error;
+      // Update questions in the database with better error handling
+      const updatePromises = reviewedQuestions.map(async (question, index) => {
+        try {
+          const { error } = await supabase
+            .from('questions')
+            .update({
+              question: question.question,
+              option_a: question.optionA,
+              option_b: question.optionB,
+              option_c: question.optionC,
+              option_d: question.optionD,
+              option_e: question.optionE,
+              subject: question.subject,
+              correct_answer: question.correctAnswer,
+              comment: question.comment,
+              difficulty: question.difficulty,
+              visibility: question.visibility,
+              university_id: question.visibility === 'university' ? universityId : null,
+              exam_semester: question.semester,
+              exam_year: question.year,
+              exam_name: question.exam_name
+            })
+            .eq('id', question.id);
+
+          if (error) {
+            console.error(`Error updating question ${index + 1}:`, error);
+            throw error;
+          }
+          
+          return { success: true, question, index };
+        } catch (error) {
+          console.error(`Failed to update question ${index + 1}:`, error);
+          return { success: false, question, index, error };
         }
+      });
+
+      // Process updates in batches to avoid overwhelming the database
+      const batchSize = 20;
+      const results = [];
+      
+      for (let i = 0; i < updatePromises.length; i += batchSize) {
+        const batch = updatePromises.slice(i, i + batchSize);
+        const batchResults = await Promise.allSettled(batch);
+        results.push(...batchResults);
+        
+        // Show progress for large batches
+        if (reviewedQuestions.length > 50 && i + batchSize < updatePromises.length) {
+          const processed = i + batchSize;
+          showToast.success(`Fortschritt: ${processed}/${reviewedQuestions.length} Fragen aktualisiert`);
+        }
+      }
+
+      // Count successful and failed updates
+      const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+      const failed = results.length - successful;
+
+      if (failed > 0) {
+        console.warn(`${failed} questions failed to update`);
+        showToast.error(`${successful} Fragen aktualisiert, ${failed} Fehler`, {
+          description: "Einige Fragen konnten nicht aktualisiert werden. Prüfe die Konsole für Details."
+        });
+      } else {
+        showToast.success(`${successful} Fragen erfolgreich aktualisiert`, {
+          description: "Alle Fragen wurden erfolgreich in der Datenbank aktualisiert"
+        });
       }
       
       onQuestionsLoaded(reviewedQuestions);
-      
-      showToast.success(`${reviewedQuestions.length} Fragen aktualisiert`, {
-        description: "Die Fragen wurden erfolgreich in der Datenbank aktualisiert"
-      });
       
       // Reset state
       setExtractedQuestions(null);
       setProcessingStats(null);
       setCurrentFilename('');
       setFiles([]);
+      
     } catch (error: any) {
       console.error('Error updating questions:', error);
       showToast.error("Fehler beim Aktualisieren", {
