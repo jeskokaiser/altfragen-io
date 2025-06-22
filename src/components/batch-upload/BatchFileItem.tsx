@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUp, X, Loader2 } from 'lucide-react';
 import { BatchPDFFile } from './types';
@@ -88,19 +89,25 @@ const BatchFileItem: React.FC<BatchFileItemProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Semester</Label>
-                <Select
+                <RadioGroup
                   value={fileData.semester}
                   onValueChange={(value) => onUpdate(index, 'semester', value)}
                   disabled={fileData.isProcessing || isUploading}
+                  className="flex flex-col space-y-1"
                 >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Semester" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="WS">Wintersemester</SelectItem>
-                    <SelectItem value="SS">Sommersemester</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="WS" id={`ws-${index}`} />
+                    <Label htmlFor={`ws-${index}`} className="text-xs cursor-pointer">
+                      WS
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="SS" id={`ss-${index}`} />
+                    <Label htmlFor={`ss-${index}`} className="text-xs cursor-pointer">
+                      SS
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Jahr</Label>
