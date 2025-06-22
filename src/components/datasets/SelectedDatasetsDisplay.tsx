@@ -1,72 +1,82 @@
 
 import React from 'react';
-import { Question } from '@/types/Question';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { X, Trash2 } from 'lucide-react';
+
+interface QuestionSummary {
+  id: string;
+  filename: string;
+  subject: string;
+  difficulty: number;
+  visibility: 'private' | 'university' | 'public';
+  user_id: string | null;
+  university_id: string | null;
+  semester: string | null;
+  year: string | null;
+  exam_name: string | null;
+  created_at: string;
+}
 
 interface SelectedDatasetsDisplayProps {
-  groupedQuestions: Record<string, Question[]>;
+  groupedQuestions: Record<string, QuestionSummary[]>;
   selectedDatasets: string[];
   onRemoveDataset: (filename: string) => void;
   onClearAll: () => void;
 }
 
-const SelectedDatasetsDisplay: React.FC<SelectedDatasetsDisplayProps> = ({
+const SelectedDatasetsDisplay = ({
   groupedQuestions,
   selectedDatasets,
   onRemoveDataset,
   onClearAll
-}) => {
-  if (selectedDatasets.length === 0) {
-    return <Card>
-        <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-          <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-            Keine Datensätze ausgewählt
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Wähle Datensätze aus, um sie hier anzuzeigen
-          </p>
-        </CardContent>
-      </Card>;
-  }
-  
-  const totalQuestions = selectedDatasets.reduce((sum, filename) => {
-    return sum + (groupedQuestions[filename]?.length || 0);
-  }, 0);
-  
-  return <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            {selectedDatasets.length} Datensätze ausgewählt
-          </span>
-          <Badge variant="secondary">
-            {totalQuestions} Fragen
-          </Badge>
-        </div>
-        <Button variant="ghost" size="sm" onClick={onClearAll} className="h-8 px-2 text-xs">
+}: SelectedDatasetsDisplayProps) => {
+  if (selectedDatasets.length === 0) return null;
+
+  return (
+    <div className="bg-blue-50/50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+          Ausgewählte Datensätze ({selectedDatasets.length})
+        </h3>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClearAll}
+          className="text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-100 h-6 px-2"
+        >
+          <Trash2 className="h-3 w-3 mr-1" />
           Alle entfernen
         </Button>
       </div>
       
-      <div className="flex flex-wrap gap-2 mt-2">
-        {selectedDatasets.map(dataset => (
-          <Badge key={dataset} variant="outline" className="flex items-center gap-1 px-3 py-1">
-            <span className="truncate max-w-[150px]">{dataset}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-4 w-4 p-0 ml-1 rounded-full"
-              onClick={() => onRemoveDataset(dataset)}
+      <div className="flex flex-wrap gap-2">
+        {selectedDatasets.map(filename => {
+          const questions = groupedQuestions[filename] || [];
+          const questionCount = questions.length;
+          
+          return (
+            <Badge
+              key={filename}
+              variant="secondary"
+              className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700"
             >
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        ))}
+              <span className="max-w-40 truncate">{filename}</span>
+              <span className="text-xs opacity-70">({questionCount})</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemoveDataset(filename)}
+                className="h-4 w-4 p-0 ml-1 hover:bg-blue-200 dark:hover:bg-blue-800"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          );
+        })}
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default SelectedDatasetsDisplay;
