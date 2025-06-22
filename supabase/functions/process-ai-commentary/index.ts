@@ -129,61 +129,95 @@ serve(async (req) => {
         console.log(`Processing question ${question.id}`);
 
         // Generate commentaries for enabled models
-        const commentaries = [];
+        const answerCommentData: any = {
+          question_id: question.id,
+          processing_status: 'completed'
+        };
 
+        // Generate general and answer-specific comments for each enabled model
         for (const modelName of enabledModels) {
           try {
-            const commentary = await generateCommentary(question, modelName);
-            if (commentary) {
-              commentaries.push({
-                question_id: question.id,
-                model_name: modelName,
-                commentary_text: commentary,
-                processing_status: 'completed'
-              });
+            console.log(`Generating commentary for model: ${modelName}`);
+            
+            // Generate general comment
+            const generalComment = await generateGeneralCommentary(question, modelName);
+            if (generalComment) {
+              answerCommentData[`${modelName}_general_comment`] = generalComment;
             }
-          } catch (error) {
-            console.error(`Error generating commentary for ${modelName}:`, error);
-            // Continue with other models even if one fails
-            commentaries.push({
-              question_id: question.id,
-              model_name: modelName,
-              commentary_text: `Error generating commentary: ${error.message}`,
-              processing_status: 'failed'
-            });
-          }
-        }
 
-        // Insert commentaries
-        if (commentaries.length > 0) {
-          const { error: insertError } = await supabase
-            .from('ai_commentaries')
-            .insert(commentaries);
-
-          if (insertError) {
-            console.error('Error inserting commentaries:', insertError);
-          }
-
-          // Generate and insert summary using successful commentaries
-          try {
-            const successfulCommentaries = commentaries
-              .filter(c => c.processing_status === 'completed')
-              .map(c => c.commentary_text);
-
-            if (successfulCommentaries.length > 0) {
-              const summary = await generateSummary(successfulCommentaries, question);
-              if (summary) {
-                await supabase
-                  .from('ai_commentary_summaries')
-                  .upsert({
-                    question_id: question.id,
-                    summary_text: summary
-                  });
+            // Generate answer-specific comments
+            const answerOptions = ['a', 'b', 'c', 'd', 'e'];
+            for (const option of answerOptions) {
+              try {
+                const answerComment = await generateAnswerCommentary(question, modelName, option);
+                if (answerComment) {
+                  answerCommentData[`${modelName}_comment_${option}`] = answerComment;
+                }
+              } catch (error) {
+                console.error(`Error generating ${modelName} comment for option ${option}:`, error);
+                // Continue with other options even if one fails
               }
             }
           } catch (error) {
-            console.error('Error generating summary:', error);
+            console.error(`Error generating commentary for ${modelName}:`, error);
+            answerCommentData.processing_status = 'failed';
           }
+        }
+
+        // Insert or update answer comments
+        try {
+          const { error: insertError } = await supabase
+            .from('ai_answer_comments')
+            .upsert(answerCommentData);
+
+          if (insertError) {
+            console.error('Error inserting answer comments:', {
+              error: insertError,
+              message: insertError.message,
+              details: insertError.details,
+              hint: insertError.hint,
+              code: insertError.code
+            });
+            throw insertError;
+          }
+
+          console.log(`Successfully inserted answer comments for question ${question.id}`);
+        } catch (error) {
+          console.error('Failed to insert answer comments:', error);
+          throw error;
+        }
+
+        // Generate and insert summary using successful commentaries
+        try {
+          const successfulComments = [];
+          
+          // Collect successful general comments
+          for (const modelName of enabledModels) {
+            const generalComment = answerCommentData[`${modelName}_general_comment`];
+            if (generalComment) {
+              successfulComments.push(`${modelName.toUpperCase()} General: ${generalComment}`);
+            }
+          }
+
+          if (successfulComments.length > 0) {
+            const summaryData = await generateSummaryData(successfulComments, question);
+            if (summaryData) {
+              const { error: summaryError } = await supabase
+                .from('ai_commentary_summaries')
+                .upsert({
+                  ...summaryData,
+                  question_id: question.id
+                });
+
+              if (summaryError) {
+                console.error('Error inserting summary:', summaryError);
+              } else {
+                console.log(`Successfully inserted summary for question ${question.id}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error generating summary:', error);
         }
 
         // Update status to completed
@@ -199,7 +233,11 @@ serve(async (req) => {
         console.log(`Successfully processed question ${question.id}`);
 
       } catch (error) {
-        console.error(`Error processing question ${question.id}:`, error);
+        console.error(`Error processing question ${question.id}:`, {
+          error: error,
+          message: error.message,
+          stack: error.stack
+        });
         
         // Update status to failed
         await supabase
@@ -219,7 +257,11 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in process-ai-commentary function:', error);
+    console.error('Error in process-ai-commentary function:', {
+      error: error,
+      message: error.message,
+      stack: error.stack
+    });
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -227,8 +269,8 @@ serve(async (req) => {
   }
 });
 
-// Generate commentary using real AI APIs
-async function generateCommentary(question: Question, modelName: string): Promise<string> {
+// Generate general commentary using real AI APIs
+async function generateGeneralCommentary(question: Question, modelName: string): Promise<string> {
   const prompt = `Analyze this multiple choice question and provide educational commentary:
 
 Question: ${question.question}
@@ -243,14 +285,47 @@ Subject: ${question.subject}
 Difficulty: ${question.difficulty}
 Explanation: ${question.comment}
 
-Please provide insightful commentary about this question, including:
+Please provide insightful general commentary about this question, including:
 1. Key concepts being tested
 2. Common mistakes students might make
 3. Learning objectives
-4. Additional context or real-world applications
-5. Study tips for this topic
+4. Study tips for this topic
 
 Keep your response concise but comprehensive (200-400 words).`;
+
+  switch (modelName.toLowerCase()) {
+    case 'openai':
+      return await callOpenAI(prompt);
+    case 'claude':
+      return await callClaude(prompt);
+    case 'gemini':
+      return await callGemini(prompt);
+    default:
+      throw new Error(`Unknown model: ${modelName}`);
+  }
+}
+
+// Generate answer-specific commentary
+async function generateAnswerCommentary(question: Question, modelName: string, option: string): Promise<string> {
+  const optionMap: { [key: string]: string } = {
+    'a': question.option_a,
+    'b': question.option_b,
+    'c': question.option_c,
+    'd': question.option_d,
+    'e': question.option_e
+  };
+
+  const optionText = optionMap[option];
+  const isCorrect = question.correct_answer.toLowerCase().includes(option.toLowerCase());
+
+  const prompt = `Analyze this specific answer option for the multiple choice question:
+
+Question: ${question.question}
+Option ${option.toUpperCase()}: ${optionText}
+This option is: ${isCorrect ? 'CORRECT' : 'INCORRECT'}
+Correct Answer: ${question.correct_answer}
+
+Please provide a brief commentary (50-100 words) explaining why this option is ${isCorrect ? 'correct' : 'incorrect'} and what concept it tests or misconception it represents.`;
 
   switch (modelName.toLowerCase()) {
     case 'openai':
@@ -360,8 +435,8 @@ async function callGemini(prompt: string): Promise<string> {
   return data.candidates[0].content.parts[0].text;
 }
 
-// Generate unified summary using GPT-4o-mini
-async function generateSummary(commentaries: string[], question: Question): Promise<string> {
+// Generate unified summary data using GPT-4o-mini
+async function generateSummaryData(commentaries: string[], question: Question): Promise<any> {
   const apiKey = Deno.env.get('OPENAI_API_KEY');
   if (!apiKey) {
     throw new Error('OpenAI API key not configured for summary generation');
@@ -373,13 +448,12 @@ Question: ${question.question}
 Correct Answer: ${question.correct_answer}
 
 AI Commentaries:
-${commentaries.map((c, i) => `Commentary ${i + 1}:\n${c}`).join('\n\n')}
+${commentaries.join('\n\n')}
 
-Please provide a concise unified summary (150-250 words) that:
-1. Highlights the most important learning objectives
-2. Identifies key concepts and common misconceptions
-3. Provides actionable study recommendations
-4. Synthesizes the best insights from all commentaries`;
+Please provide:
+1. A concise unified general summary (150-250 words) that highlights the most important learning objectives and key concepts
+2. Brief summaries for each answer option (30-50 words each) explaining why it's correct/incorrect
+3. An analysis of model agreement and disagreement (100-150 words)`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -390,10 +464,10 @@ Please provide a concise unified summary (150-250 words) that:
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'You are an expert educational AI that creates unified summaries from multiple AI commentaries.' },
+        { role: 'system', content: 'You are an expert educational AI that creates unified summaries from multiple AI commentaries. Structure your response with clear sections for: GENERAL_SUMMARY, OPTION_A, OPTION_B, OPTION_C, OPTION_D, OPTION_E, MODEL_AGREEMENT.' },
         { role: 'user', content: summaryPrompt }
       ],
-      max_tokens: 400,
+      max_tokens: 800,
       temperature: 0.5
     }),
   });
@@ -403,5 +477,35 @@ Please provide a concise unified summary (150-250 words) that:
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  const summaryText = data.choices[0].message.content;
+
+  // Parse the structured response
+  const summaryData: any = {};
+  
+  // Extract sections using simple text parsing
+  const generalMatch = summaryText.match(/GENERAL_SUMMARY[:\s]*(.*?)(?=OPTION_|$)/s);
+  if (generalMatch) {
+    summaryData.summary_general_comment = generalMatch[1].trim();
+  }
+
+  const optionMatches = {
+    a: summaryText.match(/OPTION_A[:\s]*(.*?)(?=OPTION_|MODEL_|$)/s),
+    b: summaryText.match(/OPTION_B[:\s]*(.*?)(?=OPTION_|MODEL_|$)/s),
+    c: summaryText.match(/OPTION_C[:\s]*(.*?)(?=OPTION_|MODEL_|$)/s),
+    d: summaryText.match(/OPTION_D[:\s]*(.*?)(?=OPTION_|MODEL_|$)/s),
+    e: summaryText.match(/OPTION_E[:\s]*(.*?)(?=OPTION_|MODEL_|$)/s)
+  };
+
+  Object.entries(optionMatches).forEach(([option, match]) => {
+    if (match) {
+      summaryData[`summary_comment_${option}`] = match[1].trim();
+    }
+  });
+
+  const agreementMatch = summaryText.match(/MODEL_AGREEMENT[:\s]*(.*?)$/s);
+  if (agreementMatch) {
+    summaryData.model_agreement_analysis = agreementMatch[1].trim();
+  }
+
+  return summaryData;
 }
