@@ -1,8 +1,11 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,98 +13,147 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useAdminRole } from '@/hooks/useAdminRole';
+} from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 
-const Navbar = () => {
-  const { user, logout } = useAuth();
-  const { subscriptionTier } = useSubscription();
-  const { hasAdminRole } = useAdminRole();
+const Navbar: React.FC = () => {
+  const { user, logout, universityId, universityName } = useAuth();
+  const { subscribed } = useSubscription();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+      toast.success('Du wurdest erfolgreich abgemeldet');
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Fehler beim Abmelden');
+    }
   };
 
-  return (
-    <nav className="border-b bg-card">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <span className="font-bold text-xl">Altfragen</span>
-            </Link>
-          </div>
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/training"
-                  className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Training
-                </Link>
-                <Link
-                  to="/collab-sessions"
-                  className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Collaboration
-                </Link>
-                {hasAdminRole && (
-                  <Link
-                    to="/admin"
-                    className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="outline-none focus:outline-none rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.email || "User Avatar"} />
-                        <AvatarFallback>{user.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
-                      </Avatar>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Link to="/settings" className="w-full h-full block">
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link to="/subscription" className="w-full h-full block">
-                        Subscription ({subscriptionTier || 'Free'})
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
+  const mainNavItems = [
+    { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
+    { label: 'Premium', href: '/subscription', icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} /> },
+  ];
+  
+  const userMenuItems = [
+      { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="mr-2 h-4 w-4" /> },
+      { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
+  ];
+
+  const allNavItems = [...mainNavItems, ...userMenuItems];
+
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center">
+          <Link to="/" className="font-bold text-xl flex items-center gap-2">
+            <GraduationCap className="h-6 w-6" />
+            Altfragen.io
+          </Link>
+        </div>
+
+        {user && !isMobile && (
+          <nav className="flex items-center gap-6 text-sm">
+            {mainNavItems.map((item) => (
               <Link
-                to="/login"
-                className="text-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
+                key={item.href}
+                to={item.href}
+                className={`flex items-center transition-colors hover:text-foreground/80 ${
+                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                }`}
               >
-                Login
+                {item.icon}
+                {item.label}
               </Link>
-            )}
-            <ThemeToggle />
-          </div>
+            ))}
+          </nav>
+        )}
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+
+          {user ? (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>
+                    {user.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {userMenuItems.map((item) => (
+                    <DropdownMenuItem key={item.href} onClick={() => navigate(item.href)}>
+                      {item.icon}
+                      {item.label}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    Einstellungen
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Abmelden
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleMenu}
+                  aria-label="Menü öffnen/schließen"
+                >
+                  {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button onClick={() => navigate('/auth')}>Anmelden</Button>
+          )}
         </div>
       </div>
-    </nav>
+
+      {user && isMobile && isMenuOpen && (
+        <div className="container py-4 border-t bg-background">
+          <nav className="flex flex-col space-y-4">
+            {allNavItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`flex items-center py-2 ${
+                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
+    </header>
   );
 };
 
