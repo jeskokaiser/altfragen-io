@@ -28,7 +28,7 @@ interface ProcessingResult {
 const SubjectReassignmentPanel: React.FC = () => {
   const { user } = useAuth();
   const [examName, setExamName] = useState('');
-  const [universityId, setUniversityId] = useState<string>('');
+  const [universityId, setUniversityId] = useState<string>('all');
   const [subjects, setSubjects] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<ProcessingResult | null>(null);
@@ -70,7 +70,7 @@ const SubjectReassignmentPanel: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('reassign-subjects', {
         body: {
           examName: examName.trim(),
-          universityId: universityId || null,
+          universityId: universityId === 'all' ? null : universityId,
           availableSubjects: subjectList
         }
       });
@@ -94,7 +94,7 @@ const SubjectReassignmentPanel: React.FC = () => {
 
   const resetForm = () => {
     setExamName('');
-    setUniversityId('');
+    setUniversityId('all');
     setSubjects('');
     setResult(null);
   };
@@ -130,7 +130,7 @@ const SubjectReassignmentPanel: React.FC = () => {
                   <SelectValue placeholder="Select university (leave empty for all)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Universities</SelectItem>
+                  <SelectItem value="all">All Universities</SelectItem>
                   {universities?.map((uni) => (
                     <SelectItem key={uni.id} value={uni.id}>
                       {uni.name}
