@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +16,7 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { subscriptionTier } = useSubscription();
+  const { subscription } = useSubscription();
   const { hasAdminRole } = useAdminRole();
 
   const handleLogout = async () => {
@@ -82,7 +81,7 @@ const Navbar = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <Link to="/subscription" className="w-full h-full block">
-                        Subscription ({subscriptionTier || 'Free'})
+                        Subscription ({subscription?.subscription_tier || 'Free'})
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
