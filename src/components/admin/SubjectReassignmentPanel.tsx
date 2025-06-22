@@ -29,6 +29,7 @@ const SubjectReassignmentPanel: React.FC = () => {
   const { user } = useAuth();
   const [examName, setExamName] = useState('');
   const [universityId, setUniversityId] = useState<string>('all');
+  const [onlyNullSubjects, setOnlyNullSubjects] = useState<string>('all');
   const [subjects, setSubjects] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<ProcessingResult | null>(null);
@@ -65,12 +66,13 @@ const SubjectReassignmentPanel: React.FC = () => {
     setResult(null);
 
     try {
-      console.log('Starting subject reassignment:', { examName, universityId, subjects: subjectList });
+      console.log('Starting subject reassignment:', { examName, universityId, onlyNullSubjects, subjects: subjectList });
       
       const { data, error } = await supabase.functions.invoke('reassign-subjects', {
         body: {
           examName: examName.trim(),
           universityId: universityId === 'all' ? null : universityId,
+          onlyNullSubjects: onlyNullSubjects === 'null-only',
           availableSubjects: subjectList
         }
       });
@@ -95,6 +97,7 @@ const SubjectReassignmentPanel: React.FC = () => {
   const resetForm = () => {
     setExamName('');
     setUniversityId('all');
+    setOnlyNullSubjects('all');
     setSubjects('');
     setResult(null);
   };
@@ -136,6 +139,23 @@ const SubjectReassignmentPanel: React.FC = () => {
                       {uni.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nullSubjects">Subject Filter</Label>
+              <Select 
+                value={onlyNullSubjects} 
+                onValueChange={setOnlyNullSubjects}
+                disabled={isProcessing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by subject assignment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Questions</SelectItem>
+                  <SelectItem value="null-only">Only Questions Without Assigned Subject</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -126,7 +125,7 @@ serve(async (req) => {
   }
 
   try {
-    const { examName, universityId, availableSubjects } = await req.json();
+    const { examName, universityId, onlyNullSubjects, availableSubjects } = await req.json();
     
     if (!examName || !availableSubjects) {
       return new Response(
@@ -158,6 +157,11 @@ serve(async (req) => {
       query = query.eq('university_id', universityId);
     }
 
+    // Add filter for null subjects if requested
+    if (onlyNullSubjects) {
+      query = query.is('subject', null);
+    }
+
     const { data: questions, error: questionsError } = await query;
 
     if (questionsError) {
@@ -180,7 +184,7 @@ serve(async (req) => {
     let processed = 0;
     let errors = 0;
 
-    console.log(`Starting to process ${totalQuestions} questions for exam: ${examName}`);
+    console.log(`Starting to process ${totalQuestions} questions for exam: ${examName}${onlyNullSubjects ? ' (null subjects only)' : ''}`);
 
     // Process questions in chunks
     for (let chunkStart = 0; chunkStart < totalQuestions; chunkStart += CONFIG.CHUNK_SIZE) {
@@ -242,7 +246,7 @@ serve(async (req) => {
           errors: errors,
           processed: processed
         },
-        message: `Successfully processed ${successCount} out of ${totalQuestions} questions${errors > 0 ? ` (${errors} questions had errors and used fallback subjects)` : ''}`
+        message: `Successfully processed ${successCount} out of ${totalQuestions} questions${errors > 0 ? ` (${errors} questions had errors and used fallback subjects)` : ''}${onlyNullSubjects ? ' (filtered for null subjects only)' : ''}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
