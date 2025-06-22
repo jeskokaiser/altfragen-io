@@ -175,8 +175,10 @@ const Dashboard = () => {
     return grouped;
   }, [filteredQuestions]);
 
+  // Group university questions by exam_name instead of filename
   const groupedUniversityQuestions = useMemo(() => {
     const grouped = universityQuestions.reduce((acc, question) => {
+      // Use exam_name as the primary key for grouping university questions
       const key = question.exam_name || question.filename;
       if (!acc[key]) {
         acc[key] = [];
@@ -211,7 +213,7 @@ const Dashboard = () => {
       return {};
     }
     
-    // Show only selected datasets
+    // Show only selected datasets (now based on exam_name)
     return Object.entries(groupedUniversityQuestions)
       .filter(([key]) => selectedUniversityDatasets.includes(key))
       .reduce((acc, [key, questions]) => {
@@ -423,7 +425,10 @@ const Dashboard = () => {
             </h2>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                {universityQuestions?.length || 0} Fragen verfügbar
+                {selectedUniversityDatasets.length > 0
+                  ? `${Object.values(displayedUniversityDatasets).reduce((sum, questions) => sum + questions.length, 0)} Fragen ausgewählt`
+                  : `${universityQuestions?.length || 0} Fragen verfügbar`
+                }
               </span>
               {hasUniversityQuestions && (
                 <DatasetSelectionButton 

@@ -293,6 +293,42 @@ export type Database = {
           },
         ]
       }
+      job_progress: {
+        Row: {
+          created_at: string
+          errors: number
+          id: string
+          message: string
+          progress: number
+          result: Json | null
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at: string
+          errors?: number
+          id: string
+          message: string
+          progress?: number
+          result?: Json | null
+          status: string
+          total?: number
+          updated_at: string
+        }
+        Update: {
+          created_at?: string
+          errors?: number
+          id?: string
+          message?: string
+          progress?: number
+          result?: Json | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
