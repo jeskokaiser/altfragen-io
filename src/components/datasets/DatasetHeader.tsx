@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +37,7 @@ interface DatasetHeaderProps {
   onRestore?: (e: React.MouseEvent) => void;
   isArchived?: boolean;
   displayName?: string;
+  onUnclearQuestions: () => void;
 }
 
 const DatasetHeader: React.FC<DatasetHeaderProps> = ({
@@ -49,6 +49,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   onRestore,
   isArchived = false,
   displayName,
+  onUnclearQuestions,
 }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -67,7 +68,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   const canChangeToPrivate = !questions.some(q => q.visibility === 'university');
 
   const handleUnclearClick = () => {
-    navigate(`/unclear-questions/${encodeURIComponent(filename)}`);
+    onUnclearQuestions();
   };
 
   const handleStartTraining = () => {
