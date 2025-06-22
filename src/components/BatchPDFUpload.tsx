@@ -17,6 +17,7 @@ import { BatchPDFFile, BatchPDFUploadProps } from './batch-upload/types';
 import FileSelector from './batch-upload/FileSelector';
 import BatchFileList from './batch-upload/BatchFileList';
 import UploadButton from './batch-upload/UploadButton';
+import BulkExamNameAssignment from './batch-upload/BulkExamNameAssignment';
 import PDFQuestionReview from './PDFQuestionReview';
 
 const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
@@ -78,6 +79,13 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleApplyExamNameToAll = (examName: string) => {
+    setFiles(prev => prev.map(file => ({ ...file, examName })));
+    showToast.success('Prüfungsname angewendet', {
+      description: `"${examName}" wurde für alle ${files.length} Dateien festgelegt`
+    });
   };
 
   const fetchSavedQuestions = async (filename: string) => {
@@ -415,6 +423,13 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           onFileSelect={handleFileSelect}
           isUploading={isUploading}
         />
+
+        {files.length > 0 && (
+          <BulkExamNameAssignment
+            onApplyToAll={handleApplyExamNameToAll}
+            isDisabled={isUploading}
+          />
+        )}
 
         <BatchFileList
           files={files}
