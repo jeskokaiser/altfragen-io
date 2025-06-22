@@ -204,11 +204,31 @@ const Dashboard = () => {
     return grouped;
   }, [universityQuestions]);
 
-  // Show filtered university datasets only if specific datasets are selected
+  // Auto-populate university datasets when there's only one university and user hasn't selected any
+  useEffect(() => {
+    if (
+      universityId && 
+      Object.keys(groupedUniversityQuestions).length > 0 && 
+      selectedUniversityDatasets.length === 0 &&
+      preferences?.selectedUniversityDatasets?.length === 0
+    ) {
+      const allUniversityDatasets = Object.keys(groupedUniversityQuestions);
+      setSelectedUniversityDatasets(allUniversityDatasets);
+      updateSelectedUniversityDatasets(allUniversityDatasets);
+    }
+  }, [
+    universityId, 
+    groupedUniversityQuestions, 
+    selectedUniversityDatasets.length, 
+    preferences?.selectedUniversityDatasets?.length,
+    updateSelectedUniversityDatasets
+  ]);
+
+  // Show university datasets based on selection, but default to all if none selected
   const displayedUniversityDatasets = useMemo(() => {
     if (selectedUniversityDatasets.length === 0) {
-      // Show no university datasets when none are specifically selected
-      return {};
+      // If no datasets are specifically selected, show all available datasets
+      return groupedUniversityQuestions;
     }
     
     // Show only selected datasets
@@ -448,14 +468,16 @@ const Dashboard = () => {
           )}
           
           {hasUniversityQuestions ? (
-            selectedUniversityDatasets.length > 0 ? (
+            Object.keys(displayedUniversityDatasets).length > 0 ? (
               <>
-                <SelectedDatasetsDisplay 
-                  groupedQuestions={groupedUniversityQuestions}
-                  selectedDatasets={selectedUniversityDatasets}
-                  onRemoveDataset={handleRemoveDataset}
-                  onClearAll={handleClearAllSelectedDatasets}
-                />
+                {selectedUniversityDatasets.length > 0 && (
+                  <SelectedDatasetsDisplay 
+                    groupedQuestions={groupedUniversityQuestions}
+                    selectedDatasets={selectedUniversityDatasets}
+                    onRemoveDataset={handleRemoveDataset}
+                    onClearAll={handleClearAllSelectedDatasets}
+                  />
+                )}
                 <DatasetList
                   groupedQuestions={displayedUniversityDatasets}
                   selectedFilename={selectedFilename}
