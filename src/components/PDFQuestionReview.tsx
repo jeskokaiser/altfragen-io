@@ -211,7 +211,9 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       }
 
       if (data.success && data.updatedQuestions) {
+        // Update the questions state with the AI-assigned subjects
         setQuestions(data.updatedQuestions);
+        
         showToast.success('Fächer zugewiesen', {
           description: data.message || `${data.updatedQuestions.length} Fragen wurden erfolgreich mit Fächern versehen`
         });
