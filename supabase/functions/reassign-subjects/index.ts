@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -43,13 +42,20 @@ async function assignSubjectToQuestion(
   openAIApiKey: string,
   supabase: any
 ): Promise<any> {
-  const prompt = `You are a subject classifier for academic questions. Given the following question and list of available subjects, select the most appropriate subject.
+  const prompt = `Du bist ein Fachgebiet-Klassifizierer für akademische Fragen. Gegeben ist die folgende Frage mit Antwortoptionen und eine Liste verfügbarer Fachgebiete. Wähle das am besten passende Fachgebiet aus.
 
-Question: "${question.question}"
+Frage: "${question.question}"
 
-Available subjects: ${availableSubjects.join(', ')}
+Antwortoptionen:
+A) ${question.option_a}
+B) ${question.option_b}
+C) ${question.option_c}
+D) ${question.option_d}
+E) ${question.option_e}
 
-Please respond with ONLY the exact subject name from the list above that best matches this question. Do not add any explanation or additional text.`;
+Verfügbare Fachgebiete: ${availableSubjects.join(', ')}
+
+Bitte antworte NUR mit dem exakten Fachgebiet-Namen aus der obigen Liste, der am besten zu dieser Frage passt. Füge keine Erklärung oder zusätzlichen Text hinzu.`;
 
   const assignSubject = async () => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -63,7 +69,7 @@ Please respond with ONLY the exact subject name from the list above that best ma
         messages: [
           { 
             role: 'system', 
-            content: 'You are a precise subject classifier. Always respond with only the exact subject name from the provided list.' 
+            content: 'Du bist ein präziser Fachgebiet-Klassifizierer. Antworte immer nur mit dem exakten Fachgebiet-Namen aus der bereitgestellten Liste.' 
           },
           { role: 'user', content: prompt }
         ],
