@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -170,10 +171,11 @@ serve(async (req) => {
       query = query.eq('university_id', universityId);
     }
 
-    // Add filter for null subjects if requested
+    // Add filter for null subjects if requested - try multiple approaches
     if (onlyNullSubjects === true) {
       console.log('Filtering for null subjects only');
-      query = query.is('subject', null);
+      // Try both null and empty string checks
+      query = query.or('subject.is.null,subject.eq.');
     }
 
     console.log('About to execute query...');
@@ -280,3 +282,4 @@ serve(async (req) => {
     );
   }
 });
+
