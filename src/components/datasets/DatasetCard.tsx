@@ -1,5 +1,6 @@
 
 import React, { memo } from 'react';
+import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -15,26 +16,12 @@ import DatasetHeader from './DatasetHeader';
 import QuestionList from './QuestionList';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
-interface QuestionSummary {
-  id: string;
-  filename: string;
-  subject: string;
-  difficulty: number;
-  visibility: 'private' | 'university' | 'public';
-  user_id: string | null;
-  university_id: string | null;
-  semester: string | null;
-  year: string | null;
-  exam_name: string | null;
-  created_at: string;
-}
-
 interface DatasetCardProps {
   filename: string;
-  questions: QuestionSummary[];
+  questions: Question[];
   isSelected: boolean;
   onDatasetClick: (filename: string) => void;
-  onStartTraining: (questions: QuestionSummary[]) => void;
+  onStartTraining: (questions: Question[]) => void;
   isArchived?: boolean;
   displayName?: string;
 }

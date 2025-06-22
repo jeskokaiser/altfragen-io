@@ -1,5 +1,7 @@
+
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DatasetList from './datasets/DatasetList';
@@ -17,20 +19,6 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { useQuestionFiltering } from '@/hooks/useQuestionFiltering';
 import { useQuestionGrouping } from '@/hooks/useQuestionGrouping';
 
-interface QuestionSummary {
-  id: string;
-  filename: string;
-  subject: string;
-  difficulty: number;
-  visibility: 'private' | 'university' | 'public';
-  user_id: string | null;
-  university_id: string | null;
-  semester: string | null;
-  year: string | null;
-  exam_name: string | null;
-  created_at: string;
-}
-
 const Dashboard = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
@@ -46,17 +34,15 @@ const Dashboard = () => {
   const [isDatasetSelectorOpen, setIsDatasetSelectorOpen] = useState(false);
   const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
 
-  // Fetch optimized dashboard data
+  // Fetch all dashboard data
   const {
-    personalQuestions,
-    universityQuestions,
+    questions,
     isQuestionsLoading,
     questionsError,
     todayNewCount,
     todayPracticeCount,
     totalAnsweredCount,
     totalAttemptsCount,
-    isStatsLoading
   } = useDashboardData(user?.id, universityId);
 
   // Update selected university datasets when preferences change
@@ -68,7 +54,7 @@ const Dashboard = () => {
 
   // Filter questions for personal datasets
   const filteredQuestions = useQuestionFiltering({
-    questions: personalQuestions,
+    questions,
     userId: user?.id,
     universityId,
     selectedSemester,
@@ -78,8 +64,8 @@ const Dashboard = () => {
   });
 
   // Filter questions for university datasets
-  const filteredUniversityQuestions = useQuestionFiltering({
-    questions: universityQuestions,
+  const universityQuestions = useQuestionFiltering({
+    questions,
     userId: user?.id,
     universityId,
     selectedSemester: uniSelectedSemester,
@@ -90,7 +76,7 @@ const Dashboard = () => {
 
   // Group questions
   const groupedQuestions = useQuestionGrouping(filteredQuestions);
-  const groupedUniversityQuestions = useQuestionGrouping(filteredUniversityQuestions);
+  const groupedUniversityQuestions = useQuestionGrouping(universityQuestions);
 
   // Display filtered university datasets only if specific datasets are selected
   const displayedUniversityDatasets = useMemo(() => {
@@ -103,7 +89,7 @@ const Dashboard = () => {
       .reduce((acc, [key, questions]) => {
         acc[key] = questions;
         return acc;
-      }, {} as Record<string, QuestionSummary[]>);
+      }, {} as Record<string, Question[]>);
   }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
   // Memoized event handlers
@@ -111,10 +97,8 @@ const Dashboard = () => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
   }, [selectedFilename]);
 
-  const handleStartTraining = useCallback((questions: QuestionSummary[]) => {
-    // For training, we'll need to fetch the full questions
-    // For now, store the question IDs and let the training page handle the full fetch
-    localStorage.setItem('trainingQuestionIds', JSON.stringify(questions.map(q => q.id)));
+  const handleStartTraining = useCallback((questions: Question[]) => {
+    localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     navigate('/training');
   }, [navigate]);
 
@@ -159,8 +143,8 @@ const Dashboard = () => {
   );
   
   const hasUniSemesterOrYearData = useMemo(() => 
-    filteredUniversityQuestions.some(q => q.semester || q.year), 
-    [filteredUniversityQuestions]
+    universityQuestions.some(q => q.semester || q.year), 
+    [universityQuestions]
   );
   
   const hasUniversityQuestions = useMemo(() => 
@@ -189,7 +173,7 @@ const Dashboard = () => {
     );
   }
   
-  if (isQuestionsLoading || isStatsLoading) {
+  if (isQuestionsLoading) {
     return (
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="animate-pulse space-y-4">

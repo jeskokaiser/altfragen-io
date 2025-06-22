@@ -1,22 +1,9 @@
 
 import { useMemo } from 'react';
-
-interface QuestionSummary {
-  id: string;
-  filename: string;
-  subject: string;
-  difficulty: number;
-  visibility: 'private' | 'university' | 'public';
-  user_id: string | null;
-  university_id: string | null;
-  semester: string | null;
-  year: string | null;
-  exam_name: string | null;
-  created_at: string;
-}
+import { Question } from '@/types/Question';
 
 interface UseQuestionFilteringProps {
-  questions: QuestionSummary[] | undefined;
+  questions: Question[] | undefined;
   userId: string | undefined;
   universityId?: string | null;
   selectedSemester: string | null;

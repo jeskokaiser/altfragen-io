@@ -1,25 +1,20 @@
 
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Question } from '@/types/Question';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { FilterX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
-
-interface QuestionSummary {
-  id: string;
-  filename: string;
-  subject: string;
-  difficulty: number;
-  visibility: 'private' | 'university' | 'public';
-  user_id: string | null;
-  university_id: string | null;
-  semester: string | null;
-  year: string | null;
-  exam_name: string | null;
-  created_at: string;
-}
 
 interface SemesterYearFilterProps {
-  questions: QuestionSummary[];
+  questions: Question[];
   selectedSemester: string | null;
   selectedYear: string | null;
   onSemesterChange: (semester: string | null) => void;
@@ -28,64 +23,88 @@ interface SemesterYearFilterProps {
   title?: string;
 }
 
-const SemesterYearFilter = ({
+const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   questions,
   selectedSemester,
   selectedYear,
   onSemesterChange,
   onYearChange,
   onClearFilters,
-  title = "Filter"
-}: SemesterYearFilterProps) => {
-  const uniqueSemesters = [...new Set(questions.map(q => q.semester).filter(Boolean))].sort();
-  const uniqueYears = [...new Set(questions.map(q => q.year).filter(Boolean))].sort().reverse();
+  title = "Filter",
+}) => {
+  // Extract unique semesters from questions, ensuring we don't include empty values
+  const uniqueSemesters = Array.from(
+    new Set(
+      questions
+        .filter(q => q.semester && q.semester.trim() !== '')
+        .map(q => q.semester)
+    )
+  ).sort();
+  
+  // Generate years from 2010 to current year
+  const currentYear = new Date().getFullYear();
+  const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) => (currentYear - i).toString());
 
-  const hasActiveFilters = selectedSemester || selectedYear;
+  const hasFilters = !!(selectedSemester || selectedYear);
 
   return (
-    <div className="bg-slate-50/50 dark:bg-black/20 p-4 rounded-lg border">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="flex flex-wrap gap-2 flex-1">
-          <Select value={selectedSemester || undefined} onValueChange={(value) => onSemesterChange(value || null)}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Semester" />
-            </SelectTrigger>
-            <SelectContent>
-              {uniqueSemesters.map(semester => (
-                <SelectItem key={semester} value={semester!}>
-                  {semester}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedYear || undefined} onValueChange={(value) => onYearChange(value || null)}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Jahr" />
-            </SelectTrigger>
-            <SelectContent>
-              {uniqueYears.map(year => (
-                <SelectItem key={year} value={year!}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <Card className="p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+        <div className="grid sm:grid-cols-2 gap-4 w-full sm:w-auto">
+          <div className="space-y-2">
+            <Label htmlFor="semester-filter">Semester</Label>
+            <Select
+              value={selectedSemester || undefined}
+              onValueChange={(value) => onSemesterChange(value === 'all' ? null : value)}
+            >
+              <SelectTrigger id="semester-filter" className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Alle Semester" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle Semester</SelectItem>
+                {uniqueSemesters.map((semester) => (
+                  <SelectItem key={semester} value={semester || 'unknown'}>
+                    {semester}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="year-filter">Jahr</Label>
+            <Select
+              value={selectedYear || undefined}
+              onValueChange={(value) => onYearChange(value === 'all' ? null : value)}
+            >
+              <SelectTrigger id="year-filter" className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Alle Jahre" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle Jahre</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-
-        {hasActiveFilters && (
-          <Button
-            variant="outline"
-            size="sm"
+        
+        {hasFilters && (
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={onClearFilters}
-            className="flex items-center gap-1"
+            className="w-full sm:w-auto"
           >
-            <X className="h-3 w-3" />
+            <FilterX className="mr-2 h-4 w-4" />
             Filter zurücksetzen
           </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 

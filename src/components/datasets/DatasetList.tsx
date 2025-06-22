@@ -1,26 +1,13 @@
 
 import React from 'react';
+import { Question } from '@/types/Question';
 import DatasetCard from './DatasetCard';
 
-interface QuestionSummary {
-  id: string;
-  filename: string;
-  subject: string;
-  difficulty: number;
-  visibility: 'private' | 'university' | 'public';
-  user_id: string | null;
-  university_id: string | null;
-  semester: string | null;
-  year: string | null;
-  exam_name: string | null;
-  created_at: string;
-}
-
 interface DatasetListProps {
-  groupedQuestions: Record<string, QuestionSummary[]>;
+  groupedQuestions: Record<string, Question[]>;
   selectedFilename: string | null;
   onDatasetClick: (filename: string) => void;
-  onStartTraining: (questions: QuestionSummary[]) => void;
+  onStartTraining: (questions: Question[]) => void;
   isArchived?: boolean;
   groupBy?: 'filename' | 'examName';
 }

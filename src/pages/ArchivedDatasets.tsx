@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
+import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,20 +12,6 @@ import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 
-interface QuestionSummary {
-  id: string;
-  filename: string;
-  subject: string;
-  difficulty: number;
-  visibility: 'private' | 'university' | 'public';
-  user_id: string | null;
-  university_id: string | null;
-  semester: string | null;
-  year: string | null;
-  exam_name: string | null;
-  created_at: string;
-}
-
 const ArchivedDatasets = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -33,40 +20,33 @@ const ArchivedDatasets = () => {
   const [selectedFilename, setSelectedFilename] = React.useState<string | null>(null);
 
   const { data: questions } = useQuery({
-    queryKey: ['archived-questions'],
+    queryKey: ['questions'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('questions')
-        .select(`
-          id,
-          filename,
-          subject,
-          difficulty,
-          visibility,
-          user_id,
-          university_id,
-          exam_semester,
-          exam_year,
-          exam_name,
-          created_at
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
       return (data || []).map(q => ({
         id: q.id,
-        filename: q.filename,
+        question: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        optionC: q.option_c,
+        optionD: q.option_d,
+        optionE: q.option_e,
         subject: q.subject,
+        correctAnswer: q.correct_answer,
+        comment: q.comment,
+        filename: q.filename,
+        created_at: q.created_at,
         difficulty: q.difficulty,
-        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-        user_id: q.user_id,
-        university_id: q.university_id,
-        semester: q.exam_semester,
-        year: q.exam_year,
-        exam_name: q.exam_name,
-        created_at: q.created_at
-      })) as QuestionSummary[];
+        is_unclear: q.is_unclear,
+        marked_unclear_at: q.marked_unclear_at,
+        exam_name: q.exam_name
+      })) as Question[];
     },
   });
 
@@ -84,15 +64,15 @@ const ArchivedDatasets = () => {
       }
       acc[key].push(question);
       return acc;
-    }, {} as Record<string, QuestionSummary[]>);
+    }, {} as Record<string, Question[]>);
   }, [archivedQuestions]);
 
   const handleDatasetClick = (key: string) => {
     setSelectedFilename(selectedFilename === key ? null : key);
   };
 
-  const handleStartTraining = (questions: QuestionSummary[]) => {
-    localStorage.setItem('trainingQuestionIds', JSON.stringify(questions.map(q => q.id)));
+  const handleStartTraining = (questions: Question[]) => {
+    localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     navigate('/training');
   };
 
