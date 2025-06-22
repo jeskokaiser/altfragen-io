@@ -1,217 +1,89 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import DatasetList from './datasets/DatasetList';
 import FileUpload from './FileUpload';
 import DashboardHeader from './datasets/DashboardHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { fetchAllQuestions } from '@/services/DatabaseService';
 import SemesterYearFilter from './datasets/SemesterYearFilter';
 import { Calendar, SlidersHorizontal, GraduationCap, ListPlus } from 'lucide-react';
 import DatasetSelectionButton from './datasets/DatasetSelectionButton';
 import UniversityDatasetSelector from './datasets/UniversityDatasetSelector';
 import SelectedDatasetsDisplay from './datasets/SelectedDatasetsDisplay';
 import { Button } from '@/components/ui/button';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { useQuestionFiltering } from '@/hooks/useQuestionFiltering';
+import { useQuestionGrouping } from '@/hooks/useQuestionGrouping';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { preferences, isDatasetArchived, updateSelectedUniversityDatasets } = useUserPreferences();
+  
+  // State variables
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [uniSelectedSemester, setUniSelectedSemester] = useState<string | null>(null);
   const [uniSelectedYear, setUniSelectedYear] = useState<string | null>(null);
-  
   const [isDatasetSelectorOpen, setIsDatasetSelectorOpen] = useState(false);
   const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
 
+  // Fetch all dashboard data
+  const {
+    questions,
+    isQuestionsLoading,
+    questionsError,
+    todayNewCount,
+    todayPracticeCount,
+    totalAnsweredCount,
+    totalAttemptsCount,
+  } = useDashboardData(user?.id, universityId);
+
+  // Update selected university datasets when preferences change
   useEffect(() => {
     if (preferences?.selectedUniversityDatasets) {
       setSelectedUniversityDatasets(preferences.selectedUniversityDatasets);
     }
   }, [preferences?.selectedUniversityDatasets]);
 
-  const { data: questions, isLoading: isQuestionsLoading, error: questionsError } = useQuery({
-    queryKey: ['all-questions', user?.id, universityId],
-    queryFn: async () => {
-      if (!user) return [];
-      return fetchAllQuestions(user.id, universityId);
-    },
-    enabled: !!user
+  // Filter questions for personal datasets
+  const filteredQuestions = useQuestionFiltering({
+    questions,
+    userId: user?.id,
+    universityId,
+    selectedSemester,
+    selectedYear,
+    isDatasetArchived,
+    filterType: 'personal'
   });
 
-  const { data: todayNewCount } = useQuery({
-    queryKey: ['today-new', user?.id],
-    queryFn: async () => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('id')
-        .eq('user_id', user?.id)
-        .gte('created_at', today.toISOString());
-      if (error) throw error;
-      return data?.length ?? 0;
-    },
-    enabled: !!user
+  // Filter questions for university datasets
+  const universityQuestions = useQuestionFiltering({
+    questions,
+    userId: user?.id,
+    universityId,
+    selectedSemester: uniSelectedSemester,
+    selectedYear: uniSelectedYear,
+    isDatasetArchived,
+    filterType: 'university'
   });
 
-  const { data: todayPracticeCount } = useQuery({
-    queryKey: ['today-practice', user?.id],
-    queryFn: async () => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('id')
-        .eq('user_id', user?.id)
-        .gte('updated_at', today.toISOString());
-      if (error) throw error;
-      return data?.length ?? 0;
-    },
-    enabled: !!user
-  });
+  // Group questions
+  const groupedQuestions = useQuestionGrouping(filteredQuestions);
+  const groupedUniversityQuestions = useQuestionGrouping(universityQuestions);
 
-  const { data: totalAnsweredCount } = useQuery({
-    queryKey: ['total-answers', user?.id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user?.id);
-      if (error) throw error;
-      return count || 0;
-    },
-    enabled: !!user
-  });
-
-  const { data: totalAttemptsCount } = useQuery({
-    queryKey: ['total-attempts', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('attempts_count')
-        .eq('user_id', user?.id);
-      if (error) throw error;
-      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
-      return totalAttempts;
-    },
-    enabled: !!user
-  });
-
-  const filteredQuestions = useMemo(() => {
-    if (!questions || !preferences) return [];
-    
-    let filtered = questions.filter(q => 
-      !isDatasetArchived(q.filename) && 
-      q.user_id === user?.id &&
-      q.visibility === 'private'
-    );
-    
-    if (selectedSemester) {
-      filtered = filtered.filter(q => q.semester === selectedSemester);
-    }
-    
-    if (selectedYear) {
-      filtered = filtered.filter(q => q.year === selectedYear);
-    }
-    
-    return filtered;
-  }, [questions, preferences, isDatasetArchived, selectedSemester, selectedYear, user?.id]);
-
-  const universityQuestions = useMemo(() => {
-    if (!questions || !universityId) {
-      return [];
-    }
-    
-    let filtered = questions.filter(q => {
-      return q.visibility === 'university' && q.university_id === universityId;
-    });
-    
-    if (uniSelectedSemester) {
-      filtered = filtered.filter(q => q.semester === uniSelectedSemester);
-    }
-    
-    if (uniSelectedYear) {
-      filtered = filtered.filter(q => q.year === uniSelectedYear);
-    }
-    
-    return filtered;
-  }, [questions, universityId, uniSelectedSemester, uniSelectedYear]);
-
-  const groupedQuestions = useMemo(() => {
-    const grouped = filteredQuestions.reduce((acc, question) => {
-      const key = question.exam_name || question.filename;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(question);
-      return acc;
-    }, {} as Record<string, Question[]>);
-    
-    Object.keys(grouped).forEach(key => {
-      grouped[key].sort((a, b) => {
-        if (a.year && b.year && a.year !== b.year) {
-          return b.year.localeCompare(a.year);
-        }
-        
-        if (a.semester && b.semester && a.semester !== b.semester) {
-          const semA = a.semester.startsWith('WS') ? 1 : 2;
-          const semB = b.semester.startsWith('WS') ? 1 : 2;
-          return semA - semB;
-        }
-        
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      });
-    });
-    
-    return grouped;
-  }, [filteredQuestions]);
-
-  const groupedUniversityQuestions = useMemo(() => {
-    const grouped = universityQuestions.reduce((acc, question) => {
-      const key = question.exam_name || question.filename;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(question);
-      return acc;
-    }, {} as Record<string, Question[]>);
-    
-    Object.keys(grouped).forEach(key => {
-      grouped[key].sort((a, b) => {
-        if (a.year && b.year && a.year !== b.year) {
-          return b.year.localeCompare(a.year);
-        }
-        
-        if (a.semester && b.semester && a.semester !== b.semester) {
-          const semA = a.semester.startsWith('WS') ? 1 : 2;
-          const semB = b.semester.startsWith('WS') ? 1 : 2;
-          return semA - semB;
-        }
-        
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      });
-    });
-    
-    return grouped;
-  }, [universityQuestions]);
-
-  // Show filtered university datasets only if specific datasets are selected
+  // Display filtered university datasets only if specific datasets are selected
   const displayedUniversityDatasets = useMemo(() => {
     if (selectedUniversityDatasets.length === 0) {
-      // Show no university datasets when none are specifically selected
       return {};
     }
     
-    // Show only selected datasets
     return Object.entries(groupedUniversityQuestions)
       .filter(([key]) => selectedUniversityDatasets.includes(key))
       .reduce((acc, [key, questions]) => {
@@ -220,48 +92,65 @@ const Dashboard = () => {
       }, {} as Record<string, Question[]>);
   }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
-  const handleDatasetClick = (filename: string) => {
+  // Memoized event handlers
+  const handleDatasetClick = useCallback((filename: string) => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
-  };
+  }, [selectedFilename]);
 
-  const handleStartTraining = (questions: Question[]) => {
+  const handleStartTraining = useCallback((questions: Question[]) => {
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     navigate('/training');
-  };
+  }, [navigate]);
 
-  const handleQuestionsLoaded = () => {
+  const handleQuestionsLoaded = useCallback(() => {
     window.location.reload();
-  };
+  }, []);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setSelectedSemester(null);
     setSelectedYear(null);
-  };
+  }, []);
 
-  const handleClearUniFilters = () => {
+  const handleClearUniFilters = useCallback(() => {
     setUniSelectedSemester(null);
     setUniSelectedYear(null);
-  };
+  }, []);
 
-  const handleOpenDatasetSelector = () => {
+  const handleOpenDatasetSelector = useCallback(() => {
     setIsDatasetSelectorOpen(true);
-  };
+  }, []);
 
-  const handleSelectedDatasetsChange = (datasets: string[]) => {
+  const handleSelectedDatasetsChange = useCallback((datasets: string[]) => {
     setSelectedUniversityDatasets(datasets);
     updateSelectedUniversityDatasets(datasets);
-  };
+  }, [updateSelectedUniversityDatasets]);
 
-  const handleRemoveDataset = (filename: string) => {
+  const handleRemoveDataset = useCallback((filename: string) => {
     const newDatasets = selectedUniversityDatasets.filter(f => f !== filename);
     setSelectedUniversityDatasets(newDatasets);
     updateSelectedUniversityDatasets(newDatasets);
-  };
+  }, [selectedUniversityDatasets, updateSelectedUniversityDatasets]);
 
-  const handleClearAllSelectedDatasets = () => {
+  const handleClearAllSelectedDatasets = useCallback(() => {
     setSelectedUniversityDatasets([]);
     updateSelectedUniversityDatasets([]);
-  };
+  }, [updateSelectedUniversityDatasets]);
+
+  // Memoized computed values
+  const hasSemesterOrYearData = useMemo(() => 
+    filteredQuestions.some(q => q.semester || q.year), 
+    [filteredQuestions]
+  );
+  
+  const hasUniSemesterOrYearData = useMemo(() => 
+    universityQuestions.some(q => q.semester || q.year), 
+    [universityQuestions]
+  );
+  
+  const hasUniversityQuestions = useMemo(() => 
+    Object.keys(groupedUniversityQuestions).length > 0, 
+    [groupedUniversityQuestions]
+  );
 
   if (!user) {
     return <div>Loading...</div>;
@@ -310,10 +199,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  const hasSemesterOrYearData = filteredQuestions.some(q => q.semester || q.year);
-  const hasUniSemesterOrYearData = universityQuestions.some(q => q.semester || q.year);
-  const hasUniversityQuestions = Object.keys(groupedUniversityQuestions).length > 0;
 
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
