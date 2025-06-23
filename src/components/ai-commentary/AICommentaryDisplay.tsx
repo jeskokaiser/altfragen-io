@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +35,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     createCheckoutSession
   } = useSubscription();
   const [expandedAnswers, setExpandedAnswers] = useState<Set<AnswerOption>>(new Set());
+  const [expandedGeneral, setExpandedGeneral] = useState(false);
 
   // Premium gate - this is a fallback in case the component is rendered without proper gating
   if (!canAccessAIComments) {
@@ -83,6 +83,10 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
       newExpanded.add(option);
     }
     setExpandedAnswers(newExpanded);
+  };
+  
+  const toggleGeneral = () => {
+    setExpandedGeneral(!expandedGeneral);
   };
   
   const getModelColor = (model: ModelName): string => {
@@ -142,6 +146,30 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     return models.some(model => commentaryData.models[model].answers[option]);
   };
   
+  const hasGeneralComments = (): boolean => {
+    const models = Object.keys(commentaryData.models) as ModelName[];
+    return models.some(model => commentaryData.models[model].general);
+  };
+  
+  const renderGeneralComments = () => {
+    const models = Object.keys(commentaryData.models) as ModelName[];
+    return <div className="mt-4 space-y-3">
+        {models.map(model => {
+        const comment = commentaryData.models[model].general;
+        if (!comment) return null;
+        return <div key={model} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge className={getModelColor(model)}>
+                  {getModelIcon(model)}
+                  <span className="ml-1">{getModelDisplayName(model)}</span>
+                </Badge>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
+            </div>;
+      })}
+      </div>;
+  };
+  
   const renderAnswerComments = (option: AnswerOption) => {
     const models = Object.keys(commentaryData.models) as ModelName[];
     return <div className="mt-4 space-y-3">
@@ -178,6 +206,19 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
               <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summary.summary_general_comment}</p>
             </div>
+            
+            {/* Expandable Individual General Model Comments */}
+            {hasGeneralComments() && <Collapsible open={expandedGeneral} onOpenChange={toggleGeneral}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 mt-3">
+                    <span className="text-sm font-medium">Einzelne KI-Modell Kommentare anzeigen</span>
+                    {expandedGeneral ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  {renderGeneralComments()}
+                </CollapsibleContent>
+              </Collapsible>}
           </div>}
 
         {/* Answer Options with Summary and Expandable Individual Comments */}
