@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -142,9 +141,14 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     return questionData.correctAnswer.toLowerCase() === option;
   };
   
-  // Always show expandable sections when AI commentary data exists
-  const hasAICommentaryData = (): boolean => {
-    return !!commentaryData && !!commentaryData.models;
+  const hasModelComments = (option: AnswerOption): boolean => {
+    const models = Object.keys(commentaryData.models) as ModelName[];
+    return models.some(model => commentaryData.models[model].answers[option]);
+  };
+  
+  const hasGeneralComments = (): boolean => {
+    const models = Object.keys(commentaryData.models) as ModelName[];
+    return models.some(model => commentaryData.models[model].general);
   };
   
   const renderGeneralComments = () => {
@@ -152,6 +156,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     return <div className="mt-4 space-y-3">
         {models.map(model => {
         const comment = commentaryData.models[model].general;
+        if (!comment) return null;
         return <div key={model} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Badge className={getModelColor(model)}>
@@ -159,11 +164,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                   <span className="ml-1">{getModelDisplayName(model)}</span>
                 </Badge>
               </div>
-              {comment ? (
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 italic">Kein Kommentar verfügbar</p>
-              )}
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
             </div>;
       })}
       </div>;
@@ -174,6 +175,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     return <div className="mt-4 space-y-3">
         {models.map(model => {
         const comment = commentaryData.models[model].answers[option];
+        if (!comment) return null;
         return <div key={model} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Badge className={getModelColor(model)}>
@@ -181,11 +183,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                   <span className="ml-1">{getModelDisplayName(model)}</span>
                 </Badge>
               </div>
-              {comment ? (
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 italic">Kein Kommentar verfügbar</p>
-              )}
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
             </div>;
       })}
       </div>;
@@ -209,8 +207,8 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
               <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summary.summary_general_comment}</p>
             </div>
             
-            {/* Always show expandable Individual General Model Comments when AI data exists */}
-            {hasAICommentaryData() && <Collapsible open={expandedGeneral} onOpenChange={toggleGeneral}>
+            {/* Expandable Individual General Model Comments */}
+            {hasGeneralComments() && <Collapsible open={expandedGeneral} onOpenChange={toggleGeneral}>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="w-full justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 mt-3">
                     <span className="text-sm font-medium">Einzelne KI-Modell Kommentare anzeigen</span>
@@ -230,8 +228,8 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
             {(['a', 'b', 'c', 'd', 'e'] as AnswerOption[]).map(option => {
             const summaryField = `summary_comment_${option}` as keyof typeof summary;
             const summaryText = summary[summaryField] as string;
-            // Always show answer options when AI commentary data exists
-            if (!summaryText && !hasAICommentaryData()) return null;
+            const hasIndividualComments = hasModelComments(option);
+            if (!summaryText && !hasIndividualComments) return null;
             return <div key={option} className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
                   <div className="flex items-center gap-3 mb-4">
                     <Badge variant={isCorrectAnswer(option) ? "default" : "outline"} className="text-sm">
@@ -248,8 +246,8 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
                       <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summaryText}</p>
                     </div>}
                   
-                  {/* Always show expandable Individual Model Comments when AI data exists */}
-                  {hasAICommentaryData() && <Collapsible open={expandedAnswers.has(option)} onOpenChange={() => toggleAnswer(option)}>
+                  {/* Expandable Individual Model Comments */}
+                  {hasIndividualComments && <Collapsible open={expandedAnswers.has(option)} onOpenChange={() => toggleAnswer(option)}>
                       <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="sm" className="w-full justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
                           <span className="text-sm font-medium">Einzelne KI-Modell Kommentare anzeigen</span>
