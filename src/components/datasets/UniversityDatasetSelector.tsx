@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,8 @@ const UniversityDatasetSelector: React.FC<UniversityDatasetSelectorProps> = ({
   const filteredDatasets = Object.entries(groupedQuestions)
     .filter(([filename]) => 
       filename.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    )
+    .sort(([a], [b]) => a.localeCompare(b)); // Sort alphabetically by filename
 
   const handleToggleDataset = (filename: string) => {
     setLocalSelectedDatasets(prev => 
