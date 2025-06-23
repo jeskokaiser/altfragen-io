@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from './AnswerOption';

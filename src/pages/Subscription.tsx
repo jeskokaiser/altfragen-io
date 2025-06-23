@@ -1,4 +1,3 @@
-
 import React from 'react';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
@@ -6,22 +5,48 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X, Brain, Shield, Upload, FileText, Zap, Tag } from 'lucide-react';
-
 const Subscription = () => {
-  const { subscribed, createCheckoutSession } = useSubscription();
-
-  const features = [
-    { name: 'Werbefrei und ohne Tracking', free: true, premium: true, icon: Shield },
-    { name: 'Deine Daten gehören dir', free: true, premium: true, icon: Shield },
-    { name: 'Unbegrenzte Fragenerstellung und -beantwortung', free: true, premium: true, icon: Upload },
-    { name: 'Unbegrenzte PDF-Verarbeitung', free: true, premium: true, icon: FileText },
-    { name: 'KI-kommentierte Fragen (10 pro Tag)', free: true, premium: false, icon: Brain },
-    { name: 'Unbegrenzte KI-kommentierte Fragen', free: false, premium: true, icon: Brain },
-    { name: 'Premium Support verfügbar', free: false, premium: true, icon: Zap },
-  ];
-
-  return (
-    <div className="container mx-auto py-8 space-y-8">
+  const {
+    subscribed,
+    createCheckoutSession
+  } = useSubscription();
+  const features = [{
+    name: 'Werbefrei und ohne Tracking',
+    free: true,
+    premium: true,
+    icon: Shield
+  }, {
+    name: 'Deine Daten gehören dir',
+    free: true,
+    premium: true,
+    icon: Shield
+  }, {
+    name: 'Unbegrenzte Fragenerstellung und -beantwortung',
+    free: true,
+    premium: true,
+    icon: Upload
+  }, {
+    name: 'Unbegrenzte PDF-Verarbeitung',
+    free: true,
+    premium: true,
+    icon: FileText
+  }, {
+    name: 'KI-kommentierte Fragen (10 pro Tag)',
+    free: true,
+    premium: false,
+    icon: Brain
+  }, {
+    name: 'Unbegrenzte KI-kommentierte Fragen',
+    free: false,
+    premium: true,
+    icon: Brain
+  }, {
+    name: 'Premium Support verfügbar',
+    free: false,
+    premium: true,
+    icon: Zap
+  }];
+  return <div className="container mx-auto py-8 space-y-8">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Altfragen.io Premium</h1>
         <p className="text-muted-foreground">
@@ -36,14 +61,9 @@ const Subscription = () => {
           <p className="text-sm text-muted-foreground mt-2">
             Limitiertes Einführungsangebot für die ersten 100 Nutzer
           </p>
-          {!subscribed && (
-            <Button 
-              onClick={createCheckoutSession} 
-              className="mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold"
-            >
+          {!subscribed && <Button onClick={createCheckoutSession} className="mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold">
               🔥 Jetzt für €2,99/Monat sichern
-            </Button>
-          )}
+            </Button>}
         </div>
       </div>
 
@@ -60,15 +80,15 @@ const Subscription = () => {
             </p>
             <div className="grid md:grid-cols-3 gap-4 mt-4">
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">ChatGPT o4-mini</h4>
+                <h4 className="font-semibold text-gray-900">OpenAI o4-mini</h4>
                 <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
               </div>
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">Claude Sonnet 4</h4>
+                <h4 className="font-semibold text-gray-900">Gemini 2.5 Pro/Flash</h4>
                 <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
               </div>
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">Gemini 2.5 Pro</h4>
+                <h4 className="font-semibold text-gray-900">Grok oder Mistral</h4>
                 <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
               </div>
             </div>
@@ -102,39 +122,29 @@ const Subscription = () => {
           
           <div className="space-y-3 mt-6">
             {features.map((feature, index) => {
-              const Icon = feature.icon;
-              const isIncluded = feature.free;
-              return (
-                <div key={index} className="flex items-center gap-3">
-                  {isIncluded ? (
-                    <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  ) : (
-                    <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  )}
+            const Icon = feature.icon;
+            const isIncluded = feature.free;
+            return <div key={index} className="flex items-center gap-3">
+                  {isIncluded ? <Check className="h-4 w-4 text-green-600 flex-shrink-0" /> : <X className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                   <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''}`}>
                     {feature.name}
                   </span>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
         </Card>
 
         {/* Premium Plan */}
         <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400' : 'border-2 border-green-500'}`}>
-          {subscribed && (
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+          {subscribed && <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <PremiumBadge />
-            </div>
-          )}
-          {!subscribed && (
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+            </div>}
+          {!subscribed && <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                 🔥 Early Bird
               </div>
-            </div>
-          )}
+            </div>}
           
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2">
@@ -151,22 +161,16 @@ const Subscription = () => {
           
           <div className="space-y-3 mt-6">
             {features.map((feature, index) => {
-              const Icon = feature.icon;
-              const isIncluded = feature.premium;
-              return (
-                <div key={index} className="flex items-center gap-3">
-                  {isIncluded ? (
-                    <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  ) : (
-                    <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  )}
+            const Icon = feature.icon;
+            const isIncluded = feature.premium;
+            return <div key={index} className="flex items-center gap-3">
+                  {isIncluded ? <Check className="h-4 w-4 text-green-600 flex-shrink-0" /> : <X className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                   <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700' : ''}`}>
                     {feature.name}
                   </span>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
         </Card>
       </div>
@@ -189,8 +193,8 @@ const Subscription = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Warum drei KI-Modelle?</h3>
           <p className="text-sm text-muted-foreground">
-            Verschiedene KI-Modelle haben unterschiedliche Stärken. Durch die Kombination von ChatGPT o4-mini, 
-            Claude Sonnet 4 und Gemini 2.5 Pro erhältst du präzisere und umfassendere Antworten, 
+            Verschiedene KI-Modelle haben unterschiedliche Stärken. Durch die Kombination von OpenAI o4-mini, 
+            Gemini 2.5 Pro/Flash und Grok 3 Mini/Mistral erhältst du präzisere und umfassendere Antworten, 
             besonders bei komplexen medizinischen Fragen. Eine erweiterte KI erstellt zusätzlich eine 
             Zusammenfassung aller Erkenntnisse.
           </p>
@@ -204,8 +208,6 @@ const Subscription = () => {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Subscription;

@@ -1,7 +1,7 @@
 
 export interface FormValues {
   subject: string;
-  questionCount: string;
+  questionCount: number; // Changed from string to number
   difficulty: string;
   isRandomSelection: boolean;
   sortByAttempts: boolean;

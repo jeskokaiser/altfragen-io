@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from '../training/AnswerOption';
@@ -44,9 +43,11 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white">
-          {highlightNicht(questionData.question)}
-        </h3>    
+        <div className="flex-1">
+          <h3 className="text-xl font-semibold text-slate-800 dark:text-white">
+            {highlightNicht(questionData.question)}
+          </h3>
+        </div>    
       </div>
       <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
         <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('A')} />

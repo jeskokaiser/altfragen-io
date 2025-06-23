@@ -95,6 +95,36 @@ export type Database = {
           },
         ]
       }
+      ai_commentary_cron_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          executed_at: string
+          execution_time_ms: number | null
+          id: string
+          questions_processed: number | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string
+          execution_time_ms?: number | null
+          id?: string
+          questions_processed?: number | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string
+          execution_time_ms?: number | null
+          id?: string
+          questions_processed?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       ai_commentary_settings: {
         Row: {
           auto_trigger_enabled: boolean | null
@@ -292,6 +322,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_progress: {
+        Row: {
+          created_at: string
+          errors: number
+          id: string
+          message: string
+          progress: number
+          result: Json | null
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at: string
+          errors?: number
+          id: string
+          message: string
+          progress?: number
+          result?: Json | null
+          status: string
+          total?: number
+          updated_at: string
+        }
+        Update: {
+          created_at?: string
+          errors?: number
+          id?: string
+          message?: string
+          progress?: number
+          result?: Json | null
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

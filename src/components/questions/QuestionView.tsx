@@ -7,9 +7,9 @@ import QuestionHeader from './QuestionHeader';
 import NavigationButtons from '../training/NavigationButtons';
 import EditQuestionModal from '../training/EditQuestionModal';
 import QuestionContainer from './QuestionContainer';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
 
 interface QuestionViewProps {
   questionData: Question;
@@ -43,6 +43,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const [showSolution, setShowSolution] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { toggleUnclear } = useUnclearQuestions(currentQuestion.id);
 
   React.useEffect(() => {
     setSelectedAnswer('');
@@ -85,22 +86,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
 
   const handleMarkUnclear = async () => {
     try {
-      const { error } = await supabase
-        .from('questions')
-        .update({
-          is_unclear: true,
-          marked_unclear_at: new Date().toISOString(),
-        })
-        .eq('id', currentQuestion.id);
-
-      if (error) throw error;
-
-      toast.info('Frage als unklar markiert');
-      setCurrentQuestion({
-        ...currentQuestion,
-        is_unclear: true,
-        marked_unclear_at: new Date().toISOString(),
-      });
+      await toggleUnclear();
+      toast.success('Frage als unklar markiert');
     } catch (error) {
       console.error('Error marking question as unclear:', error);
       toast.error('Fehler beim Markieren der Frage');

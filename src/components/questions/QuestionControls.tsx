@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Copy, GraduationCap, Lock } from 'lucide-react';
+import { Copy, GraduationCap, Lock, X } from 'lucide-react';
 import DifficultyControls from '../training/DifficultyControls';
 import { showToast } from '@/utils/toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -51,6 +51,19 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
     }
   };
 
+  const handleIgnoreQuestion = async () => {
+    try {
+      await toggleUnclear();
+      if (!isUnclear) {
+        showToast.success('Frage ignoriert - wird in zukünftigen Trainings übersprungen');
+      } else {
+        showToast.info('Frage nicht mehr ignoriert');
+      }
+    } catch (error) {
+      showToast.error('Fehler beim Ändern des Status');
+    }
+  };
+
   const getVisibilityIcon = () => {
     switch (question.visibility) {
       case 'university':
@@ -94,13 +107,13 @@ Zusätzlicher Kommentar(e) anderer Studierender zur Frage: ${question.comment ||
         <Button 
           variant={isUnclear ? "default" : "outline"} 
           size="sm" 
-          onClick={toggleUnclear} 
-          className="flex items-center gap-2"
+          onClick={handleIgnoreQuestion} 
+          className={`flex items-center gap-2 ${!isUnclear ? 'hover:bg-red-50 hover:text-red-600 border-red-200' : ''}`}
           disabled={isLoading}
         >
-          <AlertCircle className="h-4 w-4" />
-          <span className="hidden sm:inline">{isUnclear ? "Klar" : "Unklar"}</span>
-          <span className="sm:hidden">?!</span>
+          <X className="h-4 w-4" />
+          <span className="hidden sm:inline">{isUnclear ? "Nicht ignorieren" : "Frage ignorieren"}</span>
+          <span className="sm:hidden">{isUnclear ? "✓" : "X"}</span>
         </Button>
       </div>
     </div>

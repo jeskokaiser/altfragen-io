@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import DifficultyControls from './DifficultyControls';
 import QuestionFeedback from './QuestionFeedback';
 import AICommentaryDisplay from '@/components/ai-commentary/AICommentaryDisplay';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
-import { AlertCircle, Brain, RefreshCw, Crown } from 'lucide-react';
+import { AlertCircle, Brain, RefreshCw, Crown, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -38,6 +37,7 @@ interface QuestionDisplayWithAIProps {
   userAnswerState?: AnswerState;
   onQuit: () => void;
   onQuestionUpdate?: (updatedQuestion: Question) => void;
+  onQuestionIgnored?: (questionId: string) => void;
 }
 
 const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
@@ -51,6 +51,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   userAnswerState,
   onQuit,
   onQuestionUpdate,
+  onQuestionIgnored,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
@@ -208,8 +209,31 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
   const { isUnclear, isLoading: unclearLoading, toggleUnclear } = useUnclearQuestions(currentQuestion.id);
 
-  const handleMarkUnclear = async () => {
-    await toggleUnclear();
+  const handleIgnoreQuestion = async () => {
+    if (isDemoMode) {
+      toast.info('Demo-Frage kann nicht ignoriert werden');
+      return;
+    }
+
+    try {
+      await toggleUnclear();
+      
+      // Notify parent component that this question was ignored
+      if (onQuestionIgnored) {
+        onQuestionIgnored(currentQuestion.id);
+      }
+      
+      toast.success('Frage ignoriert und übersprungen');
+      
+      // Immediately skip to next question
+      setTimeout(() => {
+        handleNext();
+      }, 800);
+      
+    } catch (error) {
+      console.error('Error ignoring question:', error);
+      toast.error('Fehler beim Ignorieren der Frage');
+    }
   };
 
   const renderAICommentary = () => {
@@ -370,19 +394,21 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
               difficulty={currentQuestion.difficulty || 3}
               onEditClick={() => setIsEditModalOpen(true)}
               disabled={isDemoMode}
+              semester={currentQuestion.semester}
+              year={currentQuestion.year}
             />
           </div>
           <div className="flex justify-end gap-2">
             <Button
-              variant={isUnclear ? "default" : "outline"}
+              variant="outline"
               size={isMobile ? "sm" : "default"}
-              onClick={handleMarkUnclear}
-              className="flex items-center gap-2 hover:bg-gray-100"
+              onClick={handleIgnoreQuestion}
+              className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 border-red-200"
               disabled={unclearLoading || isDemoMode}
             >
-              <AlertCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">{isUnclear ? "Klar" : "Unklar"}</span>
-              <span className="sm:hidden">?!</span>
+              <X className="h-4 w-4" />
+              <span className="hidden sm:inline">Frage ignorieren</span>
+              <span className="sm:hidden">Ignore</span>
             </Button>
           </div>
         </div>

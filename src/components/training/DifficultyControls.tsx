@@ -11,6 +11,8 @@ interface DifficultyControlsProps {
   difficulty: number;
   onEditClick?: () => void;
   disabled?: boolean;
+  semester?: string;
+  year?: string;
 }
 
 const DifficultyControls: React.FC<DifficultyControlsProps> = ({
@@ -18,6 +20,8 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
   difficulty,
   onEditClick,
   disabled = false,
+  semester,
+  year,
 }) => {
   const [currentDifficulty, setCurrentDifficulty] = useState(difficulty);
   const [attemptsCount, setAttemptsCount] = useState(0);
@@ -125,6 +129,8 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
           difficulty={currentDifficulty} 
           attemptsCount={attemptsCount}
           isPersonalized={isUserSpecificDifficulty}
+          semester={semester}
+          year={year}
         />
         {onEditClick && !disabled && <EditButton onClick={onEditClick} />}
       </div>

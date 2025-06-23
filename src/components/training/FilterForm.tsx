@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+
+import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -18,7 +18,12 @@ interface FilterFormProps {
   onSubmit: (values: FormValues) => void;
 }
 
-const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) => {
+export interface FilterFormRef {
+  getValues: () => FormValues;
+  submit: () => void;
+}
+
+const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years, onSubmit }, ref) => {
   const numericYears = useMemo(() => {
     return years
       .map(year => parseInt(year))
@@ -33,7 +38,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
     defaultValues: {
       subject: 'all',
       difficulty: 'all',
-      questionCount: 'all',
+      questionCount: 20,
       isRandomSelection: false,
       sortByAttempts: false,
       sortDirection: 'desc',
@@ -47,10 +52,10 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
   const isSortingEnabled = form.watch('sortByAttempts');
   const yearRange = form.watch('yearRange');
 
-  const isFormValid = form.watch('subject') && 
-                     form.watch('difficulty') && 
-                     (form.watch('questionCount') === 'all' || 
-                      parseInt(form.watch('questionCount')) > 0);
+  useImperativeHandle(ref, () => ({
+    getValues: () => form.getValues(),
+    submit: () => form.handleSubmit(onSubmit)(),
+  }));
 
   return (
     <Form {...form}>
@@ -166,17 +171,11 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
             )}
           </div>
         </div>
-
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={!isFormValid}
-        >
-          Training starten
-        </Button>
       </form>
     </Form>
   );
-};
+});
+
+FilterForm.displayName = 'FilterForm';
 
 export default FilterForm;
