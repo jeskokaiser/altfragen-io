@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
@@ -33,7 +34,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
     defaultValues: {
       subject: 'all',
       difficulty: 'all',
-      questionCount: 'all',
+      questionCount: 20, // Changed from 'all' to number
       isRandomSelection: false,
       sortByAttempts: false,
       sortDirection: 'desc',
@@ -49,8 +50,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
 
   const isFormValid = form.watch('subject') && 
                      form.watch('difficulty') && 
-                     (form.watch('questionCount') === 'all' || 
-                      parseInt(form.watch('questionCount')) > 0);
+                     form.watch('questionCount') > 0;
 
   return (
     <Form {...form}>
@@ -167,13 +167,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ subjects, years, onSubmit }) =>
           </div>
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={!isFormValid}
-        >
-          Training starten
-        </Button>
+        {/* Remove the submit button from here since it's handled in the parent component */}
       </form>
     </Form>
   );
