@@ -370,6 +370,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
               difficulty={currentQuestion.difficulty || 3}
               onEditClick={() => setIsEditModalOpen(true)}
               disabled={isDemoMode}
+              semester={currentQuestion.semester}
+              year={currentQuestion.year}
             />
           </div>
           <div className="flex justify-end gap-2">

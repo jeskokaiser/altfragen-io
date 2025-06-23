@@ -8,12 +8,16 @@ interface DifficultyBadgeProps {
   difficulty: number;
   attemptsCount?: number;
   isPersonalized?: boolean;
+  semester?: string;
+  year?: string;
 }
 
 const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ 
   difficulty, 
   attemptsCount = 0,
-  isPersonalized = false
+  isPersonalized = false,
+  semester,
+  year
 }) => {
   const getDifficultyColor = (level: number) => {
     switch (level) {
@@ -27,10 +31,22 @@ const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <Badge className={`${getDifficultyColor(difficulty)}`}>
         Versuche: {attemptsCount}
       </Badge>
+      
+      {semester && (
+        <Badge variant="outline" className="text-xs">
+          Semester: {semester}
+        </Badge>
+      )}
+      
+      {year && (
+        <Badge variant="outline" className="text-xs">
+          Jahr: {year}
+        </Badge>
+      )}
       
       {isPersonalized && (
         <TooltipProvider>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -136,6 +135,8 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               questionId={currentQuestion.id}
               difficulty={currentQuestion.difficulty || 3}
               onEditClick={() => setIsEditModalOpen(true)}
+              semester={currentQuestion.semester}
+              year={currentQuestion.year}
             />
           </div>
           <div className="flex justify-end">
