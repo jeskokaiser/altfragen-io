@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   FormControl,
@@ -26,19 +27,34 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
   const handleSelectChange = (value: string) => {
     if (value === 'custom') {
       setShowCustomInput(true);
-      form.setValue('questionCount', '');
+      form.setValue('questionCount', 1); // Set to minimum valid number
+    } else if (value === 'all') {
+      setShowCustomInput(false);
+      form.setValue('questionCount', 9999); // Large number to represent "all"
     } else {
       setShowCustomInput(false);
-      form.setValue('questionCount', value);
+      form.setValue('questionCount', parseInt(value)); // Convert string to number
     }
   };
 
   const handleCustomInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Only allow positive numbers
-    if (/^\d*$/.test(value)) {
-      form.setValue('questionCount', value);
+    if (/^\d*$/.test(value) && value !== '') {
+      form.setValue('questionCount', parseInt(value));
+    } else if (value === '') {
+      form.setValue('questionCount', 1); // Default to 1 if empty
     }
+  };
+
+  const currentValue = form.watch('questionCount');
+  
+  // Determine the select value based on current questionCount
+  const getSelectValue = () => {
+    if (showCustomInput) return 'custom';
+    if (currentValue >= 9999) return 'all';
+    if ([5, 10, 20, 50].includes(currentValue)) return currentValue.toString();
+    return 'custom';
   };
 
   return (
@@ -49,7 +65,7 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
         <FormItem className="space-y-2">
           <FormLabel>Anzahl der Fragen</FormLabel>
           <div className="space-y-2">
-            <Select onValueChange={handleSelectChange} value={showCustomInput ? 'custom' : field.value}>
+            <Select onValueChange={handleSelectChange} value={getSelectValue()}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Wähle die Anzahl" />
@@ -70,7 +86,7 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
               <Input
                 type="text"
                 placeholder="Gewünschte Anzahl"
-                value={field.value}
+                value={currentValue >= 9999 ? '' : currentValue.toString()}
                 onChange={handleCustomInputChange}
                 className="mt-2"
               />
