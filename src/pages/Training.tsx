@@ -16,6 +16,7 @@ const Training = () => {
   const [showResults, setShowResults] = useState(false);
   const [configurationComplete, setConfigurationComplete] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
+  const [ignoredQuestions, setIgnoredQuestions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const demoFlag = localStorage.getItem('isDemoSession');
@@ -85,23 +86,41 @@ const Training = () => {
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < selectedQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    // Find next question that hasn't been ignored
+    let nextIndex = currentQuestionIndex + 1;
+    while (nextIndex < selectedQuestions.length && ignoredQuestions.has(selectedQuestions[nextIndex].id)) {
+      nextIndex++;
+    }
+
+    if (nextIndex < selectedQuestions.length) {
+      setCurrentQuestionIndex(nextIndex);
     } else {
       setShowResults(true);
     }
   };
 
   const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    // Find previous question that hasn't been ignored
+    let prevIndex = currentQuestionIndex - 1;
+    while (prevIndex >= 0 && ignoredQuestions.has(selectedQuestions[prevIndex].id)) {
+      prevIndex--;
     }
+
+    if (prevIndex >= 0) {
+      setCurrentQuestionIndex(prevIndex);
+    }
+  };
+
+  const handleQuestionIgnored = (questionId: string) => {
+    // Add question to ignored set
+    setIgnoredQuestions(prev => new Set([...prev, questionId]));
   };
 
   const handleRestart = () => {
     setCurrentQuestionIndex(0);
     setUserAnswers([]);
     setShowResults(false);
+    setIgnoredQuestions(new Set());
     if (!isDemo) {
       setConfigurationComplete(false);
     }
@@ -117,6 +136,17 @@ const Training = () => {
     );
     setSelectedQuestions(updatedQuestions);
   };
+
+  // Find current non-ignored question
+  const getCurrentQuestion = () => {
+    let index = currentQuestionIndex;
+    while (index < selectedQuestions.length && ignoredQuestions.has(selectedQuestions[index].id)) {
+      index++;
+    }
+    return index < selectedQuestions.length ? selectedQuestions[index] : null;
+  };
+
+  const currentQuestion = getCurrentQuestion();
 
   if (allQuestions.length === 0) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -134,23 +164,39 @@ const Training = () => {
   }
 
   if (showResults) {
+    // Filter out ignored questions from results
+    const resultsQuestions = selectedQuestions.filter(q => !ignoredQuestions.has(q.id));
+    const resultsAnswers = userAnswers.filter((_, index) => !ignoredQuestions.has(selectedQuestions[index]?.id));
+    
     return (
       <div className="container mx-auto py-8">
         <Results
-          questions={selectedQuestions}
-          userAnswers={userAnswers}
+          questions={resultsQuestions}
+          userAnswers={resultsAnswers}
           onRestart={handleRestart}
         />
       </div>
     );
   }
 
+  if (!currentQuestion) {
+    // No more non-ignored questions, show results
+    setShowResults(true);
+    return null;
+  }
+
+  // Calculate effective total questions (excluding ignored ones)
+  const effectiveTotalQuestions = selectedQuestions.length - ignoredQuestions.size;
+  // Calculate effective current index (position among non-ignored questions)
+  const effectiveCurrentIndex = selectedQuestions.slice(0, currentQuestionIndex)
+    .filter(q => !ignoredQuestions.has(q.id)).length;
+
   return (
     <div className="container mx-auto py-8">
       <QuestionDisplayWithAI
-        questionData={selectedQuestions[currentQuestionIndex]}
-        totalQuestions={selectedQuestions.length}
-        currentIndex={currentQuestionIndex}
+        questionData={currentQuestion}
+        totalQuestions={effectiveTotalQuestions}
+        currentIndex={effectiveCurrentIndex}
         onNext={handleNext}
         onPrevious={handlePrevious}
         onAnswer={handleAnswer}
@@ -158,6 +204,7 @@ const Training = () => {
         userAnswerState={userAnswers[currentQuestionIndex]}
         onQuit={handleQuit}
         onQuestionUpdate={handleQuestionUpdate}
+        onQuestionIgnored={handleQuestionIgnored}
       />
     </div>
   );

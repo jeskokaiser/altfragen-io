@@ -2,16 +2,29 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Form } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Question } from '@/types/Question';
-import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { FormData } from './types/FormData';
 import { FormValues } from './types/FormValues';
-import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
 import FilterForm from './FilterForm';
+import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
+import { DatabaseService } from '@/services/DatabaseService';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
+
+const formSchema = z.object({
+  subject: z.string(),
+  difficulty: z.string(),
+  questionCount: z.coerce.number().min(1).max(100),
+  wrongQuestionsOnly: z.boolean().default(false),
+  isRandomSelection: z.boolean().default(false),
+  yearRange: z.array(z.number()).length(2),
+  sortByAttempts: z.boolean().default(false),
+  sortDirection: z.enum(['asc', 'desc']).default('desc'),
+});
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -19,119 +32,116 @@ interface TrainingConfigProps {
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [questionResults, setQuestionResults] = useState<Map<string, boolean>>(new Map());
+  const [attemptsCount, setAttemptsCount] = useState<Map<string, number>>(new Map());
   const { user } = useAuth();
-  const { preferences } = useUserPreferences();
 
-  const subjects = Array.from(new Set(questions.map(q => q.subject))).sort((a, b) => 
-    a.localeCompare(b, 'de')
-  );
-  
-  // Extract unique years from questions
-  const years = Array.from(
-    new Set(
-      questions
-        .filter(q => q.year)
-        .map(q => q.year || '')
-    )
-  ).sort((a, b) => b.localeCompare(a)); // Sort years in descending order
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      subject: 'all',
+      difficulty: 'all',
+      questionCount: 20,
+      wrongQuestionsOnly: false,
+      isRandomSelection: false,
+      yearRange: [2020, 2024],
+      sortByAttempts: false,
+      sortDirection: 'desc',
+    },
+  });
 
-  const handleSubmit = async (values: FormValues) => {
-    console.log('Form values:', values);
-    console.log('Total questions:', questions.length);
-    
-    // Get user progress data before filtering
-    const { data: userProgress } = await supabase
-      .from('user_progress')
-      .select('question_id, is_correct, attempts_count')
-      .eq('user_id', user?.id);
-
-    // Create results map for filtering wrong questions
-    const questionResults = new Map();
-    userProgress?.forEach(progress => {
-      questionResults.set(progress.question_id, progress.is_correct);
-    });
-    
-    // Get user's unclear questions and filter them out
-    const { data: unclearQuestions } = await UnclearQuestionsService.getUserUnclearQuestions();
-    const unclearQuestionIds = new Set(unclearQuestions?.map(uq => uq.question_id) || []);
-    
-    // Filter out unclear questions first
-    const questionsWithoutUnclear = questions.filter(q => !unclearQuestionIds.has(q.id));
-    
-    // Apply other filters
-    const filteredQuestions = filterQuestions(questionsWithoutUnclear, values, questionResults);
-
-    if (filteredQuestions.length === 0) {
-      toast.error("Keine Fragen verfügbar", {
-        description: "Mit den gewählten Filtereinstellungen sind keine Fragen verfügbar. Bitte passe deine Auswahl an."
-      });
-      return;
+  // Load user progress data
+  useEffect(() => {
+    if (user) {
+      loadUserProgress();
     }
-    
-    const questionCount = values.questionCount === 'all' 
-      ? filteredQuestions.length 
-      : parseInt(values.questionCount);
-    
-    // Create attempts count map for sorting
-    const attemptsCount = new Map();
-    userProgress?.forEach(progress => {
-      attemptsCount.set(progress.question_id, progress.attempts_count || 0);
-    });
+  }, [user]);
 
-    const prioritizedQuestions = prioritizeQuestions(
-      filteredQuestions,
-      questionResults,
-      questionCount,
-      values.isRandomSelection,
-      values.sortByAttempts,
-      attemptsCount,
-      values.sortDirection
-    );
+  const loadUserProgress = async () => {
+    try {
+      const progress = await DatabaseService.getUserProgress(user!.id);
+      
+      const resultsMap = new Map<string, boolean>();
+      const attemptsMap = new Map<string, number>();
+      
+      progress.forEach(p => {
+        if (p.question_id) {
+          resultsMap.set(p.question_id, p.is_correct || false);
+          attemptsMap.set(p.question_id, p.attempts_count || 1);
+        }
+      });
+      
+      setQuestionResults(resultsMap);
+      setAttemptsCount(attemptsMap);
+    } catch (error) {
+      console.error('Error loading user progress:', error);
+    }
+  };
 
-    onStart(prioritizedQuestions);
+  const onSubmit = async (values: FormValues) => {
+    setIsProcessing(true);
+    
+    try {
+      const filteredQuestions = await filterQuestions(questions, values, questionResults);
+      
+      if (filteredQuestions.length === 0) {
+        toast.error('Keine Fragen gefunden, die den Filterkriterien entsprechen.');
+        setIsProcessing(false);
+        return;
+      }
+
+      const prioritizedQuestions = prioritizeQuestions(
+        filteredQuestions,
+        questionResults,
+        values.questionCount,
+        values.isRandomSelection,
+        values.sortByAttempts,
+        attemptsCount,
+        values.sortDirection
+      );
+
+      if (prioritizedQuestions.length === 0) {
+        toast.error('Keine Fragen verfügbar für das Training.');
+        setIsProcessing(false);
+        return;
+      }
+
+      onStart(prioritizedQuestions);
+    } catch (error) {
+      console.error('Error filtering questions:', error);
+      toast.error('Fehler beim Verarbeiten der Fragen');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h2 className="text-2xl font-semibold mb-4">Training konfigurieren</h2>
-      
-      <FilterForm 
-        subjects={subjects}
-        years={years}
-        onSubmit={handleSubmit}
-      />
-      <br />
-      <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-        <p className="mb-2">
-          Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:
-        </p>
-        <ol className="list-decimal ml-4 mb-3 space-y-1">
-          <li>Noch nie beantwortete Fragen</li>
-          <li>Falsch beantwortete Fragen</li>
-          <li>Richtig beantwortete Fragen</li>
-        </ol>
-        <p>
-          Du kannst die Auswahl anpassen durch:
-        </p>
-        <ul className="list-disc ml-4 space-y-1">
-         <li>Filtern nach Fach, Schwierigkeitsgrad und Jahr</li>
-          <li>Nur falsch beantwortete Fragen</li>
-         <li>Nach Anzahl der Versuche sortieren
-            <ul>
-            <li>Jede Antwort zählt als ein Versuch (auch mehrere Versuche pro Frage)</li>
-            </ul>
-         </li>
-          <li>Zufällige Auswahl aktivieren 
-         <ul>
-         <li>Ideal für Probeklausuren in Kombination mit benutzerdefinierter Anzahl</li>
-          </ul>
-          </li>
-        </ul>
-        <p className="mt-2 text-orange-600">
-          <strong>Hinweis:</strong> Als unklar markierte Fragen werden automatisch ausgeblendet.
-        </p>
-      </div>
-    </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Training Konfiguration</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FilterForm 
+              form={form} 
+              questions={questions}
+              questionResults={questionResults}
+              attemptsCount={attemptsCount}
+            />
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Verarbeite...' : 'Training starten'}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
