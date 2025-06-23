@@ -1,13 +1,6 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-};
 
 // Configuration for robust processing
 const CONFIG = {
@@ -413,19 +406,21 @@ serve(async (req) => {
     // Create job progress tracking
     await createJobProgress(supabase, jobId, questions.length);
 
-    // Start background processing immediately
+    // Start background processing with EdgeRuntime.waitUntil to prevent early shutdown
     console.log(`Starting background processing for job ${jobId}`);
-    processQuestionsInBackground(
-      jobId,
-      questions,
-      availableSubjects,
-      openAIApiKey,
-      supabase,
-      examName,
-      onlyNullSubjects
-    ).catch(error => {
-      console.error(`Background processing failed for job ${jobId}:`, error);
-    });
+    EdgeRuntime.waitUntil(
+      processQuestionsInBackground(
+        jobId,
+        questions,
+        availableSubjects,
+        openAIApiKey,
+        supabase,
+        examName,
+        onlyNullSubjects
+      ).catch(error => {
+        console.error(`Background processing failed for job ${jobId}:`, error);
+      })
+    );
 
     // Return immediate response with job ID
     return new Response(
