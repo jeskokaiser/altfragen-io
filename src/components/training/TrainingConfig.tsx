@@ -111,6 +111,37 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
         </Button>
       </CardContent>
     </Card>
+    <br />
+      <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+        <p className="mb-2">
+          Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:
+        </p>
+        <ol className="list-decimal ml-4 mb-3 space-y-1">
+          <li>Noch nie beantwortete Fragen</li>
+          <li>Falsch beantwortete Fragen</li>
+          <li>Richtig beantwortete Fragen</li>
+        </ol>
+        <p>
+          Du kannst die Auswahl anpassen durch:
+        </p>
+        <ul className="list-disc ml-4 space-y-1">
+         <li>Filtern nach Fach, Schwierigkeitsgrad und Jahr</li>
+          <li>Nur falsch beantwortete Fragen</li>
+         <li>Nach Anzahl der Versuche sortieren
+            <ul>
+            <li>Jede Antwort zählt als ein Versuch (auch mehrere Versuche pro Frage)</li>
+            </ul>
+         </li>
+          <li>Zufällige Auswahl aktivieren 
+         <ul>
+         <li>Ideal für Probeklausuren in Kombination mit benutzerdefinierter Anzahl</li>
+          </ul>
+          </li>
+        </ul>
+        <p className="mt-2 text-orange-600">
+          <strong>Hinweis:</strong> Als unklar markierte Fragen werden automatisch ausgeblendet.
+        </p>
+      </div>
   );
 };
 
