@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from '../training/AnswerOption';
 import { Question } from '@/types/Question';
+import { Badge } from "@/components/ui/badge";
 
 interface QuestionContentProps {
   questionData: Question;
@@ -44,9 +45,23 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white">
-          {highlightNicht(questionData.question)}
-        </h3>    
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {questionData.semester && (
+              <Badge variant="outline" className="text-xs">
+                Semester: {questionData.semester}
+              </Badge>
+            )}
+            {questionData.year && (
+              <Badge variant="outline" className="text-xs">
+                Jahr: {questionData.year}
+              </Badge>
+            )}
+          </div>
+          <h3 className="text-xl font-semibold text-slate-800 dark:text-white">
+            {highlightNicht(questionData.question)}
+          </h3>
+        </div>    
       </div>
       <RadioGroup value={selectedAnswer} onValueChange={onAnswerChange}>
         <AnswerOption value="A" text={questionData.optionA} resetTrigger={resetTrigger} isWrong={wrongAnswers.includes('A')} />
