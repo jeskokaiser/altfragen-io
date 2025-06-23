@@ -89,8 +89,8 @@ const Tutorial = () => {
               <TutorialStep icon={<BarChart className="w-5 h-5" />} title="3. Qualität der Fragen verbessern">
                 <p>Gute Fragen sind das A und O. Du kannst aktiv zur Qualität beitragen:</p>
                 <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li><strong className="font-semibold">Fragen bearbeiten (<Edit className="inline h-4 w-4" />):</strong> Korrigiere Tippfehler oder passe Antwortmöglichkeiten an.</li>
-                  <li><strong className="font-semibold">Unklare Fragen markieren (<Lightbulb className="inline h-4 w-4" />):</strong> Ist eine Frage mehrdeutig? Markiere sie, damit sie überprüft werden kann.</li>
+                  <li><strong className="font-semibold">Fragen bearbeiten (<Edit className="inline h-4 w-4" />):</strong> Korrigiere Tippfehler oder passe Antwortmöglichkeiten an. Wenn du denkst, dass eine Antwort falsch ist, bearbeite die Frage - sie wird dann für alle Nutzer korrigiert!</li>
+                  <li><strong className="font-semibold">Fragen ignorieren:</strong> Störende oder unpassende Fragen kannst du ignorieren. Sie werden dann in zukünftigen Trainings übersprungen.</li>
                   <li><strong className="font-semibold">KI-Kommentare nutzen (<BrainCircuit className="inline h-4 w-4" />):</strong> Premium-Nutzer erhalten detaillierte KI-Erklärungen zu jeder Antwortoption, um den Stoff noch besser zu verstehen.</li>
                 </ul>
               </TutorialStep>
