@@ -1,30 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Question } from '@/types/Question';
-import { FormData } from './types/FormData';
 import { FormValues } from './types/FormValues';
-import FilterForm from './FilterForm';
+import FilterForm, { FilterFormRef } from './FilterForm';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
-import { fetchAllQuestions } from '@/services/DatabaseService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-
-const formSchema = z.object({
-  subject: z.string(),
-  difficulty: z.string(),
-  questionCount: z.coerce.number().min(1).max(100),
-  wrongQuestionsOnly: z.boolean().default(false),
-  isRandomSelection: z.boolean().default(false),
-  yearRange: z.array(z.number()).length(2),
-  sortByAttempts: z.boolean().default(false),
-  sortDirection: z.enum(['asc', 'desc']).default('desc'),
-});
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -36,20 +19,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const [questionResults, setQuestionResults] = useState<Map<string, boolean>>(new Map());
   const [attemptsCount, setAttemptsCount] = useState<Map<string, number>>(new Map());
   const { user } = useAuth();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      subject: 'all',
-      difficulty: 'all',
-      questionCount: 20,
-      wrongQuestionsOnly: false,
-      isRandomSelection: false,
-      yearRange: [2020, 2024],
-      sortByAttempts: false,
-      sortDirection: 'desc',
-    },
-  });
+  const formRef = useRef<FilterFormRef>(null);
 
   // Load user progress data
   useEffect(() => {
@@ -108,6 +78,12 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     }
   };
 
+  const handleStartTraining = () => {
+    if (formRef.current) {
+      formRef.current.submit();
+    }
+  };
+
   // Extract unique subjects and years from questions
   const subjects = Array.from(new Set(questions.map(q => q.subject).filter(Boolean)));
   const years = Array.from(new Set(questions.map(q => q.year).filter(Boolean)));
@@ -119,16 +95,17 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
       </CardHeader>
       <CardContent>
         <FilterForm 
+          ref={formRef}
           subjects={subjects}
           years={years}
           onSubmit={onSubmit}
         />
         
         <Button 
-          type="submit" 
+          type="button" 
           className="w-full mt-6" 
           disabled={isProcessing}
-          onClick={form.handleSubmit(onSubmit)}
+          onClick={handleStartTraining}
         >
           {isProcessing ? 'Verarbeite...' : 'Training starten'}
         </Button>
