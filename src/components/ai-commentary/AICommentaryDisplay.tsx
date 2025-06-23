@@ -263,17 +263,6 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           </div>
         </div>
 
-        {/* Model Agreement Analysis */}
-        {summary.model_agreement_analysis && <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Modell-Übereinstimmungsanalyse</h3>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-              <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summary.model_agreement_analysis}</p>
-            </div>
-          </div>}
-
         {/* AI Disclaimer */}
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
