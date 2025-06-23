@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown, Eye, AlertTrian
 import { AICommentaryData, ModelName, AnswerOption } from '@/types/AIAnswerComments';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+
 interface AICommentaryDisplayProps {
   commentaryData: AICommentaryData;
   questionData: {
@@ -18,6 +19,7 @@ interface AICommentaryDisplayProps {
     correctAnswer: string;
   };
 }
+
 const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   commentaryData,
   questionData
@@ -33,6 +35,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     createCheckoutSession
   } = useSubscription();
   const [expandedAnswers, setExpandedAnswers] = useState<Set<AnswerOption>>(new Set());
+  const [expandedGeneral, setExpandedGeneral] = useState(false);
 
   // Premium gate - this is a fallback in case the component is rendered without proper gating
   if (!canAccessAIComments) {
@@ -47,7 +50,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           </p>
           <Button onClick={createCheckoutSession} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2">
             <Crown className="h-4 w-4" />
-            Premium für €3,99/Monat
+            Jetzt upgraden!
           </Button>
         </div>
       </div>;
@@ -71,6 +74,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           </p>}
       </div>;
   };
+  
   const toggleAnswer = (option: AnswerOption) => {
     const newExpanded = new Set(expandedAnswers);
     if (newExpanded.has(option)) {
@@ -80,6 +84,11 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     }
     setExpandedAnswers(newExpanded);
   };
+  
+  const toggleGeneral = () => {
+    setExpandedGeneral(!expandedGeneral);
+  };
+  
   const getModelColor = (model: ModelName): string => {
     switch (model) {
       case 'openai':
@@ -90,9 +99,11 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
     }
   };
+  
   const getModelIcon = (model: ModelName) => {
     return <Brain className="h-3 w-3" />;
   };
+  
   const getModelDisplayName = (model: ModelName): string => {
     switch (model) {
       case 'openai':
@@ -103,6 +114,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         return 'Gemini';
     }
   };
+  
   const getAnswerLabel = (option: AnswerOption): string => {
     const labels = {
       a: 'A',
@@ -113,6 +125,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     };
     return labels[option];
   };
+  
   const getAnswerText = (option: AnswerOption): string => {
     const texts = {
       a: questionData.optionA,
@@ -123,13 +136,40 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     };
     return texts[option];
   };
+  
   const isCorrectAnswer = (option: AnswerOption): boolean => {
     return questionData.correctAnswer.toLowerCase() === option;
   };
+  
   const hasModelComments = (option: AnswerOption): boolean => {
     const models = Object.keys(commentaryData.models) as ModelName[];
     return models.some(model => commentaryData.models[model].answers[option]);
   };
+  
+  const hasGeneralComments = (): boolean => {
+    const models = Object.keys(commentaryData.models) as ModelName[];
+    return models.some(model => commentaryData.models[model].general);
+  };
+  
+  const renderGeneralComments = () => {
+    const models = Object.keys(commentaryData.models) as ModelName[];
+    return <div className="mt-4 space-y-3">
+        {models.map(model => {
+        const comment = commentaryData.models[model].general;
+        if (!comment) return null;
+        return <div key={model} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge className={getModelColor(model)}>
+                  {getModelIcon(model)}
+                  <span className="ml-1">{getModelDisplayName(model)}</span>
+                </Badge>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
+            </div>;
+      })}
+      </div>;
+  };
+  
   const renderAnswerComments = (option: AnswerOption) => {
     const models = Object.keys(commentaryData.models) as ModelName[];
     return <div className="mt-4 space-y-3">
@@ -148,6 +188,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
       })}
       </div>;
   };
+
   const renderSummaryView = () => {
     if (!commentaryData.summary) {
       return <div className="text-center text-gray-500 dark:text-gray-400 py-8">
@@ -165,6 +206,19 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
               <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summary.summary_general_comment}</p>
             </div>
+            
+            {/* Expandable Individual General Model Comments */}
+            {hasGeneralComments() && <Collapsible open={expandedGeneral} onOpenChange={toggleGeneral}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 mt-3">
+                    <span className="text-sm font-medium">Einzelne KI-Modell Kommentare anzeigen</span>
+                    {expandedGeneral ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  {renderGeneralComments()}
+                </CollapsibleContent>
+              </Collapsible>}
           </div>}
 
         {/* Answer Options with Summary and Expandable Individual Comments */}
@@ -209,17 +263,6 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           </div>
         </div>
 
-        {/* Model Agreement Analysis */}
-        {summary.model_agreement_analysis && <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Modell-Übereinstimmungsanalyse</h3>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-              <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{summary.model_agreement_analysis}</p>
-            </div>
-          </div>}
-
         {/* AI Disclaimer */}
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
@@ -232,9 +275,11 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         </div>
       </div>;
   };
+  
   return <div className="space-y-6">
       {renderUsageInfo()}
       {renderSummaryView()}
     </div>;
 };
+
 export default AICommentaryDisplay;

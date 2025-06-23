@@ -267,7 +267,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                   className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
                 >
                   <Crown className="h-4 w-4" />
-                  Premium für €3,99/Monat
+                  Jetzt upgraden!
                 </Button>
               </div>
             </div>

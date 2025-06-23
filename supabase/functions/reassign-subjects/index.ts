@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -116,7 +115,7 @@ Bitte antworte NUR mit dem exakten Fachgebiet-Namen aus der obigen Liste, der am
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-nano',
         messages: [
           { 
             role: 'system', 
@@ -413,7 +412,8 @@ serve(async (req) => {
     // Create job progress tracking
     await createJobProgress(supabase, jobId, questions.length);
 
-    // Start background processing
+    // Start background processing with EdgeRuntime.waitUntil to prevent early shutdown
+    console.log(`Starting background processing for job ${jobId}`);
     EdgeRuntime.waitUntil(
       processQuestionsInBackground(
         jobId,
@@ -423,7 +423,9 @@ serve(async (req) => {
         supabase,
         examName,
         onlyNullSubjects
-      )
+      ).catch(error => {
+        console.error(`Background processing failed for job ${jobId}:`, error);
+      })
     );
 
     // Return immediate response with job ID
