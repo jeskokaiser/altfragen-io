@@ -92,7 +92,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     <div className="space-y-6">
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Training Konfiguration</CardTitle>
+          <CardTitle>Training konfigurieren</CardTitle>
         </CardHeader>
         <CardContent>
           <FilterForm 
