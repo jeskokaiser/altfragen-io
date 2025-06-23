@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -102,6 +101,14 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     return <Brain className="h-3 w-3" />;
   };
 
+  const getModelDisplayName = (model: ModelName): string => {
+    switch (model) {
+      case 'openai': return 'OpenAI';
+      case 'claude': return 'Grok / Mistral';
+      case 'gemini': return 'Gemini';
+    }
+  };
+
   const getAnswerLabel = (option: AnswerOption): string => {
     const labels = { a: 'A', b: 'B', c: 'C', d: 'D', e: 'E' };
     return labels[option];
@@ -141,7 +148,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
               <div className="flex items-center gap-2 mb-3">
                 <Badge className={getModelColor(model)}>
                   {getModelIcon(model)}
-                  <span className="ml-1 capitalize">{model}</span>
+                  <span className="ml-1">{getModelDisplayName(model)}</span>
                 </Badge>
               </div>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
