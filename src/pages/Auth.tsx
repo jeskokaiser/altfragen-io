@@ -460,7 +460,7 @@ const Auth = () => {
             {isSignUp && email && email.includes('@') && <div className="text-xs mt-1 text-slate-500">
                 {universityInfo ? <span className="text-green-600">
                     Du registrierst dich mit einer E-Mail von {universityInfo.name}
-                  </span> : <span>Standard-Konto: Du hast Zugriff auf deine eigenen Fragen. Nutze deine Uni E-Mail Adresse, um auf geteile Fragen zuzugreifen</span>}
+                  </span> : <span className="">Standard-Konto: Du hast Zugriff auf selbst hochgeladene Fragen. Nutze deine Uni E-Mail Adresse, um auf geteilte Fragen zuzugreifen.</span>}
               </div>}
           </div>
           
