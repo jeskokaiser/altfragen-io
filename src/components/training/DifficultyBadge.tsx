@@ -30,21 +30,18 @@ const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({
     }
   };
 
+  // Combine semester and year into one badge
+  const semesterYear = semester && year ? `${semester} ${year}` : null;
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Badge className={`${getDifficultyColor(difficulty)}`}>
         Versuche: {attemptsCount}
       </Badge>
       
-      {semester && (
+      {semesterYear && (
         <Badge variant="outline" className="text-xs">
-          Semester: {semester}
-        </Badge>
-      )}
-      
-      {year && (
-        <Badge variant="outline" className="text-xs">
-          Jahr: {year}
+          {semesterYear}
         </Badge>
       )}
       
