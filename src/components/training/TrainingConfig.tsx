@@ -89,30 +89,31 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const years = Array.from(new Set(questions.map(q => q.year).filter(Boolean)));
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Training Konfiguration</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <FilterForm 
-          ref={formRef}
-          subjects={subjects}
-          years={years}
-          onSubmit={onSubmit}
-        />
-        
-        <Button 
-          type="button" 
-          className="w-full mt-6" 
-          disabled={isProcessing}
-          onClick={handleStartTraining}
-        >
-          {isProcessing ? 'Verarbeite...' : 'Training starten'}
-        </Button>
-      </CardContent>
-    </Card>
-    <br />
-      <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+    <div className="space-y-6">
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Training Konfiguration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FilterForm 
+            ref={formRef}
+            subjects={subjects}
+            years={years}
+            onSubmit={onSubmit}
+          />
+          
+          <Button 
+            type="button" 
+            className="w-full mt-6" 
+            disabled={isProcessing}
+            onClick={handleStartTraining}
+          >
+            {isProcessing ? 'Verarbeite...' : 'Training starten'}
+          </Button>
+        </CardContent>
+      </Card>
+      
+      <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground max-w-2xl mx-auto">
         <p className="mb-2">
           Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:
         </p>
@@ -142,6 +143,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           <strong>Hinweis:</strong> Als unklar markierte Fragen werden automatisch ausgeblendet.
         </p>
       </div>
+    </div>
   );
 };
 
