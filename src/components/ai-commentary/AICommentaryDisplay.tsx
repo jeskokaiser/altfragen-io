@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown, Eye, AlertTrian
 import { AICommentaryData, ModelName, AnswerOption } from '@/types/AIAnswerComments';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+
 interface AICommentaryDisplayProps {
   commentaryData: AICommentaryData;
   questionData: {
@@ -18,6 +20,7 @@ interface AICommentaryDisplayProps {
     correctAnswer: string;
   };
 }
+
 const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   commentaryData,
   questionData
@@ -47,7 +50,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           </p>
           <Button onClick={createCheckoutSession} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2">
             <Crown className="h-4 w-4" />
-            Premium für €3,99/Monat
+            Jetzt upgraden!
           </Button>
         </div>
       </div>;
@@ -71,6 +74,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
           </p>}
       </div>;
   };
+  
   const toggleAnswer = (option: AnswerOption) => {
     const newExpanded = new Set(expandedAnswers);
     if (newExpanded.has(option)) {
@@ -80,6 +84,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     }
     setExpandedAnswers(newExpanded);
   };
+  
   const getModelColor = (model: ModelName): string => {
     switch (model) {
       case 'openai':
@@ -90,9 +95,11 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
     }
   };
+  
   const getModelIcon = (model: ModelName) => {
     return <Brain className="h-3 w-3" />;
   };
+  
   const getModelDisplayName = (model: ModelName): string => {
     switch (model) {
       case 'openai':
@@ -103,6 +110,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         return 'Gemini';
     }
   };
+  
   const getAnswerLabel = (option: AnswerOption): string => {
     const labels = {
       a: 'A',
@@ -113,6 +121,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     };
     return labels[option];
   };
+  
   const getAnswerText = (option: AnswerOption): string => {
     const texts = {
       a: questionData.optionA,
@@ -123,13 +132,16 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     };
     return texts[option];
   };
+  
   const isCorrectAnswer = (option: AnswerOption): boolean => {
     return questionData.correctAnswer.toLowerCase() === option;
   };
+  
   const hasModelComments = (option: AnswerOption): boolean => {
     const models = Object.keys(commentaryData.models) as ModelName[];
     return models.some(model => commentaryData.models[model].answers[option]);
   };
+  
   const renderAnswerComments = (option: AnswerOption) => {
     const models = Object.keys(commentaryData.models) as ModelName[];
     return <div className="mt-4 space-y-3">
@@ -148,6 +160,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
       })}
       </div>;
   };
+
   const renderSummaryView = () => {
     if (!commentaryData.summary) {
       return <div className="text-center text-gray-500 dark:text-gray-400 py-8">
@@ -232,9 +245,11 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         </div>
       </div>;
   };
+  
   return <div className="space-y-6">
       {renderUsageInfo()}
       {renderSummaryView()}
     </div>;
 };
+
 export default AICommentaryDisplay;
