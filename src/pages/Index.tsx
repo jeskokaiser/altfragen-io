@@ -155,7 +155,7 @@ const Index = () => {
                   Gemeinsam lernen, besser werden
                 </h2>
                 <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Verbinde dich mit anderen Studenten deiner Universität und teile deine Altfragen. 
+                  Verbinde dich mit anderen Student:innen deiner Universität und teile deine Altfragen. 
                   Profitiere von einer größeren Fragendatenbank und hilf anderen beim Lernen.
                 </p>
                 <div className="space-y-4">
@@ -293,7 +293,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">Drei KI-Modelle im Vergleich</h3>
-                      <p className="text-slate-600">OpenAI, Claude und Gemini analysieren jede Frage für umfassende Erklärungen</p>
+                      <p className="text-slate-600">OpenAI, Grok, Mistral und Gemini analysieren jede Frage für umfassende Erklärungen</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -463,7 +463,7 @@ const Index = () => {
               </div>
               <blockquote className="text-2xl md:text-3xl font-medium text-slate-700 mb-8 leading-relaxed">
                 Altfragen.io hat meine Art mich auf Prüfungen vorzubereiten revolutioniert. 
-                Die Plattform ist intuitiv und hat mir geholfen, meine Noten deutlich zu verbessern.
+                Die Plattform ist intuitiv und das durcharbeiten von PDFs ist endlich vorbei! 
               </blockquote>
               <cite className="text-slate-500 font-semibold text-lg">
                 – Jessi, Medizinstudentin im 9. Semester

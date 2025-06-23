@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, ArrowLeft, School, Mail, CheckCircle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/contexts/AuthContext';
+import { NonUniversitySignupDialog } from '@/components/auth/NonUniversitySignupDialog';
+
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +25,7 @@ const Auth = () => {
   } | null>(null);
   const [isCheckingDomain, setIsCheckingDomain] = useState(false);
   const [isVerificationScreen, setIsVerificationScreen] = useState(false);
+  const [showNonUniversityDialog, setShowNonUniversityDialog] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -30,6 +33,7 @@ const Auth = () => {
     isEmailVerified,
     universityName
   } = useAuth();
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('verification') === 'pending') {
@@ -58,6 +62,7 @@ const Auth = () => {
       handleEmailVerification();
     }
   }, [location, navigate]);
+
   const handleEmailVerification = async () => {
     try {
       setLoading(true);
@@ -80,6 +85,7 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
   const updateVerificationStatus = async (userId: string, isVerified: boolean) => {
     try {
       const {
@@ -94,6 +100,7 @@ const Auth = () => {
       console.error('Error in updateVerificationStatus:', error);
     }
   };
+
   useEffect(() => {
     const checkEmailDomain = async () => {
       if (!email || !email.includes('@') || !isSignUp) return;
@@ -144,6 +151,7 @@ const Auth = () => {
     const debounceTimer = setTimeout(checkEmailDomain, 500);
     return () => clearTimeout(debounceTimer);
   }, [email, isSignUp]);
+
   const validatePassword = (password: string) => {
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -156,13 +164,16 @@ const Auth = () => {
     if (!hasNumbers) errors.push('eine Zahl');
     return errors;
   };
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
   const getEmailDomain = (email: string) => {
     return email.split('@')[1] || '';
   };
+
   const handleResetPassword = async () => {
     try {
       setLoading(true);
@@ -190,6 +201,7 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
   const handleUpdatePassword = async () => {
     try {
       setLoading(true);
@@ -220,6 +232,7 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
   const handleAuth = async (type: 'login' | 'signup') => {
     try {
       setLoading(true);
@@ -237,32 +250,17 @@ const Auth = () => {
           toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
           return;
         }
-        const {
-          error: signUpError
-        } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin + '/auth?verification=pending',
-            data: {
-              university_id: universityInfo?.id || null,
-              domain: getEmailDomain(email)
-            }
-          }
-        });
-        if (signUpError) {
-          if (signUpError.message.includes('User already registered')) {
-            toast.error('Diese E-Mail-Adresse ist bereits registriert');
-          } else {
-            throw signUpError;
-          }
+
+        // Check if it's a non-university signup and show dialog
+        if (!universityInfo) {
+          setShowNonUniversityDialog(true);
           return;
         }
-        setIsVerificationScreen(true);
-        toast.success('Bitte überprüfen Sie Ihre E-Mail, um Ihre Registrierung abzuschließen.');
-        navigate('/auth?verification=pending');
+
+        await performSignup();
         return;
       }
+
       const {
         error
       } = await supabase.auth.signInWithPassword({
@@ -289,6 +287,43 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const performSignup = async () => {
+    try {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + '/auth?verification=pending',
+          data: {
+            university_id: universityInfo?.id || null,
+            domain: getEmailDomain(email)
+          }
+        }
+      });
+
+      if (signUpError) {
+        if (signUpError.message.includes('User already registered')) {
+          toast.error('Diese E-Mail-Adresse ist bereits registriert');
+        } else {
+          throw signUpError;
+        }
+        return;
+      }
+
+      setIsVerificationScreen(true);
+      toast.success('Bitte überprüfen Sie Ihre E-Mail, um Ihre Registrierung abzuschließen.');
+      navigate('/auth?verification=pending');
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleNonUniversitySignupConfirm = () => {
+    setShowNonUniversityDialog(false);
+    performSignup();
+  };
+
   const handleResendVerification = async () => {
     try {
       setLoading(true);
@@ -319,6 +354,7 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
   if (isVerificationScreen) {
     return <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md p-6 space-y-6">
@@ -431,71 +467,83 @@ const Auth = () => {
         </Card>
       </div>;
   }
-  return <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
-      <Card className="w-full max-w-md p-6 space-y-6">
-        <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-semibold text-slate-800">
-            Willkommen bei Altfragen.io!
-          </h2>
-          <p className="text-sm text-slate-600">
-            {isSignUp ? 'Erstelle ein neues Konto' : 'Melde Dich mit deinem Konto an'}
-          </p>
-        </div>
+  return (
+    <>
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+        <Card className="w-full max-w-md p-6 space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="text-2xl font-semibold text-slate-800">
+              Willkommen bei Altfragen.io!
+            </h2>
+            <p className="text-sm text-slate-600">
+              {isSignUp ? 'Erstelle ein neues Konto' : 'Melde Dich mit deinem Konto an'}
+            </p>
+          </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">E-Mail</Label>
-            <div className="relative">
-              <Input id="email" type="email" placeholder="E-Mail-Adresse eingeben" value={email} onChange={e => setEmail(e.target.value)} disabled={loading || isCheckingDomain} className="w-full" />
-              {isSignUp && email && email.includes('@') && <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                  {isCheckingDomain ? <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-400"></div> : universityInfo ? <Badge variant="outline" className="flex items-center gap-1 bg-green-50 text-green-800 border-green-200">
-                      <School className="h-3 w-3" />
-                      {universityInfo.name}
-                    </Badge> : <Badge variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
-                      <Mail className="h-3 w-3" />
-                      Standard
-                    </Badge>}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-Mail</Label>
+              <div className="relative">
+                <Input id="email" type="email" placeholder="E-Mail-Adresse eingeben" value={email} onChange={e => setEmail(e.target.value)} disabled={loading || isCheckingDomain} className="w-full" />
+                {isSignUp && email && email.includes('@') && <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    {isCheckingDomain ? <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-400"></div> : universityInfo ? <Badge className="flex items-center gap-1 bg-green-50 text-green-800 border-green-200">
+                        <School className="h-3 w-3" />
+                        {universityInfo.name}
+                      </Badge> : <Badge className="flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
+                        <Mail className="h-3 w-3" />
+                        Standard
+                      </Badge>}
+                  </div>}
+              </div>
+              {isSignUp && email && email.includes('@') && <div className="text-xs mt-1 text-slate-500">
+                  {universityInfo ? <span className="text-green-600">
+                      Du registrierst dich mit einer E-Mail von {universityInfo.name}
+                    </span> : <span className="">Standard-Konto: Du hast Zugriff auf selbst hochgeladene Fragen. Nutze deine Uni E-Mail Adresse, um auf geteilte Fragen zuzugreifen.</span>}
                 </div>}
             </div>
-            {isSignUp && email && email.includes('@') && <div className="text-xs mt-1 text-slate-500">
-                {universityInfo ? <span className="text-green-600">
-                    Du registrierst dich mit einer E-Mail von {universityInfo.name}
-                  </span> : <span className="">Standard-Konto: Du hast Zugriff auf selbst hochgeladene Fragen. Nutze deine Uni E-Mail Adresse, um auf geteilte Fragen zuzugreifen.</span>}
-              </div>}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="password">Passwort</Label>
-            <Input id="password" type="password" placeholder="Passwort eingeben" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} className="w-full" />
-          </div>
-
-          {isSignUp && <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
-                einen Kleinbuchstaben und eine Zahl enthalten.
-              </AlertDescription>
-            </Alert>}
-
-          <div className="space-y-2 pt-2">
-            <Button className="w-full" onClick={() => handleAuth(isSignUp ? 'signup' : 'login')} disabled={loading || isCheckingDomain}>
-              {loading ? 'Lädt...' : isSignUp ? 'Registrieren' : 'Anmelden'}
-            </Button>
             
-            <div className="text-center space-y-2">
-              <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
-                {isSignUp ? 'Bereits registriert? Hier anmelden' : 'Noch kein Konto? Hier registrieren'}
-              </button>
+            <div className="space-y-2">
+              <Label htmlFor="password">Passwort</Label>
+              <Input id="password" type="password" placeholder="Passwort eingeben" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} className="w-full" />
+            </div>
 
-              {!isSignUp && <div>
-                  <button type="button" onClick={() => setIsForgotPassword(true)} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
-                    Passwort vergessen?
-                  </button>
-                </div>}
+            {isSignUp && <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
+                  einen Kleinbuchstaben und eine Zahl enthalten.
+                </AlertDescription>
+              </Alert>}
+
+            <div className="space-y-2 pt-2">
+              <Button className="w-full" onClick={() => handleAuth(isSignUp ? 'signup' : 'login')} disabled={loading || isCheckingDomain}>
+                {loading ? 'Lädt...' : isSignUp ? 'Registrieren' : 'Anmelden'}
+              </Button>
+              
+              <div className="text-center space-y-2">
+                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
+                  {isSignUp ? 'Bereits registriert? Hier anmelden' : 'Noch kein Konto? Hier registrieren'}
+                </button>
+
+                {!isSignUp && <div>
+                    <button type="button" onClick={() => setIsForgotPassword(true)} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
+                      Passwort vergessen?
+                    </button>
+                  </div>}
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
-    </div>;
+        </Card>
+      </div>
+      
+      <NonUniversitySignupDialog
+        open={showNonUniversityDialog}
+        onOpenChange={setShowNonUniversityDialog}
+        onConfirm={handleNonUniversitySignupConfirm}
+        email={email}
+      />
+    </>
+  );
 };
+
 export default Auth;
