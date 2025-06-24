@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Widerruf = () => {
@@ -23,7 +22,7 @@ const Widerruf = () => {
                   Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.
                 </p>
                 <p className="mb-3">
-                  Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ([PLATZHALTER: VOLLSTÄNDIGE FIRMENADRESSE], E-Mail: info@jeskokaiser.de) mittels einer eindeutigen Erklärung (z.B. ein mit der Post versandter Brief oder E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.
+                  Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (Jesko Kaiser, Kegelhofstr. 17, 20251 Hamburg, E-Mail: hallo@altfragen.io) mittels einer eindeutigen Erklärung (z.B E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.
                 </p>
                 <p className="mb-3">
                   Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.
@@ -61,8 +60,11 @@ const Widerruf = () => {
               <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
                 <p className="mb-4">An:</p>
                 <p className="mb-4">
-                  [PLATZHALTER: VOLLSTÄNDIGE FIRMENADRESSE]<br />
-                  E-Mail: info@jeskokaiser.de
+                  KSR Labs<br />
+                  Jesko Kaiser<br />
+                  Kegelhofstr. 17<br />
+                  20251 Hamburg<br />
+                  E-Mail: hallo@altfragen.io
                 </p>
                 
                 <p className="mb-4">
@@ -103,8 +105,7 @@ const Widerruf = () => {
               </p>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p>
-                  <strong>E-Mail:</strong> info@jeskokaiser.de<br />
-                  <strong>Anschrift:</strong> [PLATZHALTER: VOLLSTÄNDIGE FIRMENADRESSE]
+                  <strong>E-Mail:</strong> hallo@altfragen.io
                 </p>
               </div>
             </section>

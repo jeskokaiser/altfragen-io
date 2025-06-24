@@ -1,4 +1,3 @@
-
 const Terms = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -12,7 +11,7 @@ const Terms = () => {
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">2. Leistungsbeschreibung</h2>
         <p className="mb-4">
-          Altfragen.io ist eine Plattform zur Unterstützung der Prüfungsvorbereitung durch das Lernen mit Altfragen. Die Plattform ermöglicht das Hochladen und Bearbeiten von Altfragen.
+          Altfragen.io ist eine Plattform zur Unterstützung der Prüfungsvorbereitung durch das Lernen mit Altfragen. Die Plattform ermöglicht das Hochladen, Bearbeiten, Teilen und Trainieren von Altfragen.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">3. Nutzungsrechte</h2>
@@ -27,7 +26,7 @@ const Terms = () => {
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">5. Datenschutz</h2>
         <p className="mb-4">
-          Der Schutz Ihrer persönlichen Daten ist uns wichtig. Informationen zur Verarbeitung Ihrer Daten finden Sie in unserer Datenschutzerklärung im Impressum.
+          Der Schutz Ihrer persönlichen Daten ist uns wichtig. Informationen zur Verarbeitung Ihrer Daten finden Sie in unserer <a href="/privacy" className="text-blue-600 hover:underline">Datenschutzerklärung</a>.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">6. Haftungsausschluss</h2>

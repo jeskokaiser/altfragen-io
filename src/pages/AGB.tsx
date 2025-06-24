@@ -132,7 +132,7 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 10 Datenschutz</h2>
               <p>
-                Die Verarbeitung personenbezogener Daten erfolgt gemäß unserer Datenschutzerklärung, die Sie in unserem Impressum finden.
+                Die Verarbeitung personenbezogener Daten erfolgt gemäß unserer <a href="/privacy" className="text-blue-600 hover:underline">Datenschutzerklärung</a>.
               </p>
             </section>
 

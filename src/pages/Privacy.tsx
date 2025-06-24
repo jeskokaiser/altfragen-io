@@ -56,6 +56,9 @@ const Privacy = () => {
                 Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)
               </p>
               <p>
+                Da Stripe ein US-amerikanisches Unternehmen ist, werden Daten in die USA übermittelt. Die EU-Kommission hat die USA als Land mit einem angemessenen Datenschutzniveau eingestuft (Angemessenheitsbeschluss). Die Datenübermittlung erfolgt auf Grundlage von Standardvertragsklauseln (SCC), um die Einhaltung europäischer Datenschutzstandards zu gewährleisten.
+              </p>
+              <p>
                 Datenschutzerklärung von Stripe: <a href="https://stripe.com/de/privacy" className="text-blue-600 hover:underline">https://stripe.com/de/privacy</a>
               </p>
             </section>
@@ -83,7 +86,7 @@ const Privacy = () => {
               <ul className="list-disc pl-6 space-y-1">
                 <li>Bereitstellung und Verwaltung Ihres Benutzerkontos (Art. 6 Abs. 1 lit. b DSGVO)</li>
                 <li>Abwicklung von Zahlungen für Premium-Abonnements (Art. 6 Abs. 1 lit. b DSGVO)</li>
-                <li>Verbesserung unserer Dienstleistungen (Art. 6 Abs. 1 lit. f DSGVO)</li>
+                <li>Verbesserung unserer Dienstleistungen auf Basis von Nutzungsanalysen (Art. 6 Abs. 1 lit. f DSGVO). Sie haben das Recht, dieser Verarbeitung jederzeit zu widersprechen.</li>
                 <li>Erfüllung rechtlicher Verpflichtungen (Art. 6 Abs. 1 lit. c DSGVO)</li>
               </ul>
             </section>
@@ -92,11 +95,11 @@ const Privacy = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">7. Cookies</h2>
               <p>
-                Unsere Website verwendet nur technisch notwendige Cookies für die Funktionsfähigkeit der Plattform. 
-                Diese werden automatisch gelöscht, wenn Sie Ihren Browser schließen.
+                Unsere Website verwendet ausschließlich technisch notwendige Cookies, die für die Grundfunktionen der Plattform (z.B. Login-Status) unerlässlich sind.
+                Diese Cookies speichern keine personenbezogenen Daten, die eine Identifizierung ermöglichen.
               </p>
               <p>
-                Wir verwenden keine Tracking-Cookies oder Analyse-Tools von Drittanbietern.
+                Wir verwenden keine optionalen Analyse- oder Marketing-Cookies von Drittanbietern. Daher ist kein Cookie-Einwilligungsbanner erforderlich.
               </p>
             </section>
 
@@ -169,7 +172,7 @@ const Privacy = () => {
                 Die aktuelle Version ist stets auf unserer Website verfügbar.
               </p>
               <p>
-                Stand: Dezember 2024
+                Stand: Juni 2025
               </p>
             </section>
           </CardContent>
