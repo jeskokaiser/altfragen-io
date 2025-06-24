@@ -149,8 +149,60 @@ serve(async (req)=>{
     // Calculate the delay threshold
     const delayThreshold = new Date();
     delayThreshold.setMinutes(delayThreshold.getMinutes() - aiSettings.processing_delay_minutes);
+    
+    // Get question IDs that already have entries in ai_answer_comments
+    const { data: existingComments, error: commentsError } = await supabase
+      .from('ai_answer_comments')
+      .select('question_id');
+    
+    if (commentsError) {
+      console.error('Error fetching existing comments:', commentsError);
+      return new Response(JSON.stringify({
+        error: 'Failed to fetch existing comments'
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
+    // Get question IDs that already have entries in ai_commentary_summaries
+    const { data: existingSummaries, error: summariesError } = await supabase
+      .from('ai_commentary_summaries')
+      .select('question_id');
+    
+    if (summariesError) {
+      console.error('Error fetching existing summaries:', summariesError);
+      return new Response(JSON.stringify({
+        error: 'Failed to fetch existing summaries'
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
+    // Combine existing question IDs from both tables
+    const existingQuestionIds = new Set([
+      ...(existingComments?.map(item => item.question_id) || []),
+      ...(existingSummaries?.map(item => item.question_id) || [])
+    ]);
+    
+    console.log(`Found ${existingQuestionIds.size} questions that already have commentary or summaries`);
+    
     // Get pending questions that are older than the delay threshold
-    const { data: pendingQuestions, error: questionsError } = await supabase.from('questions').select('*').eq('ai_commentary_status', 'pending').lt('ai_commentary_queued_at', delayThreshold.toISOString()).limit(aiSettings.batch_size);
+    // We'll filter out existing ones after fetching to avoid URL length issues
+    const { data: allPendingQuestions, error: questionsError } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('ai_commentary_status', 'pending')
+      .lt('ai_commentary_queued_at', delayThreshold.toISOString())
+      .limit(aiSettings.batch_size * 3); // Fetch more to account for filtering
+    
     if (questionsError) {
       console.error('Error fetching pending questions:', questionsError);
       return new Response(JSON.stringify({
@@ -163,6 +215,13 @@ serve(async (req)=>{
         }
       });
     }
+    
+    // Filter out questions that already have commentary or summaries
+    const pendingQuestions = (allPendingQuestions || [])
+      .filter(question => !existingQuestionIds.has(question.id))
+      .slice(0, aiSettings.batch_size); // Limit to the actual batch size
+    
+         console.log(`Filtered down to ${pendingQuestions.length} questions that need processing`);
     console.log(`Found ${pendingQuestions?.length || 0} questions to process`);
     if (!pendingQuestions || pendingQuestions.length === 0) {
       return new Response(JSON.stringify({
