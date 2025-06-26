@@ -9,7 +9,7 @@ interface SubscriptionContextType {
   subscriptionEnd: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
-  createCheckoutSession: () => Promise<void>;
+  createCheckoutSession: (priceType?: 'monthly' | 'weekly') => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
 
@@ -86,14 +86,14 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
-  const createCheckoutSession = async () => {
+  const createCheckoutSession = async (priceType?: 'monthly' | 'weekly') => {
     if (!user) {
       showToast.error('Please log in to subscribe');
       return;
     }
 
     try {
-      console.log('Creating checkout session for user:', user.id);
+      console.log('Creating checkout session for user:', user.id, 'priceType:', priceType);
       
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.access_token) {
@@ -105,6 +105,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         headers: {
           Authorization: `Bearer ${session.session.access_token}`,
         },
+        body: {
+          priceType: priceType || 'monthly'
+        }
       });
 
       if (error) {

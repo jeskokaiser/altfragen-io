@@ -17,21 +17,39 @@ serve(async (req)=>{
   }
   try {
     logStep("Function started");
+    
+    // Parse request body to get priceType
+    const { priceType = 'monthly' } = await req.json().catch(() => ({ priceType: 'monthly' }));
+    logStep("Price type requested", { priceType });
+    
     // Check environment variables first
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const monthlyPriceId = Deno.env.get("STRIPE_PRICE_MONTHLY_ID");
+    const weeklyPriceId = Deno.env.get("STRIPE_PRICE_WEEKLY_ID");
     
     if (!supabaseUrl || !supabaseAnonKey || !stripeKey || !monthlyPriceId) {
       logStep("Missing environment variables", {
         hasUrl: !!supabaseUrl,
         hasAnonKey: !!supabaseAnonKey,
         hasStripeKey: !!stripeKey,
-        hasMonthlyPriceId: !!monthlyPriceId
+        hasMonthlyPriceId: !!monthlyPriceId,
+        hasWeeklyPriceId: !!weeklyPriceId
       });
       throw new Error("Missing required environment variables");
     }
+    
+    // Select the appropriate price ID
+    let selectedPriceId;
+    if (priceType === 'weekly' && weeklyPriceId) {
+      selectedPriceId = weeklyPriceId;
+    } else {
+      selectedPriceId = monthlyPriceId;
+    }
+    
+    logStep("Selected price ID", { priceType, selectedPriceId });
+    
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -83,7 +101,7 @@ serve(async (req)=>{
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: monthlyPriceId,
+          price: selectedPriceId,
           quantity: 1
         }
       ],

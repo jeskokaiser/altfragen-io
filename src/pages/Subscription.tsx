@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -10,6 +10,9 @@ const Subscription = () => {
     subscribed,
     createCheckoutSession
   } = useSubscription();
+  
+  const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly'>('monthly');
+  
   const features = [{
     name: 'Werbefrei und ohne Tracking',
     free: true,
@@ -56,14 +59,11 @@ const Subscription = () => {
         <div className="max-w-md mx-auto mt-4">
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
             <Tag className="h-4 w-4" />
-            <span className="font-semibold">🎉 Einführungsangebot: 40% Rabatt!</span>
+            <span className="font-semibold">🎉 Einführungsangebot: bis zu 40% Rabatt!</span>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
             Limitiertes Angebot zum Start von Altfragen.io für die ersten 500 Nutzer
           </p>
-          {!subscribed && <Button onClick={createCheckoutSession} className="mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold">
-              🔥 Jetzt für €5,99/Monat sichern
-            </Button>}
         </div>
       </div>
 
@@ -100,7 +100,7 @@ const Subscription = () => {
                 <span className="line-through">Mit Altfragen.io Premium: Nur €9,99/Monat</span>
               </p>
               <p className="text-green-700 font-semibold text-lg mt-1">
-              🎉 Einführungspreis: Nur €5,99/Monat + automatische Zusammenfassung durch erweiterte KI
+              🎉 Einführungspreis: Monatlich nur €5,99/Monat + automatische Zusammenfassung durch erweiterte KI
               </p>
             </div>
             <p className="text-blue-700 text-sm">
@@ -111,68 +111,148 @@ const Subscription = () => {
         </Card>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {/* Free Plan */}
-        <Card className="p-6">
-          <div className="text-center space-y-4">
-            <h3 className="text-xl font-semibold">Kostenlos</h3>
-            <div className="text-3xl font-bold">€0<span className="text-sm font-normal">/Monat</span></div>
-            <p className="text-sm text-muted-foreground">Perfekt für den Einstieg</p>
-          </div>
-          
-          <div className="space-y-3 mt-6">
-            {features.map((feature, index) => {
-            const Icon = feature.icon;
-            const isIncluded = feature.free;
-            return <div key={index} className="flex items-center gap-3">
-                  {isIncluded ? <Check className="h-4 w-4 text-green-600 flex-shrink-0" /> : <X className="h-4 w-4 text-gray-400 flex-shrink-0" />}
-                  <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''}`}>
-                    {feature.name}
-                  </span>
-                </div>;
-          })}
-          </div>
-        </Card>
+      {/* Pricing Plans */}
+      <div className="max-w-5xl mx-auto">
+        <h2 className="text-2xl font-bold text-center mb-8">Wähle deinen Plan</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Free Plan */}
+          <Card className="p-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-semibold">Kostenlos</h3>
+              <div className="text-3xl font-bold">€0<span className="text-sm font-normal">/Monat</span></div>
+              <p className="text-sm text-muted-foreground">Perfekt für den Einstieg</p>
+            </div>
+            
+            <div className="space-y-3 mt-6">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                const isIncluded = feature.free;
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    {isIncluded ? (
+                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    )}
+                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
+                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''}`}>
+                      {feature.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
 
-        {/* Premium Plan */}
-        <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400' : 'border-2 border-green-500'}`}>
-          {subscribed && <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <PremiumBadge />
-            </div>}
-          {!subscribed && <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                Einführungsangebot
+          {/* Weekly Plan */}
+          <Card className={`p-6 relative border-2 border-purple-500`}>
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <div className="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                Wochenabo
               </div>
-            </div>}
-          
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <Brain className="h-6 w-6 text-blue-600" />
-              <h3 className="text-xl font-semibold">Premium</h3>
             </div>
-            <div className="space-y-2">
+            
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <Brain className="h-6 w-6 text-purple-600" />
+                <h3 className="text-xl font-semibold">Premium Wöchentlich</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="text-3xl font-bold text-purple-600">€2,99<span className="text-sm font-normal">/Woche</span></div>
+                <div className="text-lg text-gray-500 line-through">€3,99<span className="text-sm">/Woche</span></div>
+                <div className="text-xs text-purple-600 font-medium">25% Rabatt für die ersten 500 Nutzer</div>
+              </div>
+              <p className="text-sm text-muted-foreground">Perfekt zum Ausprobieren</p>
+              
+              {!subscribed && (
+                <Button 
+                  onClick={() => createCheckoutSession('weekly')} 
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                >
+                  🔥 Wochenabo starten
+                </Button>
+              )}
+            </div>
+            
+            <div className="space-y-3 mt-6">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                const isIncluded = feature.premium;
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    {isIncluded ? (
+                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    )}
+                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
+                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-purple-700' : ''}`}>
+                      {feature.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Monthly Plan */}
+          <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400' : 'border-2 border-green-500'}`}>
+            {subscribed && (
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <PremiumBadge />
+              </div>
+            )}
+            {!subscribed && (
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  Monatsabo
+                </div>
+              </div>
+            )}
+            
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <Brain className="h-6 w-6 text-blue-600" />
+                <h3 className="text-xl font-semibold">Premium Monatlich</h3>
+              </div>
+              <div className="space-y-2">
                 <div className="text-3xl font-bold text-green-600">€5,99<span className="text-sm font-normal">/Monat</span></div>
-              <div className="text-lg text-gray-500 line-through">€9,99<span className="text-sm">/Monat</span></div>
-              <div className="text-xs text-green-600 font-medium">40% Rabatt für die ersten 500 Nutzer</div>
+                <div className="text-lg text-gray-500 line-through">€9,99<span className="text-sm">/Monat</span></div>
+                <div className="text-xs text-green-600 font-medium">40% Rabatt für die ersten 500 Nutzer</div>
+              </div>
+              <p className="text-sm text-muted-foreground">Bestes Preis-Leistungs-Verhältnis</p>
+              
+              {!subscribed && (
+                <Button 
+                  onClick={() => createCheckoutSession('monthly')} 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                >
+                  🔥 Monatsabo sichern
+                </Button>
+              )}
             </div>
-            <p className="text-sm text-muted-foreground">Drei Premium-KI-Modelle für unbegrenzte Insights</p>
-          </div>
-          
-          <div className="space-y-3 mt-6">
-            {features.map((feature, index) => {
-            const Icon = feature.icon;
-            const isIncluded = feature.premium;
-            return <div key={index} className="flex items-center gap-3">
-                  {isIncluded ? <Check className="h-4 w-4 text-green-600 flex-shrink-0" /> : <X className="h-4 w-4 text-gray-400 flex-shrink-0" />}
-                  <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700' : ''}`}>
-                    {feature.name}
-                  </span>
-                </div>;
-          })}
-          </div>
-        </Card>
+            
+            <div className="space-y-3 mt-6">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                const isIncluded = feature.premium;
+                return (
+                  <div key={index} className="flex items-center gap-3">
+                    {isIncluded ? (
+                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    )}
+                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
+                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700' : ''}`}>
+                      {feature.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        </div>
       </div>
 
       <div className="max-w-md mx-auto">
@@ -203,8 +283,18 @@ const Subscription = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Einführungsangebot</h3>
           <p className="text-sm text-muted-foreground">
-            Als einer der ersten 500 Nutzer erhältst du dauerhaft 40% Rabatt auf Altfragen.io Premium. 
-            Dieses Angebot ist limitiert und gilt solange du dein Abonnement nicht kündigst.
+            Als einer der ersten 500 Nutzer erhältst du dauerhaft Rabatt auf Altfragen.io Premium: 
+            40% Rabatt auf das Monatsabo (€5,99 statt €9,99) und 25% Rabatt auf das Wochenabo (€2,99 statt €3,99). 
+            Diese Angebote sind limitiert und gelten solange du dein Abonnement nicht kündigst.
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Flexibilität mit Wochen- und Monatsabos</h3>
+          <p className="text-sm text-muted-foreground">
+            Du bist dir noch nicht sicher? Teste alle Premium-Features für nur €2,99 pro Woche (statt €3,99). 
+            Das Wochenabo verlängert sich automatisch, kann aber jederzeit gekündigt werden. 
+            Für das beste Preis-Leistungs-Verhältnis empfehlen wir das Monatsabo mit 40% Rabatt.
           </p>
         </div>
       </div>

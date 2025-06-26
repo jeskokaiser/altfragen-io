@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,7 +99,7 @@ const SubscriptionCard: React.FC = () => {
             Abonnement verwalten
           </Button>
         ) : (
-          <Button onClick={createCheckoutSession} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => createCheckoutSession('monthly')} className="bg-green-600 hover:bg-green-700">
             🔥 Premium für €5,99/Monat
           </Button>
         )}
