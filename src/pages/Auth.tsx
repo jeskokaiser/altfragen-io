@@ -29,6 +29,7 @@ const Auth = () => {
   const [isVerificationScreen, setIsVerificationScreen] = useState(false);
   const [showNonUniversityDialog, setShowNonUniversityDialog] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -40,6 +41,12 @@ const Auth = () => {
   useEffect(() => {
     const handleAuthRedirect = async () => {
       const params = new URLSearchParams(location.search);
+      
+      // Don't handle redirects while updating password
+      if (isUpdatingPassword) {
+        console.log('Skipping auth redirect - password update in progress');
+        return;
+      }
       
       if (params.get('verification') === 'pending') {
         setIsVerificationScreen(true);
@@ -82,7 +89,7 @@ const Auth = () => {
     };
     
     handleAuthRedirect();
-  }, [location, navigate]);
+  }, [location, navigate, isUpdatingPassword]);
 
   const handleEmailVerification = async () => {
     try {
@@ -232,12 +239,21 @@ const Auth = () => {
   };
 
   const handleUpdatePassword = async () => {
+    console.log('handleUpdatePassword called, password length:', password?.length);
+    
+    if (isUpdatingPassword) {
+      console.log('Already updating password, ignoring...');
+      return;
+    }
+    
     try {
       setLoading(true);
+      setIsUpdatingPassword(true);
       
       if (!password) {
         toast.error('Bitte gib ein neues Passwort ein');
         setLoading(false);
+        setIsUpdatingPassword(false);
         return;
       }
       
@@ -245,32 +261,34 @@ const Auth = () => {
       if (passwordErrors.length > 0) {
         toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
         setLoading(false);
+        setIsUpdatingPassword(false);
         return;
       }
       
+      console.log('Attempting to update password...');
       const { data, error } = await supabase.auth.updateUser({
         password: password
       });
       
+      console.log('Update password response:', { data, error });
+      
       if (error) {
         console.error('Password update error:', error);
+        setIsUpdatingPassword(false);
         throw error;
       }
       
       toast.success('Passwort erfolgreich aktualisiert');
       
-      // Sign out the user after password update
-      await supabase.auth.signOut();
-      
-      // Reset states and navigate
-      setIsResetPassword(false);
-      setPassword(''); // Clear the password field
+      // Navigate immediately after success
       navigate('/auth');
+      
     } catch (error: any) {
       console.error('Error updating password:', error);
       toast.error(error.message || 'Fehler beim Aktualisieren des Passworts');
     } finally {
       setLoading(false);
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -477,10 +495,26 @@ const Auth = () => {
             </p>
           </div>
 
-          <div className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            console.log('Form submitted');
+            handleUpdatePassword();
+          }} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new-password">Neues Passwort</Label>
-              <Input id="new-password" type="password" placeholder="Neues Passwort eingeben" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} className="w-full" />
+              <Input 
+                id="new-password" 
+                type="password" 
+                placeholder="Neues Passwort eingeben" 
+                value={password} 
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  console.log('Password input changed:', newValue.length);
+                  setPassword(newValue);
+                }} 
+                disabled={loading} 
+                className="w-full" 
+              />
             </div>
 
             <Alert>
@@ -491,10 +525,14 @@ const Auth = () => {
               </AlertDescription>
             </Alert>
 
-            <Button className="w-full" onClick={handleUpdatePassword} disabled={loading}>
+            <Button 
+              className="w-full" 
+              disabled={loading}
+              type="submit"
+            >
               {loading ? 'Lädt...' : 'Passwort aktualisieren'}
             </Button>
-          </div>
+          </form>
         </Card>
       </div>;
   }
