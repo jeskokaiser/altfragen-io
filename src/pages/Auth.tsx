@@ -60,9 +60,11 @@ const Auth = () => {
             navigate('/auth');
           } else if (session) {
             // We have a valid session, show the password reset form
+            console.log('Recovery session found:', session.user.id);
             setIsResetPassword(true);
           } else {
             // No session, maybe the link expired
+            console.error('No recovery session found');
             toast.error('Der Link ist abgelaufen oder ungültig. Bitte fordere einen neuen Link an.');
             navigate('/auth');
           }
@@ -196,26 +198,34 @@ const Auth = () => {
   const handleResetPassword = async () => {
     try {
       setLoading(true);
+      
       if (!email) {
         toast.error('Bitte gib deine E-Mail-Adresse ein');
+        setLoading(false);
         return;
       }
+      
       if (!validateEmail(email)) {
         toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
+        setLoading(false);
         return;
       }
-      const {
-        error
-      } = await supabase.auth.resetPasswordForEmail(email, {
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/auth?type=recovery'
       });
+      
       if (error) {
+        console.error('Password reset email error:', error);
         throw error;
       }
+      
       toast.success('Eine E-Mail zum Zurücksetzen des Passworts wurde gesendet');
       setIsForgotPassword(false);
+      setEmail(''); // Clear email field
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Error sending reset email:', error);
+      toast.error(error.message || 'Fehler beim Senden der E-Mail');
     } finally {
       setLoading(false);
     }
@@ -224,29 +234,41 @@ const Auth = () => {
   const handleUpdatePassword = async () => {
     try {
       setLoading(true);
+      
       if (!password) {
         toast.error('Bitte gib ein neues Passwort ein');
+        setLoading(false);
         return;
       }
+      
       const passwordErrors = validatePassword(password);
       if (passwordErrors.length > 0) {
         toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
+        setLoading(false);
         return;
       }
-      const {
-        error
-      } = await supabase.auth.updateUser({
+      
+      const { data, error } = await supabase.auth.updateUser({
         password: password
       });
+      
       if (error) {
+        console.error('Password update error:', error);
         throw error;
       }
+      
       toast.success('Passwort erfolgreich aktualisiert');
+      
+      // Sign out the user after password update
       await supabase.auth.signOut();
+      
+      // Reset states and navigate
       setIsResetPassword(false);
+      setPassword(''); // Clear the password field
       navigate('/auth');
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Error updating password:', error);
+      toast.error(error.message || 'Fehler beim Aktualisieren des Passworts');
     } finally {
       setLoading(false);
     }
@@ -257,28 +279,33 @@ const Auth = () => {
       setLoading(true);
       if (!email || !password) {
         toast.error('Bitte gib E-Mail und Passwort ein');
+        setLoading(false);
         return;
       }
       if (!validateEmail(email)) {
         toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
+        setLoading(false);
         return;
       }
       if (type === 'signup') {
         const passwordErrors = validatePassword(password);
         if (passwordErrors.length > 0) {
           toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
+          setLoading(false);
           return;
         }
 
         // Check if terms are accepted
         if (!acceptedTerms) {
           toast.error('Bitte akzeptiere die AGB, Nutzungsbedingungen und Datenschutzerklärung');
+          setLoading(false);
           return;
         }
 
         // Check if it's a non-university signup and show dialog
         if (!universityInfo) {
           setShowNonUniversityDialog(true);
+          setLoading(false);
           return;
         }
 
@@ -352,28 +379,35 @@ const Auth = () => {
   const handleResendVerification = async () => {
     try {
       setLoading(true);
+      
       if (!email) {
         toast.error('Bitte gib deine E-Mail-Adresse ein');
+        setLoading(false);
         return;
       }
+      
       if (!validateEmail(email)) {
         toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
+        setLoading(false);
         return;
       }
-      const {
-        error
-      } = await supabase.auth.resend({
+      
+      const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
         options: {
           emailRedirectTo: window.location.origin + '/auth?verification=pending'
         }
       });
+      
       if (error) {
+        console.error('Resend verification error:', error);
         throw error;
       }
+      
       toast.success('Bestätigungslink wurde erneut gesendet. Bitte überprüfe deine E-Mails.');
     } catch (error: any) {
+      console.error('Error resending verification:', error);
       toast.error('Fehler beim Senden der Bestätigungsmail: ' + error.message);
     } finally {
       setLoading(false);
