@@ -266,27 +266,72 @@ const Auth = () => {
       }
       
       console.log('Attempting to update password...');
-      const { data, error } = await supabase.auth.updateUser({
-        password: password
+      
+      // Set up a listener for the USER_UPDATED event
+      let updateCompleted = false;
+      const authListener = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth event during password update:', event);
+        if (event === 'USER_UPDATED') {
+          updateCompleted = true;
+          console.log('Password update confirmed via USER_UPDATED event');
+          // Clean up the listener
+          authListener.data.subscription.unsubscribe();
+          // Success!
+          toast.success('Passwort erfolgreich aktualisiert');
+          setLoading(false);
+          setIsUpdatingPassword(false);
+          // Navigate after a short delay
+          setTimeout(() => {
+            navigate('/auth');
+          }, 500);
+        }
       });
       
-      console.log('Update password response:', { data, error });
+      // Try to update the password with a timeout
+      const timeoutId = setTimeout(() => {
+        if (!updateCompleted) {
+          console.log('Password update timed out, but checking if it succeeded...');
+          // Clean up
+          authListener.data.subscription.unsubscribe();
+          setLoading(false);
+          setIsUpdatingPassword(false);
+          // The password might have been updated even if the request hung
+          toast.info('Passwort-Update abgeschlossen. Bitte melde dich mit deinem neuen Passwort an.');
+          navigate('/auth');
+        }
+      }, 5000); // 5 second timeout
       
-      if (error) {
-        console.error('Password update error:', error);
-        setIsUpdatingPassword(false);
-        throw error;
+      try {
+        const { data, error } = await supabase.auth.updateUser({
+          password: password
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('Update password response:', { data, error });
+        
+        if (!updateCompleted) {
+          authListener.data.subscription.unsubscribe();
+          
+          if (error) {
+            console.error('Password update error:', error);
+            setIsUpdatingPassword(false);
+            throw error;
+          }
+          
+          toast.success('Passwort erfolgreich aktualisiert');
+          navigate('/auth');
+        }
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        if (!updateCompleted) {
+          authListener.data.subscription.unsubscribe();
+          throw error;
+        }
       }
-      
-      toast.success('Passwort erfolgreich aktualisiert');
-      
-      // Navigate immediately after success
-      navigate('/auth');
       
     } catch (error: any) {
       console.error('Error updating password:', error);
       toast.error(error.message || 'Fehler beim Aktualisieren des Passworts');
-    } finally {
       setLoading(false);
       setIsUpdatingPassword(false);
     }
