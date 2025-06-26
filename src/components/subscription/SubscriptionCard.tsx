@@ -45,7 +45,7 @@ const SubscriptionCard: React.FC = () => {
             {!subscribed && (
               <Badge variant="secondary" className="bg-green-100 text-green-800">
                 <Tag className="h-3 w-3 mr-1" />
-                50% Rabatt
+                40% Rabatt
               </Badge>
             )}
           </div>

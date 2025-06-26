@@ -100,7 +100,7 @@ const Subscription = () => {
                 <span className="line-through">Mit Altfragen.io Premium: Nur €9,99/Monat</span>
               </p>
               <p className="text-green-700 font-semibold text-lg mt-1">
-                🎉 Early Bird Preis: Nur €5,99/Monat + automatische Zusammenfassung durch erweiterte KI
+              🎉 Einführungspreis: Nur €5,99/Monat + automatische Zusammenfassung durch erweiterte KI
               </p>
             </div>
             <p className="text-blue-700 text-sm">
