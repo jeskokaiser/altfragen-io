@@ -54,13 +54,10 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 4 Preise und Zahlungsbedingungen</h2>
               <p>
-                Die Preise verstehen sich als Bruttopreise inklusive der gesetzlichen Mehrwertsteuer.
+                Die Preise werden nach §19 UStG versteuert, daher fällt keine Mehrwertsteuer an.
               </p>
               <p>
-                <strong>Early Bird Angebot:</strong> Für die ersten 100 Nutzer gilt ein Sonderpreis von €1,99/Monat (regulär €3,99/Monat). Dieses Angebot gilt dauerhaft, solange das Abonnement nicht gekündigt wird.
-              </p>
-              <p>
-                Die Zahlung erfolgt monatlich im Voraus über unseren Zahlungsdienstleister Stripe. Akzeptierte Zahlungsmethoden: Kreditkarte, SEPA-Lastschrift.
+                Die Zahlung erfolgt monatlich im Voraus über unseren Zahlungsdienstleister Stripe.
               </p>
             </section>
 
@@ -68,7 +65,7 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 5 Laufzeit und Kündigung</h2>
               <p>
-                Das Abonnement läuft auf unbestimmte Zeit mit einer monatlichen Kündigungsfrist von einem Monat zum Monatsende.
+                Das Abonnement läuft auf unbestimmte Zeit und ist jederzeit zum Ablauf des Abrechnungszeitraums kündbar.
               </p>
               <p>
                 Die Kündigung kann jederzeit über das Stripe Customer Portal in Ihrem Benutzerkonto oder per E-Mail an hallo@altfragen.io erfolgen.

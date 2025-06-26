@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -26,6 +25,8 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const weeklyPriceId = Deno.env.get("STRIPE_PRICE_WEEKLY_ID");
+    const monthlyPriceId = Deno.env.get("STRIPE_PRICE_MONTHLY_ID");
 
     if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey || !stripeKey) {
       logStep("Missing environment variables", { 
@@ -35,6 +36,14 @@ serve(async (req) => {
         hasStripeKey: !!stripeKey 
       });
       throw new Error("Missing required environment variables");
+    }
+
+    // Price IDs are optional but recommended for proper tier identification
+    if (!weeklyPriceId || !monthlyPriceId) {
+      logStep("Missing price ID environment variables", {
+        hasWeeklyPriceId: !!weeklyPriceId,
+        hasMonthlyPriceId: !!monthlyPriceId
+      });
     }
 
     const authHeader = req.headers.get("Authorization");
@@ -108,26 +117,27 @@ serve(async (req) => {
     });
     
     const hasActiveSub = subscriptions.data.length > 0;
-    let subscriptionTier = null;
-    let subscriptionEnd = null;
+    let subscriptionTier: string | null = null;
+    let subscriptionEnd: string | null = null;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       
-      // Determine subscription tier from price
+      // Determine subscription tier from price ID
       const priceId = subscription.items.data[0].price.id;
-      const price = await stripe.prices.retrieve(priceId);
-      const amount = price.unit_amount || 0;
-      if (amount <= 299) {
-        subscriptionTier = "Premium"; // Early Bird pricing
-      } else if (amount <= 599) {
-        subscriptionTier = "Premium";
+      
+      if (priceId === weeklyPriceId) {
+        subscriptionTier = "Weekly";
+      } else if (priceId === monthlyPriceId) {
+        subscriptionTier = "Monthly";
       } else {
-        subscriptionTier = "Enterprise";
+        // Fallback for unknown price IDs (legacy subscriptions, custom plans, etc.)
+        subscriptionTier = "Unknown";
+        logStep("Unknown price ID encountered", { priceId });
       }
-      logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
+      logStep("Determined subscription tier", { priceId, subscriptionTier });
     } else {
       logStep("No active subscription found");
     }
