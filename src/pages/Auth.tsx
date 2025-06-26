@@ -38,32 +38,48 @@ const Auth = () => {
   } = useAuth();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('verification') === 'pending') {
-      setIsVerificationScreen(true);
-    }
-    const type = params.get('type');
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    if (type === 'recovery' && (access_token || refresh_token)) {
-      supabase.auth.setSession({
-        access_token: access_token || '',
-        refresh_token: refresh_token || ''
-      }).then(({
-        data,
-        error
-      }) => {
-        if (error) {
-          toast.error('Fehler beim Zurücksetzen des Passworts. Bitte versuche es erneut.');
+    const handleAuthRedirect = async () => {
+      const params = new URLSearchParams(location.search);
+      
+      if (params.get('verification') === 'pending') {
+        setIsVerificationScreen(true);
+        return;
+      }
+      
+      const type = params.get('type');
+      
+      // Handle password recovery
+      if (type === 'recovery') {
+        try {
+          // Check if we have a session after the redirect from Supabase
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Recovery session error:', error);
+            toast.error('Fehler beim Zurücksetzen des Passworts. Bitte versuche es erneut.');
+            navigate('/auth');
+          } else if (session) {
+            // We have a valid session, show the password reset form
+            setIsResetPassword(true);
+          } else {
+            // No session, maybe the link expired
+            toast.error('Der Link ist abgelaufen oder ungültig. Bitte fordere einen neuen Link an.');
+            navigate('/auth');
+          }
+        } catch (error) {
+          console.error('Recovery error:', error);
+          toast.error('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
           navigate('/auth');
-        } else if (data.session) {
-          setIsResetPassword(true);
         }
-      });
-    }
-    if (type === 'email_change' || type === 'signup') {
-      handleEmailVerification();
-    }
+        return;
+      }
+      
+      if (type === 'email_change' || type === 'signup') {
+        handleEmailVerification();
+      }
+    };
+    
+    handleAuthRedirect();
   }, [location, navigate]);
 
   const handleEmailVerification = async () => {
