@@ -280,9 +280,9 @@ const Auth = () => {
           toast.success('Passwort erfolgreich aktualisiert');
           setLoading(false);
           setIsUpdatingPassword(false);
-          // Navigate after a short delay
+          // Navigate to dashboard after a short delay
           setTimeout(() => {
-            navigate('/auth');
+            navigate('/dashboard');
           }, 500);
         }
       });
@@ -296,8 +296,8 @@ const Auth = () => {
           setLoading(false);
           setIsUpdatingPassword(false);
           // The password might have been updated even if the request hung
-          toast.info('Passwort-Update abgeschlossen. Bitte melde dich mit deinem neuen Passwort an.');
-          navigate('/auth');
+          toast.info('Passwort-Update abgeschlossen. Du wirst zum Dashboard weitergeleitet.');
+          navigate('/dashboard');
         }
       }, 5000); // 5 second timeout
       
@@ -319,7 +319,7 @@ const Auth = () => {
           }
           
           toast.success('Passwort erfolgreich aktualisiert');
-          navigate('/auth');
+          navigate('/dashboard');
         }
       } catch (error: any) {
         clearTimeout(timeoutId);
