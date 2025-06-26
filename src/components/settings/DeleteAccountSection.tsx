@@ -30,11 +30,11 @@ const DeleteAccountSection: React.FC = () => {
         await logout();
         window.location.href = '/';
       } else {
-        toast.error('Fehler beim Löschen des Kontos. Bitte kontaktieren Sie hallo@altfragen.io');
+        toast.error('Fehler beim Löschen des Kontos. Bitte kontaktiere uns unter hallo@altfragen.io');
       }
     } catch (error) {
       console.error('Error deleting account:', error);
-      toast.error('Fehler beim Löschen des Kontos. Bitte kontaktieren Sie hallo@altfragen.io');
+      toast.error('Fehler beim Löschen des Kontos. Bitte kontaktiere uns unter hallo@altfragen.io');
     } finally {
       setIsDeleting(false);
       setIsDialogOpen(false);
@@ -56,7 +56,7 @@ const DeleteAccountSection: React.FC = () => {
         <div className="space-y-2">
           <h3 className="font-medium text-red-700">Konto löschen</h3>
           <p className="text-sm text-red-600">
-            Diese Aktion kann nicht rückgängig gemacht werden. Alle Ihre privaten Fragen und persönlichen Daten werden permanent gelöscht. 
+            Diese Aktion kann nicht rückgängig gemacht werden. Alle deine privaten Fragen und persönlichen Daten werden permanent gelöscht. 
             Öffentliche Fragen bleiben erhalten, um die Community zu unterstützen.
           </p>
           <p className="text-sm text-red-600 font-medium">
@@ -64,9 +64,9 @@ const DeleteAccountSection: React.FC = () => {
           </p>
           <ul className="text-sm text-red-600 list-disc list-inside space-y-1">
             <li>Alle privaten Fragen</li>
-            <li>Ihr Lernfortschritt</li>
-            <li>Ihre Einstellungen</li>
-            <li>Ihr Benutzerprofil</li>
+            <li>Dein Lernfortschritt</li>
+            <li>Deine Einstellungen</li>
+            <li>Dein Benutzerprofil</li>
           </ul>
           <p className="text-sm text-red-600 font-medium">
             Folgende Daten bleiben erhalten:
@@ -75,7 +75,7 @@ const DeleteAccountSection: React.FC = () => {
             <li>Öffentliche Fragen (anonymisiert)</li>
           </ul>
           <p className="text-sm text-red-600">
-            Bei Problemen kontaktieren Sie uns unter: hallo@altfragen.io
+            Bei Problemen kontaktiere uns unter: hallo@altfragen.io
           </p>
         </div>
 
@@ -88,14 +88,14 @@ const DeleteAccountSection: React.FC = () => {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Sind Sie sicher?</AlertDialogTitle>
+              <AlertDialogTitle>Bist du sicher?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>
-                  Diese Aktion kann nicht rückgängig gemacht werden. Ihr Konto und alle privaten Daten werden permanent gelöscht.
+                  Diese Aktion kann nicht rückgängig gemacht werden. Dein Konto und alle privaten Daten werden permanent gelöscht.
                 </p>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-delete">
-                    Geben Sie "DELETE" ein, um zu bestätigen:
+                    Gib "DELETE" ein, um zu bestätigen:
                   </Label>
                   <Input
                     id="confirm-delete"

@@ -13,11 +13,11 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 1 Geltungsbereich</h2>
               <p>
-                Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") gelten für alle Verträge zwischen Altfragen.io, Jesko Kaiser (nachfolgend "Anbieter") und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen Premium-Dienste.
+                Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") gelten für alle Verträge zwischen Altfragen.io, angeboten von KSR Labs, Jesko Kaiser (nachfolgend "Anbieter") und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen Premium-Dienste.
               </p>
               <p>
                 Anbieter:<br />
-                Altfragen.io<br />
+                KSR Labs<br />
                 Jesko Kaiser<br />
                 Kegelhofstr. 17<br />
                 20251 Hamburg<br />
@@ -32,10 +32,8 @@ const AGB = () => {
                 Gegenstand des Vertrages ist die Bereitstellung des Premium-Zugangs zur Plattform Altfragen.io mit folgenden Leistungen:
               </p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>Unbegrenzte KI-kommentierte Fragen und Antworten</li>
-                <li>Zugang zu drei Premium-KI-Modellen (ChatGPT o4-mini, Claude Sonnet 4, Gemini 2.5 Pro)</li>
-                <li>Premium Support</li>
-                <li>Werbefreie Nutzung</li>
+                <li>Zugriff auf unbegrenzte KI-kommentierte Fragen und Antworten</li>
+                <li>Premium Support unter premium@altfragen.io</li>
               </ul>
             </section>
 
@@ -57,7 +55,7 @@ const AGB = () => {
                 Die Preise werden nach §19 UStG versteuert, daher fällt keine Mehrwertsteuer an.
               </p>
               <p>
-                Die Zahlung erfolgt monatlich im Voraus über unseren Zahlungsdienstleister Stripe.
+                Die Zahlung erfolgt monatlich über unseren Zahlungsdienstleister Stripe.
               </p>
             </section>
 
@@ -68,7 +66,7 @@ const AGB = () => {
                 Das Abonnement läuft auf unbestimmte Zeit und ist jederzeit zum Ablauf des Abrechnungszeitraums kündbar.
               </p>
               <p>
-                Die Kündigung kann jederzeit über das Stripe Customer Portal in Ihrem Benutzerkonto oder per E-Mail an hallo@altfragen.io erfolgen.
+                Die Kündigung kann jederzeit über das Stripe Customer Portal in Ihrem Benutzerkonto oder per E-Mail an premium@altfragen.io erfolgen.
               </p>
               <p>
                 Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.

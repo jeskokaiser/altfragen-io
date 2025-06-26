@@ -296,7 +296,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Fehler beim Laden der KI-Kommentare. Bitte versuchen Sie es später erneut.
+                Fehler beim Laden der KI-Kommentare. Bitte versuche es später erneut.
               </AlertDescription>
             </Alert>
           </CardContent>

@@ -11,6 +11,8 @@ import { Info, ArrowLeft, School, Mail, CheckCircle, AlertCircle } from "lucide-
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/contexts/AuthContext';
 import { NonUniversitySignupDialog } from '@/components/auth/NonUniversitySignupDialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Link } from 'react-router-dom';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -26,6 +28,7 @@ const Auth = () => {
   const [isCheckingDomain, setIsCheckingDomain] = useState(false);
   const [isVerificationScreen, setIsVerificationScreen] = useState(false);
   const [showNonUniversityDialog, setShowNonUniversityDialog] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -51,7 +54,7 @@ const Auth = () => {
         error
       }) => {
         if (error) {
-          toast.error('Fehler beim Zurücksetzen des Passworts. Bitte versuchen Sie es erneut.');
+          toast.error('Fehler beim Zurücksetzen des Passworts. Bitte versuche es erneut.');
           navigate('/auth');
         } else if (data.session) {
           setIsResetPassword(true);
@@ -75,7 +78,7 @@ const Auth = () => {
         await updateVerificationStatus(userId, true);
         navigate('/dashboard');
       } else {
-        toast.success('E-Mail wurde bestätigt. Bitte melden Sie sich an.');
+        toast.success('E-Mail wurde bestätigt. Bitte melde dich an.');
         navigate('/auth');
       }
     } catch (error: any) {
@@ -178,11 +181,11 @@ const Auth = () => {
     try {
       setLoading(true);
       if (!email) {
-        toast.error('Bitte geben Sie Ihre E-Mail-Adresse ein');
+        toast.error('Bitte gib deine E-Mail-Adresse ein');
         return;
       }
       if (!validateEmail(email)) {
-        toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+        toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
         return;
       }
       const {
@@ -206,7 +209,7 @@ const Auth = () => {
     try {
       setLoading(true);
       if (!password) {
-        toast.error('Bitte geben Sie ein neues Passwort ein');
+        toast.error('Bitte gib ein neues Passwort ein');
         return;
       }
       const passwordErrors = validatePassword(password);
@@ -237,17 +240,23 @@ const Auth = () => {
     try {
       setLoading(true);
       if (!email || !password) {
-        toast.error('Bitte geben Sie E-Mail und Passwort ein');
+        toast.error('Bitte gib E-Mail und Passwort ein');
         return;
       }
       if (!validateEmail(email)) {
-        toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+        toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
         return;
       }
       if (type === 'signup') {
         const passwordErrors = validatePassword(password);
         if (passwordErrors.length > 0) {
           toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
+          return;
+        }
+
+        // Check if terms are accepted
+        if (!acceptedTerms) {
+          toast.error('Bitte akzeptiere die AGB, Nutzungsbedingungen und Datenschutzerklärung');
           return;
         }
 
@@ -269,7 +278,7 @@ const Auth = () => {
       });
       if (error) {
         if (error.message.includes('Email not confirmed')) {
-          toast.error('Bitte bestätigen Sie Ihre E-Mail-Adresse');
+          toast.error('Bitte bestätige deine E-Mail-Adresse');
           setIsVerificationScreen(true);
           navigate('/auth?verification=pending');
         } else if (error.message.includes('Invalid login credentials')) {
@@ -312,7 +321,7 @@ const Auth = () => {
       }
 
       setIsVerificationScreen(true);
-      toast.success('Bitte überprüfen Sie Ihre E-Mail, um Ihre Registrierung abzuschließen.');
+      toast.success('Bitte überprüfe deine E-Mail, um deine Registrierung abzuschließen.');
       navigate('/auth?verification=pending');
     } catch (error: any) {
       toast.error(error.message);
@@ -328,11 +337,11 @@ const Auth = () => {
     try {
       setLoading(true);
       if (!email) {
-        toast.error('Bitte geben Sie Ihre E-Mail-Adresse ein');
+        toast.error('Bitte gib deine E-Mail-Adresse ein');
         return;
       }
       if (!validateEmail(email)) {
-        toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+        toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
         return;
       }
       const {
@@ -347,7 +356,7 @@ const Auth = () => {
       if (error) {
         throw error;
       }
-      toast.success('Bestätigungslink wurde erneut gesendet. Bitte überprüfen Sie Ihre E-Mails.');
+      toast.success('Bestätigungslink wurde erneut gesendet. Bitte überprüfe deine E-Mails.');
     } catch (error: any) {
       toast.error('Fehler beim Senden der Bestätigungsmail: ' + error.message);
     } finally {
@@ -366,7 +375,7 @@ const Auth = () => {
               {isEmailVerified ? 'E-Mail-Verifizierung abgeschlossen!' : 'E-Mail-Verifizierung ausstehend'}
             </h2>
             <p className="text-sm text-slate-600">
-              {isEmailVerified ? universityName ? `Sie haben jetzt Zugriff auf den Altfragen-Pool der ${universityName}.` : 'Ihre E-Mail wurde erfolgreich verifiziert.' : 'Wir haben Ihnen einen Bestätigungslink per E-Mail gesendet.'}
+              {isEmailVerified ? universityName ? `Du hast jetzt Zugriff auf den Altfragen-Pool der ${universityName}.` : 'Deine E-Mail wurde erfolgreich verifiziert.' : 'Wir haben dir einen Bestätigungslink per E-Mail gesendet.'}
             </p>
           </div>
 
@@ -374,14 +383,14 @@ const Auth = () => {
             {!isEmailVerified && <Alert className="bg-amber-50 border-amber-200">
                 <Info className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-amber-700">
-                  Bitte überprüfen Sie Ihren Posteingang und klicken Sie auf den Bestätigungslink.
+                  Bitte überprüfe deinen Posteingang und klicke auf den Bestätigungslink.
                 </AlertDescription>
               </Alert>}
 
             {isEmailVerified && universityName && <Alert className="bg-green-50 border-green-200">
                 <School className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-700">
-                  Sie sind als Student der {universityName} verifiziert.
+                  Du bist als Student der {universityName} verifiziert.
                 </AlertDescription>
               </Alert>}
 
@@ -414,7 +423,7 @@ const Auth = () => {
               Neues Passwort festlegen
             </h2>
             <p className="text-sm text-slate-600">
-              Bitte geben Sie Ihr neues Passwort ein
+              Bitte gib dein neues Passwort ein
             </p>
           </div>
 
@@ -450,7 +459,7 @@ const Auth = () => {
               Passwort zurücksetzen
             </h2>
             <p className="text-sm text-slate-600">
-              Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen
+              Gib deine E-Mail-Adresse ein, um dein Passwort zurückzusetzen
             </p>
           </div>
 
@@ -515,13 +524,45 @@ const Auth = () => {
                 </AlertDescription>
               </Alert>}
 
+            {isSignUp && (
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+                  className="mt-1"
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-sm text-slate-600 leading-relaxed cursor-pointer"
+                >
+                  Ich habe die{' '}
+                  <Link to="/agb" className="text-blue-600 hover:underline" target="_blank">
+                    AGB
+                  </Link>
+                  ,{' '}
+                  <Link to="/terms" className="text-blue-600 hover:underline" target="_blank">
+                    Nutzungsbedingungen
+                  </Link>
+                  {' '}und{' '}
+                  <Link to="/privacy" className="text-blue-600 hover:underline" target="_blank">
+                    Datenschutzerklärung
+                  </Link>
+                  {' '}gelesen und akzeptiere diese.
+                </label>
+              </div>
+            )}
+
             <div className="space-y-2 pt-2">
               <Button className="w-full" onClick={() => handleAuth(isSignUp ? 'signup' : 'login')} disabled={loading || isCheckingDomain}>
                 {loading ? 'Lädt...' : isSignUp ? 'Registrieren' : 'Anmelden'}
               </Button>
               
               <div className="text-center space-y-2">
-                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
+                <button type="button" onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setAcceptedTerms(false);
+                }} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
                   {isSignUp ? 'Bereits registriert? Hier anmelden' : 'Noch kein Konto? Hier registrieren'}
                 </button>
 

@@ -37,14 +37,14 @@ import {
                 Die E-Mail-Adresse <strong>{email}</strong> ist keiner Universität in unserer Datenbank zugeordnet.
               </p>
               <p>
-                Mit einem Standard-Konto haben Sie nur Zugriff auf:
+                Mit einem Standard-Konto hast du nur Zugriff auf:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600">
-                <li>Ihre selbst hochgeladenen Fragen</li>
+                <li>Deine selbst hochgeladenen Fragen</li>
                 <li>Grundlegende Lernfunktionen</li>
               </ul>
               <p className="text-sm text-slate-600">
-                <strong>Hinweis:</strong> Um Zugriff auf geteilte Universitätsfragen zu erhalten, registrieren Sie sich mit Ihrer offiziellen Uni-E-Mail-Adresse.
+                <strong>Hinweis:</strong> Um Zugriff auf geteilte Universitätsfragen zu erhalten, registriere dich mit deiner offiziellen Uni-E-Mail-Adresse.
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
