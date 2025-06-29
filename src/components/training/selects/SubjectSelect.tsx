@@ -37,11 +37,14 @@ const SubjectSelect: React.FC<SubjectSelectProps> = ({ form, subjects }) => {
             </FormControl>
             <SelectContent>
               <SelectItem value="all">Alle Fächer</SelectItem>
-              {subjects.map((subject) => (
-                <SelectItem key={subject} value={subject || 'unknown'}>
-                  {subject}
-                </SelectItem>
-              ))}
+              {[...subjects]
+                .slice()
+                .sort((a, b) => (a || '').localeCompare(b || ''))
+                .map((subject) => (
+                  <SelectItem key={subject} value={subject || 'unknown'}>
+                    {subject}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </FormItem>

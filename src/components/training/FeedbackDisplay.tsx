@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -11,11 +10,26 @@ interface FeedbackDisplayProps {
 const FeedbackDisplay: React.FC<FeedbackDisplayProps> = ({ isCorrect, correctAnswer, comment }) => {
   return (
     <div className="mt-6 space-y-4">
-      {comment && (
-        <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-          <AlertDescription className="text-gray-800 dark:text-gray-200">{comment}</AlertDescription>
-        </Alert>
-      )}
+      <Alert className={`${
+        isCorrect 
+          ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+          : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+      }`}>
+        <AlertDescription className="text-gray-800 dark:text-gray-200">
+          <div className="space-y-2">
+            <div>
+              <span className="font-medium">Protokollierte Antwort: </span>
+              <span className="font-bold">{correctAnswer}</span>
+            </div>
+            {comment && (
+              <div>
+                <span className="font-medium">Kommentar: </span>
+                {comment}
+              </div>
+            )}
+          </div>
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

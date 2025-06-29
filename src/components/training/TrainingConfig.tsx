@@ -139,9 +139,6 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           </ul>
           </li>
         </ul>
-        <p className="mt-2 text-orange-600">
-          <strong>Hinweis:</strong> Als unklar markierte Fragen werden automatisch ausgeblendet.
-        </p>
       </div>
     </div>
   );
