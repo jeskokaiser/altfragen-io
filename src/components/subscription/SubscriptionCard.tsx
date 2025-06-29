@@ -44,7 +44,7 @@ const SubscriptionCard: React.FC = () => {
             {!subscribed && (
               <Badge variant="secondary" className="bg-green-100 text-green-800">
                 <Tag className="h-3 w-3 mr-1" />
-                40% Rabatt
+                33% Rabatt
               </Badge>
             )}
           </div>
@@ -68,7 +68,7 @@ const SubscriptionCard: React.FC = () => {
             <div className="space-y-3">
               <div className="bg-green-100 p-3 rounded-lg">
                 <p className="text-sm font-semibold text-green-800">
-                  🎉 Einführungsangebot: Nur €5,99/Monat (statt €9,99)
+                  🎉 Einführungsangebot: Nur €5,99/Monat (statt €8,99)
                 </p>
                 <p className="text-xs text-green-700 mt-1">
                   Limitiert auf die ersten 500 Nutzer

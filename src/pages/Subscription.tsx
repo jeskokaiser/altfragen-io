@@ -59,7 +59,7 @@ const Subscription = () => {
         <div className="max-w-md mx-auto mt-4">
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
             <Tag className="h-4 w-4" />
-            <span className="font-semibold">🎉 Einführungsangebot: bis zu 40% Rabatt!</span>
+            <span className="font-semibold">🎉 Einführungsangebot: 33% Rabatt!</span>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
             Limitiertes Angebot zum Start von Altfragen.io für die ersten 500 Nutzer
@@ -97,7 +97,7 @@ const Subscription = () => {
                 💰 Einzelkauf aller drei Modelle: ~€60/Monat
               </p>
               <p className="text-blue-700 text-sm mt-1">
-                <span className="line-through">Mit Altfragen.io Premium: Nur €9,99/Monat</span>
+                <span className="line-through">Mit Altfragen.io Premium: Nur €8,99/Monat</span>
               </p>
               <p className="text-green-700 font-semibold text-lg mt-1">
               🎉 Einführungspreis: Monatlich nur €5,99/Monat + automatische Zusammenfassung durch erweiterte KI
@@ -158,9 +158,9 @@ const Subscription = () => {
                 <h3 className="text-xl font-semibold">Premium Wöchentlich</h3>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-purple-600">€2,99<span className="text-sm font-normal">/Woche</span></div>
-                <div className="text-lg text-gray-500 line-through">€3,99<span className="text-sm">/Woche</span></div>
-                <div className="text-xs text-purple-600 font-medium">25% Rabatt für die ersten 500 Nutzer</div>
+                <div className="text-3xl font-bold text-purple-600">€1,99<span className="text-sm font-normal">/Woche</span></div>
+                <div className="text-lg text-gray-500 line-through">€2,99<span className="text-sm">/Woche</span></div>
+                <div className="text-xs text-purple-600 font-medium">Nur für die ersten 500 Nutzer</div>
               </div>
               <p className="text-sm text-muted-foreground">Perfekt zum Ausprobieren</p>
               
@@ -217,8 +217,8 @@ const Subscription = () => {
               </div>
               <div className="space-y-2">
                 <div className="text-3xl font-bold text-green-600">€5,99<span className="text-sm font-normal">/Monat</span></div>
-                <div className="text-lg text-gray-500 line-through">€9,99<span className="text-sm">/Monat</span></div>
-                <div className="text-xs text-green-600 font-medium">40% Rabatt für die ersten 500 Nutzer</div>
+                <div className="text-lg text-gray-500 line-through">€8,99<span className="text-sm">/Monat</span></div>
+                <div className="text-xs text-green-600 font-medium">Nur für die ersten 500 Nutzer</div>
               </div>
               <p className="text-sm text-muted-foreground">Bestes Preis-Leistungs-Verhältnis</p>
               
@@ -284,7 +284,7 @@ const Subscription = () => {
           <h3 className="text-lg font-semibold">Einführungsangebot</h3>
           <p className="text-sm text-muted-foreground">
             Als einer der ersten 500 Nutzer erhältst du dauerhaft Rabatt auf Altfragen.io Premium: 
-            40% Rabatt auf das Monatsabo (€5,99 statt €9,99) und 25% Rabatt auf das Wochenabo (€2,99 statt €3,99). 
+            33% Rabatt auf das Monatsabo (€5,99 statt €8,99) und das Wochenabo (€1,99 statt €2,99). 
             Diese Angebote sind limitiert und gelten solange du dein Abonnement nicht kündigst.
           </p>
         </div>
@@ -292,9 +292,9 @@ const Subscription = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Flexibilität mit Wochen- und Monatsabos</h3>
           <p className="text-sm text-muted-foreground">
-            Du bist dir noch nicht sicher? Teste alle Premium-Features für nur €2,99 pro Woche (statt €3,99). 
+            Du bist dir noch nicht sicher? Teste alle Premium-Features für nur €1,99 pro Woche (statt €2,99). 
             Das Wochenabo verlängert sich automatisch, kann aber jederzeit gekündigt werden. 
-            Für das beste Preis-Leistungs-Verhältnis empfehlen wir das Monatsabo mit 40% Rabatt.
+            Für das beste Preis-Leistungs-Verhältnis empfehlen wir das Monatsabo.
           </p>
         </div>
       </div>
