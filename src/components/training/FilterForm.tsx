@@ -1,4 +1,3 @@
-
 import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
@@ -43,6 +42,8 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
       sortByAttempts: false,
       sortDirection: 'desc',
       wrongQuestionsOnly: false,
+      newQuestionsOnly: false,
+      excludeTodaysQuestions: false,
       yearRange: [minYear, maxYear],
     },
     mode: 'onChange',
@@ -123,6 +124,48 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Nur Fragen auswählen, die bisher falsch beantwortet wurden</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={form.watch('newQuestionsOnly')}
+                      onCheckedChange={(checked) => form.setValue('newQuestionsOnly', checked)}
+                      id="new-questions"
+                      disabled={isRandomMode}
+                    />
+                    <Label htmlFor="new-questions">Nur neue Fragen</Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Nur Fragen auswählen, die noch nie beantwortet wurden</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={form.watch('excludeTodaysQuestions')}
+                      onCheckedChange={(checked) => form.setValue('excludeTodaysQuestions', checked)}
+                      id="exclude-todays-questions"
+                      disabled={isRandomMode}
+                    />
+                    <Label htmlFor="exclude-todays-questions">Nur Fragen die ich heute noch nicht hatte</Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Nur Fragen auswählen, die heute noch nicht beantwortet wurden</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

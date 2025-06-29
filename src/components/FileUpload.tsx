@@ -130,7 +130,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       )}
 
       <Tabs defaultValue="csv" className="w-full max-w-4xl">
-        <TabsList className="grid grid-cols-3">
+        <TabsList className="grid grid-cols-2">
           <TabsTrigger 
             value="csv" 
             onClick={() => setUploadType('csv')}
@@ -138,14 +138,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           >
             <FileText className="h-4 w-4" />
             CSV-Datei
-          </TabsTrigger>
-          <TabsTrigger 
-            value="pdf" 
-            onClick={() => setUploadType('pdf')}
-            className="flex items-center gap-2"
-          >
-            <FileUp className="h-4 w-4" />
-            PDF/DOCX-Datei
           </TabsTrigger>
           <TabsTrigger 
             value="batch-pdf" 
@@ -214,7 +206,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                 
                 <div className="mt-2 p-4 bg-muted/50 rounded-lg text-xs text-muted-foreground">
                   <p>Die CSV-Datei sollte folgende Spalten enthalten:</p>
-                  <p className="font-mono mt-1">Frage, A, B, C, D, E, Fach, Antwort, Kommentar, Schwierigkeitsgrad</p>
+                  <p className="font-mono mt-1">Frage, A, B, C, D, E, Fach, Antwort, Kommentar</p>
                 </div>
               </div>
             </CardContent>

@@ -1,12 +1,13 @@
-
 import { Question } from '@/types/Question';
 import { FormValues } from '@/components/training/types/FormValues';
 import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
+import { supabase } from '@/integrations/supabase/client';
 
 export const filterQuestions = async (
   questions: Question[],
   values: FormValues,
-  questionResults?: Map<string, boolean>
+  questionResults?: Map<string, boolean>,
+  userId?: string
 ): Promise<Question[]> => {
   console.log('Starting filterQuestions with', questions.length, 'questions');
   
@@ -28,6 +29,58 @@ export const filterQuestions = async (
   // If random selection is enabled, skip other filtering
   if (values.isRandomSelection) {
     return filteredQuestions;
+  }
+  
+  // Apply new filters if enabled and userId is available
+  if (userId && (values.newQuestionsOnly || values.excludeTodaysQuestions)) {
+    console.log('Applying new question filters...');
+    
+    // Get all user progress data for filtering
+    const { data: userProgress, error: progressError } = await supabase
+      .from('user_progress')
+      .select('question_id, created_at, updated_at')
+      .eq('user_id', userId);
+    
+    if (progressError) {
+      console.error('Error fetching user progress for filtering:', progressError);
+    } else {
+      const userProgressMap = new Map<string, { created_at: string; updated_at: string | null }>();
+      userProgress?.forEach(progress => {
+        userProgressMap.set(progress.question_id, {
+          created_at: progress.created_at,
+          updated_at: progress.updated_at
+        });
+      });
+      
+      // Filter new questions only
+      if (values.newQuestionsOnly) {
+        console.log('Filtering new questions only...');
+        const beforeCount = filteredQuestions.length;
+        filteredQuestions = filteredQuestions.filter(q => !userProgressMap.has(q.id));
+        console.log(`After new questions filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
+      }
+      
+      // Filter out today's questions
+      if (values.excludeTodaysQuestions) {
+        console.log('Filtering out today\'s questions...');
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const todayISOString = today.toISOString();
+        
+        const beforeCount = filteredQuestions.length;
+        filteredQuestions = filteredQuestions.filter(q => {
+          const progress = userProgressMap.get(q.id);
+          if (!progress) return true; // Include questions never answered
+          
+          // Check if question was answered today (either created or updated today)
+          const createdToday = progress.created_at >= todayISOString;
+          const updatedToday = progress.updated_at && progress.updated_at >= todayISOString;
+          
+          return !createdToday && !updatedToday;
+        });
+        console.log(`After excluding today's questions filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
+      }
+    }
   }
   
   // Filter wrong questions first if enabled

@@ -22,7 +22,7 @@ const BatchFileList: React.FC<BatchFileListProps> = ({
   if (files.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-8">
-        Wähle PDF-Dateien aus, um zu beginnen
+        Wähle Dateien aus, um zu beginnen
       </div>
     );
   }

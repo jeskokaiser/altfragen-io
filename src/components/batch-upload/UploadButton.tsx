@@ -28,12 +28,12 @@ const UploadButton: React.FC<UploadButtonProps> = ({
         {isUploading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Verarbeite PDFs...
+            Verarbeite Dokumente...
           </>
         ) : (
           <>
             <Upload className="h-4 w-4" />
-            Alle PDFs verarbeiten
+            Alle Dokumente verarbeiten
           </>
         )}
       </Button>
