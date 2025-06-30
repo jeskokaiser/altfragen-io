@@ -91,12 +91,12 @@ const EditQuestionForm: React.FC<EditQuestionFormProps> = ({
 
       if (updatedQuestion) {
         onQuestionUpdated(updatedQuestion);
-        toast.success('Question updated successfully');
+        toast.success('Frage erfolgreich aktualisiert');
         onClose();
       }
     } catch (error) {
-      console.error('Error updating question:', error);
-      toast.error('Failed to update question');
+      console.error('Frage zur Fehleraktualisierung:', error);
+      toast.error('Frage konnte nicht aktualisiert werden');
     }
   };
 

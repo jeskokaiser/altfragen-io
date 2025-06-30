@@ -28,13 +28,13 @@ const AICommentarySettings: React.FC = () => {
     try {
       const success = await AICommentaryService.updateSettings(localSettings);
       if (success) {
-        toast.success('Settings saved successfully');
+        toast.success('Einstellungen erfolgreich gespeichert');
         await refreshSettings();
       } else {
-        toast.error('Failed to save settings');
+        toast.error('Einstellungen konnten nicht gespeichert werden');
       }
     } catch (error) {
-      toast.error('Error saving settings');
+      toast.error('Fehler beim Speichern von Einstellungen');
     } finally {
       setSaving(false);
     }

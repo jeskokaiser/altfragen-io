@@ -75,9 +75,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         setSubscriptionEnd(null);
       }
     } catch (error) {
-      console.error('Failed to check subscription:', error);
+      console.error('Überprüfung des Abonnements fehlgeschlagen:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showToast.error(`Failed to check subscription status: ${errorMessage}`);
+      showToast.error(`Überprüfung des Abonnementstatus fehlgeschlagen: ${errorMessage}`);
       setSubscribed(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
@@ -88,7 +88,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
   const createCheckoutSession = async (priceType?: 'monthly' | 'weekly') => {
     if (!user) {
-      showToast.error('Please log in to subscribe');
+      showToast.error('Bitte melde dich an, um ein Abonnement zu erstellen');
       return;
     }
 
@@ -125,13 +125,13 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error('Failed to create checkout session:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showToast.error(`Failed to start checkout process: ${errorMessage}`);
+      showToast.error(`Der Checkout-Prozess konnte nicht gestartet werden: ${errorMessage}`);
     }
   };
 
   const openCustomerPortal = async () => {
     if (!user) {
-      showToast.error('Please log in to manage subscription');
+      showToast.error('Bitte melde dich an, um dein Abonnement zu verwalten');
       return;
     }
 
@@ -145,7 +145,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     } catch (error) {
       console.error('Failed to open customer portal:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showToast.error(`Failed to open subscription management: ${errorMessage}`);
+      showToast.error(`Fehler beim Öffnen des Kundenportals: ${errorMessage}`);
     }
   };
 
@@ -161,7 +161,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('checkout') === 'success') {
-      showToast.success('Subscription activated successfully!');
+      showToast.success('Abonnement erfolgreich aktiviert!');
       // Remove the checkout parameter from URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
@@ -170,7 +170,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         checkSubscription();
       }, 2000);
     } else if (urlParams.get('checkout') === 'cancelled') {
-      showToast.info('Checkout was cancelled');
+      showToast.info('Der Checkout wurde abgebrochen');
       // Remove the checkout parameter from URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);

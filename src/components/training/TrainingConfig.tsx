@@ -8,6 +8,7 @@ import FilterForm, { FilterFormRef } from './FilterForm';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -30,9 +31,38 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
 
   const loadUserProgress = async () => {
     try {
-      // Create a simple mock progress for now since we need to fix the immediate errors
+      if (!user?.id) return;
+      
+      // Get question IDs in batches to avoid URL length limits
+      const questionIds = questions.map(q => q.id);
+      const BATCH_SIZE = 500;
       const resultsMap = new Map<string, boolean>();
       const attemptsMap = new Map<string, number>();
+      
+      // Process in batches
+      for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
+        const batch = questionIds.slice(i, i + BATCH_SIZE);
+        
+        const { data: progressData, error } = await supabase
+          .from('user_progress')
+          .select('question_id, is_correct, attempts_count')
+          .eq('user_id', user.id)
+          .in('question_id', batch);
+        
+        if (error) {
+          console.error('Error loading user progress batch:', error);
+          continue;
+        }
+        
+        progressData?.forEach(progress => {
+          if (progress.is_correct !== null) {
+            resultsMap.set(progress.question_id, progress.is_correct);
+          }
+          if (progress.attempts_count !== null) {
+            attemptsMap.set(progress.question_id, progress.attempts_count);
+          }
+        });
+      }
       
       setQuestionResults(resultsMap);
       setAttemptsCount(attemptsMap);

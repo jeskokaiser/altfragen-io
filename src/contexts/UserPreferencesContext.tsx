@@ -83,7 +83,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
-      toast.error('Failed to load preferences');
+      toast.error('Einstellungen konnten nicht geladen werden');
     } finally {
       setIsLoading(false);
     }
@@ -106,10 +106,10 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       if (error) throw error;
 
       setPreferences(prev => ({ ...prev, ...newPreferences }));
-      toast.success('Preferences updated successfully');
+      toast.success('Einstellungen erfolgreich aktualisiert');
     } catch (error) {
       console.error('Error updating preferences:', error);
-      toast.error('Failed to update preferences');
+      toast.error('Einstellungen konnten nicht aktualisiert werden');
     }
   };
 
@@ -118,7 +118,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     
     const newArchivedDatasets = [...preferences.archivedDatasets, filename];
     await updatePreferences({ archivedDatasets: newArchivedDatasets });
-    toast.success('Dataset archived successfully');
+    toast.success('Dataset erfolgreich archiviert');
   };
 
   const restoreDataset = async (filename: string) => {
@@ -126,7 +126,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     
     const newArchivedDatasets = preferences.archivedDatasets.filter(f => f !== filename);
     await updatePreferences({ archivedDatasets: newArchivedDatasets });
-    toast.success('Dataset restored successfully');
+    toast.success('Dataset erfolgreich wiederhergestellt');
   };
 
   const isDatasetArchived = (filename: string): boolean => {

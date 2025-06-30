@@ -178,21 +178,37 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
   let userDifficulties: Record<string, number> = {};
   
   if (allQuestionsIds.length > 0) {
-    const { data: progressData, error: progressError } = await supabase
-      .from('user_progress')
-      .select('question_id, user_difficulty')
-      .eq('user_id', userId)
-      .in('question_id', allQuestionsIds)
-      .not('user_difficulty', 'is', null);
+    // Batch the question IDs to avoid URL length limits
+    const BATCH_SIZE = 500; // Safe batch size to avoid URL length issues
+    const batches = [];
     
-    if (!progressError && progressData) {
-      userDifficulties = progressData.reduce((acc: Record<string, number>, item) => {
-        if (item.user_difficulty !== null) {
-          acc[item.question_id] = item.user_difficulty;
-        }
-        return acc;
-      }, {});
+    for (let i = 0; i < allQuestionsIds.length; i += BATCH_SIZE) {
+      batches.push(allQuestionsIds.slice(i, i + BATCH_SIZE));
     }
+    
+    // Fetch user difficulties in batches
+    const allProgressData = [];
+    
+    for (const batch of batches) {
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('question_id, user_difficulty')
+        .eq('user_id', userId)
+        .in('question_id', batch)
+        .not('user_difficulty', 'is', null);
+      
+      if (!progressError && progressData) {
+        allProgressData.push(...progressData);
+      }
+    }
+    
+    // Combine all batch results
+    userDifficulties = allProgressData.reduce((acc: Record<string, number>, item) => {
+      if (item.user_difficulty !== null) {
+        acc[item.question_id] = item.user_difficulty;
+      }
+      return acc;
+    }, {});
   }
 
   const allQuestions = [...personalQuestions, ...universityQuestions].map(q => ({

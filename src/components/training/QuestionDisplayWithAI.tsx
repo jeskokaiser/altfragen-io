@@ -118,29 +118,31 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   });
 
   useEffect(() => {
-    setSelectedAnswer('');
-    setShowFeedback(false);
-    setCurrentQuestion(questionData);
-    setIsCorrect(false);
-    setShowSolution(false);
-    setUsageIncrementedForQuestion(null); // Reset for new question
-    
-    // Initialize state from userAnswerState if it exists
-    if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
-      setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()));
-      setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
-      setShowFeedback(true);
-      setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
-      
-      // Check if solution was viewed
-      if (userAnswerState.viewedSolution) {
-        setShowSolution(true);
-      }
-    } else {
+    // Only reset state if we're actually moving to a different question
+    if (currentQuestion.id !== questionData.id) {
+      setSelectedAnswer('');
+      setShowFeedback(false);
+      setCurrentQuestion(questionData);
+      setIsCorrect(false);
+      setShowSolution(false);
+      setUsageIncrementedForQuestion(null); // Reset for new question
       setWrongAnswers([]);
       setFirstWrongAnswer(null);
+      
+      // Initialize state from userAnswerState if it exists
+      if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
+        setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()));
+        setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
+        setShowFeedback(true);
+        setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
+        
+        // Check if solution was viewed
+        if (userAnswerState.viewedSolution) {
+          setShowSolution(true);
+        }
+      }
     }
-  }, [questionData, userAnswerState]);
+  }, [questionData.id, userAnswerState]);
 
   // Handle usage increment when AI comments should be shown for free tier users
   useEffect(() => {
@@ -171,19 +173,26 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
-    onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, viewedSolution || false);
+    // Don't add to wrongAnswers if it's a "solution_viewed" action
+    if (answer !== 'solution_viewed') {
+      onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, viewedSolution || false);
+      
+      if (!correct) {
+        if (!firstWrongAnswer) {
+          setFirstWrongAnswer(answer);
+        }
+        setWrongAnswers(prev => [...prev, answer]);
+      }
+    } else {
+      // For solution_viewed, just update the answer state
+      onAnswer(answer, false, true);
+    }
+    
     setShowFeedback(true);
     setIsCorrect(correct);
     
     if (viewedSolution) {
       setShowSolution(true);
-    }
-    
-    if (!correct) {
-      if (!firstWrongAnswer) {
-        setFirstWrongAnswer(answer);
-      }
-      setWrongAnswers(prev => [...prev, answer]);
     }
     
     // Remove automatic navigation - let user manually proceed
@@ -344,7 +353,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           onNext={handleNext}
           isFirstQuestion={currentIndex === 0}
           isLastQuestion={currentIndex === totalQuestions - 1}
-          hasUserAnswer={!!userAnswer && isCorrect}
+          hasUserAnswer={(!!userAnswer && isCorrect) || (showFeedback && preferences?.immediateFeedback)}
           wrongAttempts={wrongAnswers.length}
           showSolution={showSolution}
         />
@@ -431,6 +440,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           selectedAnswer={selectedAnswer}
           user={user}
           onAnswerSubmitted={handleAnswerSubmitted}
+          showSolution={showSolution}
+          wrongAnswers={wrongAnswers}
         />
 
         <QuestionFeedback
@@ -450,7 +461,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         onNext={handleNext}
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
-        hasUserAnswer={!!userAnswer && isCorrect}
+        hasUserAnswer={(!!userAnswer && isCorrect) || (showFeedback && preferences?.immediateFeedback)}
         wrongAttempts={wrongAnswers.length}
         showSolution={showSolution}
       />

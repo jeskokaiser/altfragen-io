@@ -8,12 +8,15 @@ import { XCircle, Eye } from 'lucide-react';
 import FeedbackDisplay from './FeedbackDisplay';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { showToast } from '@/utils/toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
   selectedAnswer: string;
   user: User | null;
-  onAnswerSubmitted: (answer: string, isCorrect: boolean, showSolution?: boolean) => void;
+  onAnswerSubmitted: (answer: string, isCorrect: boolean, viewedSolution?: boolean) => void;
+  showSolution: boolean;
+  wrongAnswers: string[];
 }
 
 const AnswerSubmission = ({
@@ -21,19 +24,17 @@ const AnswerSubmission = ({
   selectedAnswer,
   user,
   onAnswerSubmitted,
+  showSolution,
+  wrongAnswers,
 }: AnswerSubmissionProps) => {
   const [hasSubmittedWrong, setHasSubmittedWrong] = React.useState(false);
   const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
-  const [wrongAnswers, setWrongAnswers] = React.useState<string[]>([]);
-  const [showSolution, setShowSolution] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { preferences } = useUserPreferences();
 
   React.useEffect(() => {
     setHasSubmittedWrong(false);
     setLastSubmissionCorrect(null);
-    setWrongAnswers([]);
-    setShowSolution(false);
   }, [currentQuestion]);
 
   const handleConfirmAnswer = async () => {
@@ -99,17 +100,13 @@ const AnswerSubmission = ({
 
       if (!isCorrect && !preferences?.immediateFeedback) {
         setHasSubmittedWrong(true);
-        if (!wrongAnswers.includes(selectedAnswer)) {
-          setWrongAnswers(prev => [...prev, selectedAnswer]);
-        }
       }
 
       setLastSubmissionCorrect(isCorrect);
-      onAnswerSubmitted(selectedAnswer, isCorrect, preferences?.immediateFeedback && !isCorrect);
-
-      if (preferences?.immediateFeedback) {
-        setShowSolution(true);
-      }
+      
+      // Pass true for viewedSolution when immediate feedback is enabled (for both correct and incorrect)
+      const shouldShowSolution = preferences?.immediateFeedback;
+      onAnswerSubmitted(selectedAnswer, isCorrect, shouldShowSolution);
 
     } catch (error) {
       console.error('Error handling answer submission:', error);
@@ -121,7 +118,6 @@ const AnswerSubmission = ({
 
   const handleShowSolution = () => {
     if (!user) return;
-    setShowSolution(true);
     setLastSubmissionCorrect(false);
     onAnswerSubmitted('solution_viewed', false, true);
   };

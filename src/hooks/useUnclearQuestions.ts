@@ -11,7 +11,7 @@ export const useUnclearQuestions = (questionId?: string) => {
     if (questionId) {
       checkUnclearStatus();
     }
-  }, [questionId]);
+  }, [questionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkUnclearStatus = async () => {
     if (!questionId) return;

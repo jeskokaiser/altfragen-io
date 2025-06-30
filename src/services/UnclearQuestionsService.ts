@@ -78,14 +78,15 @@ export class UnclearQuestionsService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('user_unclear_questions')
         .select('id')
         .eq('user_id', user.id)
         .eq('question_id', questionId)
-        .single();
+        .maybeSingle();
 
-      return !!data;
+      // If there's an error or no data, the question is not marked as unclear
+      return !error && !!data;
     } catch {
       return false;
     }
