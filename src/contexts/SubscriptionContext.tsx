@@ -136,12 +136,32 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
 
     try {
-      console.log('Opening customer portal for user:', user.id);
+      console.log('Creating authenticated customer portal session for user:', user.id);
       
-      // Direct redirect to Stripe customer portal
-      const portalUrl = 'https://billing.stripe.com/p/login/eVqbJ0aDy6gQ7Yi6ykcAo00';
-      window.open(portalUrl, '_blank', 'noopener,noreferrer');
-      showToast.success('Kundenportal wurde geöffnet');
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      console.log('Invoking customer-portal function');
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Customer portal error details:', error);
+        throw new Error(error.message || 'Failed to create customer portal session');
+      }
+
+      console.log('Customer portal session created:', data);
+      if (data?.url) {
+        // Redirect to the authenticated portal URL in the same tab
+        window.location.href = data.url;
+      } else {
+        throw new Error('No portal URL received');
+      }
     } catch (error) {
       console.error('Failed to open customer portal:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
