@@ -120,26 +120,26 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   useEffect(() => {
     // Only reset state if we're actually moving to a different question
     if (currentQuestion.id !== questionData.id) {
-      setSelectedAnswer('');
-      setShowFeedback(false);
-      setCurrentQuestion(questionData);
-      setIsCorrect(false);
-      setShowSolution(false);
-      setUsageIncrementedForQuestion(null); // Reset for new question
+    setSelectedAnswer('');
+    setShowFeedback(false);
+    setCurrentQuestion(questionData);
+    setIsCorrect(false);
+    setShowSolution(false);
+    setUsageIncrementedForQuestion(null); // Reset for new question
       setWrongAnswers([]);
       setFirstWrongAnswer(null);
+    
+    // Initialize state from userAnswerState if it exists
+    if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
+      setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()));
+      setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
+      setShowFeedback(true);
+      setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
       
-      // Initialize state from userAnswerState if it exists
-      if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
-        setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()));
-        setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
-        setShowFeedback(true);
-        setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
-        
-        // Check if solution was viewed
-        if (userAnswerState.viewedSolution) {
-          setShowSolution(true);
-        }
+      // Check if solution was viewed
+      if (userAnswerState.viewedSolution) {
+        setShowSolution(true);
+      }
       }
     }
   }, [questionData.id, userAnswerState]);
@@ -175,7 +175,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
     // Don't add to wrongAnswers if it's a "solution_viewed" action
     if (answer !== 'solution_viewed') {
-      onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, viewedSolution || false);
+    onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, viewedSolution || false);
       
       if (!correct) {
         if (!firstWrongAnswer) {

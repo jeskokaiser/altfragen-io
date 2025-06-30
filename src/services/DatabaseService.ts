@@ -174,43 +174,8 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     universityQuestions = uniQuestions || [];
   }
 
-  const allQuestionsIds = [...personalQuestions, ...universityQuestions].map(q => q.id);
-  let userDifficulties: Record<string, number> = {};
-  
-  if (allQuestionsIds.length > 0) {
-    // Batch the question IDs to avoid URL length limits
-    const BATCH_SIZE = 500; // Safe batch size to avoid URL length issues
-    const batches = [];
-    
-    for (let i = 0; i < allQuestionsIds.length; i += BATCH_SIZE) {
-      batches.push(allQuestionsIds.slice(i, i + BATCH_SIZE));
-    }
-    
-    // Fetch user difficulties in batches
-    const allProgressData = [];
-    
-    for (const batch of batches) {
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('question_id, user_difficulty')
-        .eq('user_id', userId)
-        .in('question_id', batch)
-        .not('user_difficulty', 'is', null);
-      
-      if (!progressError && progressData) {
-        allProgressData.push(...progressData);
-      }
-    }
-    
-    // Combine all batch results
-    userDifficulties = allProgressData.reduce((acc: Record<string, number>, item) => {
-      if (item.user_difficulty !== null) {
-        acc[item.question_id] = item.user_difficulty;
-      }
-      return acc;
-    }, {});
-  }
-
+  // For now, skip fetching user difficulties in the dashboard to improve performance
+  // User difficulties will be fetched on-demand when questions are actually displayed
   const allQuestions = [...personalQuestions, ...universityQuestions].map(q => ({
     id: q.id,
     question: q.question,
@@ -224,7 +189,7 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     comment: q.comment,
     filename: q.filename,
     created_at: q.created_at,
-    difficulty: q.id in userDifficulties ? userDifficulties[q.id] : q.difficulty,
+    difficulty: q.difficulty, // Use default difficulty, user-specific will be fetched on-demand
     is_unclear: q.is_unclear,
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
@@ -253,6 +218,46 @@ export const fetchUserDifficulty = async (userId: string, questionId: string): P
   if (error || !data) return null;
   
   return data.user_difficulty;
+};
+
+export const fetchUserDifficultiesForQuestions = async (userId: string, questionIds: string[]): Promise<Record<string, number>> => {
+  if (!userId || questionIds.length === 0) return {};
+  
+  const userDifficulties: Record<string, number> = {};
+  
+  // Batch the question IDs to avoid URL length limits
+  const BATCH_SIZE = 500;
+  const batches = [];
+  
+  for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
+    batches.push(questionIds.slice(i, i + BATCH_SIZE));
+  }
+  
+  // Fetch all batches in parallel
+  const batchPromises = batches.map(batch => 
+    supabase
+      .from('user_progress')
+      .select('question_id, user_difficulty')
+      .eq('user_id', userId)
+      .in('question_id', batch)
+      .not('user_difficulty', 'is', null)
+  );
+  
+  try {
+    const results = await Promise.all(batchPromises);
+    const allProgressData = results.flatMap(result => result.data || []);
+    
+    // Combine all batch results
+    allProgressData.forEach(item => {
+      if (item.user_difficulty !== null) {
+        userDifficulties[item.question_id] = item.user_difficulty;
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user difficulties:', error);
+  }
+  
+  return userDifficulties;
 };
 
 export const fetchPublicQuestions = async (limit: number = 5): Promise<Question[]> => {
