@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { Crown, Check, Loader2, Brain, Tag } from 'lucide-react';
+import { Crown, Check, Loader2, Brain, Tag, Mail } from 'lucide-react';
 
 const SubscriptionCard: React.FC = () => {
   const { 
@@ -71,7 +71,7 @@ const SubscriptionCard: React.FC = () => {
                   🎉 Einführungsangebot: Nur €5,99/Monat (statt €8,99)
                 </p>
                 <p className="text-xs text-green-700 mt-1">
-                  Limitiert auf die ersten 500 Nutzer
+                  Limitiert auf die ersten 500 Nutzer:innen
                 </p>
               </div>
               <div className="space-y-1">
@@ -93,19 +93,36 @@ const SubscriptionCard: React.FC = () => {
         </div>
       </div>
       
-      <div className="flex gap-2 mt-4">
+      <div className="space-y-2 mt-4">
         {subscribed ? (
-          <Button onClick={openCustomerPortal} variant="outline">
-            Abonnement verwalten
-          </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button onClick={openCustomerPortal} variant="outline" className="flex-1">
+                Abonnement verwalten
+              </Button>
+              <Button 
+                onClick={() => window.open('mailto:premium@altfragen.io?subject=Premium Support Anfrage', '_blank')}
+                variant="outline"
+                className="flex items-center gap-2 flex-1"
+              >
+                <Mail className="h-4 w-4" />
+                Premium Support
+              </Button>
+            </div>
+            <Button onClick={checkSubscription} variant="ghost" size="sm" className="w-full">
+              Status aktualisieren
+            </Button>
+          </div>
         ) : (
-          <Button onClick={() => createCheckoutSession('monthly')} className="bg-green-600 hover:bg-green-700">
-            🔥 Premium für €5,99/Monat
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button onClick={() => createCheckoutSession('monthly')} className="bg-green-600 hover:bg-green-700 w-full">
+              🔥 Premium für €5,99/Monat
+            </Button>
+            <Button onClick={checkSubscription} variant="ghost" size="sm" className="w-full">
+              Status aktualisieren
+            </Button>
+          </div>
         )}
-        <Button onClick={checkSubscription} variant="ghost" size="sm">
-          Status aktualisieren
-        </Button>
       </div>
     </Card>
   );

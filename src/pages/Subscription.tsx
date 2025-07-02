@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X, Brain, Shield, Upload, FileText, Zap, Tag } from 'lucide-react';
@@ -10,6 +11,8 @@ const Subscription = () => {
     subscribed,
     createCheckoutSession
   } = useSubscription();
+  
+  const { universityName } = useAuth();
   
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly'>('monthly');
   
@@ -62,7 +65,7 @@ const Subscription = () => {
             <span className="font-semibold">🎉 Einführungsangebot: 33% Rabatt!</span>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Limitiertes Angebot zum Start von Altfragen.io für die ersten 500 Nutzer
+            Limitiertes Angebot zum Start von Altfragen.io für die ersten 500 Nutzer:innen
           </p>
         </div>
       </div>
@@ -145,29 +148,29 @@ const Subscription = () => {
           </Card>
 
           {/* Weekly Plan */}
-          <Card className={`p-6 relative border-2 border-purple-500`}>
+          <Card className={`p-6 relative border-2 border-blue-500`}>
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <div className="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                 Wochenabo
               </div>
             </div>
             
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2">
-                <Brain className="h-6 w-6 text-purple-600" />
+                <Brain className="h-6 w-6 text-blue-600" />
                 <h3 className="text-xl font-semibold">Premium Wöchentlich</h3>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-purple-600">€1,99<span className="text-sm font-normal">/Woche</span></div>
+                <div className="text-3xl font-bold text-blue-600">€1,99<span className="text-sm font-normal">/Woche</span></div>
                 <div className="text-lg text-gray-500 line-through">€2,99<span className="text-sm">/Woche</span></div>
-                <div className="text-xs text-purple-600 font-medium">Nur für die ersten 500 Nutzer</div>
+                <div className="text-xs text-blue-600 font-medium">Nur für die ersten 500 Nutzer:innen</div>
               </div>
               <p className="text-sm text-muted-foreground">Perfekt zum Ausprobieren</p>
               
               {!subscribed && (
                 <Button 
                   onClick={() => createCheckoutSession('weekly')} 
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                 >
                   🔥 Wochenabo starten
                 </Button>
@@ -186,7 +189,7 @@ const Subscription = () => {
                       <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     )}
                     <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
-                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-purple-700' : ''}`}>
+                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700' : ''}`}>
                       {feature.name}
                     </span>
                   </div>
@@ -218,9 +221,11 @@ const Subscription = () => {
               <div className="space-y-2">
                 <div className="text-3xl font-bold text-green-600">€5,99<span className="text-sm font-normal">/Monat</span></div>
                 <div className="text-lg text-gray-500 line-through">€8,99<span className="text-sm">/Monat</span></div>
-                <div className="text-xs text-green-600 font-medium">Nur für die ersten 500 Nutzer</div>
+                <div className="text-xs text-green-600 font-medium">Nur für die ersten 500 Nutzer:innen</div>
               </div>
-              <p className="text-sm text-muted-foreground">Bestes Preis-Leistungs-Verhältnis</p>
+              <p className="text-sm text-muted-foreground">
+                Bestes Preis-Leistungs-Verhältnis{universityName === "Hamburg UKE" ? ": Entspricht 1 Bundi Kaffee pro Woche ☕️" : ""}
+              </p>
               
               {!subscribed && (
                 <Button 
@@ -283,7 +288,7 @@ const Subscription = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Einführungsangebot</h3>
           <p className="text-sm text-muted-foreground">
-            Als einer der ersten 500 Nutzer erhältst du dauerhaft Rabatt auf Altfragen.io Premium: 
+            Als eine:r der ersten 500 Nutzer:innen erhältst du dauerhaft Rabatt auf Altfragen.io Premium: 
             33% Rabatt auf das Monatsabo (€5,99 statt €8,99) und das Wochenabo (€1,99 statt €2,99). 
             Diese Angebote sind limitiert und gelten solange du dein Abonnement nicht kündigst.
           </p>

@@ -503,7 +503,7 @@ const Auth = () => {
             {isEmailVerified && universityName && <Alert className="bg-green-50 border-green-200">
                 <School className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-700">
-                  Du bist als Student der {universityName} verifiziert.
+                  Du bist als Student:in der {universityName} verifiziert.
                 </AlertDescription>
               </Alert>}
 

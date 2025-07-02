@@ -109,7 +109,7 @@ const Index = () => {
           </h2>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
             Unsere Plattform bietet alles, was du für eine effiziente Prüfungsvorbereitung brauchst – 
-            entwickelt von Studenten für Studenten.
+            entwickelt von Student:innen für Student:innen.
           </p>
         </div>
         
@@ -135,7 +135,7 @@ const Index = () => {
           <FeatureCard 
             icon={<Users className="w-10 h-10" />} 
             title="Universitäts-Community" 
-            description="Teile Fragen mit anderen Studenten deiner Universität und profitiere von geteiltem Wissen." 
+            description="Teile Fragen mit anderen Student:innen deiner Universität und profitiere von geteiltem Wissen." 
             color="violet" 
           />
         </div>
@@ -183,7 +183,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">Größere Fragendatenbank</h3>
-                      <p className="text-slate-600">Zugriff auf Fragen von anderen Studenten derselben Fächer</p>
+                      <p className="text-slate-600">Zugriff auf Fragen von anderen Student:innen derselben Fächer</p>
                     </div>
                   </div>
                 </div>
