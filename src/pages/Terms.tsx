@@ -13,6 +13,9 @@ const Terms = () => {
         <p className="mb-4">
           Altfragen.io ist eine Plattform zur Unterstützung der Prüfungsvorbereitung durch das Lernen mit Altfragen. Die Plattform ermöglicht das Hochladen, Bearbeiten, Teilen und Trainieren von Altfragen.
         </p>
+        <p className="mb-4">
+          Die Erstellung von KI-Kommentaren ist eine Funktion, die Ratenbegrenzungen unterliegt. Daher können wir nicht garantieren, dass für jede Frage ein KI-Kommentar erstellt wird. Dies gilt insbesondere für private Fragen, die auch mit einem Premium-Abonnement möglicherweise nicht verarbeitet werden. Nutzer, die eine garantierte Verarbeitung ihrer privaten Fragen benötigen, können uns unter <a href="mailto:premium@altfragen.io" className="text-blue-600 hover:underline">premium@altfragen.io</a> für ein individuelles Angebot kontaktieren.
+        </p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">3. Nutzungsrechte</h2>
         <p className="mb-4">

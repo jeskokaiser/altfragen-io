@@ -82,6 +82,9 @@ const AGB = () => {
               <p>
                 Wir streben eine Verfügbarkeit von 99% an, können diese jedoch nicht garantieren. Wartungsarbeiten werden nach Möglichkeit außerhalb der Hauptnutzungszeiten durchgeführt.
               </p>
+              <p>
+                Die Erstellung von KI-generierten Kommentaren für vom Nutzer hochgeladene Fragen unterliegt technischen Beschränkungen und einer Fair-Use-Policy, die durch Ratenbegrenzungen umgesetzt wird. Der Anbieter kann daher nicht garantieren, dass sämtliche Fragen, insbesondere private Fragen des Nutzers, mit KI-Kommentaren versehen werden. Dies gilt auch im Rahmen eines Premium-Abonnements. Nutzern mit einem Bedarf an garantierter und vollständiger Verarbeitung ihrer privaten Fragen bietet der Anbieter individuelle Vereinbarungen an. Anfragen hierzu sind an premium@altfragen.io zu richten.
+              </p>
             </section>
 
             {/* 7. Pflichten des Kunden */}
