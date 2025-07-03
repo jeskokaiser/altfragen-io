@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface ResultsProps {
   questions: Question[];
@@ -16,6 +16,7 @@ interface ResultsProps {
 const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { preferences } = useUserPreferences();
 
   // Filter to only show answered questions
   const answeredQuestions = questions.filter((_, index) => userAnswers[index]?.value);
@@ -24,11 +25,25 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   const calculateScore = () => {
     return answeredQuestions.reduce((score, question, index) => {
       const answer = answeredUserAnswers[index];
-      if (!answer || !answer.isFirstAttempt || answer.viewedSolution) return score;
+      if (!answer) return score;
       
-      const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
-      const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
-      return score + (userAnswerLetter === correctAnswerLetter ? 1 : 0);
+      // In immediate feedback mode, don't check isFirstAttempt since every answer should count if correct
+      if (preferences?.immediateFeedback) {
+        const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
+        const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
+        const isCorrect = userAnswerLetter === correctAnswerLetter;
+        return score + (isCorrect ? 1 : 0);
+      } else {
+        // In normal mode, use the original logic
+        if (!answer.isFirstAttempt || answer.viewedSolution) {
+          return score;
+        }
+        
+        const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
+        const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
+        const isCorrect = userAnswerLetter === correctAnswerLetter;
+        return score + (isCorrect ? 1 : 0);
+      }
     }, 0);
   };
 
@@ -38,8 +53,17 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     const userAnswerLetter = (answer.originalAnswer || answer.value).trim()[0]?.toUpperCase();
     const isCorrectAnswer = userAnswerLetter === correctLetter;
 
-    if (answer.viewedSolution) return 'text-red-600';
-    if (!answer.isFirstAttempt) return 'text-red-600';
+    // In immediate feedback mode, use simple correct/incorrect coloring
+    if (preferences?.immediateFeedback) {
+      return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
+    }
+    
+    // In normal mode, show red for non-first attempts or viewed solutions, even if eventually correct
+    if (answer.viewedSolution || !answer.isFirstAttempt) {
+      return 'text-red-600';
+    }
+    
+    // First attempt without viewing solution: color by correctness
     return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
   };
 
@@ -54,13 +78,23 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     }
 
     const answerText = `${userAnswerLetter}: ${question[`option${userAnswerLetter}` as keyof Question]}`;
+    const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
+    const isCorrectAnswer = userAnswerLetter === correctAnswerLetter;
     
+    // In immediate feedback mode, just show the answer text without context flags
+    if (preferences?.immediateFeedback) {
+      return answerText;
+    }
+    
+    // In normal mode, show context flags regardless of correctness
     if (answer.viewedSolution) {
       return `${answerText} (Lösung angezeigt)`;
     }
     if (!answer.isFirstAttempt) {
       return `${answerText} (Nicht der erste Versuch)`;
     }
+    
+    // No context flags to show, just return the answer text
     return answerText;
   };
 
