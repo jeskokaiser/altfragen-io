@@ -16,7 +16,6 @@ export const usePremiumFeatures = () => {
   } = useAICommentUsage();
 
   // User must be logged in AND (have an active subscription OR have free views remaining)
-  const isPremium = user && subscribed;
   const canAccessAIComments = user && (subscribed || canViewFree);
   
   const requirePremiumForAI = async (callback: () => void) => {
@@ -38,7 +37,7 @@ export const usePremiumFeatures = () => {
   };
 
   return {
-    isPremium: !!isPremium,
+    subscribed: !!subscribed,
     canAccessAIComments: !!canAccessAIComments,
     requirePremiumForAI,
     loading,

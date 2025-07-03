@@ -5,6 +5,8 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
+import CampaignBanner from '@/components/campaigns/CampaignBanner';
+import CampaignToast from '@/components/campaigns/CampaignToast';
 
 // Import pages
 import DashboardPage from '@/pages/Dashboard';
@@ -49,6 +51,8 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <CampaignBanner />
+      <CampaignToast />
       <main className="flex-1">
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />

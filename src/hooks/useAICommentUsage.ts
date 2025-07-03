@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,27 @@ export const useAICommentUsage = () => {
   const [dailyUsage, setDailyUsage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isIncrementing, setIsIncrementing] = useState(false);
-  const DAILY_LIMIT = 10;
+  const [dailyLimit, setDailyLimit] = useState(10); // Default value
+
+  // Fetch the daily limit from database
+  const fetchDailyLimit = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ai_commentary_settings')
+        .select('free_ai_daily_limit')
+        .single();
+
+      if (error) {
+        console.error('Error fetching daily limit:', error);
+        setDailyLimit(10); // Fall back to default
+      } else {
+        setDailyLimit(data?.free_ai_daily_limit || 10);
+      }
+    } catch (error) {
+      console.error('Error in fetchDailyLimit:', error);
+      setDailyLimit(10); // Fall back to default
+    }
+  }, []);
 
   const checkDailyUsage = useCallback(async () => {
     if (!user) {
@@ -98,12 +117,13 @@ export const useAICommentUsage = () => {
     }
   }, [user, isIncrementing]);
 
-  const canViewAIComments = dailyUsage < DAILY_LIMIT && !isIncrementing;
-  const remainingFreeViews = Math.max(0, DAILY_LIMIT - dailyUsage);
+  const canViewAIComments = dailyUsage < dailyLimit && !isIncrementing;
+  const remainingFreeViews = Math.max(0, dailyLimit - dailyUsage);
 
   useEffect(() => {
+    fetchDailyLimit();
     checkDailyUsage();
-  }, [checkDailyUsage]);
+  }, [fetchDailyLimit, checkDailyUsage]);
 
   return {
     dailyUsage,
@@ -111,7 +131,7 @@ export const useAICommentUsage = () => {
     remainingFreeViews,
     incrementUsage,
     loading,
-    DAILY_LIMIT,
+    DAILY_LIMIT: dailyLimit,
     isIncrementing
   };
 };

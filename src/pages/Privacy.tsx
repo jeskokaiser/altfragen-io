@@ -38,6 +38,7 @@ const Privacy = () => {
                 <li>Passwort (verschlüsselt gespeichert, nicht im Klartext einsehbar)</li>
                 <li>Abonnement-Status und Zahlungsinformationen (verarbeitet durch Stripe)</li>
                 <li>Nutzungsverhalten der Plattform (Sessions, bearbeitete Fragen)</li>
+                <li>Einwilligung zum Erhalt von Marketing-E-Mails (falls erteilt)</li>
               </ul>
             </section>
 
@@ -91,9 +92,23 @@ const Privacy = () => {
               </ul>
             </section>
 
-            {/* 7. Cookies */}
+            {/* 7. Newsletter und Marketingkommunikation */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">7. Cookies</h2>
+              <h2 className="text-xl font-semibold">7. Newsletter und Marketingkommunikation</h2>
+              <p>
+                Sofern Sie uns Ihre ausdrückliche Einwilligung erteilt haben (Art. 6 Abs. 1 lit. a DSGVO), verwenden wir Ihre E-Mail-Adresse, um Sie regelmäßig über Neuigkeiten, Angebote und Produktupdates zu informieren.
+              </p>
+              <p>
+                Ihre Einwilligung können Sie jederzeit widerrufen. In jeder Marketing-E-Mail finden Sie einen Abmeldelink. Alternativ können Sie uns auch per E-Mail unter hallo@altfragen.io kontaktieren.
+              </p>
+              <p>
+                Der Widerruf der Einwilligung berührt nicht die Rechtmäßigkeit der bis zum Widerruf erfolgten Verarbeitung.
+              </p>
+            </section>
+
+            {/* 8. Cookies */}
+            <section className="space-y-2">
+              <h2 className="text-xl font-semibold">8. Cookies</h2>
               <p>
                 Unsere Website verwendet ausschließlich technisch notwendige Cookies, die für die Grundfunktionen der Plattform (z.B. Login-Status) unerlässlich sind.
                 Diese Cookies speichern keine personenbezogenen Daten, die eine Identifizierung ermöglichen.
@@ -103,9 +118,9 @@ const Privacy = () => {
               </p>
             </section>
 
-            {/* 8. Keine Weitergabe von Daten */}
+            {/* 9. Weitergabe von Daten */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">8. Weitergabe von Daten</h2>
+              <h2 className="text-xl font-semibold">9. Weitergabe von Daten</h2>
               <p>
                 Ihre Daten werden nur in folgenden Fällen an Dritte weitergegeben:
               </p>
@@ -116,9 +131,9 @@ const Privacy = () => {
               </ul>
             </section>
 
-            {/* 9. Datensicherheit */}
+            {/* 10. Datensicherheit */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">9. Datensicherheit</h2>
+              <h2 className="text-xl font-semibold">10. Datensicherheit</h2>
               <p>
                 Wir verwenden branchenübliche Sicherheitsmaßnahmen zum Schutz Ihrer Daten:
               </p>
@@ -130,9 +145,9 @@ const Privacy = () => {
               </ul>
             </section>
 
-            {/* 10. Speicherdauer */}
+            {/* 11. Speicherdauer */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">10. Speicherdauer</h2>
+              <h2 className="text-xl font-semibold">11. Speicherdauer</h2>
               <p>
                 Ihre Daten werden so lange gespeichert, wie:
               </p>
@@ -146,9 +161,9 @@ const Privacy = () => {
               </p>
             </section>
 
-            {/* 11. Ihre Rechte */}
+            {/* 12. Ihre Rechte */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">11. Ihre Rechte</h2>
+              <h2 className="text-xl font-semibold">12. Ihre Rechte</h2>
               <p>Sie haben folgende Rechte bezüglich Ihrer personenbezogenen Daten:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Recht auf Auskunft (Art. 15 DSGVO)</li>
@@ -164,9 +179,9 @@ const Privacy = () => {
               </p>
             </section>
 
-            {/* 12. Änderungen */}
+            {/* 13. Änderungen */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">12. Änderungen dieser Datenschutzerklärung</h2>
+              <h2 className="text-xl font-semibold">13. Änderungen dieser Datenschutzerklärung</h2>
               <p>
                 Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren. 
                 Die aktuelle Version ist stets auf unserer Website verfügbar.

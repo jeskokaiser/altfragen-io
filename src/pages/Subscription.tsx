@@ -60,7 +60,7 @@ const Subscription = () => {
         </p>
         {/* Subscription Info */}
         <div className="max-w-md mx-auto mt-4">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
             <Tag className="h-4 w-4" />
             <span className="font-semibold">🎉 Einführungsangebot: 33% Rabatt!</span>
           </div>
@@ -72,41 +72,41 @@ const Subscription = () => {
 
       {/* AI Models Value Proposition */}
       <div className="max-w-4xl mx-auto">
-        <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2">
-              <Brain className="h-6 w-6 text-blue-600" />
-              <h3 className="text-xl font-semibold text-blue-900">Drei Premium-KI-Modelle für maximale Genauigkeit</h3>
+              <Brain className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-xl font-semibold text-blue-900 dark:text-blue-100">Drei Premium-KI-Modelle für maximale Genauigkeit</h3>
             </div>
-            <p className="text-blue-700">
+            <p className="text-blue-700 dark:text-blue-300">
               Wir nutzen die neuesten und leistungsstärksten KI-Reasoning-Modelle mit höchsten Benchmark-Ergebnissen:
             </p>
             <div className="grid md:grid-cols-3 gap-4 mt-4">
-              <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">OpenAI o4-mini</h4>
-                <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">OpenAI o4-mini</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
               </div>
-              <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">Gemini 2.5 Pro/Flash</h4>
-                <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">Gemini 2.5 Pro/Flash</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
               </div>
-              <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold text-gray-900">Grok oder Mistral</h4>
-                <p className="text-sm text-gray-600">~€20/Monat einzeln</p>
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">Grok oder Mistral</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
               </div>
             </div>
-            <div className="bg-blue-100 p-4 rounded-lg">
-              <p className="text-blue-800 font-medium">
+            <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg">
+              <p className="text-blue-800 dark:text-blue-200 font-medium">
                 💰 Einzelkauf aller drei Modelle: ~€60/Monat
               </p>
-              <p className="text-blue-700 text-sm mt-1">
+              <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
                 <span className="line-through">Mit Altfragen.io Premium: Nur €8,99/Monat</span>
               </p>
-              <p className="text-green-700 font-semibold text-lg mt-1">
+              <p className="text-green-700 dark:text-green-300 font-semibold text-lg mt-1">
               🎉 Einführungspreis: Monatlich nur €5,99/Monat + automatische Zusammenfassung durch erweiterte KI
               </p>
             </div>
-            <p className="text-blue-700 text-sm">
+            <p className="text-blue-700 dark:text-blue-300 text-sm">
               Drei verschiedene Modelle sorgen für höhere Genauigkeit bei schwierigen Fragen. 
               Du sparst Zeit und Geld im Vergleich zum Einzelkauf und Setup der Modelle.
             </p>
@@ -133,12 +133,12 @@ const Subscription = () => {
                 return (
                   <div key={index} className="flex items-center gap-3">
                     {isIncluded ? (
-                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <Check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                     ) : (
-                      <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <X className="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                     )}
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
-                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''}`}>
+                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                    <span className={`text-sm ${!isIncluded ? 'text-gray-400 dark:text-gray-500' : ''}`}>
                       {feature.name}
                     </span>
                   </div>
@@ -148,29 +148,29 @@ const Subscription = () => {
           </Card>
 
           {/* Weekly Plan */}
-          <Card className={`p-6 relative border-2 border-blue-500`}>
+          <Card className={`p-6 relative border-2 border-blue-500 dark:border-blue-400`}>
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              <div className="bg-blue-500 dark:bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                 Wochenabo
               </div>
             </div>
             
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2">
-                <Brain className="h-6 w-6 text-blue-600" />
+                <Brain className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-xl font-semibold">Premium Wöchentlich</h3>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-blue-600">€1,99<span className="text-sm font-normal">/Woche</span></div>
-                <div className="text-lg text-gray-500 line-through">€2,99<span className="text-sm">/Woche</span></div>
-                <div className="text-xs text-blue-600 font-medium">Nur für die ersten 500 Nutzer:innen</div>
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">€1,99<span className="text-sm font-normal">/Woche</span></div>
+                <div className="text-lg text-gray-500 dark:text-gray-400 line-through">€2,99<span className="text-sm">/Woche</span></div>
+                <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">Nur für die ersten 500 Nutzer:innen</div>
               </div>
               <p className="text-sm text-muted-foreground">Perfekt zum Ausprobieren</p>
               
               {!subscribed && (
                 <Button 
                   onClick={() => createCheckoutSession('weekly')} 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                  className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold"
                 >
                   🔥 Wochenabo starten
                 </Button>
@@ -184,12 +184,12 @@ const Subscription = () => {
                 return (
                   <div key={index} className="flex items-center gap-3">
                     {isIncluded ? (
-                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <Check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                     ) : (
-                      <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <X className="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                     )}
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
-                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700' : ''}`}>
+                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                    <span className={`text-sm ${!isIncluded ? 'text-gray-400 dark:text-gray-500' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700 dark:text-blue-300' : ''}`}>
                       {feature.name}
                     </span>
                   </div>
@@ -199,7 +199,7 @@ const Subscription = () => {
           </Card>
 
           {/* Monthly Plan */}
-          <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400' : 'border-2 border-green-500'}`}>
+          <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400 dark:border-yellow-500' : 'border-2 border-green-500 dark:border-green-400'}`}>
             {subscribed && (
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <PremiumBadge />
@@ -207,7 +207,7 @@ const Subscription = () => {
             )}
             {!subscribed && (
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                <div className="bg-green-500 dark:bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                   Monatsabo
                 </div>
               </div>
@@ -215,13 +215,13 @@ const Subscription = () => {
             
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2">
-                <Brain className="h-6 w-6 text-blue-600" />
+                <Brain className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-xl font-semibold">Premium Monatlich</h3>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-green-600">€5,99<span className="text-sm font-normal">/Monat</span></div>
-                <div className="text-lg text-gray-500 line-through">€8,99<span className="text-sm">/Monat</span></div>
-                <div className="text-xs text-green-600 font-medium">Nur für die ersten 500 Nutzer:innen</div>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">€5,99<span className="text-sm font-normal">/Monat</span></div>
+                <div className="text-lg text-gray-500 dark:text-gray-400 line-through">€8,99<span className="text-sm">/Monat</span></div>
+                <div className="text-xs text-green-600 dark:text-green-400 font-medium">Nur für die ersten 500 Nutzer:innen</div>
               </div>
               <p className="text-sm text-muted-foreground">
                 Bestes Preis-Leistungs-Verhältnis{universityName === "Hamburg UKE" ? ": Entspricht 1 Bundi Kaffee pro Woche ☕️" : ""}
@@ -230,7 +230,7 @@ const Subscription = () => {
               {!subscribed && (
                 <Button 
                   onClick={() => createCheckoutSession('monthly')} 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-semibold"
                 >
                   🔥 Monatsabo sichern
                 </Button>
@@ -244,12 +244,12 @@ const Subscription = () => {
                 return (
                   <div key={index} className="flex items-center gap-3">
                     {isIncluded ? (
-                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <Check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                     ) : (
-                      <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <X className="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                     )}
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600' : 'text-gray-400'}`} />
-                    <span className={`text-sm ${!isIncluded ? 'text-gray-400' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700' : ''}`}>
+                    <Icon className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                    <span className={`text-sm ${!isIncluded ? 'text-gray-400 dark:text-gray-500' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700 dark:text-blue-300' : ''}`}>
                       {feature.name}
                     </span>
                   </div>

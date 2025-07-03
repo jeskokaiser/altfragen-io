@@ -26,7 +26,7 @@ const Terms = () => {
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">5. Datenschutz</h2>
         <p className="mb-4">
-          Der Schutz Ihrer persönlichen Daten ist uns wichtig. Informationen zur Verarbeitung Ihrer Daten finden Sie in unserer <a href="/privacy" className="text-blue-600 hover:underline">Datenschutzerklärung</a>.
+          Der Schutz Ihrer persönlichen Daten ist uns wichtig. Informationen zur Verarbeitung Ihrer Daten, einschließlich der Verwendung Ihrer E-Mail-Adresse für Marketingzwecke nach Ihrer Einwilligung, finden Sie in unserer <a href="/privacy" className="text-blue-600 hover:underline">Datenschutzerklärung</a>.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">6. Haftungsausschluss</h2>

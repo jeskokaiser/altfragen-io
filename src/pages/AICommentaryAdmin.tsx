@@ -10,7 +10,8 @@ import AICommentaryStats from '@/components/ai-commentary/AICommentaryStats';
 import AICommentaryLogs from '@/components/ai-commentary/AICommentaryLogs';
 import CronJobMonitor from '@/components/ai-commentary/CronJobMonitor';
 import SubjectReassignmentPanel from '@/components/admin/SubjectReassignmentPanel';
-import { Settings, BarChart3, Clock, FileText, RefreshCw, AlertCircle, Timer } from 'lucide-react';
+import CampaignManagement from '@/components/admin/CampaignManagement';
+import { Settings, BarChart3, Clock, FileText, RefreshCw, AlertCircle, Timer, Megaphone } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AICommentaryAdmin: React.FC = () => {
@@ -52,7 +53,7 @@ const AICommentaryAdmin: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="gri w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Overview
@@ -76,6 +77,10 @@ const AICommentaryAdmin: React.FC = () => {
           <TabsTrigger value="subjects" className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             Subjects
+          </TabsTrigger>
+          <TabsTrigger value="campaigns" className="flex items-center gap-2">
+            <Megaphone className="h-4 w-4" />
+            Kampagnen
           </TabsTrigger>
         </TabsList>
 
@@ -101,6 +106,10 @@ const AICommentaryAdmin: React.FC = () => {
 
         <TabsContent value="subjects" className="space-y-6">
           <SubjectReassignmentPanel />
+        </TabsContent>
+
+        <TabsContent value="campaigns" className="space-y-6">
+          <CampaignManagement />
         </TabsContent>
       </Tabs>
     </div>

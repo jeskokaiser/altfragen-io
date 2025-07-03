@@ -29,6 +29,7 @@ const Auth = () => {
   const [isVerificationScreen, setIsVerificationScreen] = useState(false);
   const [showNonUniversityDialog, setShowNonUniversityDialog] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedMarketing, setAcceptedMarketing] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -405,14 +406,15 @@ const Auth = () => {
 
   const performSignup = async () => {
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: window.location.origin + '/auth?verification=pending',
           data: {
             university_id: universityInfo?.id || null,
-            domain: getEmailDomain(email)
+            domain: getEmailDomain(email),
+            marketing_consent: acceptedMarketing
           }
         }
       });
@@ -424,6 +426,27 @@ const Auth = () => {
           throw signUpError;
         }
         return;
+      }
+
+      // If signup was successful and we have a user, update the profile with marketing consent
+      if (signUpData.user) {
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              marketing_consent: acceptedMarketing,
+              marketing_consent_at: acceptedMarketing ? new Date().toISOString() : null
+            })
+            .eq('id', signUpData.user.id);
+
+          if (profileError) {
+            console.error('Error updating marketing consent:', profileError);
+            // Don't fail the signup process for this error
+          }
+        } catch (error) {
+          console.error('Error saving marketing consent:', error);
+          // Don't fail the signup process for this error
+        }
       }
 
       setIsVerificationScreen(true);
@@ -658,32 +681,49 @@ const Auth = () => {
               </Alert>}
 
             {isSignUp && (
-              <div className="flex items-start space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={acceptedTerms}
-                  onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
-                  className="mt-1"
-                />
-                <label
-                  htmlFor="terms"
-                  className="text-sm text-slate-600 leading-relaxed cursor-pointer"
-                >
-                  Ich habe die{' '}
-                  <Link to="/agb" className="text-blue-600 hover:underline" target="_blank">
-                    AGB
-                  </Link>
-                  ,{' '}
-                  <Link to="/terms" className="text-blue-600 hover:underline" target="_blank">
-                    Nutzungsbedingungen
-                  </Link>
-                  {' '}und{' '}
-                  <Link to="/privacy" className="text-blue-600 hover:underline" target="_blank">
-                    Datenschutzerklärung
-                  </Link>
-                  {' '}gelesen und akzeptiere diese.
-                </label>
-              </div>
+              <>
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm text-slate-600 leading-relaxed cursor-pointer"
+                  >
+                    Ich habe die{' '}
+                    <Link to="/agb" className="text-blue-600 hover:underline" target="_blank">
+                      AGB
+                    </Link>
+                    ,{' '}
+                    <Link to="/terms" className="text-blue-600 hover:underline" target="_blank">
+                      Nutzungsbedingungen
+                    </Link>
+                    {' '}und{' '}
+                    <Link to="/privacy" className="text-blue-600 hover:underline" target="_blank">
+                      Datenschutzerklärung
+                    </Link>
+                    {' '}gelesen und akzeptiere diese.
+                  </label>
+                </div>
+
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="marketing"
+                    checked={acceptedMarketing}
+                    onCheckedChange={(checked) => setAcceptedMarketing(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <label
+                    htmlFor="marketing"
+                    className="text-sm text-slate-600 leading-relaxed cursor-pointer"
+                  >
+                    Ich möchte E-Mails mit Neuigkeiten, Angeboten und Produktupdates erhalten. Diese Einwilligung kann jederzeit widerrufen werden.
+                  </label>
+                </div>
+              </>
             )}
 
             <div className="space-y-2 pt-2">
@@ -695,6 +735,7 @@ const Auth = () => {
                 <button type="button" onClick={() => {
                   setIsSignUp(!isSignUp);
                   setAcceptedTerms(false);
+                  setAcceptedMarketing(false);
                 }} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
                   {isSignUp ? 'Bereits registriert? Hier anmelden' : 'Noch kein Konto? Hier registrieren'}
                 </button>

@@ -69,7 +69,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const isDemoMode = questionData.id.startsWith('demo-');
 
   const { 
-    isPremium, 
+    subscribed, 
     canAccessAIComments: canAccessHook, 
     loading: premiumLoading, 
     requirePremiumForAI, 
@@ -272,7 +272,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                   Upgraden für unbegrenzten Zugang!
                 </p>
                 <Button 
-                  onClick={createCheckoutSession}
+                  onClick={() => createCheckoutSession('monthly')}
                   className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
                 >
                   <Crown className="h-4 w-4" />

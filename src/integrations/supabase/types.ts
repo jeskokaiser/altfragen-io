@@ -131,6 +131,7 @@ export type Database = {
           batch_size: number | null
           created_at: string
           feature_enabled: boolean | null
+          free_ai_daily_limit: number | null
           id: string
           models_enabled: Json | null
           processing_delay_minutes: number | null
@@ -142,6 +143,7 @@ export type Database = {
           batch_size?: number | null
           created_at?: string
           feature_enabled?: boolean | null
+          free_ai_daily_limit?: number | null
           id?: string
           models_enabled?: Json | null
           processing_delay_minutes?: number | null
@@ -153,6 +155,7 @@ export type Database = {
           batch_size?: number | null
           created_at?: string
           feature_enabled?: boolean | null
+          free_ai_daily_limit?: number | null
           id?: string
           models_enabled?: Json | null
           processing_delay_minutes?: number | null
@@ -207,6 +210,62 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          code: string | null
+          discount_percentage: number | null
+          active: boolean | null
+          start_date: string | null
+          end_date: string | null
+          created_at: string
+          updated_at: string
+          created_by: string | null
+          priority: number | null
+          display_type: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          code?: string | null
+          discount_percentage?: number | null
+          active?: boolean | null
+          start_date?: string | null
+          end_date?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          priority?: number | null
+          display_type?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          code?: string | null
+          discount_percentage?: number | null
+          active?: boolean | null
+          start_date?: string | null
+          end_date?: string | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string | null
+          priority?: number | null
+          display_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -367,6 +426,8 @@ export type Database = {
           is_admin: boolean | null
           is_email_verified: boolean | null
           is_premium: boolean | null
+          marketing_consent: boolean | null
+          marketing_consent_at: string | null
           university_id: string | null
         }
         Insert: {
@@ -376,6 +437,8 @@ export type Database = {
           is_admin?: boolean | null
           is_email_verified?: boolean | null
           is_premium?: boolean | null
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
           university_id?: string | null
         }
         Update: {
@@ -385,6 +448,8 @@ export type Database = {
           is_admin?: boolean | null
           is_email_verified?: boolean | null
           is_premium?: boolean | null
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
           university_id?: string | null
         }
         Relationships: [

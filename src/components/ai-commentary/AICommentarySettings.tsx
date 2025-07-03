@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -117,6 +116,24 @@ const AICommentarySettings: React.FC = () => {
               onCheckedChange={(checked) => updateSetting('auto_trigger_enabled', checked)}
               disabled={!localSettings.feature_enabled}
             />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label htmlFor="free-daily-limit">Free AI Comments Daily Limit</Label>
+            <Input
+              id="free-daily-limit"
+              type="number"
+              value={localSettings.free_ai_daily_limit || 10}
+              onChange={(e) => updateSetting('free_ai_daily_limit', parseInt(e.target.value))}
+              min="1"
+              max="100"
+              disabled={!localSettings.feature_enabled}
+            />
+            <p className="text-xs text-muted-foreground">
+              Number of free AI comments available per day for non-premium users (1-100)
+            </p>
           </div>
         </CardContent>
       </Card>

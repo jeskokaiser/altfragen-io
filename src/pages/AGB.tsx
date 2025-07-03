@@ -131,9 +131,20 @@ const AGB = () => {
               </p>
             </section>
 
-            {/* 11. Änderungen der AGB */}
+            {/* 11. E-Mail-Kommunikation */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">§ 11 Änderungen der AGB</h2>
+              <h2 className="text-xl font-semibold">§ 11 E-Mail-Kommunikation</h2>
+              <p>
+                Der Anbieter ist berechtigt, dem Nutzer vertragsrelevante Informationen und Mitteilungen (z.B. zu Änderungen dieser AGB, technische Informationen) an die von ihm hinterlegte E-Mail-Adresse zu senden.
+              </p>
+              <p>
+                Sofern der Nutzer seine gesonderte Einwilligung erteilt hat, erhält er zudem Marketing-E-Mails mit Informationen zu neuen Produkten, Angeboten und Neuigkeiten. Diese Einwilligung kann jederzeit widerrufen werden. Näheres regelt unsere <a href="/privacy" className="text-blue-600 hover:underline">Datenschutzerklärung</a>.
+              </p>
+            </section>
+
+            {/* 12. Änderungen der AGB */}
+            <section className="space-y-2">
+              <h2 className="text-xl font-semibold">§ 12 Änderungen der AGB</h2>
               <p>
                 Änderungen dieser AGB werden Ihnen mindestens vier Wochen vor Inkrafttreten per E-Mail mitgeteilt. Widersprechen Sie nicht innerhalb von vier Wochen nach Zugang der Mitteilung, gelten die geänderten AGB als angenommen.
               </p>
@@ -142,9 +153,9 @@ const AGB = () => {
               </p>
             </section>
 
-            {/* 12. Schlussbestimmungen */}
+            {/* 13. Schlussbestimmungen */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">§ 12 Schlussbestimmungen</h2>
+              <h2 className="text-xl font-semibold">§ 13 Schlussbestimmungen</h2>
               <p>
                 Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts.
               </p>

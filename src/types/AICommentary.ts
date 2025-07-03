@@ -1,4 +1,3 @@
-
 export interface AICommentary {
   id: string;
   question_id: string;
@@ -29,6 +28,7 @@ export interface AICommentarySettings {
   batch_size: number;
   processing_delay_minutes: number;
   rate_limit_per_user_per_day: number;
+  free_ai_daily_limit?: number;
   created_at: string;
   updated_at: string;
 }
