@@ -1,11 +1,12 @@
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, AlertCircle, Archive, RotateCcw, Lock, GraduationCap, Share2 } from 'lucide-react';
+import { Play, AlertCircle, Archive, RotateCcw, Lock, GraduationCap, Share2, EyeOff } from 'lucide-react';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,8 +56,40 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   const isMobile = useIsMobile();
   const { user, universityId } = useAuth();
   
-  const unclearQuestions = questions.filter(q => q.is_unclear === true);
-  const hasUnclearQuestions = unclearQuestions.length > 0;
+  // Query ignored questions count for this dataset
+  const { data: ignoredQuestionsCount = 0 } = useQuery({
+    queryKey: ['ignored-questions-count', filename, user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      
+      const { data, error } = await supabase
+        .from('user_unclear_questions')
+        .select(`
+          id,
+          questions:question_id (
+            filename,
+            exam_name
+          )
+        `)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        console.error('Error fetching ignored questions count:', error);
+        return 0;
+      }
+      
+      // Count questions that match this dataset's filename OR exam_name
+      const count = data?.filter(item => 
+        item.questions && (
+          item.questions.filename === filename || 
+          item.questions.exam_name === filename
+        )
+      ).length || 0;
+      
+      return count;
+    },
+    enabled: !!user
+  });
 
   // Determine visibility of the dataset (using the first question as reference)
   const datasetVisibility = questions[0]?.visibility || 'private';
@@ -234,17 +267,22 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
           </AlertDialog>
         )}
         
-        {hasUnclearQuestions && (
-          <Button 
-            variant="outline"
-            onClick={handleUnclearClick}
-            className="w-full sm:w-auto"
-            size={isMobile ? "sm" : "default"}
-          >
-            <AlertCircle className="mr-2 h-4 w-4" />
-            Unklare Fragen ({unclearQuestions.length})
-          </Button>
-        )}
+        {/* Always show ignored questions button */}
+        <Button 
+          variant="outline"
+          onClick={handleUnclearClick}
+          className="w-full sm:w-auto"
+          size={isMobile ? "sm" : "default"}
+        >
+          <EyeOff className="mr-2 h-4 w-4" />
+          Ignorierte Fragen
+          {ignoredQuestionsCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-muted rounded-full">
+              {ignoredQuestionsCount}
+            </span>
+          )}
+        </Button>
+        
         <Button 
           onClick={handleStartTraining}
           className="w-full sm:w-auto"

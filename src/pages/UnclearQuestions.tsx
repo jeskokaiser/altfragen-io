@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,11 +22,13 @@ const UnclearQuestions = () => {
   const { data: questions, isLoading, error } = useQuery({
     queryKey: ['unclear-questions', filename, user?.id],
     queryFn: async () => {
-      if (!user || !filename) return [];
+      if (!user || !filename) {
+        return [];
+      }
 
-      console.log('Fetching unclear questions for:', { user: user.id, filename: decodeURIComponent(filename) });
+      const decodedFilename = decodeURIComponent(filename);
 
-      // Get unclear questions for this user and filename
+      // Get unclear questions for this user
       const { data: unclearData, error: unclearError } = await supabase
         .from('user_unclear_questions')
         .select(`
@@ -65,13 +66,22 @@ const UnclearQuestions = () => {
         throw unclearError;
       }
 
-      console.log('Unclear data fetched:', unclearData);
-
-      // Filter by filename and map to Question format
+      if (!unclearData || unclearData.length === 0) {
+        return [];
+      }
+      
       const filteredQuestions = unclearData
         ?.filter(item => {
-          console.log('Checking item:', item);
-          return item.questions && item.questions.filename === decodeURIComponent(filename);
+          const hasQuestions = !!item.questions;
+          const questionFilename = item.questions?.filename;
+          const questionExamName = item.questions?.exam_name;
+          
+          // Match either by filename or exam_name since datasets can be grouped by either
+          const filenameMatch = questionFilename === decodedFilename;
+          const examNameMatch = questionExamName === decodedFilename;
+          const matches = filenameMatch || examNameMatch;
+          
+          return hasQuestions && matches;
         })
         .map(item => ({
           id: item.questions.id,
@@ -99,7 +109,6 @@ const UnclearQuestions = () => {
           marked_unclear_at: item.marked_unclear_at
         })) || [];
 
-      console.log('Filtered questions:', filteredQuestions);
       return filteredQuestions as Question[];
     },
     enabled: !!user && !!filename
@@ -113,6 +122,7 @@ const UnclearQuestions = () => {
       toast.success('Frage wurde aus der Liste entfernt');
       queryClient.invalidateQueries({ queryKey: ['unclear-questions'] });
       queryClient.invalidateQueries({ queryKey: ['questions'] });
+      queryClient.invalidateQueries({ queryKey: ['ignored-questions-count'] });
     } catch (error) {
       console.error('Error removing unclear status:', error);
       toast.error('Fehler beim Entfernen der Frage');
@@ -133,7 +143,7 @@ const UnclearQuestions = () => {
     return (
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Lädt unklare Fragen...</div>
+          <div className="text-lg">Lädt ignorierte Fragen...</div>
         </div>
       </div>
     );
@@ -152,7 +162,7 @@ const UnclearQuestions = () => {
           Zurück
         </Button>
         <div className="text-center py-8">
-          <p className="text-red-500">Fehler beim Laden der unklaren Fragen</p>
+          <p className="text-red-500">Fehler beim Laden der ignorierten Fragen</p>
           <p className="text-sm text-muted-foreground mt-2">
             {error instanceof Error ? error.message : 'Unbekannter Fehler'}
           </p>
@@ -173,20 +183,20 @@ const UnclearQuestions = () => {
           Zurück
         </Button>
         <h1 className="text-2xl font-bold mb-2">
-          Unklare Fragen - {decodeURIComponent(filename || '')}
+          Ignorierte Fragen - {decodeURIComponent(filename || '')}
         </h1>
         <p className="text-muted-foreground">
-          {questions?.length || 0} unklare Fragen gefunden
+          {questions?.length || 0} ignorierte Fragen gefunden
         </p>
       </div>
 
       {!questions || questions.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-lg text-muted-foreground mb-4">
-            Keine unklaren Fragen für diese Datei gefunden
+            Keine ignorierten Fragen für diese Datei gefunden
           </p>
           <p className="text-sm text-muted-foreground">
-            Markiere Fragen während des Trainings als unklar, um sie hier zu sehen.
+            Markiere Fragen während des Trainings als ignoriert, um sie hier zu sehen.
           </p>
         </div>
       ) : (
@@ -212,7 +222,7 @@ const UnclearQuestions = () => {
                       <p className="mt-2"><strong>Kommentar:</strong> {question.comment}</p>
                     )}
                     <p className="text-sm text-muted-foreground mt-2">
-                      Als unklar markiert am: {new Date(question.marked_unclear_at!).toLocaleDateString()}
+                      Als ignoriert markiert am: {new Date(question.marked_unclear_at!).toLocaleDateString()}
                     </p>
                     <div className="flex gap-2 mt-4">
                       <Button 
