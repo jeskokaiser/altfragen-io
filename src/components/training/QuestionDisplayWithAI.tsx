@@ -12,6 +12,7 @@ import EditQuestionModal from './EditQuestionModal';
 import AnswerSubmission from './AnswerSubmission';
 import DifficultyControls from './DifficultyControls';
 import QuestionFeedback from './QuestionFeedback';
+import QuestionImage from '@/components/questions/QuestionImage';
 import AICommentaryDisplay from '@/components/ai-commentary/AICommentaryDisplay';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { AlertCircle, Brain, RefreshCw, Crown, X } from 'lucide-react';
@@ -387,6 +388,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     return <div>Loading question...</div>;
   }
 
+  // Determine if image should be shown based on show_image_after_answer setting
+  const shouldShowImage = currentQuestion.image_key && 
+    (!currentQuestion.show_image_after_answer || (currentQuestion.show_image_after_answer && showFeedback));
+
   return (
     <div className={`w-full max-w-4xl mx-auto ${isMobile ? 'px-2' : ''}`}>
       <QuestionHeader
@@ -421,6 +426,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
             </Button>
           </div>
         </div>
+
+        {shouldShowImage && <QuestionImage imageKey={currentQuestion.image_key} />}
 
         <QuestionContent
           questionData={currentQuestion}

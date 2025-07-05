@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,7 +19,8 @@ import { SubjectField } from './edit-question/SubjectField';
 import { DifficultyField } from './edit-question/DifficultyField';
 import { useAuth } from '@/contexts/AuthContext';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { GraduationCap, Lock, Image } from 'lucide-react';
+import { GraduationCap, Lock, Image, Trash2 } from 'lucide-react';
+import QuestionImage from '@/components/questions/QuestionImage';
 
 interface EditQuestionModalProps {
   question: Question;
@@ -51,6 +53,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   const [showImageAfterAnswer, setShowImageAfterAnswer] = useState<boolean>(
     question.show_image_after_answer || false
   );
+  const [imageToRemove, setImageToRemove] = useState<boolean>(false);
   const { user, universityId } = useAuth();
   
   useEffect(() => {
@@ -69,6 +72,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       });
       setVisibility((question.visibility as 'private' | 'university') || 'private');
       setShowImageAfterAnswer(question.show_image_after_answer || false);
+      setImageToRemove(false);
     }
   }, [question, reset]);
 
@@ -79,10 +83,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         return;
       }
 
-      const {
-        data: updatedQuestion,
-        error
-      } = await supabase.from('questions').update({
+      const updateData: any = {
         question: data.question,
         option_a: data.optionA,
         option_b: data.optionB,
@@ -95,7 +96,31 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         difficulty: parseInt(data.difficulty),
         visibility: visibility,
         show_image_after_answer: showImageAfterAnswer
-      }).eq('id', question.id).select().single();
+      };
+
+      // Handle image removal
+      if (imageToRemove && question.image_key) {
+        updateData.image_key = null;
+        
+        // Optionally delete the image from storage
+        try {
+          const { error: deleteError } = await supabase.storage
+            .from('exam-images')
+            .remove([question.image_key]);
+          
+          if (deleteError) {
+            console.warn('Warning: Could not delete image from storage:', deleteError);
+            // Don't fail the update if storage deletion fails
+          }
+        } catch (storageError) {
+          console.warn('Warning: Could not delete image from storage:', storageError);
+        }
+      }
+
+      const {
+        data: updatedQuestion,
+        error
+      } = await supabase.from('questions').update(updateData).eq('id', question.id).select().single();
 
       if (error) {
         console.error('Error updating question:', error);
@@ -137,6 +162,14 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     setValue('correctAnswer', '');
   };
 
+  const handleRemoveImage = () => {
+    setImageToRemove(true);
+  };
+
+  const handleCancelRemoveImage = () => {
+    setImageToRemove(false);
+  };
+
   const canChangeVisibility = question.university_id === null || 
                               (user && user.id === question.user_id);
                               
@@ -172,22 +205,68 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
 
             <SubjectField defaultValue={question.subject} onValueChange={value => setValue('subject', value)} />
             
-            {question.image_key && (
-              <div className="flex items-center justify-between space-x-2">
-                <div className="flex items-center space-x-2">
-                  <Image className="h-4 w-4 text-blue-500" />
-                  <Label htmlFor="showImageAfterAnswer" className="text-sm font-medium">
-                    Bild nach Antwort anzeigen
-                  </Label>
+            {question.image_key && !imageToRemove && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <Image className="h-4 w-4 text-blue-500" />
+                    <Label htmlFor="showImageAfterAnswer" className="text-sm font-medium">
+                      Bild nach Antwort anzeigen
+                    </Label>
+                  </div>
+                  <Switch
+                    id="showImageAfterAnswer"
+                    checked={showImageAfterAnswer}
+                    onCheckedChange={setShowImageAfterAnswer}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {showImageAfterAnswer ? 'Bild wird nach der Antwort angezeigt' : 'Bild wird sofort angezeigt'}
+                  </span>
                 </div>
-                <Switch
-                  id="showImageAfterAnswer"
-                  checked={showImageAfterAnswer}
-                  onCheckedChange={setShowImageAfterAnswer}
-                />
-                <span className="text-xs text-muted-foreground">
-                  {showImageAfterAnswer ? 'Bild wird nach der Antwort angezeigt' : 'Bild wird sofort angezeigt'}
-                </span>
+                
+                <div className="space-y-2">
+                  <Label>Aktuelles Bild</Label>
+                  <QuestionImage imageKey={question.image_key} />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
+                        <Trash2 className="h-4 w-4" />
+                        Bild entfernen
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Bild entfernen</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Sind Sie sicher, dass Sie das Bild von dieser Frage entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleRemoveImage} className="bg-red-600 hover:bg-red-700">
+                          Bild entfernen
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            )}
+
+            {imageToRemove && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-600">Bild wird entfernt</span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleCancelRemoveImage}>
+                    Rückgängig
+                  </Button>
+                </div>
+                <p className="text-xs text-red-600 mt-1">
+                  Das Bild wird beim Speichern der Frage entfernt.
+                </p>
               </div>
             )}
             

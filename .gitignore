@@ -22,4 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.cursor
 supabase/functions/check-pdf-status/main.py
