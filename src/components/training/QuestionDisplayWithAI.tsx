@@ -174,6 +174,51 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setSelectedAnswer(answer);
   };
 
+  // Database progress saving logic (extracted from AnswerSubmission)
+  const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean) => {
+    if (!user || answer === 'solution_viewed') return;
+
+    try {
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from('user_progress')
+        .select('is_correct, attempts_count')
+        .eq('user_id', user.id)
+        .eq('question_id', currentQuestion.id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      if (!existingProgress) {
+        const { error: insertError } = await supabase
+          .from('user_progress')
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_answer: answer,
+            is_correct: isAnswerCorrect,
+            attempts_count: 1
+          });
+
+        if (insertError) throw insertError;
+      } else {
+        const { error: updateError } = await supabase
+          .from('user_progress')
+          .update({
+            user_answer: answer,
+            attempts_count: (existingProgress.attempts_count || 1) + 1,
+            is_correct: isAnswerCorrect ? (preferences?.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
+          })
+          .eq('user_id', user.id)
+          .eq('question_id', currentQuestion.id);
+
+        if (updateError) throw updateError;
+      }
+    } catch (error) {
+      console.error('Error saving answer progress:', error);
+      toast.error("Fehler beim Speichern des Fortschritts");
+    }
+  };
+
   const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
     // Don't add to wrongAnswers if it's a "solution_viewed" action
     if (answer !== 'solution_viewed') {
@@ -234,9 +279,13 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         setSelectedAnswer(answer);
       }
     },
-    onConfirmAnswer: () => {
+    onConfirmAnswer: async () => {
       if (selectedAnswer && canMakeAttempts) {
         const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
+        
+        // Save progress to database (same logic as button clicks)
+        await saveAnswerProgress(selectedAnswer, isCorrect);
+        
         // Pass viewedSolution as true for immediate feedback mode (matches AnswerSubmission behavior)
         const shouldShowSolution = preferences?.immediateFeedback;
         handleAnswerSubmitted(selectedAnswer, isCorrect, shouldShowSolution);

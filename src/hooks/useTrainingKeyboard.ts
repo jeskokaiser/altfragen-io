@@ -3,7 +3,7 @@ import { KeyboardBindings } from '@/contexts/UserPreferencesContext';
 
 export interface TrainingKeyboardActions {
   onAnswerSelect: (answer: string) => void;
-  onConfirmAnswer: () => void;
+  onConfirmAnswer: () => void | Promise<void>;
   onNextQuestion: () => void;
   onShowSolution: () => void;
   canConfirm: boolean;
@@ -61,7 +61,11 @@ export const useTrainingKeyboard = (
         if (actions.canNavigate) {
           actions.onNextQuestion();
         } else if (actions.canConfirm) {
-          actions.onConfirmAnswer();
+          // Handle both sync and async onConfirmAnswer
+          const result = actions.onConfirmAnswer();
+          if (result instanceof Promise) {
+            result.catch(console.error);
+          }
         }
       }
       // Handle show solution ('s' key by default)

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +5,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield } from 'lucide-react';
+import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield, Bug } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -56,6 +55,35 @@ const Navbar: React.FC = () => {
   const userMenuItems = [
       { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="mr-2 h-4 w-4" /> },
       { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
+      { 
+        label: 'Feedback/Bug melden', 
+        icon: <Bug className="mr-2 h-4 w-4" />,
+        onClick: () => {
+          const subject = encodeURIComponent('Feedback/Bug Report - Altfragen.io');
+          const body = encodeURIComponent(`Hallo Altfragen.io Team,
+
+ich möchte euch Feedback geben oder einen Bug melden:
+
+Beschreibung:
+[Hier dein Feedback oder der gefundene Bug]
+
+Optional:
+
+Schritte zur Reproduktion (falls Bug):
+Erwartetes Verhalten:
+Tatsächliches Verhalten:
+
+
+Zusätzliche Informationen:
+- Browser: ${navigator.userAgent}
+- Aktuelle Seite: ${window.location.href}
+- Zeitpunkt: ${new Date().toLocaleString('de-DE')}
+
+Vielen Dank!
+`);
+          window.location.href = `mailto:hallo@altfragen.io?subject=${subject}&body=${body}`;
+        }
+      },
   ];
 
   const allNavItems = [...mainNavItems, ...userMenuItems];
@@ -104,7 +132,10 @@ const Navbar: React.FC = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {userMenuItems.map((item) => (
-                    <DropdownMenuItem key={item.href} onClick={() => navigate(item.href)}>
+                    <DropdownMenuItem 
+                      key={item.label} 
+                      onClick={() => 'onClick' in item ? item.onClick() : navigate(item.href)}
+                    >
                       {item.icon}
                       {item.label}
                     </DropdownMenuItem>
@@ -148,16 +179,27 @@ const Navbar: React.FC = () => {
         <div className="container py-4 border-t bg-background">
           <nav className="flex flex-col space-y-4">
             {allNavItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`flex items-center py-2 ${
-                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
+              'onClick' in item ? (
+                <button
+                  key={item.label}
+                  onClick={item.onClick}
+                  className="flex items-center py-2 text-left text-foreground/60"
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ) : (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`flex items-center py-2 ${
+                    location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              )
             ))}
           </nav>
         </div>
