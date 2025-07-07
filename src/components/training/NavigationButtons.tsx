@@ -2,6 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { getKeyDisplayName } from '@/hooks/useTrainingKeyboard';
 
 interface NavigationButtonsProps {
   onPrevious: () => void;
@@ -23,6 +25,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   showSolution = false,
 }) => {
   const isMobile = useIsMobile();
+  const { preferences } = useUserPreferences();
 
   // Allow next if either:
   // 1. Answer is correct OR
@@ -43,9 +46,14 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       <Button
         onClick={onNext}
         disabled={!canProceed}
-        className={`flex-1 ${isMobile ? 'max-w-[160px]' : ''}`}
+        className={`flex-1 ${isMobile ? 'max-w-[160px]' : ''} flex items-center justify-center gap-2`}
       >
-        {isLastQuestion ? 'Fertig' : 'Weiter'}
+        <span>{isLastQuestion ? 'Fertig' : 'Weiter'}</span>
+        {canProceed && !isMobile && (
+          <span className="text-xs bg-white/20 px-1 py-0.5 rounded">
+            {getKeyDisplayName(preferences.keyboardBindings.nextQuestion)}
+          </span>
+        )}
       </Button>
     </div>
   );

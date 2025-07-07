@@ -26,6 +26,7 @@ import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
+import { useTrainingKeyboard, TrainingKeyboardActions } from '@/hooks/useTrainingKeyboard';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -218,6 +219,46 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const { isUnclear, isLoading: unclearLoading, toggleUnclear } = useUnclearQuestions(currentQuestion.id);
+
+  // Determine when user can still make attempts
+  const canMakeAttempts = !showFeedback || 
+    (showFeedback && !preferences?.immediateFeedback && !isCorrect && wrongAnswers.length < 4 && !showSolution);
+  
+  // Determine when user can show solution
+  const canShowSolution = showFeedback && !preferences?.immediateFeedback && !isCorrect && wrongAnswers.length < 4 && !showSolution;
+  
+  // Keyboard shortcuts setup
+  const keyboardActions: TrainingKeyboardActions = {
+    onAnswerSelect: (answer: string) => {
+      if (canMakeAttempts) {
+        setSelectedAnswer(answer);
+      }
+    },
+    onConfirmAnswer: () => {
+      if (selectedAnswer && canMakeAttempts) {
+        const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
+        // Pass viewedSolution as true for immediate feedback mode (matches AnswerSubmission behavior)
+        const shouldShowSolution = preferences?.immediateFeedback;
+        handleAnswerSubmitted(selectedAnswer, isCorrect, shouldShowSolution);
+      }
+    },
+    onNextQuestion: () => {
+      if (showFeedback && (isCorrect || showSolution || wrongAnswers.length >= 4)) {
+        handleNext();
+      }
+    },
+    onShowSolution: () => {
+      if (canShowSolution) {
+        handleAnswerSubmitted('solution_viewed', false, true);
+      }
+    },
+    canConfirm: !!selectedAnswer && canMakeAttempts,
+    canNavigate: showFeedback && (isCorrect || showSolution || wrongAnswers.length >= 4),
+    canShowSolution: canShowSolution
+  };
+
+  // Enable keyboard shortcuts
+  useTrainingKeyboard(preferences.keyboardBindings, keyboardActions, true);
 
   const handleIgnoreQuestion = async () => {
     if (isDemoMode) {
@@ -449,6 +490,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           onAnswerSubmitted={handleAnswerSubmitted}
           showSolution={showSolution}
           wrongAnswers={wrongAnswers}
+          showFeedback={showFeedback}
+          isCorrect={isCorrect}
         />
 
         <QuestionFeedback

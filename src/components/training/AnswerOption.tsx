@@ -15,6 +15,7 @@ interface AnswerOptionProps {
   showFeedback?: boolean;
   shouldHighlightCorrect?: boolean;
   showSolution?: boolean;
+  keyboardShortcut?: string;
 }
 
 const AnswerOption: React.FC<AnswerOptionProps> = ({ 
@@ -26,7 +27,8 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({
   isCorrect, 
   showFeedback,
   shouldHighlightCorrect,
-  showSolution
+  showSolution,
+  keyboardShortcut
 }) => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const isMobile = useIsMobile();
@@ -70,9 +72,14 @@ const AnswerOption: React.FC<AnswerOptionProps> = ({
       <RadioGroupItem value={value} id={value} />
       <Label htmlFor={value} className="flex items-center flex-1">
         <span className="font-semibold mr-2">{value})</span>
-        <span className={isStrikethrough ? 'line-through' : ''}>
+        <span className={`flex-1 ${isStrikethrough ? 'line-through' : ''}`}>
           {text}
         </span>
+        {keyboardShortcut && !isMobile && (
+          <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-gray-600 dark:text-gray-300 ml-2">
+            {keyboardShortcut}
+          </span>
+        )}
       </Label>
       <button
         onClick={handleStrikethrough}

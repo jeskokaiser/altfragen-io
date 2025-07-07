@@ -9,6 +9,8 @@ import FeedbackDisplay from './FeedbackDisplay';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { showToast } from '@/utils/toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { getKeyDisplayName } from '@/hooks/useTrainingKeyboard';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -17,6 +19,8 @@ interface AnswerSubmissionProps {
   onAnswerSubmitted: (answer: string, isCorrect: boolean, viewedSolution?: boolean) => void;
   showSolution: boolean;
   wrongAnswers: string[];
+  showFeedback: boolean;
+  isCorrect: boolean;
 }
 
 const AnswerSubmission = ({
@@ -26,11 +30,14 @@ const AnswerSubmission = ({
   onAnswerSubmitted,
   showSolution,
   wrongAnswers,
+  showFeedback,
+  isCorrect,
 }: AnswerSubmissionProps) => {
   const [hasSubmittedWrong, setHasSubmittedWrong] = React.useState(false);
   const [lastSubmissionCorrect, setLastSubmissionCorrect] = React.useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { preferences } = useUserPreferences();
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     setHasSubmittedWrong(false);
@@ -129,9 +136,14 @@ const AnswerSubmission = ({
           <Button 
             onClick={handleConfirmAnswer}
             disabled={!selectedAnswer || isSubmitting}
-            className="w-full"
+            className="w-full flex items-center justify-center gap-2"
           >
-            {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
+            <span>{isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}</span>
+            {!isSubmitting && selectedAnswer && !isMobile && (
+              <span className="text-xs bg-white/20 px-1 py-0.5 rounded">
+                {getKeyDisplayName(preferences.keyboardBindings.confirmAnswer)}
+              </span>
+            )}
           </Button>
         )}
         
@@ -151,12 +163,17 @@ const AnswerSubmission = ({
       <Button 
         onClick={handleConfirmAnswer}
         disabled={!selectedAnswer || isSubmitting}
-        className="w-full"
+        className="w-full flex items-center justify-center gap-2"
       >
-        {isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}
+        <span>{isSubmitting ? "Wird gespeichert..." : "Antwort bestätigen"}</span>
+        {!isSubmitting && selectedAnswer && !isMobile && (
+          <span className="text-xs bg-white/20 px-1 py-0.5 rounded">
+            {getKeyDisplayName(preferences.keyboardBindings.confirmAnswer)}
+          </span>
+        )}
       </Button>
       
-      {lastSubmissionCorrect !== null && !lastSubmissionCorrect && wrongAnswers.length < 4 && !showSolution && (
+      {showFeedback && !preferences?.immediateFeedback && !isCorrect && wrongAnswers.length < 4 && !showSolution && (
         <div className="space-y-4">
           <Alert variant="destructive">
             <div className="flex items-center gap-2">
@@ -172,6 +189,11 @@ const AnswerSubmission = ({
           >
             <Eye className="h-4 w-4" />
             <span>Lösung anzeigen</span>
+            {!isMobile && (
+              <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded">
+                {getKeyDisplayName(preferences.keyboardBindings.showSolution)}
+              </span>
+            )}
           </Button>
         </div>
       )}

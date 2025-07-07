@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { RadioGroup } from "@/components/ui/radio-group";
 import AnswerOption from './AnswerOption';
 import { Question } from '@/types/Question';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { getKeyDisplayName } from '@/hooks/useTrainingKeyboard';
 
 interface QuestionContentProps {
   questionData: Question;
@@ -29,6 +31,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
   showSolution,
 }) => {
   const [resetTrigger, setResetTrigger] = useState(0);
+  const { preferences } = useUserPreferences();
 
   useEffect(() => {
     setResetTrigger(prev => prev + 1);
@@ -71,6 +74,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
           showSolution={showSolution}
+          keyboardShortcut={getKeyDisplayName(preferences.keyboardBindings.answerA)}
         />
         <AnswerOption 
           value="B" 
@@ -82,6 +86,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
           showSolution={showSolution}
+          keyboardShortcut={getKeyDisplayName(preferences.keyboardBindings.answerB)}
         />
         <AnswerOption 
           value="C" 
@@ -93,6 +98,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
           showSolution={showSolution}
+          keyboardShortcut={getKeyDisplayName(preferences.keyboardBindings.answerC)}
         />
         <AnswerOption 
           value="D" 
@@ -104,6 +110,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
           showSolution={showSolution}
+          keyboardShortcut={getKeyDisplayName(preferences.keyboardBindings.answerD)}
         />
         <AnswerOption 
           value="E" 
@@ -115,6 +122,7 @@ const QuestionContent: React.FC<QuestionContentProps> = ({
           showFeedback={showFeedback}
           shouldHighlightCorrect={shouldHighlightCorrect}
           showSolution={showSolution}
+          keyboardShortcut={getKeyDisplayName(preferences.keyboardBindings.answerE)}
         />
       </RadioGroup>
     </div>

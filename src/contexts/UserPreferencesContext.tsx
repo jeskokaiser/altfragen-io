@@ -4,10 +4,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
+export interface KeyboardBindings {
+  answerA: string;
+  answerB: string;
+  answerC: string;
+  answerD: string;
+  answerE: string;
+  confirmAnswer: string;
+  nextQuestion: string;
+  showSolution: string;
+}
+
 interface UserPreferences {
   immediateFeedback: boolean;
   archivedDatasets: string[];
   selectedUniversityDatasets: string[];
+  keyboardBindings: KeyboardBindings;
 }
 
 interface UserPreferencesContextType {
@@ -23,10 +35,22 @@ interface UserPreferencesContextType {
 const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
 
 export function UserPreferencesProvider({ children }: { children: React.ReactNode }) {
+  const defaultKeyboardBindings: KeyboardBindings = {
+    answerA: '1',
+    answerB: '2',
+    answerC: '3',
+    answerD: '4',
+    answerE: '5',
+    confirmAnswer: ' ', // Space bar
+    nextQuestion: ' ', // Space bar (same as confirm)
+    showSolution: 's', // 's' key for show solution
+  };
+
   const [preferences, setPreferences] = useState<UserPreferences>({ 
     immediateFeedback: false,
     archivedDatasets: [],
-    selectedUniversityDatasets: []
+    selectedUniversityDatasets: [],
+    keyboardBindings: defaultKeyboardBindings
   });
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -38,7 +62,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       setPreferences({ 
         immediateFeedback: false, 
         archivedDatasets: [],
-        selectedUniversityDatasets: [] 
+        selectedUniversityDatasets: [],
+        keyboardBindings: defaultKeyboardBindings
       });
       setIsLoading(false);
     }
@@ -62,7 +87,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         setPreferences({ 
           immediateFeedback: existingPrefs.immediate_feedback,
           archivedDatasets: existingPrefs.archived_datasets || [],
-          selectedUniversityDatasets: existingPrefs.selected_university_datasets || []
+          selectedUniversityDatasets: existingPrefs.selected_university_datasets || [],
+          keyboardBindings: (existingPrefs as any).keyboard_bindings || defaultKeyboardBindings
         });
       } else {
         const { error: insertError } = await supabase
@@ -71,14 +97,16 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
             user_id: user.id,
             immediate_feedback: false,
             archived_datasets: [],
-            selected_university_datasets: []
+            selected_university_datasets: [],
+            keyboard_bindings: defaultKeyboardBindings as any
           });
 
         if (insertError) throw insertError;
         setPreferences({ 
           immediateFeedback: false, 
           archivedDatasets: [],
-          selectedUniversityDatasets: [] 
+          selectedUniversityDatasets: [],
+          keyboardBindings: defaultKeyboardBindings
         });
       }
     } catch (error) {
@@ -99,6 +127,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
           archived_datasets: newPreferences.archivedDatasets ?? preferences.archivedDatasets,
           selected_university_datasets: newPreferences.selectedUniversityDatasets ?? preferences.selectedUniversityDatasets,
+          keyboard_bindings: (newPreferences.keyboardBindings ?? preferences.keyboardBindings) as any,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);

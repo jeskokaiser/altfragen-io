@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import DeleteAccountSection from '@/components/settings/DeleteAccountSection';
+import KeyboardBindingsSettings from '@/components/settings/KeyboardBindingsSettings';
 
 const Settings = () => {
   const {
@@ -42,6 +43,8 @@ const Settings = () => {
           />
         </div>
       </Card>
+
+      <KeyboardBindingsSettings />
 
       <DeleteAccountSection />
     </div>

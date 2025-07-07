@@ -17,6 +17,7 @@ const Training = () => {
   const [configurationComplete, setConfigurationComplete] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [ignoredQuestions, setIgnoredQuestions] = useState<Set<string>>(new Set());
+  const [scrollPositions, setScrollPositions] = useState<Map<number, number>>(new Map());
 
   useEffect(() => {
     const demoFlag = localStorage.getItem('isDemoSession');
@@ -45,9 +46,27 @@ const Training = () => {
     };
   }, [navigate]);
 
+  // Restore scroll position when question changes
+  useEffect(() => {
+    if (configurationComplete && !showResults) {
+      const savedPosition = scrollPositions.get(currentQuestionIndex);
+      if (savedPosition !== undefined) {
+        // Use setTimeout to ensure DOM is updated
+        setTimeout(() => {
+          window.scrollTo(0, savedPosition);
+        }, 0);
+      }
+    }
+  }, [currentQuestionIndex, configurationComplete, showResults, scrollPositions]);
+
   const handleStartTraining = (questions: Question[]) => {
     setSelectedQuestions(questions);
     setConfigurationComplete(true);
+    setScrollPositions(new Map()); // Clear any existing scroll positions
+    // Scroll to top when starting training
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 0);
   };
 
   const handleAnswer = (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
@@ -85,7 +104,17 @@ const Training = () => {
     setUserAnswers(newAnswers);
   };
 
+  // Save current scroll position before navigation
+  const saveScrollPosition = () => {
+    setScrollPositions(prev => new Map(prev.set(currentQuestionIndex, window.scrollY)));
+  };
+
+
+
   const handleNext = () => {
+    // Save current scroll position
+    saveScrollPosition();
+    
     // Find next question that hasn't been ignored
     let nextIndex = currentQuestionIndex + 1;
     while (nextIndex < selectedQuestions.length && ignoredQuestions.has(selectedQuestions[nextIndex].id)) {
@@ -100,6 +129,9 @@ const Training = () => {
   };
 
   const handlePrevious = () => {
+    // Save current scroll position
+    saveScrollPosition();
+    
     // Find previous question that hasn't been ignored
     let prevIndex = currentQuestionIndex - 1;
     while (prevIndex >= 0 && ignoredQuestions.has(selectedQuestions[prevIndex].id)) {
@@ -121,6 +153,7 @@ const Training = () => {
     setUserAnswers([]);
     setShowResults(false);
     setIgnoredQuestions(new Set());
+    setScrollPositions(new Map()); // Clear saved scroll positions
     if (!isDemo) {
       setConfigurationComplete(false);
     }
