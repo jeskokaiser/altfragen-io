@@ -92,31 +92,7 @@ const AICommentarySettings: React.FC = () => {
             />
           </div>
 
-          {!localSettings.feature_enabled && (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                AI Commentary is currently disabled. No automatic processing will occur.
-              </AlertDescription>
-            </Alert>
-          )}
 
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label htmlFor="auto-trigger">Auto-trigger Commentary</Label>
-              <p className="text-sm text-muted-foreground">
-                Automatically queue new questions for AI commentary processing
-              </p>
-            </div>
-            <Switch
-              id="auto-trigger"
-              checked={localSettings.auto_trigger_enabled}
-              onCheckedChange={(checked) => updateSetting('auto_trigger_enabled', checked)}
-              disabled={!localSettings.feature_enabled}
-            />
-          </div>
 
           <Separator />
 
@@ -129,7 +105,6 @@ const AICommentarySettings: React.FC = () => {
               onChange={(e) => updateSetting('free_ai_daily_limit', parseInt(e.target.value))}
               min="1"
               max="100"
-              disabled={!localSettings.feature_enabled}
             />
             <p className="text-xs text-muted-foreground">
               Number of free AI comments available per day for non-premium users (1-100)
@@ -147,27 +122,25 @@ const AICommentarySettings: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="space-y-1">
-                <Label htmlFor="openai-enabled" className="font-medium">OpenAI GPT-4o-mini</Label>
+                <Label htmlFor="openai-enabled" className="font-medium">OpenAI GPT o4-mini</Label>
                 <p className="text-sm text-muted-foreground">Fast and cost-effective model for generating commentaries</p>
               </div>
               <Switch
                 id="openai-enabled"
                 checked={localSettings.models_enabled.openai}
                 onCheckedChange={(checked) => updateModelSetting('openai', checked)}
-                disabled={!localSettings.feature_enabled}
               />
             </div>
 
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="space-y-1">
-                <Label htmlFor="claude-enabled" className="font-medium">Anthropic Claude Sonnet</Label>
+                <Label htmlFor="claude-enabled" className="font-medium">Grok 3 (Fallback Mistral)</Label>
                 <p className="text-sm text-muted-foreground">Advanced reasoning capabilities for complex educational content</p>
               </div>
               <Switch
                 id="claude-enabled"
                 checked={localSettings.models_enabled.claude}
                 onCheckedChange={(checked) => updateModelSetting('claude', checked)}
-                disabled={!localSettings.feature_enabled}
               />
             </div>
 
@@ -180,12 +153,11 @@ const AICommentarySettings: React.FC = () => {
                 id="gemini-enabled"
                 checked={localSettings.models_enabled.gemini}
                 onCheckedChange={(checked) => updateModelSetting('gemini', checked)}
-                disabled={!localSettings.feature_enabled}
               />
             </div>
           </div>
 
-          {enabledModelsCount === 0 && localSettings.feature_enabled && (
+          {enabledModelsCount === 0 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
@@ -221,7 +193,6 @@ const AICommentarySettings: React.FC = () => {
                 onChange={(e) => updateSetting('batch_size', parseInt(e.target.value))}
                 min="1"
                 max="20"
-                disabled={!localSettings.feature_enabled}
               />
               <p className="text-xs text-muted-foreground">
                 Number of questions to process in each batch (1-20)
@@ -237,7 +208,6 @@ const AICommentarySettings: React.FC = () => {
                 onChange={(e) => updateSetting('processing_delay_minutes', parseInt(e.target.value))}
                 min="1"
                 max="1440"
-                disabled={!localSettings.feature_enabled}
               />
               <p className="text-xs text-muted-foreground">
                 Minimum time to wait before processing new questions (1-1440 minutes)
@@ -254,7 +224,6 @@ const AICommentarySettings: React.FC = () => {
               onChange={(e) => updateSetting('rate_limit_per_user_per_day', parseInt(e.target.value))}
               min="1"
               max="1000"
-              disabled={!localSettings.feature_enabled}
             />
             <p className="text-xs text-muted-foreground">
               Maximum number of AI commentaries a user can generate per day (1-1000)
@@ -264,7 +233,7 @@ const AICommentarySettings: React.FC = () => {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Processing runs automatically every 15 minutes via cron job. Questions are processed after the specified delay to allow for batching.
+              Processing runs automatically every minute via cron job. Questions are processed after the specified delay to allow for batching.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -275,7 +244,7 @@ const AICommentarySettings: React.FC = () => {
         <CardContent className="pt-6">
           <Button 
             onClick={handleSave} 
-            disabled={saving || !localSettings.feature_enabled || enabledModelsCount === 0}
+            disabled={saving || enabledModelsCount === 0}
             className="w-full"
             size="lg"
           >
@@ -283,7 +252,7 @@ const AICommentarySettings: React.FC = () => {
             {saving ? 'Saving Settings...' : 'Save All Settings'}
           </Button>
           
-          {enabledModelsCount === 0 && localSettings.feature_enabled && (
+          {enabledModelsCount === 0 && (
             <p className="text-sm text-muted-foreground text-center mt-2">
               Enable at least one AI model to save settings
             </p>

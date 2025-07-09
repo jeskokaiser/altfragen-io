@@ -83,15 +83,19 @@ const Tutorial = () => {
               </TutorialStep>
               
               <TutorialStep icon={<CheckCircle className="w-5 h-5" />} title="2. Fragen beantworten & Feedback erhalten">
-                <p>Im Trainingsmodus bekommst du sofortiges Feedback. Nachdem du geantwortet hast, werden die richtige Lösung und hilfreiche Kommentare angezeigt. Dein Fortschritt wird automatisch gespeichert.</p>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li><strong className="font-semibold">Trainingsmodus:</strong> Im Trainingsmodus kannst du Fragen beantworten wählen, ob du sofort Feedback erhalten möchtest oder mehrere Versuche pro Frage nutzen möchtest. Lege dies in den Einstellungen fest.</li>
+                  <li><strong className="font-semibold">Feedback erhalten:</strong> Nachdem du geantwortet hast, werden die richtige Lösung und hilfreiche Kommentare angezeigt. Dein Fortschritt wird automatisch gespeichert.</li>
+                  <li><strong className="font-semibold">KI-Kommentare nutzen:</strong> Mit dem dauerhaft kostenlosen Konto erhältst du eine tägliche Anzahl an KI-Kommentaren mit detaillierten KI-Erklärungen zu jeder Antwortoption, um den Stoff noch besser zu verstehen. Premium-Nutzer erhalten unbegrenzt KI-Kommentare.</li>
+                </ul>
               </TutorialStep>
 
               <TutorialStep icon={<BarChart className="w-5 h-5" />} title="3. Qualität der Fragen verbessern">
                 <p>Gute Fragen sind das A und O. Du kannst aktiv zur Qualität beitragen:</p>
                 <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li><strong className="font-semibold">Fragen bearbeiten (<Edit className="inline h-4 w-4" />):</strong> Korrigiere Tippfehler oder passe Antwortmöglichkeiten an. Wenn du denkst, dass eine Antwort falsch ist, bearbeite die Frage - sie wird dann für alle Nutzer korrigiert!</li>
+                  <li><strong className="font-semibold">Fragen bearbeiten:</strong> Korrigiere Tippfehler oder passe Antwortmöglichkeiten an. Wenn du denkst, dass eine Antwort falsch ist, bearbeite die Frage - sie wird dann bei geteilten Fragen für alle Nutzer korrigiert!</li>
                   <li><strong className="font-semibold">Fragen ignorieren:</strong> Störende oder unpassende Fragen kannst du ignorieren. Sie werden dann in zukünftigen Trainings übersprungen.</li>
-                  <li><strong className="font-semibold">KI-Kommentare nutzen (<BrainCircuit className="inline h-4 w-4" />):</strong> Premium-Nutzer erhalten detaillierte KI-Erklärungen zu jeder Antwortoption, um den Stoff noch besser zu verstehen.</li>
+                  <li><strong className="font-semibold">Anzeigezeitpunkt des Bildes festlegen:</strong> Du kannst pro Frage festlegen, wann das Bild angezeigt wird. Bilder werden standardmäßig nach der Antwort angezeigt, damit die Frage nicht gespoilert wird. Bei Fragen, zu denen das Bild wichtig ist, kannst du es vor der Antwort anzeigen lassen.</li>
                 </ul>
               </TutorialStep>
             </CardContent>

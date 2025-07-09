@@ -431,6 +431,9 @@ const Auth = () => {
       // If signup was successful and we have a user, update the profile with marketing consent
       if (signUpData.user) {
         try {
+          // Add a small delay to ensure the profile is created by the trigger
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           const { error: profileError } = await supabase
             .from('profiles')
             .update({

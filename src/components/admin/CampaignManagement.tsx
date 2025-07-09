@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Edit, Trash2, Calendar, Tag, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { CampaignService, Campaign, CampaignInsert } from '@/services/CampaignService';
+import { CampaignService, Campaign, CampaignInsert, CampaignUpdate } from '@/services/CampaignService';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -58,7 +58,7 @@ const CampaignManagement: React.FC = () => {
       }
 
       if (editingCampaign) {
-        await CampaignService.updateCampaign(editingCampaign.id, formData);
+        await CampaignService.updateCampaign(editingCampaign.id, formData as CampaignUpdate);
         toast.success('Kampagne erfolgreich aktualisiert');
       } else {
         await CampaignService.createCampaign(formData as Omit<CampaignInsert, 'id' | 'created_at' | 'updated_at' | 'created_by'>);

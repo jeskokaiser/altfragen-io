@@ -9,7 +9,7 @@ interface SubscriptionContextType {
   subscriptionEnd: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
-  createCheckoutSession: (priceType?: 'monthly' | 'weekly') => Promise<void>;
+  createCheckoutSession: (priceType?: 'monthly' | 'weekly', consentGiven?: boolean) => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
 
@@ -86,9 +86,15 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
-  const createCheckoutSession = async (priceType?: 'monthly' | 'weekly') => {
+  const createCheckoutSession = async (priceType?: 'monthly' | 'weekly', consentGiven?: boolean) => {
     if (!user) {
       showToast.error('Bitte melde dich an, um ein Abonnement zu erstellen');
+      return;
+    }
+
+    // Check if consent is given
+    if (!consentGiven) {
+      showToast.error('Bitte stimme den Bedingungen zu, um fortzufahren');
       return;
     }
 
@@ -98,6 +104,21 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.access_token) {
         throw new Error('No valid session found');
+      }
+
+      // Record consent in database
+      console.log('Recording subscription consent for user:', user.id);
+      const { error: consentError } = await supabase
+        .from('profiles')
+        .update({
+          subscription_consent: true,
+          subscription_consent_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (consentError) {
+        console.error('Failed to record consent:', consentError);
+        throw new Error('Failed to record consent');
       }
 
       console.log('Invoking create-checkout function');

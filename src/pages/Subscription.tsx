@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Check, X, Brain, Shield, Upload, FileText, Zap, Tag } from 'lucide-react';
 const Subscription = () => {
   const {
@@ -15,6 +18,9 @@ const Subscription = () => {
   const { universityName } = useAuth();
   
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly'>('monthly');
+  const [consentGiven, setConsentGiven] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [pendingSubscription, setPendingSubscription] = useState<'weekly' | 'monthly' | null>(null);
   
   const features = [{
     name: 'Werbefrei und ohne Tracking',
@@ -52,6 +58,28 @@ const Subscription = () => {
     premium: true,
     icon: Zap
   }];
+
+  const handleSubscriptionClick = (planType: 'weekly' | 'monthly') => {
+    setPendingSubscription(planType);
+    setConsentGiven(false);
+    setShowConsentModal(true);
+  };
+
+  const handleProceedWithSubscription = () => {
+    if (pendingSubscription && consentGiven) {
+      createCheckoutSession(pendingSubscription, consentGiven);
+      setShowConsentModal(false);
+      setPendingSubscription(null);
+      setConsentGiven(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowConsentModal(false);
+    setPendingSubscription(null);
+    setConsentGiven(false);
+  };
+
   return <div className="container mx-auto py-8 space-y-8">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Altfragen.io Premium</h1>
@@ -169,7 +197,7 @@ const Subscription = () => {
               
               {!subscribed && (
                 <Button 
-                  onClick={() => createCheckoutSession('weekly')} 
+                  onClick={() => handleSubscriptionClick('weekly')} 
                   className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold"
                 >
                   🔥 Wochenabo starten
@@ -229,7 +257,7 @@ const Subscription = () => {
               
               {!subscribed && (
                 <Button 
-                  onClick={() => createCheckoutSession('monthly')} 
+                  onClick={() => handleSubscriptionClick('monthly')} 
                   className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-semibold"
                 >
                   🔥 Monatsabo sichern
@@ -303,6 +331,107 @@ const Subscription = () => {
           </p>
         </div>
       </div>
+
+      {/* Consent Modal */}
+      <Dialog open={showConsentModal} onOpenChange={setShowConsentModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {pendingSubscription === 'weekly' ? 'Wochenabo' : 'Monatsabo'} bestätigen
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="text-center space-y-2">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {pendingSubscription === 'weekly' ? (
+                  <>€1,99<span className="text-sm font-normal">/Woche</span></>
+                ) : (
+                  <>€5,99<span className="text-sm font-normal">/Monat</span></>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {pendingSubscription === 'weekly' ? 'Wochenabo' : 'Monatsabo'} - Jederzeit kündbar
+              </div>
+            </div>
+            
+            <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="consent-modal"
+                  checked={consentGiven}
+                  onCheckedChange={(checked) => setConsentGiven(checked === true)}
+                  className="mt-1"
+                />
+                <label
+                  htmlFor="consent-modal"
+                  className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed cursor-pointer"
+                >
+                  <span className="font-medium">Wichtiger Hinweis:</span><br/>
+                  Ich stimme ausdrücklich zu, dass mit der Ausführung des Vertrags vor Ablauf der Widerrufsfrist begonnen wird und mir bekannt ist, dass ich dadurch mein{' '}
+                  <Link 
+                    to="/widerruf" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    Widerrufsrecht
+                  </Link>
+                  {' '}verliere. Weiterhin erkläre ich, dass ich die{' '}
+                  <Link 
+                    to="/privacy" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    Datenschutzerklärung
+                  </Link>
+                  ,{' '}
+                  <Link 
+                    to="/terms" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    Nutzungsbedingungen
+                  </Link>
+                  {' '}und die{' '}
+                  <Link 
+                    to="/agb" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    AGBs
+                  </Link>
+                  {' '}gelesen und verstanden habe.
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleCloseModal}
+              className="flex-1"
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={handleProceedWithSubscription}
+              disabled={!consentGiven}
+              className={`flex-1 ${
+                pendingSubscription === 'weekly' 
+                  ? 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600' 
+                  : 'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600'
+              } text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {pendingSubscription === 'weekly' ? 'Wochenabo starten' : 'Monatsabo sichern'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
 export default Subscription;
