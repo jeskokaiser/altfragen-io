@@ -51,11 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Auth state changed:', event, session?.user?.id);
       setUser(session?.user ?? null);
       
-      // Handle email verification event
-      if (event === 'USER_UPDATED' && session?.user) {
-        // When user is updated (like email verification), update profile information
-        await updateEmailVerificationStatus(session.user.id, session.user.email_confirmed_at !== null);
-      }
+      // REMOVED: Don't update verification status on USER_UPDATED - let the profile table be the source of truth
       
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -105,22 +101,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log('Profile data retrieved:', profileData);
 
-      // Check if email is verified in Supabase Auth
-      const { data: authData } = await supabase.auth.getUser();
-      const isConfirmedInAuth = authData?.user?.email_confirmed_at !== null;
-      console.log('Auth verification status:', { 
-        isConfirmedInAuth, 
-        emailConfirmedAt: authData?.user?.email_confirmed_at,
-        profileVerified: profileData.is_email_verified
-      });
-      
-      // If email is confirmed in auth but not in profiles, update profiles
-      if (isConfirmedInAuth && !profileData.is_email_verified) {
-        await updateEmailVerificationStatus(userId, true);
-        setIsEmailVerified(true);
-      } else {
-        setIsEmailVerified(profileData.is_email_verified || false);
-      }
+      // FIXED: Always trust the profile table for verification status
+      setIsEmailVerified(profileData.is_email_verified || false);
       
       if (profileData.university_id) {
         console.log('University ID found:', profileData.university_id);

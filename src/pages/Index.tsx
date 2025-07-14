@@ -43,7 +43,7 @@ const Index = () => {
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
               Effizientes Lernen mit{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600">
-                Altfragen
+                Altfragen.io
               </span>
             </h1>
             
@@ -68,11 +68,11 @@ const Index = () => {
             <div className="flex items-center justify-center mt-12 space-x-8 text-slate-500">
               <div className="flex items-center">
                 <Users className="w-5 h-5 mr-2" />
-                <span className="text-sm">Über 10.000+ Fragen</span>
+                <span className="text-sm">Über 16.000+ Fragen</span>
               </div>
               <div className="flex items-center">
                 <Award className="w-5 h-5 mr-2" />
-                <span className="text-sm">Bewährt in der Praxis</span>
+                <span className="text-sm">Vertraut von über 200 Student:innen</span>
               </div>
             </div>
           </div>

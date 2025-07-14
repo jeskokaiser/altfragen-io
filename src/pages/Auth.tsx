@@ -137,38 +137,27 @@ const Auth = () => {
         setIsCheckingDomain(true);
         const emailDomain = email.split('@')[1]?.trim();
         if (!emailDomain) return;
-        const queryString = `universities?select=id,name&email_domain=eq.${encodeURIComponent(emailDomain)}`;
-        const {
-          data,
-          error
-        } = await supabase.from('universities').select('id, name, email_domain').eq('email_domain', emailDomain);
+        
+        // First try exact domain match
+        const { data, error } = await supabase
+          .from('universities')
+          .select('id, name, email_domain')
+          .eq('email_domain', emailDomain);
+        
         if (error) {
           console.error('Error checking university domain:', error);
           setUniversityInfo(null);
         } else if (data && data.length > 0) {
-          data.forEach((uni, index) => {});
+          // Exact match found
           const university = data[0];
           setUniversityInfo({
             id: university.id,
             name: university.name
           });
         } else {
-          const {
-            data: allUniversities
-          } = await supabase.from('universities').select('id, name, email_domain');
-          if (allUniversities && allUniversities.length > 0) {
-            const matchingUniversity = allUniversities.find(uni => emailDomain.endsWith(uni.email_domain));
-            if (matchingUniversity) {
-              setUniversityInfo({
-                id: matchingUniversity.id,
-                name: matchingUniversity.name
-              });
-            } else {
-              setUniversityInfo(null);
-            }
-          } else {
-            setUniversityInfo(null);
-          }
+          // FIXED: Remove problematic endsWith fallback that was causing false matches
+          // If no exact match, the user is not at a university
+          setUniversityInfo(null);
         }
       } catch (error) {
         console.error('Error in checkEmailDomain:', error);
@@ -453,6 +442,8 @@ const Auth = () => {
       }
 
       setIsVerificationScreen(true);
+      // FIXED: Clear university info to prevent showing stale data on verification screen
+      setUniversityInfo(null);
       toast.success('Bitte überprüfe deine E-Mail, um deine Registrierung abzuschließen.');
       navigate('/auth?verification=pending');
     } catch (error: any) {
@@ -739,6 +730,8 @@ const Auth = () => {
                   setIsSignUp(!isSignUp);
                   setAcceptedTerms(false);
                   setAcceptedMarketing(false);
+                  // FIXED: Clear university info when switching modes
+                  setUniversityInfo(null);
                 }} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
                   {isSignUp ? 'Bereits registriert? Hier anmelden' : 'Noch kein Konto? Hier registrieren'}
                 </button>
