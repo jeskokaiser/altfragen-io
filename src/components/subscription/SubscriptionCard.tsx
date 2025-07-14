@@ -109,7 +109,7 @@ const SubscriptionCard: React.FC = () => {
                 Premium Support
               </Button>
             </div>
-            <Button onClick={checkSubscription} variant="ghost" size="sm" className="w-full">
+            <Button onClick={() => checkSubscription(true)} variant="ghost" size="sm" className="w-full">
               Status aktualisieren
             </Button>
           </div>
@@ -118,7 +118,7 @@ const SubscriptionCard: React.FC = () => {
             <Button onClick={() => createCheckoutSession('monthly')} className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 w-full">
               🔥 Premium für €5,99/Monat
             </Button>
-            <Button onClick={checkSubscription} variant="ghost" size="sm" className="w-full">
+            <Button onClick={() => checkSubscription(true)} variant="ghost" size="sm" className="w-full">
               Status aktualisieren
             </Button>
           </div>
