@@ -12,6 +12,34 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+const shouldSkipStripeCheck = (subscriberData: any): boolean => {
+  if (!subscriberData) return false;
+  
+  const now = new Date();
+  
+  // If user is subscribed and has a subscription_end date
+  if (subscriberData.subscribed && subscriberData.subscription_end) {
+    const subscriptionEnd = new Date(subscriberData.subscription_end);
+    
+    // If subscription ends more than 1 day from now, no need to check Stripe
+    const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    if (subscriptionEnd > oneDayFromNow) {
+      return true; // Skip Stripe check
+    }
+  }
+  
+  // For unsubscribed users, check if we've checked recently (within 30 minutes)
+  if (!subscriberData.subscribed && subscriberData.updated_at) {
+    const lastUpdate = new Date(subscriberData.updated_at);
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+    if (lastUpdate > thirtyMinutesAgo) {
+      return true; // Skip Stripe check
+    }
+  }
+  
+  return false; // Check Stripe
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -19,6 +47,8 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+
 
     // Check environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -71,9 +101,40 @@ serve(async (req) => {
 
     logStep("User authenticated successfully", { userId: user.id, email: user.email });
 
-    // Use service role key for database writes
+    // Use service role key for database operations
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, { 
       auth: { persistSession: false } 
+    });
+
+    // First, check if we have cached data that's still valid
+    const { data: cachedSubscriber } = await supabaseClient
+      .from("subscribers")
+      .select("*")
+      .eq("email", user.email)
+      .single();
+
+    if (cachedSubscriber && shouldSkipStripeCheck(cachedSubscriber)) {
+      logStep("Using cached subscription data", { 
+        subscriptionTier: cachedSubscriber.subscription_tier,
+        subscriptionEnd: cachedSubscriber.subscription_end,
+        lastUpdated: cachedSubscriber.updated_at,
+        cacheAge: Math.round((Date.now() - new Date(cachedSubscriber.updated_at).getTime()) / (1000 * 60)) + ' minutes'
+      });
+      
+      return new Response(JSON.stringify({
+        subscribed: cachedSubscriber.subscribed,
+        subscription_tier: cachedSubscriber.subscription_tier,
+        subscription_end: cachedSubscriber.subscription_end
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    logStep("Cache miss or subscription expiring soon, querying Stripe", { 
+      hasCachedData: !!cachedSubscriber,
+      subscriptionEnd: cachedSubscriber?.subscription_end,
+      needsStripeCheck: !cachedSubscriber || !shouldSkipStripeCheck(cachedSubscriber)
     });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -142,37 +203,51 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
-    // Update subscribers table
-    try {
-      await supabaseClient.from("subscribers").upsert({
-        email: user.email,
-        user_id: user.id,
-        stripe_customer_id: customerId,
-        subscribed: hasActiveSub,
-        subscription_tier: subscriptionTier,
-        subscription_end: subscriptionEnd,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
-      logStep("Database updated successfully", { subscribed: hasActiveSub, subscriptionTier });
-    } catch (dbError) {
-      logStep("Database update failed", { error: dbError });
-      // Continue anyway, don't fail the whole request
+    // Update subscribers table only if data actually changed
+    let shouldUpdateDb = true;
+    if (cachedSubscriber) {
+      shouldUpdateDb = (
+        cachedSubscriber.subscribed !== hasActiveSub ||
+        cachedSubscriber.subscription_tier !== subscriptionTier ||
+        cachedSubscriber.subscription_end !== subscriptionEnd ||
+        cachedSubscriber.stripe_customer_id !== customerId
+      );
     }
 
-    // Try to update profiles table if it exists
-    try {
-      const { error: profileError } = await supabaseClient
-        .from("profiles")
-        .update({ is_premium: hasActiveSub })
-        .eq("id", user.id);
-      
-      if (profileError) {
-        logStep("Profile update failed (table may not exist)", { error: profileError.message });
-      } else {
-        logStep("Profile updated successfully");
+    if (shouldUpdateDb) {
+      try {
+        await supabaseClient.from("subscribers").upsert({
+          email: user.email,
+          user_id: user.id,
+          stripe_customer_id: customerId,
+          subscribed: hasActiveSub,
+          subscription_tier: subscriptionTier,
+          subscription_end: subscriptionEnd,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'email' });
+        logStep("Database updated successfully", { subscribed: hasActiveSub, subscriptionTier });
+      } catch (dbError) {
+        logStep("Database update failed", { error: dbError });
+        // Continue anyway, don't fail the whole request
       }
-    } catch (profileError) {
-      logStep("Profile update failed", { error: profileError });
+
+      // Try to update profiles table if it exists
+      try {
+        const { error: profileError } = await supabaseClient
+          .from("profiles")
+          .update({ is_premium: hasActiveSub })
+          .eq("id", user.id);
+        
+        if (profileError) {
+          logStep("Profile update failed (table may not exist)", { error: profileError.message });
+        } else {
+          logStep("Profile updated successfully");
+        }
+      } catch (profileError) {
+        logStep("Profile update failed", { error: profileError });
+      }
+    } else {
+      logStep("Data unchanged, skipping database update");
     }
     
     return new Response(JSON.stringify({

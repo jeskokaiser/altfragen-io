@@ -720,6 +720,7 @@ export type Database = {
           created_at: string | null
           id: string
           immediate_feedback: boolean | null
+          keyboard_bindings: Json | null
           selected_university_datasets: string[] | null
           updated_at: string | null
           user_id: string | null
@@ -729,6 +730,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
+          keyboard_bindings?: Json | null
           selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
@@ -738,6 +740,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           immediate_feedback?: boolean | null
+          keyboard_bindings?: Json | null
           selected_university_datasets?: string[] | null
           updated_at?: string | null
           user_id?: string | null
@@ -788,27 +791,6 @@ export type Database = {
           },
         ]
       }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_unclear_questions: {
         Row: {
           created_at: string
@@ -854,13 +836,6 @@ export type Database = {
         Args: { question_uuid: string }
         Returns: string
       }
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
       is_session_host: {
         Args: { session_uuid: string; user_uuid: string }
         Returns: boolean
@@ -875,7 +850,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
