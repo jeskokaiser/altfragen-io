@@ -101,8 +101,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log('Profile data retrieved:', profileData);
 
-      // FIXED: Always trust the profile table for verification status
-      setIsEmailVerified(profileData.is_email_verified || false);
+      // FIXED: Smart sync - only update profile if auth is verified but profile is not
+      const { data: authData } = await supabase.auth.getUser();
+      const isConfirmedInAuth = authData?.user?.email_confirmed_at !== null;
+      const isVerifiedInProfile = profileData.is_email_verified || false;
+      
+      console.log('Verification sync check:', { 
+        isConfirmedInAuth, 
+        isVerifiedInProfile,
+        needsSync: isConfirmedInAuth && !isVerifiedInProfile
+      });
+      
+      // If auth is verified but profile is not, sync them
+      if (isConfirmedInAuth && !isVerifiedInProfile) {
+        console.log('Syncing verification status: updating profile to verified');
+        await updateEmailVerificationStatus(userId, true);
+        setIsEmailVerified(true);
+      } else {
+        // Use profile as source of truth
+        setIsEmailVerified(isVerifiedInProfile);
+      }
       
       if (profileData.university_id) {
         console.log('University ID found:', profileData.university_id);
