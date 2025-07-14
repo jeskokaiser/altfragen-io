@@ -259,38 +259,3 @@ export const fetchUserDifficultiesForQuestions = async (userId: string, question
   
   return userDifficulties;
 };
-
-export const fetchPublicQuestions = async (limit: number = 5): Promise<Question[]> => {
-  const { data, error } = await supabase
-    .from('questions')
-    .select('*')
-    .eq('visibility', 'public')
-    .limit(limit);
-
-  if (error) throw error;
-
-  return (data || []).map(q => ({
-    id: q.id,
-    question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
-    subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
-    filename: q.filename,
-    difficulty: q.difficulty,
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: q.user_id,
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null
-  }));
-};

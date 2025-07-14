@@ -24,11 +24,9 @@ export const useAuthGuard = (): AuthGuardState => {
     }
   }, [loading]);
 
-  const isDemoSession = localStorage.getItem('isDemoSession') === 'true';
-
   return {
     isReady,
-    isAuthenticated: (!!user && isReady) || isDemoSession,
+    isAuthenticated: !!user && isReady,
     userId: user?.id || null
   };
 };

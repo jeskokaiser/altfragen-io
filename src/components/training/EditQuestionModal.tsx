@@ -144,7 +144,17 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           university_id: updatedQuestion.university_id,
           visibility: updatedQuestion.visibility as 'private' | 'university',
           image_key: updatedQuestion.image_key,
-          show_image_after_answer: updatedQuestion.show_image_after_answer
+          show_image_after_answer: updatedQuestion.show_image_after_answer,
+          semester: updatedQuestion.exam_semester,
+          year: updatedQuestion.exam_year,
+          created_at: updatedQuestion.created_at,
+          exam_name: updatedQuestion.exam_name,
+          user_id: updatedQuestion.user_id,
+          is_unclear: updatedQuestion.is_unclear,
+          marked_unclear_at: updatedQuestion.marked_unclear_at,
+          ai_commentary_status: updatedQuestion.ai_commentary_status,
+          ai_commentary_queued_at: updatedQuestion.ai_commentary_queued_at,
+          ai_commentary_processed_at: updatedQuestion.ai_commentary_processed_at
         };
         onQuestionUpdated(mappedQuestion);
         toast.info('Frage erfolgreich aktualisiert');

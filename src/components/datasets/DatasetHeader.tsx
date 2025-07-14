@@ -105,9 +105,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   };
 
   const handleStartTraining = () => {
-    localStorage.setItem('trainingQuestions', JSON.stringify(questions));
     onStartTraining(questions);
-    navigate('/training');
   };
 
   const handleChangeVisibility = async (newVisibility: 'private' | 'university') => {

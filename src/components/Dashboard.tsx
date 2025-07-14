@@ -97,8 +97,11 @@ const Dashboard = () => {
     setSelectedFilename(selectedFilename === filename ? null : filename);
   }, [selectedFilename]);
 
-  const handleStartTraining = useCallback((questions: Question[]) => {
+  const handleStartTraining = useCallback((questions: Question[], filterSettings?: any) => {
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
+    if (filterSettings) {
+      localStorage.setItem('trainingFilterSettings', JSON.stringify(filterSettings));
+    }
     navigate('/training');
   }, [navigate]);
 

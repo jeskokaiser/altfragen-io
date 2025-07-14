@@ -26,12 +26,7 @@ export const filterQuestions = async (
     console.error('Error filtering unclear questions:', error);
   }
   
-  // If random selection is enabled, skip other filtering
-  if (values.isRandomSelection) {
-    return filteredQuestions;
-  }
-  
-  // Apply new filters if enabled and userId is available
+  // Apply new filters if enabled and userId is available (these apply even in random mode)
   if (userId && (values.newQuestionsOnly || values.excludeTodaysQuestions)) {
     console.log('Applying new question filters...');
     
@@ -83,6 +78,17 @@ export const filterQuestions = async (
     }
   }
   
+  // If random selection is enabled, skip subject/difficulty/year filtering
+  if (values.isRandomSelection) {
+    return filteredQuestions;
+  }
+  
+  // Check for contradictory filters
+  if (values.newQuestionsOnly && values.wrongQuestionsOnly) {
+    console.warn('Both newQuestionsOnly and wrongQuestionsOnly are enabled - this will return no questions');
+    return []; // Return empty array since these filters are mutually exclusive
+  }
+  
   // Filter wrong questions first if enabled
   if (values.wrongQuestionsOnly && questionResults) {
     console.log('Filtering wrong questions...');
@@ -90,7 +96,6 @@ export const filterQuestions = async (
     filteredQuestions = filteredQuestions.filter(q => {
       const result = questionResults.get(q.id);
       const isWrong = result === false;
-      console.log('Question:', q.id, 'Result:', result, 'Is Wrong:', isWrong);
       return isWrong;
     });
     console.log('After wrong questions filter:', filteredQuestions.length);
@@ -107,8 +112,12 @@ export const filterQuestions = async (
   const [minYear, maxYear] = values.yearRange;
   console.log('Filtering by year range:', minYear, 'to', maxYear);
   filteredQuestions = filteredQuestions.filter(q => {
-    // Skip questions with no year data
-    if (!q.year) return false;
+    // Include questions with no year data if the range covers the default range
+    if (!q.year) {
+      // Include questions without year data when the year range is at its maximum
+      const currentYear = new Date().getFullYear();
+      return minYear <= 2000 && maxYear >= currentYear;
+    }
     
     const questionYear = parseInt(q.year);
     return !isNaN(questionYear) && questionYear >= minYear && questionYear <= maxYear;

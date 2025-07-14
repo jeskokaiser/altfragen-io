@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface TrainingConfigProps {
   questions: Question[];
-  onStart: (selectedQuestions: Question[]) => void;
+  onStart: (selectedQuestions: Question[], filterSettings: FormValues) => void;
 }
 
 const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) => {
@@ -75,7 +75,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
     setIsProcessing(true);
     
     try {
-      const filteredQuestions = await filterQuestions(questions, values, questionResults);
+      const filteredQuestions = await filterQuestions(questions, values, questionResults, user?.id);
       
       if (filteredQuestions.length === 0) {
         toast.error('Keine Fragen gefunden, die den Filterkriterien entsprechen.');
@@ -99,7 +99,8 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
         return;
       }
 
-      onStart(prioritizedQuestions);
+      // Pass filter settings along with questions
+      onStart(prioritizedQuestions, values);
     } catch (error) {
       console.error('Error filtering questions:', error);
       toast.error('Fehler beim Verarbeiten der Fragen');

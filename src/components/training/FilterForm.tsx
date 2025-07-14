@@ -52,6 +52,8 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
   const isRandomMode = form.watch('isRandomSelection');
   const isSortingEnabled = form.watch('sortByAttempts');
   const yearRange = form.watch('yearRange');
+  const wrongQuestionsOnly = form.watch('wrongQuestionsOnly');
+  const newQuestionsOnly = form.watch('newQuestionsOnly');
 
   useImperativeHandle(ref, () => ({
     getValues: () => form.getValues(),
@@ -114,8 +116,13 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
                 <TooltipTrigger asChild>
                   <div className="flex items-center space-x-2">
                     <Switch
-                      checked={form.watch('wrongQuestionsOnly')}
-                      onCheckedChange={(checked) => form.setValue('wrongQuestionsOnly', checked)}
+                      checked={wrongQuestionsOnly}
+                      onCheckedChange={(checked) => {
+                        if (checked && newQuestionsOnly) {
+                          form.setValue('newQuestionsOnly', false);
+                        }
+                        form.setValue('wrongQuestionsOnly', checked);
+                      }}
                       id="wrong-questions"
                       disabled={isRandomMode}
                     />
@@ -135,8 +142,16 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
                 <TooltipTrigger asChild>
                   <div className="flex items-center space-x-2">
                     <Switch
-                      checked={form.watch('newQuestionsOnly')}
-                      onCheckedChange={(checked) => form.setValue('newQuestionsOnly', checked)}
+                      checked={newQuestionsOnly}
+                      onCheckedChange={(checked) => {
+                        if (checked && wrongQuestionsOnly) {
+                          form.setValue('wrongQuestionsOnly', false);
+                        }
+                        if (checked && isSortingEnabled) {
+                          form.setValue('sortByAttempts', false);
+                        }
+                        form.setValue('newQuestionsOnly', checked);
+                      }}
                       id="new-questions"
                       disabled={isRandomMode}
                     />
@@ -179,15 +194,20 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
                     <div className="flex items-center space-x-2">
                       <Switch
                         checked={isSortingEnabled}
-                        onCheckedChange={(checked) => form.setValue('sortByAttempts', checked)}
+                        onCheckedChange={(checked) => {
+                          if (checked && newQuestionsOnly) {
+                            form.setValue('newQuestionsOnly', false);
+                          }
+                          form.setValue('sortByAttempts', checked);
+                        }}
                         id="sort-by-attempts"
-                        disabled={isRandomMode}
+                        disabled={isRandomMode || newQuestionsOnly}
                       />
                       <Label htmlFor="sort-by-attempts">Nach Versuchen sortieren</Label>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Sortiert Fragen nach Anzahl der Versuche</p>
+                    <p>Sortiert Fragen nach Anzahl der Versuche{newQuestionsOnly ? ' (nicht verfügbar bei neuen Fragen)' : ''}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

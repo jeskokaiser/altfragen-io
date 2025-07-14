@@ -6,6 +6,7 @@ import { AnswerState } from '@/types/Answer';
 import QuestionDisplayWithAI from '@/components/training/QuestionDisplayWithAI';
 import Results from '@/components/Results';
 import TrainingConfig from '@/components/training/TrainingConfig';
+import { FormValues } from '@/components/training/types/FormValues';
 
 const Training = () => {
   const navigate = useNavigate();
@@ -15,15 +16,11 @@ const Training = () => {
   const [userAnswers, setUserAnswers] = useState<AnswerState[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [configurationComplete, setConfigurationComplete] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
   const [ignoredQuestions, setIgnoredQuestions] = useState<Set<string>>(new Set());
   const [scrollPositions, setScrollPositions] = useState<Map<number, number>>(new Map());
+  const [filterSettings, setFilterSettings] = useState<FormValues | null>(null);
 
   useEffect(() => {
-    const demoFlag = localStorage.getItem('isDemoSession');
-    const isDemoSession = demoFlag === 'true';
-    setIsDemo(isDemoSession);
-
     const storedQuestions = localStorage.getItem('trainingQuestions');
     if (!storedQuestions) {
       navigate('/dashboard');
@@ -32,18 +29,20 @@ const Training = () => {
     const parsedQuestions = JSON.parse(storedQuestions);
     setAllQuestions(parsedQuestions);
 
-    if (isDemoSession) {
-      setSelectedQuestions(parsedQuestions);
-      setConfigurationComplete(true);
-    }
-    
-    return () => {
-      if (isDemoSession) {
-        localStorage.removeItem('isDemoSession');
-        localStorage.removeItem('demoAiCommentaries');
-        localStorage.removeItem('trainingQuestions');
+    // Load filter settings if available
+    const storedFilterSettings = localStorage.getItem('trainingFilterSettings');
+    if (storedFilterSettings) {
+      try {
+        const parsedSettings = JSON.parse(storedFilterSettings);
+        setFilterSettings(parsedSettings);
+      } catch (error) {
+        console.error('Error parsing filter settings:', error);
       }
-    };
+    }
+
+    // For regular sessions, always start with configuration
+    setSelectedQuestions(parsedQuestions);
+    setConfigurationComplete(false);
   }, [navigate]);
 
   // Restore scroll position when question changes
@@ -59,10 +58,13 @@ const Training = () => {
     }
   }, [currentQuestionIndex, configurationComplete, showResults, scrollPositions]);
 
-  const handleStartTraining = (questions: Question[]) => {
+  const handleStartTraining = (questions: Question[], settings: FormValues) => {
     setSelectedQuestions(questions);
+    setFilterSettings(settings);
     setConfigurationComplete(true);
     setScrollPositions(new Map()); // Clear any existing scroll positions
+    // Store filter settings for future use
+    localStorage.setItem('trainingFilterSettings', JSON.stringify(settings));
     // Scroll to top when starting training
     setTimeout(() => {
       window.scrollTo(0, 0);
@@ -154,9 +156,8 @@ const Training = () => {
     setShowResults(false);
     setIgnoredQuestions(new Set());
     setScrollPositions(new Map()); // Clear saved scroll positions
-    if (!isDemo) {
-      setConfigurationComplete(false);
-    }
+    // Always go back to config to allow re-filtering with updated user progress
+    setConfigurationComplete(false);
   };
 
   const handleQuit = () => {
