@@ -513,7 +513,7 @@ const Auth = () => {
             {!isEmailVerified && <Alert className="bg-amber-50 border-amber-200">
                 <Info className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-amber-700">
-                  Bitte überprüfe deinen Posteingang und klicke auf den Bestätigungslink.
+                  Bitte überprüfe deinen Posteingang und klicke auf den Bestätigungslink. Pei Problemen melde dich unter <a href={`mailto:hallo@altfragen.io?subject=Problem%20mit%20E-Mail-Verifizierung&body=Hallo%20Altfragen.io-Team%2C%0A%0Aich%20habe%20Probleme%20mit%20der%20E-Mail-Verifizierung%20meines%20Kontos.%0A%0AMeine%20E-Mail-Adresse%3A%20${encodeURIComponent(email || '')}%0AProblembeschreibung%3A%20%0A%0A%0AFreundliche%20Gr%C3%BC%C3%9Fe`} className="text-blue-600 hover:underline">hallo@altfragen.io</a>.
                 </AlertDescription>
               </Alert>}
 
