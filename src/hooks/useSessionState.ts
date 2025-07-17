@@ -50,7 +50,7 @@ export const useSessionState = (
       // Load session first - this should always work regardless of participation
       const { data: sessionData, error: sessionError } = await supabase
         .from('exam_sessions')
-        .select('*')
+        .select('id, title, description, creator_id, university_id, subject, semester, year, is_active, created_at, updated_at')
         .eq('id', sessionId)
         .single();
 
@@ -125,7 +125,7 @@ export const useSessionState = (
       const [participantsResult, questionsResult] = await Promise.allSettled([
         supabase
           .from('session_participants')
-          .select('*')
+          .select('id, session_id, user_id, role, joined_at')
           .eq('session_id', sessionId),
         supabase
           .from('draft_questions')

@@ -7,10 +7,11 @@ import { Alert } from '@/components/ui/alert';
 import { XCircle, Eye } from 'lucide-react';
 import FeedbackDisplay from './FeedbackDisplay';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { showToast } from '@/utils/toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getKeyDisplayName } from '@/hooks/useTrainingKeyboard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast as showToast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AnswerSubmissionProps {
   currentQuestion: Question;
@@ -38,6 +39,7 @@ const AnswerSubmission = ({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { preferences } = useUserPreferences();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     setHasSubmittedWrong(false);
@@ -104,6 +106,13 @@ const AnswerSubmission = ({
           }
         }
       }
+
+      // Invalidate dashboard queries to ensure fresh data when user returns
+      queryClient.invalidateQueries({ queryKey: ['today-new', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['today-practice', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-answers', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-attempts', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-progress', user.id] });
 
       if (!isCorrect && !preferences?.immediateFeedback) {
         setHasSubmittedWrong(true);

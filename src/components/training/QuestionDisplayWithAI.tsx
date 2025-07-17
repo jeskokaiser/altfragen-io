@@ -203,6 +203,14 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
         if (updateError) throw updateError;
       }
+
+      // Invalidate dashboard queries to ensure fresh data when user returns
+      queryClient.invalidateQueries({ queryKey: ['today-new', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['today-practice', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-answers', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-attempts', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-progress', user.id] });
+      
     } catch (error) {
       console.error('Error saving answer progress:', error);
       toast.error("Fehler beim Speichern des Fortschritts");

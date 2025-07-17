@@ -6,6 +6,8 @@ import { AnswerState } from '@/types/Answer';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ResultsProps {
   questions: Question[];
@@ -17,6 +19,8 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { preferences } = useUserPreferences();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Filter to only show answered questions
   const answeredQuestions = questions.filter((_, index) => userAnswers[index]?.value);
@@ -98,6 +102,19 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     return answerText;
   };
 
+  const handleNavigateToDashboard = () => {
+    // Invalidate dashboard queries to ensure fresh data
+    if (user) {
+      queryClient.invalidateQueries({ queryKey: ['today-new', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['today-practice', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-answers', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-attempts', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-progress', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['all-questions', user.id] });
+    }
+    navigate('/dashboard');
+  };
+
   return (
     <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'px-2' : ''}`}>
       <h2 className="text-xl md:text-2xl font-semibold mb-4 text-slate-800">Deine Ergebnisse</h2>
@@ -145,7 +162,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
         <Button onClick={onRestart} className="w-full md:w-auto">Neuer Test</Button>
         <Button 
           variant="outline" 
-          onClick={() => navigate('/dashboard')}
+          onClick={handleNavigateToDashboard}
           className="w-full md:w-auto"
         >
           Zurück zum Dashboard

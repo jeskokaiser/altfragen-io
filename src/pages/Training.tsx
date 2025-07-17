@@ -7,9 +7,14 @@ import QuestionDisplayWithAI from '@/components/training/QuestionDisplayWithAI';
 import Results from '@/components/Results';
 import TrainingConfig from '@/components/training/TrainingConfig';
 import { FormValues } from '@/components/training/types/FormValues';
+import { fetchQuestionDetails } from '@/services/DatabaseService';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Training = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -58,17 +63,53 @@ const Training = () => {
     }
   }, [currentQuestionIndex, configurationComplete, showResults, scrollPositions]);
 
-  const handleStartTraining = (questions: Question[], settings: FormValues) => {
-    setSelectedQuestions(questions);
+  const handleStartTraining = async (questions: Question[], settings: FormValues) => {
+    // Store filter settings
     setFilterSettings(settings);
-    setConfigurationComplete(true);
-    setScrollPositions(new Map()); // Clear any existing scroll positions
-    // Store filter settings for future use
     localStorage.setItem('trainingFilterSettings', JSON.stringify(settings));
-    // Scroll to top when starting training
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 0);
+    
+    // Fetch full details for the selected questions
+    const questionIds = questions.map(q => q.id);
+    try {
+      const fullQuestions = await fetchQuestionDetails(questionIds);
+      
+      // Create a map for quick lookup
+      const fullQuestionsMap = new Map(fullQuestions.map(q => [q.id, q]));
+      
+      // Merge full details with selected questions
+      const questionsWithDetails = questions.map(q => 
+        fullQuestionsMap.get(q.id) || q
+      );
+      
+      setSelectedQuestions(questionsWithDetails);
+      setUserAnswers(new Array(questionsWithDetails.length).fill({
+        selectedAnswer: null,
+        isCorrect: null,
+        hasAnswered: false
+      }));
+      setConfigurationComplete(true);
+      setScrollPositions(new Map()); // Clear any existing scroll positions
+      
+      // Scroll to top when starting training
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 0);
+    } catch (error) {
+      console.error('Error fetching question details:', error);
+      // Fallback to using questions as-is
+      setSelectedQuestions(questions);
+      setUserAnswers(new Array(questions.length).fill({
+        selectedAnswer: null,
+        isCorrect: null,
+        hasAnswered: false
+      }));
+      setConfigurationComplete(true);
+      setScrollPositions(new Map());
+      
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 0);
+    }
   };
 
   const handleAnswer = (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
@@ -151,6 +192,15 @@ const Training = () => {
   };
 
   const handleRestart = () => {
+    // Invalidate dashboard queries to ensure fresh data
+    if (user) {
+      queryClient.invalidateQueries({ queryKey: ['today-new', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['today-practice', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-answers', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-attempts', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-progress', user.id] });
+    }
+    
     setCurrentQuestionIndex(0);
     setUserAnswers([]);
     setShowResults(false);
@@ -161,6 +211,15 @@ const Training = () => {
   };
 
   const handleQuit = () => {
+    // Invalidate dashboard queries to ensure fresh data
+    if (user) {
+      queryClient.invalidateQueries({ queryKey: ['today-new', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['today-practice', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-answers', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['total-attempts', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['user-progress', user.id] });
+    }
+    
     setShowResults(true);  // Show results instead of navigating away
   };
 

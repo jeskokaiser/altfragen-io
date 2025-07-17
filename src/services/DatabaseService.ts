@@ -65,9 +65,26 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
 export const fetchUniversityQuestions = async (universityId: string) => {
   if (!universityId) return [];
   
+  // Select only essential columns for listing
+  const questionColumns = `
+    id,
+    question,
+    subject,
+    filename,
+    difficulty,
+    is_unclear,
+    marked_unclear_at,
+    university_id,
+    visibility,
+    user_id,
+    exam_semester,
+    exam_year,
+    exam_name
+  `;
+  
   const { data, error } = await supabase
     .from('questions')
-    .select('*')
+    .select(questionColumns)
     .eq('university_id', universityId)
     .eq('visibility', 'university')
     .order('created_at', { ascending: false });
@@ -77,14 +94,14 @@ export const fetchUniversityQuestions = async (universityId: string) => {
   return data.map(q => ({
     id: q.id,
     question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
+    optionA: '', // Load on demand
+    optionB: '', // Load on demand
+    optionC: '', // Load on demand
+    optionD: '', // Load on demand
+    optionE: '', // Load on demand
     subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
+    correctAnswer: '', // Load on demand
+    comment: '', // Load on demand
     filename: q.filename,
     difficulty: q.difficulty,
     is_unclear: q.is_unclear,
@@ -94,8 +111,8 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
+    image_key: null, // Load on demand
+    show_image_after_answer: false, // Load on demand
     exam_name: q.exam_name || null
   }));
 };
@@ -149,9 +166,27 @@ export const updateDatasetVisibility = async (filename: string, userId: string, 
 };
 
 export const fetchAllQuestions = async (userId: string, universityId?: string | null) => {
+  // Select only the columns needed for dashboard display
+  const questionColumns = `
+    id,
+    question,
+    subject,
+    filename,
+    created_at,
+    difficulty,
+    is_unclear,
+    marked_unclear_at,
+    university_id,
+    visibility,
+    user_id,
+    exam_semester,
+    exam_year,
+    exam_name
+  `;
+
   const { data: personalQuestions, error: personalError } = await supabase
     .from('questions')
-    .select('*')
+    .select(questionColumns)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -161,7 +196,7 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
   if (universityId) {
     const { data: uniQuestions, error: uniError } = await supabase
       .from('questions')
-      .select('*')
+      .select(questionColumns)
       .eq('university_id', universityId)
       .eq('visibility', 'university')
       .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
@@ -179,14 +214,14 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
   const allQuestions = [...personalQuestions, ...universityQuestions].map(q => ({
     id: q.id,
     question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
+    optionA: '', // These will be loaded on-demand when needed
+    optionB: '',
+    optionC: '',
+    optionD: '',
+    optionE: '',
     subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
+    correctAnswer: '', // Will be loaded on-demand
+    comment: '', // Will be loaded on-demand
     filename: q.filename,
     created_at: q.created_at,
     difficulty: q.difficulty, // Use default difficulty, user-specific will be fetched on-demand
@@ -197,12 +232,107 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
+    image_key: null, // Will be loaded on-demand
+    show_image_after_answer: false, // Will be loaded on-demand
     exam_name: q.exam_name || null
   }));
 
   return allQuestions;
+};
+
+export const fetchAllQuestionsPaginated = async (
+  userId: string, 
+  universityId: string | null,
+  page: number = 0,
+  pageSize: number = 100
+) => {
+  const questionColumns = `
+    id,
+    question,
+    subject,
+    filename,
+    created_at,
+    difficulty,
+    is_unclear,
+    marked_unclear_at,
+    university_id,
+    visibility,
+    user_id,
+    exam_semester,
+    exam_year,
+    exam_name
+  `;
+
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  // Fetch personal questions with pagination
+  const { data: personalQuestions, error: personalError, count: personalCount } = await supabase
+    .from('questions')
+    .select(questionColumns, { count: 'exact' })
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (personalError) throw personalError;
+
+  let universityQuestions: any[] = [];
+  let universityCount = 0;
+  
+  if (universityId && pageSize > (personalQuestions?.length || 0)) {
+    // Calculate how many university questions we need
+    const remainingSlots = pageSize - (personalQuestions?.length || 0);
+    const universityFrom = Math.max(0, from - (personalCount || 0));
+    const universityTo = universityFrom + remainingSlots - 1;
+
+    const { data: uniQuestions, error: uniError, count: uniCount } = await supabase
+      .from('questions')
+      .select(questionColumns, { count: 'exact' })
+      .eq('university_id', universityId)
+      .eq('visibility', 'university')
+      .neq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(universityFrom, universityTo);
+
+    if (uniError) throw uniError;
+    
+    universityQuestions = uniQuestions || [];
+    universityCount = uniCount || 0;
+  }
+
+  const allQuestions = [...personalQuestions || [], ...universityQuestions].map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: '',
+    optionB: '',
+    optionC: '',
+    optionD: '',
+    optionE: '',
+    subject: q.subject,
+    correctAnswer: '',
+    comment: '',
+    filename: q.filename,
+    created_at: q.created_at,
+    difficulty: q.difficulty,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at,
+    university_id: q.university_id,
+    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+    user_id: q.user_id,
+    semester: q.exam_semester || null,
+    year: q.exam_year || null,
+    image_key: null,
+    show_image_after_answer: false,
+    exam_name: q.exam_name || null
+  }));
+
+  return {
+    questions: allQuestions,
+    totalCount: (personalCount || 0) + universityCount,
+    page,
+    pageSize,
+    hasMore: allQuestions.length === pageSize
+  };
 };
 
 export const fetchUserDifficulty = async (userId: string, questionId: string): Promise<number | null> => {
@@ -258,4 +388,41 @@ export const fetchUserDifficultiesForQuestions = async (userId: string, question
   }
   
   return userDifficulties;
+};
+
+export const fetchQuestionDetails = async (questionIds: string[]) => {
+  if (!questionIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('questions')
+    .select('*')
+    .in('id', questionIds);
+
+  if (error) throw error;
+
+  return data.map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    created_at: q.created_at,
+    difficulty: q.difficulty,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at,
+    university_id: q.university_id,
+    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+    user_id: q.user_id,
+    semester: q.exam_semester || null,
+    year: q.exam_year || null,
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false,
+    exam_name: q.exam_name || null
+  }));
 };

@@ -18,13 +18,13 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
     queryFn: async () => {
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('user_progress')
-        .select('id')
+        .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .gte('created_at', today.toISOString());
       if (error) throw error;
-      return data?.length ?? 0;
+      return count ?? 0;
     },
     enabled: !!userId
   });
@@ -34,13 +34,13 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
     queryFn: async () => {
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('user_progress')
-        .select('id')
+        .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .gte('updated_at', today.toISOString());
       if (error) throw error;
-      return data?.length ?? 0;
+      return count ?? 0;
     },
     enabled: !!userId
   });
@@ -50,7 +50,7 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
     queryFn: async () => {
       const { count, error } = await supabase
         .from('user_progress')
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('user_id', userId);
       if (error) throw error;
       return count || 0;
@@ -61,6 +61,7 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
   const totalAttemptsCountQuery = useQuery({
     queryKey: ['total-attempts', userId],
     queryFn: async () => {
+      // Use Supabase's sum aggregation via RPC if available, otherwise fetch minimal data
       const { data, error } = await supabase
         .from('user_progress')
         .select('attempts_count')

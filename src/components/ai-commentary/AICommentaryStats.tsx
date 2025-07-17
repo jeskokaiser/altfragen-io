@@ -33,23 +33,20 @@ const AICommentaryStats: React.FC = () => {
   const { data: modelStats, isLoading: modelStatsLoading } = useQuery({
     queryKey: ['ai-commentary-model-stats'],
     queryFn: async () => {
-      // Since we can't reliably access ai_answer_comments table yet,
-      // let's use questions table with completed status as proxy
-      const { data: completedQuestions, error } = await supabase
+      // Use count instead of fetching all records
+      const { count, error } = await supabase
         .from('questions')
-        .select('id', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('ai_commentary_status', 'completed');
 
       if (error) {
         throw new Error('Error fetching model stats');
       }
-
-      const count = completedQuestions?.length || 0;
       
       return {
-        openai: count,
-        claude: count,
-        gemini: count
+        openai: count || 0,
+        claude: count || 0,
+        gemini: count || 0
       };
     },
     refetchInterval: 60000

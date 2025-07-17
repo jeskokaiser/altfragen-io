@@ -68,9 +68,10 @@ export class CollaborationServiceUnified {
 
   static async getAllSessions(): Promise<ExamSession[]> {
     try {
+      // Select only the columns needed for the sessions list
       const { data, error } = await supabase
         .from('exam_sessions')
-        .select('*')
+        .select('id, title, description, creator_id, university_id, subject, semester, year, is_active, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
