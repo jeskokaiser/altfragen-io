@@ -355,7 +355,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                   Upgraden für unbegrenzten Zugang!
                 </p>
                 <Button 
-                  onClick={() => createCheckoutSession('monthly')}
+                  onClick={() => window.open('/subscription', '_blank')}
                   className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
                 >
                   <Crown className="h-4 w-4" />

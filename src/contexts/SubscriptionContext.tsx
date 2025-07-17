@@ -245,20 +245,8 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         throw new Error('No valid session found');
       }
 
-      // Record consent in database
-      console.log('Recording subscription consent for user:', user.id);
-      const { error: consentError } = await supabase
-        .from('profiles')
-        .update({
-          subscription_consent: true,
-          subscription_consent_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (consentError) {
-        console.error('Failed to record consent:', consentError);
-        throw new Error('Failed to record consent');
-      }
+      // Note: Consent is handled on the subscription page
+      console.log('Creating checkout session for user:', user.id);
 
       console.log('Invoking create-checkout function');
       const { data, error } = await supabase.functions.invoke('create-checkout', {
