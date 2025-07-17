@@ -36,6 +36,27 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     const now = new Date();
     const cacheTime = new Date(cachedData.timestamp);
     
+    // Check for recent checkout activity - be more aggressive with cache invalidation
+    const recentCheckoutTime = localStorage.getItem(`checkout_initiated_${user?.id}`);
+    if (recentCheckoutTime) {
+      const checkoutInitiated = new Date(recentCheckoutTime);
+      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+      
+      // If checkout was initiated within the last 30 minutes, use shorter cache
+      if (checkoutInitiated > thirtyMinutesAgo) {
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+        const shouldUseShortCache = cacheTime < fiveMinutesAgo;
+        
+        if (shouldUseShortCache) {
+          console.log('Using shorter cache due to recent checkout activity');
+          return false; // Force refresh
+        }
+      } else {
+        // Clean up old checkout timestamp
+        localStorage.removeItem(`checkout_initiated_${user?.id}`);
+      }
+    }
+    
     // If user is subscribed and has subscription_end
     if (cachedData.subscribed && cachedData.subscription_end) {
       const subscriptionEnd = new Date(cachedData.subscription_end);
@@ -81,6 +102,17 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       localStorage.setItem(`subscription_${user.id}`, JSON.stringify(cacheData));
     } catch (error) {
       console.error('Error caching subscription data:', error);
+    }
+  };
+
+  const invalidateSubscriptionCache = () => {
+    if (!user?.id) return;
+    
+    try {
+      localStorage.removeItem(`subscription_${user.id}`);
+      console.log('Subscription cache invalidated for user:', user.id);
+    } catch (error) {
+      console.error('Error invalidating subscription cache:', error);
     }
   };
 
@@ -143,6 +175,19 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           subscription_end: data.subscription_end || null
         };
         
+        // Check if subscription status changed from unsubscribed to subscribed
+        const cachedData = getCachedSubscriptionData();
+        const wasUnsubscribed = cachedData && !cachedData.subscribed;
+        const isNowSubscribed = subscriptionData.subscribed;
+        
+        if (wasUnsubscribed && isNowSubscribed) {
+          console.log('🎉 Subscription status changed from unsubscribed to subscribed!');
+          showToast.success('🎉 Premium erfolgreich aktiviert! Du hast jetzt Zugang zu allen Premium-Features.');
+          
+          // Clean up checkout tracking
+          localStorage.removeItem(`checkout_initiated_${user.id}`);
+        }
+        
         // Update state
         setSubscribed(subscriptionData.subscribed);
         setSubscriptionTier(subscriptionData.subscription_tier);
@@ -192,6 +237,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       console.log('Creating checkout session for user:', user.id, 'priceType:', priceType);
       
+      // Track when checkout was initiated for more aggressive cache invalidation
+      localStorage.setItem(`checkout_initiated_${user.id}`, new Date().toISOString());
+      
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.access_token) {
         throw new Error('No valid session found');
@@ -229,6 +277,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
       console.log('Checkout session created:', data);
       if (data?.url) {
+        // Invalidate cache before redirecting to ensure fresh check on return
+        invalidateSubscriptionCache();
+        
         // Redirect in same tab for better UX
         window.location.href = data.url;
       } else {
@@ -238,6 +289,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       console.error('Failed to create checkout session:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       showToast.error(`Der Checkout-Prozess konnte nicht gestartet werden: ${errorMessage}`);
+      
+      // Clean up checkout tracking on error
+      localStorage.removeItem(`checkout_initiated_${user.id}`);
     }
   };
 
@@ -269,6 +323,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
       console.log('Customer portal session created:', data);
       if (data?.url) {
+        // Invalidate cache before redirecting to ensure fresh check on return
+        invalidateSubscriptionCache();
+        
         // Redirect to the authenticated portal URL in the same tab
         window.location.href = data.url;
       } else {
@@ -299,6 +356,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           if (key?.startsWith('subscription_') && key !== `subscription_${user.id}`) {
             keysToRemove.push(key);
           }
+          // Also clean up old checkout tracking for other users
+          if (key?.startsWith('checkout_initiated_') && key !== `checkout_initiated_${user.id}`) {
+            keysToRemove.push(key);
+          }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
       } catch (error) {
@@ -307,25 +368,93 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   }, [user?.id]);
 
-  // Check for successful checkout
+  // Enhanced checkout success detection with multiple strategies
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('checkout') === 'success') {
+    const hasCheckoutSuccess = urlParams.get('checkout') === 'success';
+    const hasCheckoutCancelled = urlParams.get('checkout') === 'cancelled';
+    
+    if (hasCheckoutSuccess) {
       showToast.success('Abonnement erfolgreich aktiviert!');
       // Remove the checkout parameter from URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
-      // Force refresh subscription status after a short delay (bypass cache)
-      setTimeout(() => {
-        checkSubscription(true);
-      }, 2000);
-    } else if (urlParams.get('checkout') === 'cancelled') {
+      
+      // Invalidate cache and force refresh subscription status
+      invalidateSubscriptionCache();
+      
+      // Use multiple refresh attempts with increasing delays
+      const refreshAttempts = [1000, 3000, 8000]; // 1s, 3s, 8s
+      
+      refreshAttempts.forEach((delay, index) => {
+        setTimeout(() => {
+          console.log(`Checkout success refresh attempt ${index + 1}`);
+          checkSubscription(true);
+        }, delay);
+      });
+      
+    } else if (hasCheckoutCancelled) {
       showToast.info('Der Checkout wurde abgebrochen');
       // Remove the checkout parameter from URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
+      // Clean up checkout tracking
+      if (user?.id) {
+        localStorage.removeItem(`checkout_initiated_${user.id}`);
+      }
     }
-  }, []);
+    
+    // Additional check: if user returns to the app and we have checkout tracking, do a refresh
+    if (user?.id && !hasCheckoutSuccess && !hasCheckoutCancelled) {
+      const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
+      if (checkoutInitiated) {
+        const checkoutTime = new Date(checkoutInitiated);
+        const now = new Date();
+        const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
+        
+        // If checkout was initiated within the last 10 minutes, do a background refresh
+        if (timeSinceCheckout < 10 * 60 * 1000) {
+          console.log('Background subscription refresh due to recent checkout activity');
+          setTimeout(() => {
+            checkSubscription(true);
+          }, 2000);
+        }
+      }
+    }
+  }, [user?.id]);
+
+  // Periodic background refresh for users with recent checkout activity
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
+    if (!checkoutInitiated) return;
+    
+    const checkoutTime = new Date(checkoutInitiated);
+    const now = new Date();
+    const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
+    
+    // If checkout was within the last 30 minutes, set up periodic checks
+    if (timeSinceCheckout < 30 * 60 * 1000) {
+      const interval = setInterval(() => {
+        const currentTime = new Date();
+        const currentTimeSinceCheckout = currentTime.getTime() - checkoutTime.getTime();
+        
+        // Stop checking after 30 minutes
+        if (currentTimeSinceCheckout > 30 * 60 * 1000) {
+          localStorage.removeItem(`checkout_initiated_${user.id}`);
+          clearInterval(interval);
+          return;
+        }
+        
+        // Check subscription status every 2 minutes
+        console.log('Periodic subscription check due to recent checkout');
+        checkSubscription(true);
+      }, 2 * 60 * 1000); // Every 2 minutes
+      
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]);
 
   return (
     <SubscriptionContext.Provider value={{

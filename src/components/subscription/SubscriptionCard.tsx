@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { Crown, Check, Loader2, Brain, Tag, Mail } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Crown, Check, Loader2, Brain, Tag, Mail, RefreshCw, AlertCircle } from 'lucide-react';
+import { showToast } from '@/utils/toast';
 
 const SubscriptionCard: React.FC = () => {
   const { 
@@ -15,6 +17,55 @@ const SubscriptionCard: React.FC = () => {
     createCheckoutSession, 
     openCustomerPortal 
   } = useSubscription();
+  
+  const { user } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCheckoutPrompt, setShowCheckoutPrompt] = useState(false);
+
+  // Check if user recently initiated checkout
+  useEffect(() => {
+    if (!user?.id || subscribed) return;
+    
+    const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
+    if (checkoutInitiated) {
+      const checkoutTime = new Date(checkoutInitiated);
+      const now = new Date();
+      const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
+      
+      // Show prompt if checkout was within the last 20 minutes and user is not subscribed
+      if (timeSinceCheckout < 20 * 60 * 1000) {
+        setShowCheckoutPrompt(true);
+        
+        // Auto-refresh subscription status
+        setTimeout(() => {
+          handleRefreshStatus();
+        }, 1000);
+      }
+    }
+  }, [user?.id, subscribed]);
+
+  const handleRefreshStatus = async () => {
+    try {
+      setIsRefreshing(true);
+      await checkSubscription(true);
+      
+      // If still not subscribed after refresh, show helpful message
+      setTimeout(() => {
+        if (!subscribed && showCheckoutPrompt) {
+          showToast.info('Status wird noch verarbeitet? Stripe Zahlungen können bis zu 10 Minuten dauern.');
+        }
+      }, 500);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const dismissCheckoutPrompt = () => {
+    setShowCheckoutPrompt(false);
+    if (user?.id) {
+      localStorage.removeItem(`checkout_initiated_${user.id}`);
+    }
+  };
 
   if (loading) {
     return (
@@ -28,69 +79,123 @@ const SubscriptionCard: React.FC = () => {
   }
 
   return (
-    <Card className={`p-6 ${subscribed ? 'border-2 border-yellow-400 dark:border-yellow-500 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950 dark:to-amber-950' : 'border-2 border-green-500 dark:border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950'}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Brain className={`h-5 w-5 ${subscribed ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`} />
-            <h3 className="text-lg font-semibold">
-              {subscribed ? 'Altfragen.io Premium' : 'Premium KI-Kommentare'}
-            </h3>
-            {subscribed && (
-              <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                Aktiv
-              </Badge>
+    <Card className="p-6">
+      {/* Checkout prompt for users who recently purchased */}
+      {showCheckoutPrompt && !subscribed && (
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                Premium-Status wird verarbeitet
+              </div>
+              <div className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+                Stripe-Zahlungen können bis zu 10 Minuten dauern. Wir prüfen automatisch deinen Status.
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleRefreshStatus}
+                  size="sm"
+                  variant="outline"
+                  disabled={isRefreshing}
+                  className="text-xs h-7 border-amber-300 dark:border-amber-700"
+                >
+                  <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Jetzt prüfen
+                </Button>
+                <Button
+                  onClick={dismissCheckoutPrompt}
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs h-7"
+                >
+                  Verstanden
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Crown className={`h-5 w-5 ${subscribed ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-400 dark:text-gray-600'}`} />
+          <h3 className="text-lg font-semibold">
+            {subscribed ? 'Premium Aktiv' : 'Kostenloses Konto'}
+          </h3>
+        </div>
+        <Button
+          onClick={handleRefreshStatus}
+          variant="ghost"
+          size="sm"
+          disabled={isRefreshing || loading}
+          className="text-xs h-8 px-2"
+        >
+          <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Aktualisiere...' : 'Status prüfen'}
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {subscribed ? (
+          <div className="space-y-3">
+            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-2 mb-2">
+                <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                  Premium Features verfügbar
+                </span>
+              </div>
+              <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
+                <div className="flex items-center gap-1">
+                  <Brain className="h-3 w-3" />
+                  <span>Unbegrenzte KI-Kommentare</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Tag className="h-3 w-3" />
+                  <span>Premium Support verfügbar</span>
+                </div>
+              </div>
+            </div>
+            
+            {subscriptionTier && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Plan:</span>
+                <Badge variant="secondary">{subscriptionTier}</Badge>
+              </div>
             )}
-            {!subscribed && (
-              <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                <Tag className="h-3 w-3 mr-1" />
-                33% Rabatt
-              </Badge>
+            
+            {subscriptionEnd && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Läuft ab am:</span>
+                <span>{new Date(subscriptionEnd).toLocaleDateString('de-DE')}</span>
+              </div>
             )}
           </div>
-          
-          {subscribed ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Aktueller Plan: <strong>{subscriptionTier || 'Premium'}</strong>
-              </p>
-              {subscriptionEnd && (
-                <p className="text-sm text-muted-foreground">
-                  Verlängert am: {new Date(subscriptionEnd).toLocaleDateString('de-DE')}
-                </p>
-              )}
-              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                <Check className="h-4 w-4" />
-                <span>KI-Kommentare freigeschaltet</span>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-lg">
-                <p className="text-sm font-semibold text-green-800 dark:text-green-200">
-                  🎉 Einführungsangebot: Nur €5,99/Monat (statt €8,99)
-                </p>
-                <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                  Limitiert auf die ersten 500 Nutzer:innen
-                </p>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sm">
-                  <Brain className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>Detaillierte KI-Erklärungen zu Antworten</span>
+        ) : (
+          <div className="space-y-3">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <div className="font-medium mb-2">Kostenlose Features:</div>
+                <div className="flex items-center gap-1">
+                  <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                  <span>10 KI-Kommentare pro Tag</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Brain className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>Verständnis für falsche Antwortoptionen</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Brain className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>Bessere Vorbereitung durch KI-Insights</span>
+                <div className="flex items-center gap-1">
+                  <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                  <span>Unbegrenzte Fragenbeantwortung</span>
                 </div>
               </div>
             </div>
-          )}
-        </div>
+            
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white p-3 rounded-lg">
+              <div className="text-center">
+                <div className="font-semibold text-sm mb-1">🎉 Einführungsangebot</div>
+                <div className="text-xs">33% Rabatt für die ersten 500 Nutzer</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="space-y-2 mt-4">
@@ -109,18 +214,26 @@ const SubscriptionCard: React.FC = () => {
                 Premium Support
               </Button>
             </div>
-            <Button onClick={() => checkSubscription(true)} variant="ghost" size="sm" className="w-full">
-              Status aktualisieren
-            </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
             <Button onClick={() => createCheckoutSession('monthly')} className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 w-full">
               🔥 Premium für €5,99/Monat
             </Button>
-            <Button onClick={() => checkSubscription(true)} variant="ghost" size="sm" className="w-full">
-              Status aktualisieren
-            </Button>
+            <div className="text-center">
+              <span className="text-xs text-muted-foreground">
+                Gerade Premium gekauft? 
+              </span>
+              <Button 
+                onClick={handleRefreshStatus}
+                variant="link" 
+                size="sm"
+                disabled={isRefreshing}
+                className="text-xs p-0 ml-1 h-auto underline"
+              >
+                Status aktualisieren
+              </Button>
+            </div>
           </div>
         )}
       </div>

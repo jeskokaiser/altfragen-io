@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown, Eye, AlertTriangle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Brain, Users, BarChart3, Crown, Eye, AlertTriangle, RefreshCw } from 'lucide-react';
 import { AICommentaryData, ModelName, AnswerOption } from '@/types/AIAnswerComments';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AICommentaryDisplayProps {
   commentaryData: AICommentaryData;
@@ -32,28 +33,93 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
     DAILY_LIMIT
   } = usePremiumFeatures();
   const {
-    createCheckoutSession
+    createCheckoutSession,
+    checkSubscription
   } = useSubscription();
+  const { user } = useAuth();
   const [expandedAnswers, setExpandedAnswers] = useState<Set<AnswerOption>>(new Set());
   const [expandedGeneral, setExpandedGeneral] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [recentlyPurchased, setRecentlyPurchased] = useState(false);
+
+  // Check if user recently initiated checkout
+  useEffect(() => {
+    if (!user?.id || !isFreeTier) return;
+    
+    const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
+    if (checkoutInitiated) {
+      const checkoutTime = new Date(checkoutInitiated);
+      const now = new Date();
+      const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
+      
+      // Show special message if checkout was within the last 15 minutes
+      if (timeSinceCheckout < 15 * 60 * 1000) {
+        setRecentlyPurchased(true);
+      }
+    }
+  }, [user?.id, isFreeTier]);
+
+  const handleRefreshStatus = async () => {
+    try {
+      setIsRefreshing(true);
+      await checkSubscription(true);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Premium gate - this is a fallback in case the component is rendered without proper gating
   if (!canAccessAIComments) {
-    return <div className="text-center py-8 space-y-4">
+    return (
+      <div className="text-center py-8 space-y-4">
         <Crown className="h-16 w-16 mx-auto text-blue-500" />
         <div>
           <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
             {isFreeTier ? 'Tägliches Limit erreicht' : 'Premium Feature'}
           </h3>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
-            {isFreeTier ? `Du hast heute bereits ${dailyUsage}/${DAILY_LIMIT} kostenlose KI-Kommentare verwendet. Upgraden für unbegrenzten Zugang!` : 'KI-Kommentare sind nur für Premium-Abonnenten verfügbar.'}
-          </p>
-          <Button onClick={createCheckoutSession} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            Jetzt upgraden!
-          </Button>
+          
+          {recentlyPurchased ? (
+            <div className="space-y-3">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Hast du gerade Premium gekauft? Dein Status wird möglicherweise noch verarbeitet.
+              </p>
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800 mb-4">
+                <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
+                  Stripe-Zahlungen können bis zu 10 Minuten dauern. Versuche deinen Status zu aktualisieren:
+                </p>
+                <Button
+                  onClick={handleRefreshStatus}
+                  disabled={isRefreshing}
+                  variant="outline"
+                  size="sm"
+                  className="mr-2"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Aktualisiere...' : 'Status prüfen'}
+                </Button>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Oder kaufe Premium, falls du es noch nicht getan hast:
+              </p>
+              <Button onClick={() => window.open('/subscription', '_blank')} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2">
+                <Crown className="h-4 w-4" />
+                Jetzt upgraden!
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                {isFreeTier ? `Du hast heute bereits ${dailyUsage}/${DAILY_LIMIT} kostenlose KI-Kommentare verwendet. Upgraden für unbegrenzten Zugang!` : 'KI-Kommentare sind nur für Premium-Abonnenten verfügbar.'}
+              </p>
+              <Button onClick={() => window.open('/subscription', '_blank')} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2">
+                <Crown className="h-4 w-4" />
+                Jetzt upgraden!
+              </Button>
+            </div>
+          )}
         </div>
-      </div>;
+      </div>
+    );
   }
 
   // Show usage info for free tier users - only display remaining views, no increment logic here
@@ -68,7 +134,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
         </div>
         {remainingFreeViews <= 3 && remainingFreeViews > 0 && <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
             Nur noch wenige kostenlose KI-Kommentare übrig! 
-            <Button variant="link" className="p-0 h-auto ml-1 text-blue-600 dark:text-blue-400" onClick={createCheckoutSession}>
+            <Button variant="link" className="p-0 h-auto ml-1 text-blue-600 dark:text-blue-400" onClick={() => window.open('/subscription', '_blank')}>
               Jetzt upgraden
             </Button>
           </p>}

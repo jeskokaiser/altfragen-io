@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import CampaignBanner from '@/components/campaigns/CampaignBanner';
 import CampaignToast from '@/components/campaigns/CampaignToast';
+import CheckoutStatusNotification from '@/components/subscription/CheckoutStatusNotification';
 
 // Import pages
 import DashboardPage from '@/pages/Dashboard';
@@ -53,6 +54,7 @@ const MainLayout: React.FC = () => {
       <Navbar />
       <CampaignBanner />
       <CampaignToast />
+      <CheckoutStatusNotification />
       <main className="flex-1">
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />
