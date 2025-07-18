@@ -65,6 +65,7 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
       } else {
         setCurrentDifficulty(difficulty);
         setIsUserSpecificDifficulty(false);
+        setAttemptsCount(0);
       }
     };
 
