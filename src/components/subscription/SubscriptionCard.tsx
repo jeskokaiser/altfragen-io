@@ -157,20 +157,6 @@ const SubscriptionCard: React.FC = () => {
                 </div>
               </div>
             </div>
-            
-            {subscriptionTier && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Plan:</span>
-                <Badge variant="secondary">{subscriptionTier}</Badge>
-              </div>
-            )}
-            
-            {subscriptionEnd && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Läuft ab am:</span>
-                <span>{new Date(subscriptionEnd).toLocaleDateString('de-DE')}</span>
-              </div>
-            )}
           </div>
         ) : (
           <div className="space-y-3">

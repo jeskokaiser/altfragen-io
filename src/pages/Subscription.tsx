@@ -227,7 +227,7 @@ const Subscription = () => {
           </Card>
 
           {/* Monthly Plan */}
-          <Card className={`p-6 relative ${subscribed ? 'border-2 border-yellow-400 dark:border-yellow-500' : 'border-2 border-green-500 dark:border-green-400'}`}>
+          <Card className={`p-6 relative border-2 border-green-500 dark:border-green-400`}>
             {subscribed && (
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <PremiumBadge />
