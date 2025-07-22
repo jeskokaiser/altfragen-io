@@ -68,11 +68,11 @@ const Index = () => {
             <div className="flex items-center justify-center mt-12 space-x-8 text-slate-500">
               <div className="flex items-center">
                 <Users className="w-5 h-5 mr-2" />
-                <span className="text-sm">Über 16.000+ Fragen</span>
+                <span className="text-sm">30.000+ Fragen hochgeladen</span>
               </div>
               <div className="flex items-center">
                 <Award className="w-5 h-5 mr-2" />
-                <span className="text-sm">Vertraut von über 200 Student:innen</span>
+                <span className="text-sm">Vertraut von über 400 Student:innen</span>
               </div>
             </div>
           </div>
@@ -156,7 +156,7 @@ const Index = () => {
                 </h2>
                 <p className="text-lg text-slate-600 mb-8 leading-relaxed">
                   Verbinde dich mit anderen Student:innen deiner Universität und teile deine Altfragen. 
-                  Profitiere von einer größeren Fragendatenbank und hilf anderen beim Lernen.
+                  An unserer Startuniversität im Fach Medizin lernt bereits jede vierte Student:in mit Altfragen.io.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
@@ -267,7 +267,7 @@ const Index = () => {
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-200">
                     <p className="text-xs text-slate-500 text-center">
-                      Powered by OpenAI, Claude & Gemini
+                      Powered by OpenAI, Grok/Mistral & Gemini
                     </p>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900 mb-1">Drei KI-Modelle im Vergleich</h3>
-                      <p className="text-slate-600">OpenAI, Grok, Mistral und Gemini analysieren jede Frage für umfassende Erklärungen</p>
+                      <p className="text-slate-600">OpenAI, Grok bzw.Mistral und Gemini analysieren jede Frage für umfassende Erklärungen</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
