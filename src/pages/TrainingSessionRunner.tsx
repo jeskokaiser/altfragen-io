@@ -73,17 +73,10 @@ const TrainingSessionRunnerPage: React.FC = () => {
     navigate(`/training/session/${sessionId}/analytics`);
   };
 
+  // This handler is just for notifying the component about state changes
+  // The actual database write is handled by onSessionRecordAttempt below
   const handleAnswer = async (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
-    if (!session || !user || !currentQuestion) return;
-    const isCorrect = currentQuestion.correctAnswer?.toUpperCase().startsWith(answer.toUpperCase());
-    await TrainingSessionService.recordAttempt({
-      sessionId: session.id,
-      userId: user.id,
-      questionId: currentQuestion.id,
-      answer,
-      isCorrect,
-      viewedSolution,
-    });
+    // No-op: database writes are handled by onSessionRecordAttempt to avoid duplicates
   };
 
   if (isLoading || !session) {
@@ -108,12 +101,21 @@ const TrainingSessionRunnerPage: React.FC = () => {
           onQuit={handleQuit}
           onSessionRecordAttempt={async (answer, isCorrect, viewedSolution) => {
             if (!session || !user || !currentQuestion) return;
+            
+            // Safety check: if isCorrect is not explicitly provided, calculate it
+            // This prevents TypeError if correctAnswer is null/undefined
+            const finalIsCorrect = isCorrect ?? (
+              currentQuestion.correctAnswer
+                ? currentQuestion.correctAnswer.toUpperCase().startsWith(answer.toUpperCase())
+                : false
+            );
+            
             await TrainingSessionService.recordAttempt({
               sessionId: session.id,
               userId: user.id,
               questionId: currentQuestion.id,
               answer,
-              isCorrect,
+              isCorrect: finalIsCorrect,
               viewedSolution,
             });
           }}

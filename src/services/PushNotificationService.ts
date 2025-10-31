@@ -351,6 +351,7 @@ export class PushNotificationService {
     subscription: PushSubscription
   ): Promise<void> {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const endpoint = `${supabaseUrl}/functions/v1/save-push-subscription`;
     
     const subscriptionJson = subscription.toJSON();
@@ -358,7 +359,10 @@ export class PushNotificationService {
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
         body: JSON.stringify({
           endpoint: subscriptionJson.endpoint,
           keys: subscriptionJson.keys,
@@ -392,6 +396,7 @@ export class PushNotificationService {
     subscription: PushSubscription
   ): Promise<void> {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const endpoint = `${supabaseUrl}/functions/v1/remove-push-subscription`;
     
     const subscriptionJson = subscription.toJSON();
@@ -399,7 +404,10 @@ export class PushNotificationService {
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
         body: JSON.stringify({
           endpoint: subscriptionJson.endpoint,
         }),
