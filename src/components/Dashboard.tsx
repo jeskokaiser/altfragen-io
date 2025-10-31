@@ -18,12 +18,24 @@ import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useQuestionFiltering } from '@/hooks/useQuestionFiltering';
 import { useQuestionGrouping } from '@/hooks/useQuestionGrouping';
+import { useUpcomingExams } from '@/hooks/useUpcomingExams';
+import UpcomingExamCreateDialog from './exams/UpcomingExamCreateDialog';
+import UpcomingExamsList from './exams/UpcomingExamsList';
+import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
+import { getLinkedQuestionIdsForExam, deleteUpcomingExam } from '@/services/UpcomingExamService';
+import { fetchQuestionDetails } from '@/services/DatabaseService';
+import { TrainingSessionService } from '@/services/TrainingSessionService';
+import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
+import { toast } from 'sonner';
+import StatisticsDateRangeSelector from './datasets/StatisticsDateRangeSelector';
+import { StatisticsDateRange } from '@/contexts/UserPreferencesContext';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { preferences, isDatasetArchived, updateSelectedUniversityDatasets } = useUserPreferences();
+  const { preferences, isDatasetArchived, updateSelectedUniversityDatasets, updatePreferences } = useUserPreferences();
+  const { exams, isLoading: isExamsLoading, linkQuestions } = useUpcomingExams(user?.id);
   
   // State variables
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
@@ -33,6 +45,13 @@ const Dashboard = () => {
   const [uniSelectedYear, setUniSelectedYear] = useState<string | null>(null);
   const [isDatasetSelectorOpen, setIsDatasetSelectorOpen] = useState(false);
   const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
+  const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
+  const [isQuestionSelectorOpen, setIsQuestionSelectorOpen] = useState(false);
+  const [examIdForLinking, setExamIdForLinking] = useState<string | null>(null);
+  const [isCreateTrainingSessionOpen, setIsCreateTrainingSessionOpen] = useState(false);
+  const [createSessionQuestions, setCreateSessionQuestions] = useState<Question[]>([]);
+  const [createSessionDefaultTitle, setCreateSessionDefaultTitle] = useState<string>('Training Session');
+  const [createSessionExamId, setCreateSessionExamId] = useState<string | null>(null);
 
   // Fetch all dashboard data
   const {
@@ -43,7 +62,7 @@ const Dashboard = () => {
     todayPracticeCount,
     totalAnsweredCount,
     totalAttemptsCount,
-  } = useDashboardData(user?.id, universityId);
+  } = useDashboardData(user?.id, universityId, preferences?.statisticsDateRange);
 
   // Update selected university datasets when preferences change
   useEffect(() => {
@@ -102,7 +121,7 @@ const Dashboard = () => {
     if (filterSettings) {
       localStorage.setItem('trainingFilterSettings', JSON.stringify(filterSettings));
     }
-    navigate('/training');
+    navigate('/training/sessions');
   }, [navigate]);
 
   const handleQuestionsLoaded = useCallback(() => {
@@ -123,6 +142,74 @@ const Dashboard = () => {
     setIsDatasetSelectorOpen(true);
   }, []);
 
+  const handleOpenCreateExam = useCallback(() => {
+    setIsCreateExamOpen(true);
+  }, []);
+
+  const handleOpenQuestionSelector = useCallback((examId: string) => {
+    setExamIdForLinking(examId);
+    setIsQuestionSelectorOpen(true);
+  }, []);
+
+  const handleLinkQuestionsToExam = useCallback(async (selectedIds: string[]) => {
+    if (!examIdForLinking || !user?.id) return;
+    const sourceOf = (qid: string): 'personal' | 'university' => {
+      const q = (questions || []).find(q => q.id === qid);
+      if (!q) return 'personal';
+      const isPersonal = q.user_id === user.id || q.visibility === 'private';
+      return isPersonal ? 'personal' : 'university';
+    };
+    await linkQuestions({ examId: examIdForLinking, questionIds: selectedIds, sourceOf });
+    setIsQuestionSelectorOpen(false);
+    setExamIdForLinking(null);
+  }, [examIdForLinking, questions, user?.id, linkQuestions]);
+
+  const handleStartTrainingFromExam = useCallback(async (examId: string) => {
+    try {
+      const links = await getLinkedQuestionIdsForExam(examId);
+      const ids = links.map(l => l.question_id);
+      if (!ids.length) return;
+      const idSet = new Set(ids);
+      // Use already loaded dashboard questions to avoid long Supabase URL
+      const sourceQuestions = (questions || []).filter(q => idSet.has(q.id));
+      if (sourceQuestions.length === 0) return;
+      setCreateSessionQuestions(sourceQuestions);
+      const exam = (exams || []).find(e => e.id === examId);
+      setCreateSessionDefaultTitle(exam?.title ? `Training – ${exam.title}` : 'Training Session');
+      setCreateSessionExamId(examId);
+      setIsCreateTrainingSessionOpen(true);
+    } catch (e) {
+      console.error('Failed to prepare training session from exam', e);
+    }
+  }, [exams, questions]);
+
+  const handleDeleteExam = useCallback(async (examId: string) => {
+    if (!user?.id) return;
+    const exam = (exams || []).find(e => e.id === examId);
+    const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions, aber NICHT die Fragen selbst.`;
+    if (!window.confirm(confirmMsg)) return;
+    
+    try {
+      // Delete associated training sessions first
+      const allSessions = await TrainingSessionService.list(user.id);
+      const sessionsToDelete = (allSessions || []).filter((s: any) => {
+        const fs = s.filter_settings as any;
+        return fs && fs.source === 'exam' && fs.examId === examId;
+      });
+      
+      await Promise.all(sessionsToDelete.map(s => TrainingSessionService.remove(s.id)));
+      
+      // Delete the exam (cascades to linked questions in DB via ON DELETE CASCADE)
+      await deleteUpcomingExam(examId);
+      
+      toast.success('Prüfung und zugehörige Sessions gelöscht');
+      window.location.reload(); // Refresh to update exam list
+    } catch (e) {
+      console.error('Failed to delete exam', e);
+      toast.error('Fehler beim Löschen der Prüfung');
+    }
+  }, [exams, user?.id]);
+
   const handleSelectedDatasetsChange = useCallback((datasets: string[]) => {
     setSelectedUniversityDatasets(datasets);
     updateSelectedUniversityDatasets(datasets);
@@ -138,6 +225,12 @@ const Dashboard = () => {
     setSelectedUniversityDatasets([]);
     updateSelectedUniversityDatasets([]);
   }, [updateSelectedUniversityDatasets]);
+
+  const handleDateRangeChange = useCallback((dateRange: StatisticsDateRange) => {
+    if (preferences) {
+      updatePreferences({ statisticsDateRange: dateRange });
+    }
+  }, [preferences, updatePreferences]);
 
   // Memoized computed values
   const hasSemesterOrYearData = useMemo(() => 
@@ -176,7 +269,7 @@ const Dashboard = () => {
     );
   }
   
-  if (isQuestionsLoading) {
+  if (isQuestionsLoading || isExamsLoading) {
     return (
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="animate-pulse space-y-4">
@@ -207,8 +300,9 @@ const Dashboard = () => {
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
       <DashboardHeader />
 
+      {/* Statistics Section - Moved to Top */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="mb-6">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium">Heute</CardTitle>
           </CardHeader>
@@ -232,9 +326,17 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Insgesamt</CardTitle>
+        <Card>
+          <CardHeader className="pb-2 space-y-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle className="text-lg font-medium">Insgesamt</CardTitle>
+              {preferences && (
+                <StatisticsDateRangeSelector
+                  value={preferences.statisticsDateRange}
+                  onChange={handleDateRangeChange}
+                />
+              )}
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -249,149 +351,26 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {hasSemesterOrYearData && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50 flex items-center gap-2">
-              <SlidersHorizontal className="h-5 w-5" />
-              Filter
-            </h2>
-          </div>
-          <SemesterYearFilter
-            questions={filteredQuestions}
-            selectedSemester={selectedSemester}
-            selectedYear={selectedYear}
-            onSemesterChange={setSelectedSemester}
-            onYearChange={setSelectedYear}
-            onClearFilters={handleClearFilters}
-          />
-        </section>
-      )}
-
+      {/* Upcoming Exams Section */}
       <section className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50">
-            Meine Fragendatenbanken
+          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50 flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Bevorstehende Prüfungen
           </h2>
-          <span className="text-sm text-muted-foreground">
-            {filteredQuestions?.length || 0} Fragen insgesamt
-          </span>
+          <Button onClick={handleOpenCreateExam}>
+            Neue Prüfung
+          </Button>
         </div>
-        
-        {filteredQuestions && filteredQuestions.length > 0 ? (
-          <DatasetList
-            groupedQuestions={groupedQuestions}
-            selectedFilename={selectedFilename}
-            onDatasetClick={handleDatasetClick}
-            onStartTraining={handleStartTraining}
-          />
-        ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-                Keine eigenen Datensätze vorhanden
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {selectedSemester || selectedYear 
-                  ? 'Keine Datensätze mit den ausgewählten Filtern gefunden'
-                  : 'Lade neue Datensätze hoch, um loszulegen'
-                }
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <UpcomingExamsList 
+          exams={exams}
+          onAddQuestions={handleOpenQuestionSelector}
+          onStartTraining={handleStartTrainingFromExam}
+          onDeleteExam={handleDeleteExam}
+          currentUserId={user.id}
+          onOpenAnalytics={(examId) => navigate(`/exam/${examId}/analytics`)}
+        />
       </section>
-
-      {universityId && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50 flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
-              Universitäts-Fragendatenbanken
-            </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {universityQuestions?.length || 0} Fragen verfügbar
-              </span>
-              {hasUniversityQuestions && (
-                <DatasetSelectionButton 
-                  onClick={handleOpenDatasetSelector}
-                  totalCount={Object.keys(groupedUniversityQuestions).length}
-                  selectedCount={selectedUniversityDatasets.length}
-                />
-              )}
-            </div>
-          </div>
-          
-          {hasUniSemesterOrYearData && (
-            <SemesterYearFilter
-              questions={universityQuestions}
-              selectedSemester={uniSelectedSemester}
-              selectedYear={uniSelectedYear}
-              onSemesterChange={setUniSelectedSemester}
-              onYearChange={setUniSelectedYear}
-              onClearFilters={handleClearUniFilters}
-              title="Universitäts-Filter"
-            />
-          )}
-          
-          {hasUniversityQuestions ? (
-            selectedUniversityDatasets.length > 0 ? (
-              <>
-                <SelectedDatasetsDisplay 
-                  groupedQuestions={groupedUniversityQuestions}
-                  selectedDatasets={selectedUniversityDatasets}
-                  onRemoveDataset={handleRemoveDataset}
-                  onClearAll={handleClearAllSelectedDatasets}
-                />
-                <DatasetList
-                  groupedQuestions={displayedUniversityDatasets}
-                  selectedFilename={selectedFilename}
-                  onDatasetClick={handleDatasetClick}
-                  onStartTraining={handleStartTraining}
-                />
-              </>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                  <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-                    Keine Datensätze ausgewählt
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Wähle Datensätze aus, um sie dauerhaft im Dashboard anzuzeigen.
-                  </p>
-                  <Button onClick={handleOpenDatasetSelector}>
-                    <ListPlus className="mr-2 h-4 w-4" />
-                    Datensätze wählen
-                  </Button>
-                </CardContent>
-              </Card>
-            )
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-                  Keine Universitäts-Datensätze vorhanden
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {uniSelectedSemester || uniSelectedYear 
-                    ? 'Keine Datensätze mit den ausgewählten Filtern gefunden'
-                    : 'Noch keine Datensätze von anderen Nutzern deiner Universität geteilt'
-                  }
-                </p>
-              </CardContent>
-            </Card>
-          )}
-          
-          <UniversityDatasetSelector 
-            open={isDatasetSelectorOpen}
-            onOpenChange={setIsDatasetSelectorOpen}
-            groupedQuestions={groupedUniversityQuestions}
-            selectedDatasets={selectedUniversityDatasets}
-            onSelectedDatasetsChange={handleSelectedDatasetsChange}
-          />
-        </section>
-      )}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -401,6 +380,29 @@ const Dashboard = () => {
         </div>
         <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
       </section>
+
+      {/* Dialogs */}
+      <UpcomingExamCreateDialog 
+        open={isCreateExamOpen}
+        onOpenChange={setIsCreateExamOpen}
+        userId={user.id}
+        universityId={universityId}
+      />
+      <ExamQuestionSelectorDialog 
+        open={isQuestionSelectorOpen}
+        onOpenChange={setIsQuestionSelectorOpen}
+        personalDatasets={groupedQuestions}
+        universityDatasets={groupedUniversityQuestions}
+        onConfirm={handleLinkQuestionsToExam}
+      />
+      <TrainingSessionCreateDialog
+        open={isCreateTrainingSessionOpen}
+        onOpenChange={setIsCreateTrainingSessionOpen}
+        questions={createSessionQuestions}
+        defaultTitle={createSessionDefaultTitle}
+        context={{ source: 'exam', examId: createSessionExamId || undefined }}
+        onCreated={(sessionId) => navigate(`/training/session/${sessionId}`)}
+      />
     </div>
   );
 };

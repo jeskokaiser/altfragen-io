@@ -15,11 +15,18 @@ export interface KeyboardBindings {
   showSolution: string;
 }
 
+export interface StatisticsDateRange {
+  preset: 'all' | '7days' | '30days' | '90days' | 'custom';
+  start?: string; // ISO date string
+  end?: string; // ISO date string
+}
+
 interface UserPreferences {
   immediateFeedback: boolean;
   archivedDatasets: string[];
   selectedUniversityDatasets: string[];
   keyboardBindings: KeyboardBindings;
+  statisticsDateRange: StatisticsDateRange;
 }
 
 interface UserPreferencesContextType {
@@ -50,7 +57,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     immediateFeedback: false,
     archivedDatasets: [],
     selectedUniversityDatasets: [],
-    keyboardBindings: defaultKeyboardBindings
+    keyboardBindings: defaultKeyboardBindings,
+    statisticsDateRange: { preset: 'all' }
   });
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -63,7 +71,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         immediateFeedback: false, 
         archivedDatasets: [],
         selectedUniversityDatasets: [],
-        keyboardBindings: defaultKeyboardBindings
+        keyboardBindings: defaultKeyboardBindings,
+        statisticsDateRange: { preset: 'all' }
       });
       setIsLoading(false);
     }
@@ -88,7 +97,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           immediateFeedback: existingPrefs.immediate_feedback,
           archivedDatasets: existingPrefs.archived_datasets || [],
           selectedUniversityDatasets: existingPrefs.selected_university_datasets || [],
-          keyboardBindings: (existingPrefs as any).keyboard_bindings || defaultKeyboardBindings
+          keyboardBindings: (existingPrefs as any).keyboard_bindings || defaultKeyboardBindings,
+          statisticsDateRange: (existingPrefs as any).statistics_date_range || { preset: 'all' }
         });
       } else {
         const { error: insertError } = await supabase
@@ -98,7 +108,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
             immediate_feedback: false,
             archived_datasets: [],
             selected_university_datasets: [],
-            keyboard_bindings: defaultKeyboardBindings as any
+            keyboard_bindings: defaultKeyboardBindings as any,
+            statistics_date_range: { preset: 'all' } as any
           });
 
         if (insertError) throw insertError;
@@ -106,7 +117,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           immediateFeedback: false, 
           archivedDatasets: [],
           selectedUniversityDatasets: [],
-          keyboardBindings: defaultKeyboardBindings
+          keyboardBindings: defaultKeyboardBindings,
+          statisticsDateRange: { preset: 'all' }
         });
       }
     } catch (error) {
@@ -128,6 +140,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           archived_datasets: newPreferences.archivedDatasets ?? preferences.archivedDatasets,
           selected_university_datasets: newPreferences.selectedUniversityDatasets ?? preferences.selectedUniversityDatasets,
           keyboard_bindings: (newPreferences.keyboardBindings ?? preferences.keyboardBindings) as any,
+          statistics_date_range: (newPreferences.statisticsDateRange ?? preferences.statisticsDateRange) as any,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);

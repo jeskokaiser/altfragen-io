@@ -1,3 +1,11 @@
+export interface AnswerDistribution {
+  a: number;  // percentage
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  total: number;  // sample size
+}
 
 export interface Question {
   id: string;
@@ -26,6 +34,11 @@ export interface Question {
   ai_commentary_status?: 'pending' | 'processing' | 'completed' | 'failed';
   ai_commentary_queued_at?: string;
   ai_commentary_processed_at?: string;
+  
+  // Answer distribution statistics
+  first_answer_stats?: AnswerDistribution | null;
+  first_answer_stats_updated_at?: string | null;
+  first_answer_sample_size?: number;
 }
 
 export interface PdfProcessingTask {

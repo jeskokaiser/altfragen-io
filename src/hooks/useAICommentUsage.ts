@@ -7,7 +7,7 @@ export const useAICommentUsage = () => {
   const [dailyUsage, setDailyUsage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isIncrementing, setIsIncrementing] = useState(false);
-  const [dailyLimit, setDailyLimit] = useState(10); // Default value
+  const [dailyLimit, setDailyLimit] = useState(50); // Default value for free users
 
   // Fetch the daily limit from database
   const fetchDailyLimit = useCallback(async () => {
@@ -19,13 +19,13 @@ export const useAICommentUsage = () => {
 
       if (error) {
         console.error('Error fetching daily limit:', error);
-        setDailyLimit(10); // Fall back to default
+        setDailyLimit(50); // Fall back to default
       } else {
-        setDailyLimit(data?.free_ai_daily_limit || 10);
+        setDailyLimit(data?.free_ai_daily_limit || 50);
       }
     } catch (error) {
       console.error('Error in fetchDailyLimit:', error);
-      setDailyLimit(10); // Fall back to default
+      setDailyLimit(50); // Fall back to default
     }
   }, []);
 

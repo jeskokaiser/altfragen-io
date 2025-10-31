@@ -9,6 +9,8 @@ import { Slider } from "@/components/ui/slider";
 import SubjectSelect from './selects/SubjectSelect';
 import DifficultySelect from './selects/DifficultySelect';
 import QuestionCountSelect from './selects/QuestionCountSelect';
+import ExamYearSelect from './selects/ExamYearSelect';
+import ExamSemesterSelect from './selects/ExamSemesterSelect';
 import { FormValues } from './types/FormValues';
 
 interface FilterFormProps {
@@ -45,6 +47,8 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
       newQuestionsOnly: false,
       excludeTodaysQuestions: false,
       yearRange: [minYear, maxYear],
+      examYear: 'all',
+      examSemester: 'all',
     },
     mode: 'onChange',
   });
@@ -84,6 +88,11 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
               disabled={isRandomMode}
               className="my-4"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <ExamYearSelect form={form} years={years} disabled={isRandomMode} />
+            <ExamSemesterSelect form={form} disabled={isRandomMode} />
           </div>
         </div>
         

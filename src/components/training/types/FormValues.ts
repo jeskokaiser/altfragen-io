@@ -9,4 +9,6 @@ export interface FormValues {
   newQuestionsOnly: boolean;
   excludeTodaysQuestions: boolean;
   yearRange: [number, number]; // Year range from min to max
+  examYear: string; // Specific exam year filter
+  examSemester: string; // Specific exam semester filter (SS/WS)
 }

@@ -73,7 +73,7 @@ const ArchivedDatasets = () => {
 
   const handleStartTraining = (questions: Question[]) => {
     localStorage.setItem('trainingQuestions', JSON.stringify(questions));
-    navigate('/training');
+    navigate('/training/sessions');
   };
 
   return (

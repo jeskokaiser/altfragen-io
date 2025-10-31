@@ -22,6 +22,11 @@ import ArchivedDatasetsPage from '@/pages/ArchivedDatasets';
 import AICommentaryAdminPage from '@/pages/AICommentaryAdmin';
 import TutorialPage from '@/pages/Tutorial';
 import ChangelogPage from '@/pages/Changelog';
+import TrainingSessionsPage from '@/pages/TrainingSessions';
+import TrainingSessionRunnerPage from '@/pages/TrainingSessionRunner';
+import TrainingSessionOneOffPage from '@/pages/TrainingSessionOneOff';
+import ExamAnalyticsPage from '@/pages/ExamAnalytics';
+import TrainingSessionAnalyticsPage from '@/pages/TrainingSessionAnalytics';
 
 const MainLayout: React.FC = () => {
   const { isReady, isAuthenticated } = useAuthGuard();
@@ -59,6 +64,11 @@ const MainLayout: React.FC = () => {
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/training" element={<TrainingPage />} />
+          <Route path="/training/sessions" element={<TrainingSessionsPage />} />
+          <Route path="/training/session/:sessionId" element={<TrainingSessionRunnerPage />} />
+          <Route path="/training/session/:sessionId/analytics" element={<TrainingSessionAnalyticsPage />} />
+          <Route path="/training/one-off" element={<TrainingSessionOneOffPage />} />
+          <Route path="/exam/:examId/analytics" element={<ExamAnalyticsPage />} />
           <Route path="/collab" element={<CollabSessionsPage />} />
           <Route path="/create-session" element={<CreateSessionPage />} />
           <Route path="/session/:sessionId" element={<SessionDetailsPage />} />
