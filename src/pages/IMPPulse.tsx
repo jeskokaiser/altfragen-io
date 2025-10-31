@@ -282,7 +282,8 @@ const IMPPulse = () => {
               <Alert className="mt-4">
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Hinweis:</strong> Unser System prüft die IMPP-Ergebnisseite täglich von 6 bis 23 Uhr alle 5 Minuten automatisch.
+                  <strong>Hinweis:</strong> Unser System prüft die IMPP-Ergebnisseite anhand einer Ergebnis-ID aus Hamburg täglich von 6 bis 23 Uhr alle 5 Minuten automatisch.
+                  Sollten die Ergebnisse nach LPA oder Universität zeitlich unterschiedlich veröffentlicht werden, kann es zu verfrühten oder verspäteten Benachrichtigungen kommen.
                   Sollte das IMPP auf der Website das Wort "Nichtverfügbarkeit" entfernen, ohne die Ergebnisse veröffentlicht zu haben, kann es zu Fehlbenachrichtigungen kommen. 
                   Das gleiche gilt, wenn unsere Abfragen vom IMPP gesperrt werden sollten.
                 </AlertDescription>
