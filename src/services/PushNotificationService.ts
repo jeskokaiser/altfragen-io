@@ -133,7 +133,7 @@ export class PushNotificationService {
     const registration = await navigator.serviceWorker.ready;
     await registration.showNotification('Test-Benachrichtigung', {
       body: 'Dies ist eine Test-Benachrichtigung von Altfragen.io',
-      icon: '/logo.png',
+      icon: '/pwa-icon.png',
       badge: '/favicon.ico',
       tag: 'test-notification',
     });
@@ -150,7 +150,7 @@ export class PushNotificationService {
       new_questions: (data) => ({
         title: 'Neue Fragen verfügbar!',
         body: `${data.count} neue Fragen wurden zu "${data.datasetName}" hinzugefügt`,
-        icon: '/logo.png',
+        icon: '/pwa-icon.png',
         badge: '/favicon.ico',
         tag: 'new-questions',
         data: { url: '/dashboard', datasetId: data.datasetId },
@@ -159,7 +159,7 @@ export class PushNotificationService {
       exam_reminder: (data) => ({
         title: `Prüfung in ${data.daysLeft} ${data.daysLeft === 1 ? 'Tag' : 'Tagen'}!`,
         body: `Deine Prüfung "${data.examName}" findet bald statt. ${this.getExamMotivation(data.daysLeft)}`,
-        icon: '/logo.png',
+        icon: '/pwa-icon.png',
         badge: '/favicon.ico',
         tag: 'exam-reminder',
         requireInteraction: data.daysLeft <= 1,
@@ -170,7 +170,7 @@ export class PushNotificationService {
         body: data.broken 
           ? 'Nur 10 Minuten Training heute, um deinen Streak zu halten!'
           : `Großartig! Du lernst seit ${data.days} Tagen konsequent weiter!`,
-        icon: '/logo.png',
+        icon: '/pwa-icon.png',
         badge: '/favicon.ico',
         tag: 'learning-streak',
       }),
@@ -178,7 +178,7 @@ export class PushNotificationService {
       weekly_summary: (data) => ({
         title: 'Deine Wochenzusammenfassung 📊',
         body: `Diese Woche: ${data.questionsAnswered} Fragen, ${data.accuracy}% richtig!`,
-        icon: '/logo.png',
+        icon: '/pwa-icon.png',
         badge: '/favicon.ico',
         tag: 'weekly-summary',
         data: { url: '/dashboard' },
@@ -187,7 +187,7 @@ export class PushNotificationService {
       community_update: (data) => ({
         title: data.title || 'Community-Update',
         body: data.message,
-        icon: '/logo.png',
+        icon: '/pwa-icon.png',
         badge: '/favicon.ico',
         tag: 'community-update',
       }),
@@ -195,7 +195,7 @@ export class PushNotificationService {
       performance_insight: (data) => ({
         title: 'Performance-Update 🎯',
         body: data.message,
-        icon: '/logo.png',
+        icon: '/pwa-icon.png',
         badge: '/favicon.ico',
         tag: 'performance-insight',
         data: { url: '/dashboard' },
@@ -355,20 +355,33 @@ export class PushNotificationService {
     
     const subscriptionJson = subscription.toJSON();
     
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: subscriptionJson.endpoint,
-        keys: subscriptionJson.keys,
-        type: 'broadcast',
-        userAgent: navigator.userAgent,
-      }),
-    });
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: subscriptionJson.endpoint,
+          keys: subscriptionJson.keys,
+          type: 'broadcast',
+          userAgent: navigator.userAgent,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to save subscription');
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to save subscription';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        console.error('Backend save error:', errorMessage);
+        // Don't throw - subscription is still active locally
+      }
+    } catch (error) {
+      console.error('Error saving subscription to backend:', error);
+      // Don't throw - subscription is still active locally
     }
   }
 
@@ -383,17 +396,30 @@ export class PushNotificationService {
     
     const subscriptionJson = subscription.toJSON();
     
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: subscriptionJson.endpoint,
-      }),
-    });
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: subscriptionJson.endpoint,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to remove subscription');
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to remove subscription';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        console.error('Backend remove error:', errorMessage);
+        // Don't throw - subscription is still removed locally
+      }
+    } catch (error) {
+      console.error('Error removing subscription from backend:', error);
+      // Don't throw - subscription is still removed locally
     }
   }
 

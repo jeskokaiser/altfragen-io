@@ -110,10 +110,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   }, [questionData.id, userAnswerState]);
 
   // Database progress saving logic
-  const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean) => {
+  const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean, viewedSolution: boolean = false) => {
     if (onSessionRecordAttempt) {
       // Delegate to session recording when running inside a session
-      await onSessionRecordAttempt(answer, isAnswerCorrect, true);
+      await onSessionRecordAttempt(answer, isAnswerCorrect, viewedSolution);
       return;
     }
     if (!user || answer === 'solution_viewed') return;
@@ -226,7 +226,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
     
     // Save to database in the background (non-blocking)
-    saveAnswerProgress(answer, isAnswerCorrect).catch(error => {
+    saveAnswerProgress(answer, isAnswerCorrect, false).catch(error => {
       console.error('Error saving answer progress:', error);
       // Don't show error toast for background saves to avoid disrupting flow
     });
@@ -315,7 +315,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     handleAnswerSubmitted('solution_viewed', false, true);
     
     // Save as viewed solution in database (non-blocking)
-    saveAnswerProgress('solution_viewed', false).catch(error => {
+    saveAnswerProgress('solution_viewed', false, true).catch(error => {
       console.error('Error saving solution view:', error);
     });
   };

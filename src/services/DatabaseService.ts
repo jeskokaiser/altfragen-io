@@ -410,8 +410,45 @@ export const fetchQuestionDetails = async (questionIds: string[]) => {
   );
 
   const results = await Promise.allSettled(batchPromises);
-  const allData = results
-    .filter(r => r.status === 'fulfilled')
+  
+  // Check for any failed batches
+  const failedBatches = results.filter(r => r.status === 'rejected');
+  const succeededBatches = results.filter(r => r.status === 'fulfilled');
+  
+  if (failedBatches.length > 0) {
+    console.error(`Failed to fetch ${failedBatches.length} of ${batches.length} question batches:`, 
+      failedBatches.map((r: any) => r.reason)
+    );
+    
+    // If all batches failed, throw an error
+    if (failedBatches.length === batches.length) {
+      throw new Error('Failed to fetch any question details. Please try again.');
+    }
+    
+    // If more than 30% of batches failed, throw an error
+    if (failedBatches.length / batches.length > 0.3) {
+      throw new Error(
+        `Failed to fetch ${failedBatches.length} of ${batches.length} question batches. ` +
+        'Please check your connection and try again.'
+      );
+    }
+  }
+  
+  // Check for Supabase errors in successful responses
+  const batchesWithErrors = succeededBatches.filter((r: any) => r.value.error);
+  if (batchesWithErrors.length > 0) {
+    console.error(`Database errors in ${batchesWithErrors.length} batches:`, 
+      batchesWithErrors.map((r: any) => r.value.error)
+    );
+    
+    // If all successful requests have errors, throw
+    if (batchesWithErrors.length === succeededBatches.length) {
+      throw new Error('Database error while fetching questions. Please try again.');
+    }
+  }
+  
+  const allData = succeededBatches
+    .filter((r: any) => !r.value.error)
     .flatMap((r: any) => r.value.data || []);
 
   return allData.map(q => ({

@@ -4,7 +4,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/favicon.ico',
-  '/logo.png',
+  '/pwa-icon.png',
 ];
 
 // Install service worker
@@ -60,7 +60,7 @@ self.addEventListener('push', (event) => {
     body: 'Neue Benachrichtigung',
     url: '/',
     tag: 'altfragen-notification',
-    icon: '/logo.png'
+    icon: '/pwa-icon.png'
   };
 
   // Parse notification data if available

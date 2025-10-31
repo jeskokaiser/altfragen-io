@@ -44,7 +44,7 @@ const IMPPulse = () => {
         const registration = await navigator.serviceWorker.ready;
         registration.showNotification('Willkommen bei IMPPulse!', {
           body: 'Du erhältst eine Benachrichtigung, sobald die M2-Ergebnisse Herbst 2025 online sind.',
-          icon: '/logo.png',
+          icon: '/pwa-icon.png',
           badge: '/favicon.ico',
           tag: 'imppulse-welcome',
         });
