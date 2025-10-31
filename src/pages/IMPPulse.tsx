@@ -101,7 +101,7 @@ const IMPPulse = () => {
     <div className="min-h-screen bg-background">
       {/* Simple header for landing page */}
       <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-slate-950/95">
-        <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+        <div className="container mx-auto px-4 max-w-4xl flex h-16 items-center justify-between">
           <Link to="/" className="font-bold text-xl flex items-center gap-2">
             Altfragen.io
           </Link>
@@ -130,7 +130,7 @@ const IMPPulse = () => {
           <Alert className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Dein Browser unterstützt keine Push-Benachrichtigungen. Bitte verwende einen modernen Browser wie Chrome, Firefox oder Edge.
+              Wenn Du auf einem Apple Gerät bist, nutze Safari und lade die Web-App und speichere sie als PWA (siehe unten). Ansonsten unterstützt Dein Browser keine Push-Benachrichtigungen.
             </AlertDescription>
           </Alert>
         )}
@@ -301,22 +301,18 @@ const IMPPulse = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Für die Nutzung von Push-Benachrichtigungen auf deinem Smartphone oder Computer ist Altfragen.io als Progressive Web App verfügbar.
+                Für die Nutzung von Push-Benachrichtigungen auf deinem Smartphone oder Computer ist Altfragen.io als Progressive Web App (PWA) verfügbar. Aktiviere die Benachrichtigungen in den Einstellungen deines Browsers und auf der IMPPulse-Seite der PWA.
               </p>
               <div className="bg-secondary p-4 rounded-lg">
                 <h4 className="font-semibold mb-2">So installierst du die App:</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
-                    <span className="font-bold">Chrome/Edge:</span>
-                    <span>Klicke auf das ⋮ Menü → "App installieren" oder "Zum Startbildschirm hinzufügen"</span>
+                    <span className="font-bold">Chrome (Desktop):</span>
+                    <span>Klicke in der Suchleiste auf das Computer-mit-Pfeil-Symbol</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold">Safari (iOS):</span>
                     <span>Tippe auf das Teilen-Symbol → "Zum Home-Bildschirm"</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold">Firefox:</span>
-                    <span>Tippe auf ⋮ → "Installieren"</span>
                   </li>
                 </ul>
               </div>

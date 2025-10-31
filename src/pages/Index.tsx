@@ -58,7 +58,7 @@ const Index = () => {
             {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-8">
               <Star className="w-4 h-4 mr-2" />
-              Die intelligente Lernplattform für Student:innen
+              Die Altfragen Lernplattform für Student:innen
             </div>
             
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
@@ -513,6 +513,30 @@ const Index = () => {
                 objectFit: 'contain'
               }} 
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Fachschaften Contact Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100 text-center">
+            <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
+              <Users className="w-4 h-4 mr-2" />
+              Für Fachschaften
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">
+              Altfragen.io für euer gesamtes Semester nutzen?
+            </h2>
+            <p className="text-lg text-slate-600 mb-6 leading-relaxed">
+              Meldet euch gerne, wenn ihr die Plattform für geteilte Fragen der Universität einsetzen möchtet. Es entstehen keinerlei Kosten. Wir freuen uns von euch zu hören!
+            </p>
+            <a
+              href="mailto:hallo@altfragen.io"
+              className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transition-colors"
+            >
+              hallo@altfragen.io
+            </a>
           </div>
         </div>
       </section>

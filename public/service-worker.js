@@ -33,22 +33,36 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - Network first, falling back to cache
 self.addEventListener('fetch', (event) => {
+  // Only cache GET requests and same-origin requests
+  const request = event.request;
+  const isGetRequest = request.method === 'GET';
+  const isSameOrigin = request.url.startsWith(self.location.origin);
+  
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
-        // Clone the response
-        const responseClone = response.clone();
-        
-        // Cache the fetched response
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+        // Only cache successful GET responses from same-origin
+        if (isGetRequest && isSameOrigin && response.status === 200) {
+          // Clone the response
+          const responseClone = response.clone();
+          
+          // Cache the fetched response (don't await, just fire and forget)
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          }).catch(() => {
+            // Silently fail if caching fails
+          });
+        }
         
         return response;
       })
       .catch(() => {
-        // If fetch fails, try to get from cache
-        return caches.match(event.request);
+        // If fetch fails and it's a GET request, try to get from cache
+        if (isGetRequest) {
+          return caches.match(request);
+        }
+        // For non-GET requests, just fail
+        throw new Error('Network request failed');
       })
   );
 });
