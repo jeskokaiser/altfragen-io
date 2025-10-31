@@ -28,7 +28,7 @@ export type NotificationType =
   | 'performance_insight';
 
 export class PushNotificationService {
-  private static readonly VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'YOUR_VAPID_PUBLIC_KEY_HERE';
+  private static readonly VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BNmLbOIqlFlibbHyioYNp6Y2KOtJnu49blYV-CH3-SxAkgNT4OwvYo_GJYKd85ahyqrN8nDOppfO-XYSN5DLF4U';
   
   /**
    * Check if push notifications are supported
