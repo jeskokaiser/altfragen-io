@@ -1,32 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
 import { useAuth } from '@/contexts/AuthContext';
 import QuestionHeader from './QuestionHeader';
-import QuestionContent from './QuestionContent';
 import NavigationButtons from './NavigationButtons';
 import EditQuestionModal from './EditQuestionModal';
-import AnswerSubmission from './AnswerSubmission';
 import DifficultyControls from './DifficultyControls';
-import QuestionFeedback from './QuestionFeedback';
 import QuestionImage from '@/components/questions/QuestionImage';
-import AICommentaryDisplay from '@/components/ai-commentary/AICommentaryDisplay';
-import PremiumBadge from '@/components/subscription/PremiumBadge';
-import { AlertCircle, Brain, RefreshCw, Crown, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { X } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
 import { AICommentaryData } from '@/types/AIAnswerComments';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
 import { useTrainingKeyboard, TrainingKeyboardActions } from '@/hooks/useTrainingKeyboard';
+import { AmbossAnswer } from './AmbossAnswer';
+import { MultiModelAIComment } from './MultiModelAIComment';
+import { GeneralAIComments } from './GeneralAIComments';
+import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -35,6 +31,8 @@ interface QuestionDisplayWithAIProps {
   onNext: () => void;
   onPrevious: () => void;
   onAnswer: (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => void;
+  // Optional: per-session recording; when provided, we call it instead of default save to user_progress
+  onSessionRecordAttempt?: (answer: string, isCorrect: boolean, viewedSolution?: boolean) => Promise<void>;
   userAnswer: string;
   userAnswerState?: AnswerState;
   onQuit: () => void;
@@ -54,9 +52,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   onQuit,
   onQuestionUpdate,
   onQuestionIgnored,
+  onSessionRecordAttempt,
 }) => {
   const [showFeedback, setShowFeedback] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>(questionData);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -64,21 +62,17 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [firstWrongAnswer, setFirstWrongAnswer] = useState<string | null>(null);
   const [showSolution, setShowSolution] = useState(false);
   const [usageIncrementedForQuestion, setUsageIncrementedForQuestion] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { preferences } = useUserPreferences();
-
   const { 
     subscribed, 
-    canAccessAIComments, 
-    loading: premiumLoading, 
-    requirePremiumForAI, 
-    isFreeTier, 
-    incrementUsage,
-    isIncrementing 
+    remainingFreeViews, 
+    requirePremiumForAI,
+    isFreeTier 
   } = usePremiumFeatures();
-  const { createCheckoutSession } = useSubscription();
 
   // Fetch AI commentary data
   const { data: aiCommentary, isLoading: aiLoading, error: aiError } = useQuery({
@@ -87,33 +81,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     enabled: !!currentQuestion.id
   });
 
-  // Queue question for AI processing
-  const queueForProcessing = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from('questions')
-        .update({
-          ai_commentary_status: 'pending',
-          ai_commentary_queued_at: new Date().toISOString()
-        })
-        .eq('id', currentQuestion.id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success('Frage für KI-Verarbeitung eingeplant');
-      queryClient.invalidateQueries({ queryKey: ['ai-commentary', currentQuestion.id] });
-    },
-    onError: (error) => {
-      toast.error('Fehler beim Einplanen der Frage');
-      console.error('Error queueing question:', error);
-    }
-  });
-
   useEffect(() => {
     // Only reset state if we're actually moving to a different question
     if (currentQuestion.id !== questionData.id) {
-    setSelectedAnswer('');
     setShowFeedback(false);
     setCurrentQuestion(questionData);
     setIsCorrect(false);
@@ -121,6 +91,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setUsageIncrementedForQuestion(null); // Reset for new question
       setWrongAnswers([]);
       setFirstWrongAnswer(null);
+      setSelectedAnswer(null);
     
     // Initialize state from userAnswerState if it exists
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
@@ -128,6 +99,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
       setShowFeedback(true);
       setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
+      setSelectedAnswer(userAnswerState.value);
       
       // Check if solution was viewed
       if (userAnswerState.viewedSolution) {
@@ -137,35 +109,13 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
   }, [questionData.id, userAnswerState]);
 
-  // Handle usage increment when AI comments should be shown for free tier users
-  useEffect(() => {
-    const shouldShowAICommentary = showFeedback && (isCorrect || showSolution);
-    const shouldIncrementUsage = shouldShowAICommentary && 
-                                 isFreeTier && 
-                                 aiCommentary && 
-                                 canAccessAIComments &&
-                                 !isIncrementing &&
-                                 usageIncrementedForQuestion !== currentQuestion.id;
-
-    if (shouldIncrementUsage) {
-      console.log(`Incrementing usage for question ${currentQuestion.id}`);
-      incrementUsage().then((success) => {
-        if (success) {
-          setUsageIncrementedForQuestion(currentQuestion.id);
-          console.log(`Usage incremented successfully for question ${currentQuestion.id}`);
-        }
-      }).catch((error) => {
-        console.error('Failed to increment usage:', error);
-      });
+  // Database progress saving logic
+  const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean, viewedSolution: boolean = false) => {
+    if (onSessionRecordAttempt) {
+      // Delegate to session recording when running inside a session
+      await onSessionRecordAttempt(answer, isAnswerCorrect, viewedSolution);
+      return;
     }
-  }, [showFeedback, isCorrect, showSolution, isFreeTier, aiCommentary, canAccessAIComments, incrementUsage, currentQuestion.id, usageIncrementedForQuestion, isIncrementing]);
-
-  const handleAnswerChange = (answer: string) => {
-    setSelectedAnswer(answer);
-  };
-
-  // Database progress saving logic (extracted from AnswerSubmission)
-  const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean) => {
     if (!user || answer === 'solution_viewed') return;
 
     try {
@@ -239,17 +189,55 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     if (viewedSolution) {
       setShowSolution(true);
     }
+  };
+
+  const handleAnswerClick = async (answer: string) => {
+    if (showFeedback) return;
+
+    const isAnswerCorrect = answer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
     
-    // Remove automatic navigation - let user manually proceed
+    // Track which answer was selected
+    setSelectedAnswer(answer);
+    
+    // For free users, increment AI comment usage when revealing answer (which shows percentages and AI comments)
+    if (!subscribed && currentQuestion.id !== usageIncrementedForQuestion) {
+      const willReveal = preferences?.immediateFeedback || isAnswerCorrect;
+      if (willReveal) {
+        await requirePremiumForAI(() => {
+          console.log('AI comment usage incremented for revealing answer');
+        });
+        setUsageIncrementedForQuestion(currentQuestion.id);
+      }
+    }
+    
+    // Update UI immediately for instant feedback
+    if (preferences?.immediateFeedback || isAnswerCorrect) {
+      handleAnswerSubmitted(answer, isAnswerCorrect, true);
+    } else {
+      // In normal mode with wrong answer: record the attempt but don't reveal yet
+      // This allows the user to try again
+      if (!firstWrongAnswer) {
+        setFirstWrongAnswer(answer);
+      }
+      setWrongAnswers(prev => [...prev, answer]);
+      onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, false);
+      
+      // No toast needed - AI comments show immediately
+    }
+    
+    // Save to database in the background (non-blocking)
+    saveAnswerProgress(answer, isAnswerCorrect, false).catch(error => {
+      console.error('Error saving answer progress:', error);
+      // Don't show error toast for background saves to avoid disrupting flow
+    });
   };
 
   const handleNext = () => {
     setShowFeedback(false);
-    setSelectedAnswer('');
     setIsCorrect(false);
     setWrongAnswers([]);
     setFirstWrongAnswer(null);
-    setUsageIncrementedForQuestion(null); // Reset for next question
+    setSelectedAnswer(null);
     onNext();
   };
 
@@ -263,45 +251,29 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
   const { isUnclear, isLoading: unclearLoading, toggleUnclear } = useUnclearQuestions(currentQuestion.id);
 
-  // Determine when user can still make attempts
-  const canMakeAttempts = !showFeedback || 
-    (showFeedback && !preferences?.immediateFeedback && !isCorrect && wrongAnswers.length < 4 && !showSolution);
-  
-  // Determine when user can show solution
-  const canShowSolution = showFeedback && !preferences?.immediateFeedback && !isCorrect && wrongAnswers.length < 4 && !showSolution;
-  
   // Keyboard shortcuts setup
   const keyboardActions: TrainingKeyboardActions = {
     onAnswerSelect: (answer: string) => {
-      if (canMakeAttempts) {
-        setSelectedAnswer(answer);
-      }
+      // Direct submission on key press, Amboss style
+      handleAnswerClick(answer);
     },
-    onConfirmAnswer: async () => {
-      if (selectedAnswer && canMakeAttempts) {
-        const isCorrect = selectedAnswer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
-        
-        // Save progress to database (same logic as button clicks)
-        await saveAnswerProgress(selectedAnswer, isCorrect);
-        
-        // Pass viewedSolution as true for immediate feedback mode (matches AnswerSubmission behavior)
-        const shouldShowSolution = preferences?.immediateFeedback;
-        handleAnswerSubmitted(selectedAnswer, isCorrect, shouldShowSolution);
+    onConfirmAnswer: () => {
+      // Enter key will also navigate to next question if feedback is shown
+      if (showFeedback) {
+        handleNext();
       }
     },
     onNextQuestion: () => {
-      if (showFeedback && (isCorrect || showSolution || wrongAnswers.length >= 4)) {
+      if (showFeedback) {
         handleNext();
       }
     },
     onShowSolution: () => {
-      if (canShowSolution) {
-        handleAnswerSubmitted('solution_viewed', false, true);
-      }
+      // No-op, solution is shown on selection
     },
-    canConfirm: !!selectedAnswer && canMakeAttempts,
-    canNavigate: showFeedback && (isCorrect || showSolution || wrongAnswers.length >= 4),
-    canShowSolution: canShowSolution
+    canConfirm: !showFeedback, // Can "confirm" (i.e., answer) if feedback is not shown yet
+    canNavigate: showFeedback, // Can navigate to next/prev when feedback is shown
+    canShowSolution: false, // Not a separate step anymore
   };
 
   // Enable keyboard shortcuts
@@ -311,14 +283,12 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     try {
       await toggleUnclear();
       
-      // Notify parent component that this question was ignored
       if (onQuestionIgnored) {
         onQuestionIgnored(currentQuestion.id);
       }
       
       toast.success('Frage ignoriert und übersprungen');
       
-      // Immediately skip to next question
       setTimeout(() => {
         handleNext();
       }, 1000);
@@ -328,141 +298,26 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
   };
 
-  const renderAICommentary = () => {
-    // Show AI commentary when the user has answered correctly OR when solution is shown
-    const shouldShowAICommentary = showFeedback && (isCorrect || showSolution);
+  const handleShowSolution = async () => {
+    // For free users, increment AI comment usage when showing solution
+    if (!subscribed && currentQuestion.id !== usageIncrementedForQuestion) {
+      await requirePremiumForAI(() => {
+        console.log('AI comment usage incremented for showing solution');
+      });
+      setUsageIncrementedForQuestion(currentQuestion.id);
+    }
     
-    if (!shouldShowAICommentary) return null;
-
-    // Check if user has access to AI comments (either premium or free views remaining)
-    if (!canAccessAIComments) {
-      return (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5" />
-              KI-Kommentare
-              <PremiumBadge />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-6 space-y-4">
-              <Crown className="h-16 w-16 mx-auto text-blue-500" />
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Tägliches Limit erreicht</h3>
-                <p className="text-gray-600 mb-4">
-                  Du hast heute alle kostenlosen KI-Kommentare verwendet. 
-                  Upgraden für unbegrenzten Zugang!
-                </p>
-                <Button 
-                  onClick={() => window.open('/subscription', '_blank')}
-                  className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-                >
-                  <Crown className="h-4 w-4" />
-                  Jetzt upgraden!
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (aiLoading || isIncrementing) {
-      return (
-        <Card className="mt-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center py-4">
-              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-              <span>{isIncrementing ? 'Verarbeite Nutzung...' : 'Lade KI-Kommentare...'}</span>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (aiError) {
-      return (
-        <Card className="mt-6">
-          <CardContent className="pt-6">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Fehler beim Laden der KI-Kommentare. Bitte versuche es später erneut.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    if (!aiCommentary) {
-      return (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5" />
-              KI-Kommentare
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-4 space-y-4">
-              <Brain className="h-12 w-12 mx-auto text-gray-400" />
-              <div>
-                <p className="text-gray-600 mb-4">
-                  Für diese Frage sind noch keine KI-Kommentare verfügbar.
-                </p>
-                <Button 
-                  onClick={() => queueForProcessing.mutate()}
-                  disabled={queueForProcessing.isPending}
-                  className="flex items-center gap-2"
-                >
-                  <Brain className="h-4 w-4" />
-                  {queueForProcessing.isPending ? 'Wird eingeplant...' : 'KI-Analyse anfordern'}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <div className="mt-6 space-y-4">
-        {/* Duplicate Navigation Buttons Above AI Comments */}
-        <NavigationButtons
-          onPrevious={onPrevious}
-          onNext={handleNext}
-          isFirstQuestion={currentIndex === 0}
-          isLastQuestion={currentIndex === totalQuestions - 1}
-          hasUserAnswer={(!!userAnswer && isCorrect) || (showFeedback && preferences?.immediateFeedback)}
-          wrongAttempts={wrongAnswers.length}
-          showSolution={showSolution}
-        />
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5" />
-              KI-Kommentare
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AICommentaryDisplay 
-              commentaryData={aiCommentary}
-              questionData={{
-                optionA: currentQuestion.optionA,
-                optionB: currentQuestion.optionB,
-                optionC: currentQuestion.optionC,
-                optionD: currentQuestion.optionD,
-                optionE: currentQuestion.optionE,
-                correctAnswer: currentQuestion.correctAnswer
-              }}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    );
+    // Set the correct answer as selected so it auto-expands
+    const correctAnswerLetter = currentQuestion.correctAnswer.charAt(0).toUpperCase();
+    setSelectedAnswer(correctAnswerLetter);
+    
+    // Reveal the answer immediately
+    handleAnswerSubmitted('solution_viewed', false, true);
+    
+    // Save as viewed solution in database (non-blocking)
+    saveAnswerProgress('solution_viewed', false, true).catch(error => {
+      console.error('Error saving solution view:', error);
+    });
   };
 
   if (!currentQuestion) {
@@ -473,6 +328,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const shouldShowImage = currentQuestion.image_key && 
     (!currentQuestion.show_image_after_answer || (currentQuestion.show_image_after_answer && showFeedback));
 
+  const options = (['A', 'B', 'C', 'D', 'E'] as const).map(letter => ({
+      letter,
+      text: currentQuestion[`option${letter}` as keyof Question] as string,
+  })).filter(option => option.text);
+
   return (
     <div className={`w-full max-w-4xl mx-auto ${isMobile ? 'px-2' : ''}`}>
       <QuestionHeader
@@ -481,69 +341,91 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         onQuit={onQuit}
       />
 
-      <Card className={`${isMobile ? 'p-3' : 'p-6'}`}>
-        <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
-          <div className="flex-grow">
-            <DifficultyControls
-              questionId={currentQuestion.id}
-              difficulty={currentQuestion.difficulty || 3}
-              onEditClick={() => setIsEditModalOpen(true)}
-              disabled={false}
-              semester={currentQuestion.semester}
-              year={currentQuestion.year}
-            />
+      <Card className={`${isMobile ? 'p-3' : 'p-0'}`}>
+        <div className="p-4">
+          <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
+            <div className="flex-grow">
+              <DifficultyControls
+                questionId={currentQuestion.id}
+                difficulty={currentQuestion.difficulty || 3}
+                onEditClick={() => setIsEditModalOpen(true)}
+                disabled={false}
+                semester={currentQuestion.semester}
+                year={currentQuestion.year}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size={isMobile ? "sm" : "default"}
+                onClick={handleIgnoreQuestion}
+                className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 border-red-200"
+                disabled={unclearLoading}
+              >
+                <X className="h-4 w-4" />
+                <span className="hidden sm:inline">Frage ignorieren</span>
+                <span className="sm:hidden">Ignore</span>
+              </Button>
+            </div>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size={isMobile ? "sm" : "default"}
-              onClick={handleIgnoreQuestion}
-              className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 border-red-200"
-              disabled={unclearLoading}
-            >
-              <X className="h-4 w-4" />
-              <span className="hidden sm:inline">Frage ignorieren</span>
-              <span className="sm:hidden">Ignore</span>
-            </Button>
-          </div>
+
+          {shouldShowImage && <QuestionImage imageKey={currentQuestion.image_key} />}
+
+          <article className="prose max-w-none mb-4">
+            <p>{currentQuestion.question}</p>
+          </article>
+
+          {showFeedback && (
+            <div className="mb-4 space-y-2 text-sm">
+              <div>
+                <span className="font-semibold">Protokollierte Antwort:</span> {currentQuestion.correctAnswer}
+              </div>
+              {currentQuestion.comment && (
+                <div>
+                  <span className="font-semibold">Kommentar:</span> {currentQuestion.comment}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Lösung anzeigen moved below NavigationButtons */}
         </div>
+        
+        <div className="rounded-b-lg">
+            {options.map(({ letter, text }) => {
+                const isCorrectOption = letter === currentQuestion.correctAnswer.charAt(0).toUpperCase();
+                
+                // Get real statistics from database if available
+                const stats = currentQuestion.first_answer_stats;
+                const percentage = stats 
+                  ? (stats[letter.toLowerCase() as keyof typeof stats] as number) || 0
+                  : null; // null indicates no data available
+                
+                const wasAttempted = !showFeedback && wrongAnswers.includes(letter);
+                // Pass isSelected to AmbossAnswer - this is now just for identification, not auto-expansion
+                const isSelected = selectedAnswer?.charAt(0).toUpperCase() === letter ||
+                                   wrongAnswers.includes(letter);
 
-        {shouldShowImage && <QuestionImage imageKey={currentQuestion.image_key} />}
-
-        <QuestionContent
-          questionData={currentQuestion}
-          selectedAnswer={selectedAnswer}
-          onAnswerChange={handleAnswerChange}
-          onConfirmAnswer={() => {}}
-          showFeedback={showFeedback}
-          wrongAnswers={wrongAnswers}
-          firstWrongAnswer={firstWrongAnswer}
-          correctAnswer={currentQuestion.correctAnswer}
-          isCorrect={isCorrect}
-          showSolution={showSolution}
-        />
-
-        <AnswerSubmission
-          currentQuestion={currentQuestion}
-          selectedAnswer={selectedAnswer}
-          user={user}
-          onAnswerSubmitted={handleAnswerSubmitted}
-          showSolution={showSolution}
-          wrongAnswers={wrongAnswers}
-          showFeedback={showFeedback}
-          isCorrect={isCorrect}
-        />
-
-        <QuestionFeedback
-          showFeedback={showFeedback}
-          userAnswer={userAnswer}
-          correctAnswer={currentQuestion.correctAnswer}
-          comment={currentQuestion.comment}
-          isCorrect={isCorrect}
-          wrongAnswers={wrongAnswers}
-        />
-
-        {renderAICommentary()}
+                return (
+                    <AmbossAnswer
+                        key={letter}
+                        optionLetter={letter}
+                        optionText={text}
+                        isCorrect={isCorrectOption}
+                        isRevealed={showFeedback}
+                        percentage={percentage}
+                        onClick={() => handleAnswerClick(letter)}
+                        wasAttempted={wasAttempted}
+                        isSelected={isSelected}
+                        showPercentage={true}
+                    >
+                        {aiCommentary && (
+                            <MultiModelAIComment commentaryData={aiCommentary} optionLetter={letter} />
+                        )}
+                    </AmbossAnswer>
+                );
+            })}
+        </div>
       </Card>
 
       <NavigationButtons
@@ -555,6 +437,42 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         wrongAttempts={wrongAnswers.length}
         showSolution={showSolution}
       />
+
+      <GeneralAIComments 
+        commentaryData={aiCommentary}
+        isRevealed={showFeedback}
+      />
+
+      {showFeedback && currentQuestion.first_answer_stats && (
+        <div className="mt-3 flex justify-center">
+          <p className="text-xs text-slate-500">
+            Beantwortet von {currentQuestion.first_answer_stats.total} Personen
+          </p>
+        </div>
+      )}
+      
+      {isFreeTier && remainingFreeViews !== undefined && (
+        <div className="mt-2 flex justify-center">
+          <p className="text-xs text-slate-400">
+            {remainingFreeViews > 0 
+              ? `${remainingFreeViews} kostenlose KI-Kommentare heute verfügbar`
+              : 'Tägliches Limit erreicht. Upgrade für unbegrenzte KI-Kommentare.'}
+          </p>
+        </div>
+      )}
+
+      {!showFeedback && !preferences?.immediateFeedback && (
+        <div className="mt-4 flex justify-center">
+          <Button
+            variant="outline"
+            size="default"
+            onClick={handleShowSolution}
+            className="text-slate-600 hover:text-slate-900"
+          >
+            Lösung anzeigen
+          </Button>
+        </div>
+      )}
 
       <EditQuestionModal
         question={currentQuestion}

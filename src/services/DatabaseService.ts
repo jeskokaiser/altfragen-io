@@ -393,14 +393,65 @@ export const fetchUserDifficultiesForQuestions = async (userId: string, question
 export const fetchQuestionDetails = async (questionIds: string[]) => {
   if (!questionIds.length) return [];
 
-  const { data, error } = await supabase
-    .from('questions')
-    .select('*')
-    .in('id', questionIds);
+  // Batch the question IDs to avoid URL length limits
+  const BATCH_SIZE = 300;
+  const batches: string[][] = [];
+  
+  for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
+    batches.push(questionIds.slice(i, i + BATCH_SIZE));
+  }
 
-  if (error) throw error;
+  // Fetch all batches in parallel
+  const batchPromises = batches.map(batch =>
+    supabase
+      .from('questions')
+      .select('*')
+      .in('id', batch)
+  );
 
-  return data.map(q => ({
+  const results = await Promise.allSettled(batchPromises);
+  
+  // Check for any failed batches
+  const failedBatches = results.filter(r => r.status === 'rejected');
+  const succeededBatches = results.filter(r => r.status === 'fulfilled');
+  
+  if (failedBatches.length > 0) {
+    console.error(`Failed to fetch ${failedBatches.length} of ${batches.length} question batches:`, 
+      failedBatches.map((r: any) => r.reason)
+    );
+    
+    // If all batches failed, throw an error
+    if (failedBatches.length === batches.length) {
+      throw new Error('Failed to fetch any question details. Please try again.');
+    }
+    
+    // If more than 30% of batches failed, throw an error
+    if (failedBatches.length / batches.length > 0.3) {
+      throw new Error(
+        `Failed to fetch ${failedBatches.length} of ${batches.length} question batches. ` +
+        'Please check your connection and try again.'
+      );
+    }
+  }
+  
+  // Check for Supabase errors in successful responses
+  const batchesWithErrors = succeededBatches.filter((r: any) => r.value.error);
+  if (batchesWithErrors.length > 0) {
+    console.error(`Database errors in ${batchesWithErrors.length} batches:`, 
+      batchesWithErrors.map((r: any) => r.value.error)
+    );
+    
+    // If all successful requests have errors, throw
+    if (batchesWithErrors.length === succeededBatches.length) {
+      throw new Error('Database error while fetching questions. Please try again.');
+    }
+  }
+  
+  const allData = succeededBatches
+    .filter((r: any) => !r.value.error)
+    .flatMap((r: any) => r.value.data || []);
+
+  return allData.map(q => ({
     id: q.id,
     question: q.question,
     optionA: q.option_a,
@@ -423,6 +474,11 @@ export const fetchQuestionDetails = async (questionIds: string[]) => {
     year: q.exam_year || null,
     image_key: q.image_key || null,
     show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null
+    exam_name: q.exam_name || null,
+    
+    // Answer distribution statistics
+    first_answer_stats: q.first_answer_stats || null,
+    first_answer_stats_updated_at: q.first_answer_stats_updated_at || null,
+    first_answer_sample_size: q.first_answer_sample_size || 0
   }));
 };

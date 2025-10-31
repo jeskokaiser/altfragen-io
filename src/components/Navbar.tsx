@@ -5,7 +5,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield, Bug } from 'lucide-react';
+import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield, Bug, Bell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -53,6 +53,7 @@ const Navbar: React.FC = () => {
   ];
   
   const userMenuItems = [
+      { label: 'IMPPulse', href: '/imppulse', icon: <Bell className="mr-2 h-4 w-4" /> },
       { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="mr-2 h-4 w-4" /> },
       { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
       { 

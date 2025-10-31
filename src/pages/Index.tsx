@@ -1,8 +1,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award, Clock, Zap, MessageSquare, Target } from "lucide-react";
+import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award, Clock, Zap, MessageSquare, Target, Bell } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,27 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 overflow-x-hidden">
+      {/* Header Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+          <Link to="/" className="font-bold text-xl flex items-center gap-2">
+            <GraduationCap className="h-6 w-6" />
+            Altfragen.io
+          </Link>
+          
+          <nav className="flex items-center gap-4">
+            <Link to="/imppulse">
+              <Button variant="ghost" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                IMPPulse
+              </Button>
+            </Link>
+            <Button onClick={handleGetStarted}>
+              {user ? "Dashboard" : "Anmelden"}
+            </Button>
+          </nav>
+        </div>
+      </header>
       {/* Hero Section with enhanced design */}
       <section className="relative overflow-hidden py-24 md:py-32 lg:py-40">
         {/* Background Elements */}

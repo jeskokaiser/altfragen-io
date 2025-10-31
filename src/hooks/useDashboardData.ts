@@ -2,8 +2,47 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAllQuestions } from '@/services/DatabaseService';
+import { StatisticsDateRange } from '@/contexts/UserPreferencesContext';
 
-export const useDashboardData = (userId: string | undefined, universityId?: string | null) => {
+// Helper function to calculate date range bounds
+const getDateRangeBounds = (dateRange: StatisticsDateRange): { start: string | null; end: string | null } => {
+  const now = new Date();
+  let start: Date | null = null;
+  let end: Date | null = new Date();
+
+  switch (dateRange.preset) {
+    case '7days':
+      start = new Date(now);
+      start.setDate(start.getDate() - 7);
+      break;
+    case '30days':
+      start = new Date(now);
+      start.setDate(start.getDate() - 30);
+      break;
+    case '90days':
+      start = new Date(now);
+      start.setDate(start.getDate() - 90);
+      break;
+    case 'custom':
+      start = dateRange.start ? new Date(dateRange.start) : null;
+      end = dateRange.end ? new Date(dateRange.end) : null;
+      break;
+    case 'all':
+    default:
+      return { start: null, end: null };
+  }
+
+  return {
+    start: start ? start.toISOString() : null,
+    end: end ? end.toISOString() : null
+  };
+};
+
+export const useDashboardData = (
+  userId: string | undefined, 
+  universityId?: string | null,
+  dateRange?: StatisticsDateRange
+) => {
   const questionsQuery = useQuery({
     queryKey: ['all-questions', userId, universityId],
     queryFn: async () => {
@@ -19,7 +58,7 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
       const { count, error } = await supabase
-        .from('user_progress')
+        .from('session_question_progress')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .gte('created_at', today.toISOString());
@@ -35,7 +74,7 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
       const { count, error } = await supabase
-        .from('user_progress')
+        .from('session_question_progress')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .gte('updated_at', today.toISOString());
@@ -46,12 +85,21 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
   });
 
   const totalAnsweredCountQuery = useQuery({
-    queryKey: ['total-answers', userId],
+    queryKey: ['total-answers', userId, dateRange],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('user_progress')
+      let query = supabase
+        .from('session_question_progress')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId);
+
+      // Apply date range filter if not 'all'
+      if (dateRange && dateRange.preset !== 'all') {
+        const { start, end } = getDateRangeBounds(dateRange);
+        if (start) query = query.gte('created_at', start);
+        if (end) query = query.lte('created_at', end);
+      }
+
+      const { count, error } = await query;
       if (error) throw error;
       return count || 0;
     },
@@ -59,15 +107,23 @@ export const useDashboardData = (userId: string | undefined, universityId?: stri
   });
 
   const totalAttemptsCountQuery = useQuery({
-    queryKey: ['total-attempts', userId],
+    queryKey: ['total-attempts', userId, dateRange],
     queryFn: async () => {
-      // Use Supabase's sum aggregation via RPC if available, otherwise fetch minimal data
-      const { data, error } = await supabase
-        .from('user_progress')
+      let query = supabase
+        .from('session_question_progress')
         .select('attempts_count')
         .eq('user_id', userId);
+
+      // Apply date range filter if not 'all'
+      if (dateRange && dateRange.preset !== 'all') {
+        const { start, end } = getDateRangeBounds(dateRange);
+        if (start) query = query.gte('created_at', start);
+        if (end) query = query.lte('created_at', end);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 1), 0);
+      const totalAttempts = data.reduce((sum, record) => sum + (record.attempts_count || 0), 0);
       return totalAttempts;
     },
     enabled: !!userId
