@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="w-full border-t bg-background">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-center items-center space-x-4 text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-muted-foreground">
           <Link to="/impressum" className="hover:text-foreground transition-colors">
             Impressum
           </Link>

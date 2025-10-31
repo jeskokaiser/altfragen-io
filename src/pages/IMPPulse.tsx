@@ -121,8 +121,7 @@ const IMPPulse = () => {
           </div>
           <h1 className="text-4xl font-bold mb-4">IMPPulse</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Erhalte eine Benachrichtigung, sobald die H25 M2-Ergebnisse vom IMPP veröffentlicht werden – 
-            keine Anmeldung erforderlich
+            Erhalte eine Benachrichtigung, sobald die H25 M2-Ergebnisse vom IMPP veröffentlicht werden
           </p>
         </div>
 
@@ -210,8 +209,7 @@ const IMPPulse = () => {
                   <AlertDescription>
                     Du hast Benachrichtigungen für diese Website blockiert. Um sie zu aktivieren:
                     <ol className="list-decimal ml-6 mt-2 space-y-1">
-                      <li>Klicke auf das Schloss-Symbol in der Adressleiste</li>
-                      <li>Erlaube Benachrichtigungen für diese Website</li>
+                      <li>Erlaube Benachrichtigungen für diese Website in den Einstellungen deines Browsers</li>
                       <li>Lade die Seite neu</li>
                     </ol>
                   </AlertDescription>
@@ -284,9 +282,9 @@ const IMPPulse = () => {
               <Alert className="mt-4">
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Hinweis:</strong> Diese Benachrichtigung wird an alle Abonnenten gesendet, 
-                  sobald wir von der Veröffentlichung der M2-Ergebnisse Herbst 2025 erfahren. Unser System prüft die IMPP-Webseite täglich von 6 bis 22 Uhr alle 15 Minuten automatisch.
-                  Du erhältst nur diese eine wichtige Benachrichtigung – kein Spam.
+                  <strong>Hinweis:</strong> Unser System prüft die IMPP-Ergebnisseite täglich von 6 bis 23 Uhr alle 5 Minuten automatisch.
+                  Sollte das IMPP auf der Website das Wort "Nichtverfügbarkeit" entfernen, ohne die Ergebnisse veröffentlicht zu haben, kann es zu Fehlbenachrichtigungen kommen. 
+                  Das gleiche gilt, wenn unsere Abfragen vom IMPP gesperrt werden sollten.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -301,7 +299,7 @@ const IMPPulse = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Für die Nutzung von Push-Benachrichtigungen auf deinem Smartphone oder Computer ist Altfragen.io als Progressive Web App (PWA) verfügbar. Aktiviere die Benachrichtigungen in den Einstellungen deines Browsers und auf der IMPPulse-Seite der PWA.
+                Für die Nutzung von Push-Benachrichtigungen auf deinem Smartphone oder Computer ist Altfragen.io als Progressive Web App (PWA) verfügbar. Aktiviere die Benachrichtigungen in den Einstellungen deines Browsers und auf der IMPPulse-Seite der PWA. Du solltest die Test-Benachrichtigung erhalten können, wenn du auf den Test-Button klickst.
               </p>
               <div className="bg-secondary p-4 rounded-lg">
                 <h4 className="font-semibold mb-2">So installierst du die App:</h4>
@@ -315,6 +313,30 @@ const IMPPulse = () => {
                     <span>Tippe auf das Teilen-Symbol → "Zum Home-Bildschirm"</span>
                   </li>
                 </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="w-5 h-5" />
+                Erklärvideo
+              </CardTitle>
+
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center">
+                <div className="relative w-full max-w-sm" style={{ paddingBottom: '100%' }}>
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full rounded-lg"
+                    src="https://www.youtube.com/embed/ndrOsw75cvU"
+                    title="IMPPulse Erklärvideo"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
