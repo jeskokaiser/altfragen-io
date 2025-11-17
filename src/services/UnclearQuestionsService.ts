@@ -19,7 +19,7 @@ export class UnclearQuestionsService {
 
       // Use any type to bypass TypeScript errors until types are regenerated
       const { error } = await (supabase as any)
-        .from('user_unclear_questions')
+        .from('user_ignored_questions')
         .upsert({
           user_id: user.id,
           question_id: questionId,
@@ -42,7 +42,7 @@ export class UnclearQuestionsService {
       }
 
       const { error } = await (supabase as any)
-        .from('user_unclear_questions')
+        .from('user_ignored_questions')
         .delete()
         .eq('user_id', user.id)
         .eq('question_id', questionId);
@@ -63,7 +63,7 @@ export class UnclearQuestionsService {
       }
 
       const { data, error } = await (supabase as any)
-        .from('user_unclear_questions')
+        .from('user_ignored_questions')
         .select('*')
         .eq('user_id', targetUserId);
 
@@ -79,7 +79,7 @@ export class UnclearQuestionsService {
       if (!user) return false;
 
       const { data, error } = await (supabase as any)
-        .from('user_unclear_questions')
+        .from('user_ignored_questions')
         .select('id')
         .eq('user_id', user.id)
         .eq('question_id', questionId)

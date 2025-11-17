@@ -246,7 +246,7 @@ const ExamAnalytics: React.FC = () => {
           <h1 className="text-2xl font-bold">{exam.title}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
             <Calendar className="h-4 w-4" />
-            <span>Fällig am {new Date(exam.due_date).toLocaleDateString()}</span>
+            <span>Prüfung am {new Date(exam.due_date).toLocaleDateString()}</span>
             {exam.subject && <span>• {exam.subject}</span>}
           </div>
         </div>

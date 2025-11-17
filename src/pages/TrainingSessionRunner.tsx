@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTrainingSession } from '@/hooks/useTrainingSessions';
 import { fetchQuestionDetails } from '@/services/DatabaseService';
 import { Question } from '@/types/Question';
+import { AnswerState } from '@/types/Answer';
 import QuestionDisplayWithAI from '@/components/training/QuestionDisplayWithAI';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 
@@ -15,6 +16,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [localCurrentIndex, setLocalCurrentIndex] = useState<number | null>(null);
+  const [questionProgress, setQuestionProgress] = useState<Map<string, AnswerState>>(new Map());
 
   // Use local index if set, otherwise fall back to session index
   const currentIndex = localCurrentIndex ?? session?.current_index ?? 0;
@@ -36,6 +38,55 @@ const TrainingSessionRunnerPage: React.FC = () => {
   }, [sessionId, session?.updated_at]);
 
   const currentQuestion = useMemo(() => questions[currentIndex], [questions, currentIndex]);
+
+  // Fetch progress for current question
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!session || !user || !currentQuestion) return;
+      
+      // Skip if we already have progress for this question
+      if (questionProgress.has(currentQuestion.id)) return;
+      
+      try {
+        const progress = await TrainingSessionService.getQuestionProgress({
+          sessionId: session.id,
+          userId: user.id,
+          questionId: currentQuestion.id,
+        });
+        
+        if (progress) {
+          // Construct attempts array from initial and last answer
+          const attempts: string[] = [];
+          if (progress.initial_answer) {
+            attempts.push(progress.initial_answer);
+          }
+          // Add last answer if different from initial
+          if (progress.last_answer && progress.last_answer !== progress.initial_answer) {
+            attempts.push(progress.last_answer);
+          }
+          
+          // Use last_answer if available, otherwise initial_answer
+          const finalAnswer = progress.last_answer || progress.initial_answer;
+          
+          if (finalAnswer) {
+            const answerState: AnswerState = {
+              value: finalAnswer,
+              isFirstAttempt: progress.attempts_count === 1,
+              viewedSolution: progress.viewed_solution || false,
+              attempts: attempts,
+              originalAnswer: progress.initial_answer || undefined,
+            };
+            
+            setQuestionProgress(prev => new Map(prev).set(currentQuestion.id, answerState));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading question progress:', error);
+      }
+    };
+    
+    loadProgress();
+  }, [session?.id, user?.id, currentQuestion?.id]);
 
   const handleNext = async () => {
     if (!session) return;
@@ -76,7 +127,14 @@ const TrainingSessionRunnerPage: React.FC = () => {
   // This handler is just for notifying the component about state changes
   // The actual database write is handled by onSessionRecordAttempt below
   const handleAnswer = async (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
-    // No-op: database writes are handled by onSessionRecordAttempt to avoid duplicates
+    // Clear cached progress for this question so it's refetched next time
+    if (currentQuestion) {
+      setQuestionProgress(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(currentQuestion.id);
+        return newMap;
+      });
+    }
   };
 
   if (isLoading || !session) {
@@ -86,6 +144,8 @@ const TrainingSessionRunnerPage: React.FC = () => {
   if (!currentQuestion) {
     return <div className="flex items-center justify-center min-h-[50vh]">Keine Frage gefunden.</div>;
   }
+
+  const currentAnswerState = currentQuestion ? questionProgress.get(currentQuestion.id) : undefined;
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -97,7 +157,8 @@ const TrainingSessionRunnerPage: React.FC = () => {
           onNext={handleNext}
           onPrevious={handlePrevious}
           onAnswer={handleAnswer}
-          userAnswer={''}
+          userAnswer={currentAnswerState?.value || ''}
+          userAnswerState={currentAnswerState}
           onQuit={handleQuit}
           onSessionRecordAttempt={async (answer, isCorrect, viewedSolution) => {
             if (!session || !user || !currentQuestion) return;

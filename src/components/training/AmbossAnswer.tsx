@@ -136,7 +136,7 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
             <div className="border-t-[1px] border-t-slate-200 bg-slate-50 text-sm">
               <div className="pr-6 pl-12 py-2">
                 <div className="pl-6">
-                  <p className="text-slate-600">Lade KI-Kommentare...</p>
+                  <p className="text-slate-600">Keine KI-Kommentare verfügbar</p>
                 </div>
               </div>
             </div>

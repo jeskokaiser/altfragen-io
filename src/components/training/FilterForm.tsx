@@ -46,6 +46,7 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
       wrongQuestionsOnly: false,
       newQuestionsOnly: false,
       excludeTodaysQuestions: false,
+      questionsWithImagesOnly: false,
       yearRange: [minYear, maxYear],
       examYear: 'all',
       examSemester: 'all',
@@ -67,9 +68,10 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <DifficultySelect form={form} />
+        
         <div className={`space-y-6 ${isRandomMode ? 'opacity-50 pointer-events-none' : ''}`}>
           <SubjectSelect form={form} subjects={subjects} />
-          <DifficultySelect form={form} />
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -113,7 +115,7 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Bei zufälliger Auswahl werden die Filter für Fach und Schwierigkeitsgrad ignoriert</p>
+                  <p>Bei zufälliger Auswahl werden die Filter für Fach, Jahr und Semester ignoriert</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -190,6 +192,27 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Nur Fragen auswählen, die heute noch nicht beantwortet wurden</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={form.watch('questionsWithImagesOnly')}
+                      onCheckedChange={(checked) => form.setValue('questionsWithImagesOnly', checked)}
+                      id="questions-with-images"
+                      disabled={isRandomMode}
+                    />
+                    <Label htmlFor="questions-with-images">Nur Fragen mit Bildern</Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Nur Fragen auswählen, die ein Bild enthalten</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

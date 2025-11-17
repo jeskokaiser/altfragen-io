@@ -9,7 +9,7 @@ import NavigationButtons from './NavigationButtons';
 import EditQuestionModal from './EditQuestionModal';
 import DifficultyControls from './DifficultyControls';
 import QuestionImage from '@/components/questions/QuestionImage';
-import { X } from 'lucide-react';
+import { Pencil, X, Image as ImageIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
 import { AICommentaryData } from '@/types/AIAnswerComments';
@@ -63,6 +63,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [showSolution, setShowSolution] = useState(false);
   const [usageIncrementedForQuestion, setUsageIncrementedForQuestion] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [initialAnswer, setInitialAnswer] = useState<string | null>(null);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -82,32 +83,55 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   });
 
   useEffect(() => {
-    // Only reset state if we're actually moving to a different question
-    if (currentQuestion.id !== questionData.id) {
-    setShowFeedback(false);
-    setCurrentQuestion(questionData);
-    setIsCorrect(false);
-    setShowSolution(false);
-    setUsageIncrementedForQuestion(null); // Reset for new question
+    const isNewQuestion = currentQuestion.id !== questionData.id;
+    
+    // Reset state when moving to a different question
+    if (isNewQuestion) {
+      setShowFeedback(false);
+      setCurrentQuestion(questionData);
+      setIsCorrect(false);
+      setShowSolution(false);
+      setUsageIncrementedForQuestion(null);
       setWrongAnswers([]);
       setFirstWrongAnswer(null);
       setSelectedAnswer(null);
+      setInitialAnswer(null);
+    }
     
-    // Initialize state from userAnswerState if it exists
+    // Initialize/restore state from userAnswerState if it exists
+    // This runs both on first render and when navigating back to a question
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
-      setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()));
-      setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
+      const wrongAttempts = userAnswerState.attempts.filter(
+        attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()
+      );
+      const firstWrong = userAnswerState.attempts.find(
+        attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()
+      );
+      
+      setWrongAnswers(wrongAttempts);
+      setFirstWrongAnswer(firstWrong || null);
       setShowFeedback(true);
       setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
       setSelectedAnswer(userAnswerState.value);
+      
+      // Set initial answer from user answer state if available
+      if (userAnswerState.originalAnswer) {
+        setInitialAnswer(userAnswerState.originalAnswer);
+      } else if (userAnswerState.attempts.length > 0) {
+        setInitialAnswer(userAnswerState.attempts[0]);
+      }
       
       // Check if solution was viewed
       if (userAnswerState.viewedSolution) {
         setShowSolution(true);
       }
-      }
     }
-  }, [questionData.id, userAnswerState]);
+    
+    // Update currentQuestion reference if it's a new question
+    if (isNewQuestion) {
+      setCurrentQuestion(questionData);
+    }
+  }, [questionData.id, questionData.correctAnswer, userAnswerState]);
 
   // Database progress saving logic
   const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean, viewedSolution: boolean = false) => {
@@ -198,6 +222,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     
     // Track which answer was selected
     setSelectedAnswer(answer);
+    
+    // Track initial answer (first click only)
+    if (!initialAnswer) {
+      setInitialAnswer(answer);
+    }
     
     // For free users, increment AI comment usage when revealing answer (which shows percentages and AI comments)
     if (!subscribed && currentQuestion.id !== usageIncrementedForQuestion) {
@@ -343,7 +372,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
       <Card className={`${isMobile ? 'p-3' : 'p-0'}`}>
         <div className="p-4">
-          <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
+          <div className="flex flex-row flex-wrap items-start gap-3 mb-4">
             <div className="flex-grow">
               <DifficultyControls
                 questionId={currentQuestion.id}
@@ -352,24 +381,44 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                 disabled={false}
                 semester={currentQuestion.semester}
                 year={currentQuestion.year}
+                subject={currentQuestion.subject}
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex gap-2 justify-end">
               <Button
                 variant="outline"
-                size={isMobile ? "sm" : "default"}
+                size="sm"
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex items-center gap-2"
+                >
+                <Pencil className="h-4 w-4" />
+                Bearbeiten
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleIgnoreQuestion}
                 className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 border-red-200"
                 disabled={unclearLoading}
               >
                 <X className="h-4 w-4" />
-                <span className="hidden sm:inline">Frage ignorieren</span>
-                <span className="sm:hidden">Ignore</span>
+                Frage ignorieren
               </Button>
             </div>
           </div>
 
           {shouldShowImage && <QuestionImage imageKey={currentQuestion.image_key} />}
+          
+          {/* Hint when image is hidden due to settings */}
+          {currentQuestion.image_key && !shouldShowImage && (
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-start gap-2">
+              <ImageIcon className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                Ein Bild ist verfügbar, wird aber erst nach der Beantwortung angezeigt. 
+                Diese Einstellung kann in "Bearbeiten" geändert werden.
+              </p>
+            </div>
+          )}
 
           <article className="prose max-w-none mb-4">
             <p>{currentQuestion.question}</p>
@@ -401,7 +450,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                   ? (stats[letter.toLowerCase() as keyof typeof stats] as number) || 0
                   : null; // null indicates no data available
                 
-                const wasAttempted = !showFeedback && wrongAnswers.includes(letter);
+                // Show wrong attempts even when feedback is revealed (when returning to previous question)
+                const wasAttempted = wrongAnswers.includes(letter);
                 // Pass isSelected to AmbossAnswer - this is now just for identification, not auto-expansion
                 const isSelected = selectedAnswer?.charAt(0).toUpperCase() === letter ||
                                    wrongAnswers.includes(letter);

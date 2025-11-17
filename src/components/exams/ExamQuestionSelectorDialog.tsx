@@ -22,12 +22,16 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
 
   const filteredPersonal = useMemo(() => {
     const lower = search.toLowerCase();
-    return Object.entries(personalDatasets || {}).filter(([key]) => key.toLowerCase().includes(lower));
+    return Object.entries(personalDatasets || {})
+      .filter(([key]) => key.toLowerCase().includes(lower))
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
   }, [personalDatasets, search]);
 
   const filteredUniversity = useMemo(() => {
     const lower = search.toLowerCase();
-    return Object.entries(universityDatasets || {}).filter(([key]) => key.toLowerCase().includes(lower));
+    return Object.entries(universityDatasets || {})
+      .filter(([key]) => key.toLowerCase().includes(lower))
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
   }, [universityDatasets, search]);
 
   const toggleDataset = (scope: 'personal' | 'university', key: string) => {

@@ -79,7 +79,9 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     user_id,
     exam_semester,
     exam_year,
-    exam_name
+    exam_name,
+    image_key,
+    show_image_after_answer
   `;
   
   const { data, error } = await supabase
@@ -111,8 +113,8 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: null, // Load on demand
-    show_image_after_answer: false, // Load on demand
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false,
     exam_name: q.exam_name || null
   }));
 };
@@ -181,7 +183,9 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     user_id,
     exam_semester,
     exam_year,
-    exam_name
+    exam_name,
+    image_key,
+    show_image_after_answer
   `;
 
   const { data: personalQuestions, error: personalError } = await supabase
@@ -232,8 +236,8 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: null, // Will be loaded on-demand
-    show_image_after_answer: false, // Will be loaded on-demand
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false,
     exam_name: q.exam_name || null
   }));
 
@@ -260,7 +264,9 @@ export const fetchAllQuestionsPaginated = async (
     user_id,
     exam_semester,
     exam_year,
-    exam_name
+    exam_name,
+    image_key,
+    show_image_after_answer
   `;
 
   const from = page * pageSize;
@@ -321,8 +327,8 @@ export const fetchAllQuestionsPaginated = async (
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
-    image_key: null,
-    show_image_after_answer: false,
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false,
     exam_name: q.exam_name || null
   }));
 

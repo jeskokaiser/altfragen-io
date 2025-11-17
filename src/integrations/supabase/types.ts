@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       ai_answer_comments: {
@@ -214,61 +219,113 @@ export type Database = {
           },
         ]
       }
-      campaigns: {
+      broadcast_logs: {
         Row: {
+          body: string
+          created_at: string | null
+          error_details: Json | null
+          failed_count: number
           id: string
+          invalid_removed: number
+          subscribers_count: number
+          successful_count: number
+          tag: string | null
           title: string
-          description: string
-          code: string | null
-          discount_percentage: number | null
-          active: boolean | null
-          start_date: string | null
-          end_date: string | null
-          created_at: string
-          updated_at: string
-          created_by: string | null
-          priority: number | null
-          display_type: string | null
+          url: string | null
         }
         Insert: {
+          body: string
+          created_at?: string | null
+          error_details?: Json | null
+          failed_count?: number
           id?: string
+          invalid_removed?: number
+          subscribers_count?: number
+          successful_count?: number
+          tag?: string | null
           title: string
-          description: string
-          code?: string | null
-          discount_percentage?: number | null
-          active?: boolean | null
-          start_date?: string | null
-          end_date?: string | null
-          created_at?: string
-          updated_at?: string
-          created_by?: string | null
-          priority?: number | null
-          display_type?: string | null
+          url?: string | null
         }
         Update: {
+          body?: string
+          created_at?: string | null
+          error_details?: Json | null
+          failed_count?: number
           id?: string
+          invalid_removed?: number
+          subscribers_count?: number
+          successful_count?: number
+          tag?: string | null
           title?: string
-          description?: string
-          code?: string | null
-          discount_percentage?: number | null
-          active?: boolean | null
-          start_date?: string | null
-          end_date?: string | null
-          created_at?: string
-          updated_at?: string
-          created_by?: string | null
-          priority?: number | null
-          display_type?: string | null
+          url?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          action_text: string | null
+          action_type: string | null
+          action_url: string | null
+          active: boolean | null
+          campaign_type: string | null
+          code: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          discount_percentage: number | null
+          display_type: string | null
+          end_date: string | null
+          id: string
+          priority: number | null
+          show_to_premium: boolean | null
+          start_date: string | null
+          styling_variant: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_text?: string | null
+          action_type?: string | null
+          action_url?: string | null
+          active?: boolean | null
+          campaign_type?: string | null
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          discount_percentage?: number | null
+          display_type?: string | null
+          end_date?: string | null
+          id?: string
+          priority?: number | null
+          show_to_premium?: boolean | null
+          start_date?: string | null
+          styling_variant?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_text?: string | null
+          action_type?: string | null
+          action_url?: string | null
+          active?: boolean | null
+          campaign_type?: string | null
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          discount_percentage?: number | null
+          display_type?: string | null
+          end_date?: string | null
+          id?: string
+          priority?: number | null
+          show_to_premium?: boolean | null
+          start_date?: string | null
+          styling_variant?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       draft_questions: {
         Row: {
@@ -426,8 +483,12 @@ export type Database = {
           is_admin: boolean | null
           is_email_verified: boolean | null
           is_premium: boolean | null
+          last_reminder_at: string | null
           marketing_consent: boolean | null
           marketing_consent_at: string | null
+          reminder_count: number | null
+          subscription_consent: boolean | null
+          subscription_consent_at: string | null
           university_id: string | null
         }
         Insert: {
@@ -437,8 +498,12 @@ export type Database = {
           is_admin?: boolean | null
           is_email_verified?: boolean | null
           is_premium?: boolean | null
+          last_reminder_at?: string | null
           marketing_consent?: boolean | null
           marketing_consent_at?: string | null
+          reminder_count?: number | null
+          subscription_consent?: boolean | null
+          subscription_consent_at?: string | null
           university_id?: string | null
         }
         Update: {
@@ -448,8 +513,12 @@ export type Database = {
           is_admin?: boolean | null
           is_email_verified?: boolean | null
           is_premium?: boolean | null
+          last_reminder_at?: string | null
           marketing_consent?: boolean | null
           marketing_consent_at?: string | null
+          reminder_count?: number | null
+          subscription_consent?: boolean | null
+          subscription_consent_at?: string | null
           university_id?: string | null
         }
         Relationships: [
@@ -461,6 +530,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          type: string
+          updated_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          type?: string
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          type?: string
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       questions: {
         Row: {
@@ -475,6 +577,9 @@ export type Database = {
           exam_semester: string | null
           exam_year: string | null
           filename: string
+          first_answer_sample_size: number | null
+          first_answer_stats: Json | null
+          first_answer_stats_updated_at: string | null
           id: string
           image_key: string | null
           is_unclear: boolean | null
@@ -488,6 +593,7 @@ export type Database = {
           show_image_after_answer: boolean | null
           subject: string
           university_id: string | null
+          updated_at: string
           user_id: string | null
           visibility: string | null
         }
@@ -503,6 +609,9 @@ export type Database = {
           exam_semester?: string | null
           exam_year?: string | null
           filename: string
+          first_answer_sample_size?: number | null
+          first_answer_stats?: Json | null
+          first_answer_stats_updated_at?: string | null
           id?: string
           image_key?: string | null
           is_unclear?: boolean | null
@@ -516,6 +625,7 @@ export type Database = {
           show_image_after_answer?: boolean | null
           subject: string
           university_id?: string | null
+          updated_at?: string
           user_id?: string | null
           visibility?: string | null
         }
@@ -531,6 +641,9 @@ export type Database = {
           exam_semester?: string | null
           exam_year?: string | null
           filename?: string
+          first_answer_sample_size?: number | null
+          first_answer_stats?: Json | null
+          first_answer_stats_updated_at?: string | null
           id?: string
           image_key?: string | null
           is_unclear?: boolean | null
@@ -544,6 +657,7 @@ export type Database = {
           show_image_after_answer?: boolean | null
           subject?: string
           university_id?: string | null
+          updated_at?: string
           user_id?: string | null
           visibility?: string | null
         }
@@ -627,6 +741,60 @@ export type Database = {
           },
         ]
       }
+      session_question_progress: {
+        Row: {
+          attempts_count: number
+          created_at: string
+          id: string
+          is_correct: boolean | null
+          last_answer: string | null
+          question_id: string
+          session_id: string
+          updated_at: string
+          user_id: string
+          viewed_solution: boolean
+        }
+        Insert: {
+          attempts_count?: number
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          last_answer?: string | null
+          question_id: string
+          session_id: string
+          updated_at?: string
+          user_id: string
+          viewed_solution?: boolean
+        }
+        Update: {
+          attempts_count?: number
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          last_answer?: string | null
+          question_id?: string
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+          viewed_solution?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_question_progress_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_question_progress_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscribers: {
         Row: {
           created_at: string
@@ -663,6 +831,45 @@ export type Database = {
         }
         Relationships: []
       }
+      training_sessions: {
+        Row: {
+          created_at: string
+          current_index: number
+          filter_settings: Json
+          id: string
+          question_ids: string[]
+          status: string
+          title: string
+          total_questions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_index?: number
+          filter_settings: Json
+          id?: string
+          question_ids: string[]
+          status?: string
+          title: string
+          total_questions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_index?: number
+          filter_settings?: Json
+          id?: string
+          question_ids?: string[]
+          status?: string
+          title?: string
+          total_questions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       universities: {
         Row: {
           created_at: string
@@ -686,6 +893,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      upcoming_exam_questions: {
+        Row: {
+          created_at: string
+          exam_id: string
+          question_id: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          question_id: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          question_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upcoming_exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "upcoming_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "upcoming_exam_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      upcoming_exams: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string
+          id: string
+          subject: string | null
+          title: string
+          university_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date: string
+          id?: string
+          subject?: string | null
+          title: string
+          university_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          subject?: string | null
+          title?: string
+          university_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upcoming_exams_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_ai_comment_usage: {
         Row: {
@@ -722,6 +1009,7 @@ export type Database = {
           immediate_feedback: boolean | null
           keyboard_bindings: Json | null
           selected_university_datasets: string[] | null
+          statistics_date_range: Json | null
           updated_at: string | null
           user_id: string | null
         }
@@ -732,6 +1020,7 @@ export type Database = {
           immediate_feedback?: boolean | null
           keyboard_bindings?: Json | null
           selected_university_datasets?: string[] | null
+          statistics_date_range?: Json | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -742,6 +1031,7 @@ export type Database = {
           immediate_feedback?: boolean | null
           keyboard_bindings?: Json | null
           selected_university_datasets?: string[] | null
+          statistics_date_range?: Json | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -791,7 +1081,7 @@ export type Database = {
           },
         ]
       }
-      user_unclear_questions: {
+      user_ignored_questions: {
         Row: {
           created_at: string
           id: string
@@ -815,7 +1105,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_unclear_questions_question_id_fkey"
+            foreignKeyName: "user_ignored_questions_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
@@ -829,12 +1119,19 @@ export type Database = {
     }
     Functions: {
       check_user_university_match: {
-        Args: { user_uuid: string; university_uuid: string }
+        Args: { university_uuid: string; user_uuid: string }
         Returns: boolean
       }
       get_question_session_id: {
         Args: { question_uuid: string }
         Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       is_session_host: {
         Args: { session_uuid: string; user_uuid: string }
@@ -848,9 +1145,16 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      update_question_answer_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          execution_time_ms: number
+          updated_count: number
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -858,21 +1162,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -890,14 +1198,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -913,14 +1223,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -936,14 +1248,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -951,14 +1265,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

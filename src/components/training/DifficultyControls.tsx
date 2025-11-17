@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import DifficultyBadge from './DifficultyBadge';
 import DifficultyToggle from './DifficultyToggle';
-import EditButton from './EditButton';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface DifficultyControlsProps {
@@ -13,6 +12,7 @@ interface DifficultyControlsProps {
   disabled?: boolean;
   semester?: string;
   year?: string;
+  subject?: string;
 }
 
 const DifficultyControls: React.FC<DifficultyControlsProps> = ({
@@ -22,6 +22,7 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
   disabled = false,
   semester,
   year,
+  subject,
 }) => {
   const [currentDifficulty, setCurrentDifficulty] = useState(difficulty);
   const [attemptsCount, setAttemptsCount] = useState(0);
@@ -132,8 +133,8 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
           isPersonalized={isUserSpecificDifficulty}
           semester={semester}
           year={year}
+          subject={subject}
         />
-        {onEditClick && !disabled && <EditButton onClick={onEditClick} />}
       </div>
       
       <DifficultyToggle 
