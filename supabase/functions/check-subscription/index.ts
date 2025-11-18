@@ -55,7 +55,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const weeklyPriceId = Deno.env.get("STRIPE_PRICE_WEEKLY_ID");
+    const semesterPriceId = Deno.env.get("STRIPE_PRICE_SEMESTER_ID");
     const monthlyPriceId = Deno.env.get("STRIPE_PRICE_MONTHLY_ID");
 
     if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey || !stripeKey) {
@@ -69,9 +69,9 @@ serve(async (req) => {
     }
 
     // Price IDs are optional but recommended for proper tier identification
-    if (!weeklyPriceId || !monthlyPriceId) {
+    if (!semesterPriceId || !monthlyPriceId) {
       logStep("Missing price ID environment variables", {
-        hasWeeklyPriceId: !!weeklyPriceId,
+        hasSemesterPriceId: !!semesterPriceId,
         hasMonthlyPriceId: !!monthlyPriceId
       });
     }
@@ -189,8 +189,8 @@ serve(async (req) => {
       // Determine subscription tier from price ID
       const priceId = subscription.items.data[0].price.id;
       
-      if (priceId === weeklyPriceId) {
-        subscriptionTier = "Weekly";
+      if (priceId === semesterPriceId) {
+        subscriptionTier = "Semester";
       } else if (priceId === monthlyPriceId) {
         subscriptionTier = "Monthly";
       } else {

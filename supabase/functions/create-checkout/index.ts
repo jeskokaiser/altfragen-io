@@ -18,7 +18,7 @@ serve(async (req)=>{
   try {
     logStep("Function started");
     
-    // Parse request body to get priceType
+    // Parse request body to get priceType ("monthly" or "semester")
     const { priceType = 'monthly' } = await req.json().catch(() => ({ priceType: 'monthly' }));
     logStep("Price type requested", { priceType });
     
@@ -27,7 +27,7 @@ serve(async (req)=>{
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const monthlyPriceId = Deno.env.get("STRIPE_PRICE_MONTHLY_ID");
-    const weeklyPriceId = Deno.env.get("STRIPE_PRICE_WEEKLY_ID");
+    const semesterPriceId = Deno.env.get("STRIPE_PRICE_SEMESTER_ID");
     
     if (!supabaseUrl || !supabaseAnonKey || !stripeKey || !monthlyPriceId) {
       logStep("Missing environment variables", {
@@ -35,15 +35,16 @@ serve(async (req)=>{
         hasAnonKey: !!supabaseAnonKey,
         hasStripeKey: !!stripeKey,
         hasMonthlyPriceId: !!monthlyPriceId,
-        hasWeeklyPriceId: !!weeklyPriceId
+        hasSemesterPriceId: !!semesterPriceId
       });
       throw new Error("Missing required environment variables");
     }
     
     // Select the appropriate price ID
     let selectedPriceId;
-    if (priceType === 'weekly' && weeklyPriceId) {
-      selectedPriceId = weeklyPriceId;
+
+    if (priceType === 'semester' && semesterPriceId) {
+      selectedPriceId = semesterPriceId;
     } else {
       selectedPriceId = monthlyPriceId;
     }

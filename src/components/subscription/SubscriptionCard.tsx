@@ -150,6 +150,9 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
             >
               Auf Premium upgraden
             </Button>
+            <div className="text-center text-[11px] text-muted-foreground">
+              Ab 9 €/Monat oder 29 €/Semester (6 Monate), jeweils mit automatischer Verlängerung.
+            </div>
             <div className="text-center">
               <span className="text-xs text-muted-foreground">
                 Gerade Premium gekauft? 

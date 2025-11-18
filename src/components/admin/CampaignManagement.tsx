@@ -235,7 +235,7 @@ const CampaignManagement: React.FC = () => {
         title: 'Neue Funktionen verfügbar',
         description: 'Entdecke die neuesten Features unserer Plattform.',
         action_text: 'Mehr erfahren',
-        action_url: '/changelog'
+        action_url: ''
       }
     };
 

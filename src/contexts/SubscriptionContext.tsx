@@ -9,7 +9,7 @@ interface SubscriptionContextType {
   subscriptionEnd: string | null;
   loading: boolean;
   checkSubscription: (forceRefresh?: boolean) => Promise<void>;
-  createCheckoutSession: (priceType?: 'monthly' | 'weekly', consentGiven?: boolean) => Promise<void>;
+  createCheckoutSession: (priceType?: 'monthly' | 'semester', consentGiven?: boolean) => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
 
@@ -222,7 +222,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
-  const createCheckoutSession = async (priceType?: 'monthly' | 'weekly', consentGiven?: boolean) => {
+  const createCheckoutSession = async (priceType?: 'monthly' | 'semester', consentGiven?: boolean) => {
     if (!user) {
       showToast.error('Bitte melde dich an, um ein Abonnement zu erstellen');
       return;

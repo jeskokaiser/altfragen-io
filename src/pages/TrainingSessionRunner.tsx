@@ -148,7 +148,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
   const currentAnswerState = currentQuestion ? questionProgress.get(currentQuestion.id) : undefined;
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 dark:bg-background">
       <div className="py-8">
         <QuestionDisplayWithAI
           questionData={currentQuestion}

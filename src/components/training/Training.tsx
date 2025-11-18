@@ -114,9 +114,13 @@ const Training: React.FC = () => {
     const currentAnswer = newAnswers[currentQuestionIndex];
 
     if (viewedSolution) {
+      const isFirstAttemptValue =
+        currentAnswer?.isFirstAttempt ??
+        (currentAnswer?.attempts ? currentAnswer.attempts.length === 0 : true);
+
       newAnswers[currentQuestionIndex] = {
         value: answer,
-        isFirstAttempt: currentAnswer?.isFirstAttempt ?? currentAnswer?.attempts?.length === 0 ?? true,
+        isFirstAttempt: isFirstAttemptValue,
         viewedSolution: true,
         attempts: currentAnswer?.attempts ?? [],
         originalAnswer: currentAnswer?.originalAnswer || currentAnswer?.value || answer
@@ -259,7 +263,7 @@ const Training: React.FC = () => {
     .filter(q => !ignoredQuestions.has(q.id)).length;
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="min-h-screen bg-slate-50 dark:bg-background">
       <div className="py-8">
         <QuestionDisplayWithAI
           questionData={currentQuestion}

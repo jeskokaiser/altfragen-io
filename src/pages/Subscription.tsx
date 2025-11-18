@@ -19,6 +19,7 @@ const Subscription = () => {
   
   const [consentGiven, setConsentGiven] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'semester'>('monthly');
   
   const features = [{
     name: 'Werbefrei und ohne Tracking',
@@ -57,6 +58,12 @@ const Subscription = () => {
     icon: Brain
   },
   {
+    name: 'KI-Verbesserte Fragen und Antworten',
+    free: false,
+    premium: true,
+    icon: Brain
+  },
+  {
     name: 'Premium Support in 24h',
     free: false,
     premium: true,
@@ -87,7 +94,8 @@ const Subscription = () => {
 
   const handleProceedWithSubscription = () => {
     if (consentGiven) {
-      createCheckoutSession('monthly', consentGiven);
+      const priceType: 'monthly' | 'semester' = billingCycle === 'monthly' ? 'monthly' : 'semester';
+      createCheckoutSession(priceType, consentGiven);
       setShowConsentModal(false);
       setConsentGiven(false);
     }
@@ -151,7 +159,7 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Magistral Medium
+                    Mistral Medium
                   </a>
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
@@ -164,7 +172,7 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Deepseek R1
+                    Deepseek
                   </a>
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
@@ -194,7 +202,7 @@ const Subscription = () => {
                 💰 Einzelkauf aller Modelle: ~€100/Monat
               </p>
               <p className="text-green-700 dark:text-green-300 font-semibold text-lg mt-1">
-                Mit Altfragen.io Premium: Nur €8,99/Monat
+                Mit Altfragen.io Premium: ab €9/Monat oder €29/Semester (6 Monate)
               </p>
             </div>
             <p className="text-blue-700 dark:text-blue-300 text-sm">
@@ -208,12 +216,39 @@ const Subscription = () => {
       {/* Pricing Plans */}
       <div className="max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold text-center mb-8">Wähle deinen Plan</h2>
+
+        <div className="flex items-center justify-center mb-8">
+                <div className="inline-flex rounded-full border border-gray-300 dark:border-gray-600 bg-muted p-1">
+                  <button
+                    type="button"
+                    onClick={() => setBillingCycle('monthly')}
+                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                      billingCycle === 'monthly'
+                        ? 'bg-black text-white dark:bg-white dark:text-black'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    Monatlich
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBillingCycle('semester')}
+                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                      billingCycle === 'semester'
+                        ? 'bg-black text-white dark:bg-white dark:text-black'
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    Semester
+                  </button>
+                </div>
+              </div>
         <div className="grid md:grid-cols-2 gap-6">
           {/* Free Plan */}
           <Card className="p-6">
             <div className="text-center space-y-4">
               <h3 className="text-xl font-semibold">Kostenlos</h3>
-              <div className="text-3xl font-bold">€0<span className="text-sm font-normal">/Monat</span></div>
+              <div className="text-3xl font-bold">€0</div>
               <p className="text-sm text-muted-foreground">Perfekt für den Einstieg</p>
             </div>
             
@@ -238,7 +273,7 @@ const Subscription = () => {
             </div>
           </Card>
 
-          {/* Monthly Plan */}
+          {/* Premium Plan mit Monats-/Semesterwahl */}
           <Card className={`p-6 relative border-2 border-black dark:border-white`}>
             
             <div className="text-center space-y-4">
@@ -246,7 +281,12 @@ const Subscription = () => {
                 <h3 className="text-xl font-semibold">Premium</h3>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-black dark:text-white">€8,99<span className="text-sm font-normal">/Monat</span></div>
+                <div className="text-3xl font-bold text-black dark:text-white">
+                  {billingCycle === 'monthly' ? '€9' : '€29'}
+                  <span className="text-sm font-normal">
+                    {billingCycle === 'monthly' ? '/Monat' : '/Semester'}
+                  </span>
+                </div>
               </div>
               <p className="text-sm text-muted-foreground">
                 Für Vielkreuzer:innen
@@ -323,10 +363,10 @@ const Subscription = () => {
       
         
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Flexibles Monatsabo</h3>
+          <h3 className="text-lg font-semibold">Abrechnung & Verlängerung</h3>
           <p className="text-sm text-muted-foreground">
-            Das Monatsabo verlängert sich automatisch, kann aber jederzeit gekündigt werden. 
-            Du behältst volle Kontrolle über dein Abonnement und kannst es jederzeit in den Einstellungen verwalten.
+            Dein Premium-Zugang verlängert sich automatisch entsprechend des gewählten Abrechnungszeitraums (monatlich oder alle 6 Monate). 
+            Du kannst dein Abo jederzeit in deinem Konto kündigen, bevor sich der nächste Abrechnungszeitraum verlängert.
           </p>
         </div>
       </div>
@@ -336,17 +376,22 @@ const Subscription = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              Monatsabo bestätigen
+              {billingCycle === 'monthly' ? 'Monatsabo bestätigen' : 'Semesterabo bestätigen'}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
-            <div className="text-center space-y-2">
+              <div className="text-center space-y-2">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                €8,99<span className="text-sm font-normal">/Monat</span>
+                {billingCycle === 'monthly' ? '€9' : '€29'}
+                <span className="text-sm font-normal">
+                  {billingCycle === 'monthly' ? '/Monat' : '/Semester'}
+                </span>
               </div>
               <div className="text-sm text-muted-foreground">
-                Monatsabo - Jederzeit kündbar
+                {billingCycle === 'monthly'
+                  ? 'Monatsabo – verlängert sich automatisch, jederzeit kündbar.'
+                  : 'Semesterabo – verlängert sich automatisch, jederzeit kündbar.'}
               </div>
             </div>
             
@@ -418,7 +463,7 @@ const Subscription = () => {
               disabled={!consentGiven}
               className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Monatsabo sichern
+              {billingCycle === 'monthly' ? 'Monatsabo starten' : 'Semesterabo starten'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -21,7 +21,6 @@ import UnclearQuestionsPage from '@/pages/UnclearQuestions';
 import ArchivedDatasetsPage from '@/pages/ArchivedDatasets';
 import AICommentaryAdminPage from '@/pages/AICommentaryAdmin';
 import TutorialPage from '@/pages/Tutorial';
-import ChangelogPage from '@/pages/Changelog';
 import TrainingSessionsPage from '@/pages/TrainingSessions';
 import TrainingSessionRunnerPage from '@/pages/TrainingSessionRunner';
 import TrainingSessionOneOffPage from '@/pages/TrainingSessionOneOff';
@@ -78,7 +77,6 @@ const MainLayout: React.FC = () => {
           <Route path="/archived-datasets" element={<ArchivedDatasetsPage />} />
           <Route path="/ai-commentary" element={<AICommentaryAdminPage />} />
           <Route path="/tutorial" element={<TutorialPage />} />
-          <Route path="/changelog" element={<ChangelogPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>

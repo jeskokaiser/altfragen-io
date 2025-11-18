@@ -58,36 +58,36 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
   };
   const stateClasses = isRevealed
     ? isCorrect
-      ? 'border-y-[#0b8363] bg-[#d0f1e8] z-10'
+      ? 'border-y-[#0b8363] bg-[#d0f1e8] z-10 dark:border-emerald-500 dark:bg-emerald-900/40'
       : wasAttempted
-        ? 'border-y-red-200 bg-red-50'  // Keep red background for wrong attempted answers even when revealed
-        : 'border-y-slate-200'
+        ? 'border-y-red-200 bg-red-50 dark:border-red-500 dark:bg-red-900/40' // Keep highlight but darken in dark mode
+        : 'border-y-slate-200 dark:border-slate-700'
     : wasAttempted
-      ? 'border-y-red-200 bg-red-50 hover:bg-red-100'
-      : 'border-y-slate-200 hover:bg-slate-50';
+      ? 'border-y-red-200 bg-red-50 hover:bg-red-100 dark:border-red-500 dark:bg-red-900/40 dark:hover:bg-red-900/60'
+      : 'border-y-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800';
 
   const letterClasses = isRevealed
     ? isCorrect
-      ? 'text-emerald-800'
-      : 'text-red-700'
+      ? 'text-emerald-800 dark:text-emerald-300'
+      : 'text-red-700 dark:text-red-300'
     : wasAttempted
-      ? 'text-red-700'
-      : 'text-slate-600';
+      ? 'text-red-700 dark:text-red-300'
+      : 'text-slate-600 dark:text-slate-200';
 
   const icon = isRevealed ? (
     isCorrect ? (
-      <Check className="h-5 w-5 text-emerald-800" />
+      <Check className="h-5 w-5 text-emerald-800 dark:text-emerald-300" />
     ) : (
-      <X className="h-5 w-5 text-red-700" />
+      <X className="h-5 w-5 text-red-700 dark:text-red-300" />
     )
   ) : null;
 
   const hasChildren = Boolean(explanation || children);
   const expandIcon = (isRevealed && hasChildren) && (
     isExpanded ? (
-      <ChevronUp className="h-4 w-4 text-slate-600 ml-2" />
+      <ChevronUp className="h-4 w-4 text-slate-600 dark:text-slate-300 ml-2" />
     ) : (
-      <ChevronDown className="h-4 w-4 text-slate-600 ml-2" />
+      <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-300 ml-2" />
     )
   );
 
@@ -124,7 +124,14 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
       {isExpanded && (
         <div className="cursor-pointer">
           {hasChildren ? (
-            <div className={cn('border-t-[1px] text-sm', isRevealed && isCorrect ? 'border-t-[#0b8363] bg-teal-50' : 'border-t-slate-200')}>
+            <div
+              className={cn(
+                'border-t-[1px] text-sm',
+                isRevealed && isCorrect
+                  ? 'border-t-[#0b8363] bg-teal-50 dark:border-emerald-500 dark:bg-emerald-900/40'
+                  : 'border-t-slate-200 dark:border-slate-700'
+              )}
+            >
               <div className="pr-6 pl-12 py-2">
                 <div className="pl-6 space-y-4 prose prose-sm max-w-none">
                   {explanation && <ReactMarkdown>{explanation}</ReactMarkdown>}
@@ -133,10 +140,10 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
               </div>
             </div>
           ) : (
-            <div className="border-t-[1px] border-t-slate-200 bg-slate-50 text-sm">
+            <div className="border-t-[1px] border-t-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 text-sm">
               <div className="pr-6 pl-12 py-2">
                 <div className="pl-6">
-                  <p className="text-slate-600">Keine KI-Kommentare verfügbar</p>
+                  <p className="text-slate-600 dark:text-slate-200">Keine KI-Kommentare verfügbar</p>
                 </div>
               </div>
             </div>

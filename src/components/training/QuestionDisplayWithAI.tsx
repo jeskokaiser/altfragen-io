@@ -363,7 +363,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   })).filter(option => option.text);
 
   return (
-    <div className={`w-full max-w-4xl mx-auto ${isMobile ? 'px-2' : ''}`}>
+    <div className={`w-full max-w-4xl mx-auto ${isMobile ? 'px-2' : ''} `}>
       <QuestionHeader
         currentIndex={currentIndex}
         totalQuestions={totalQuestions}
