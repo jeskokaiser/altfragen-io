@@ -26,6 +26,7 @@ import TrainingSessionRunnerPage from '@/pages/TrainingSessionRunner';
 import TrainingSessionOneOffPage from '@/pages/TrainingSessionOneOff';
 import ExamAnalyticsPage from '@/pages/ExamAnalytics';
 import TrainingSessionAnalyticsPage from '@/pages/TrainingSessionAnalytics';
+import QuestionSearchPage from '@/pages/QuestionSearch';
 
 const MainLayout: React.FC = () => {
   const { isReady, isAuthenticated } = useAuthGuard();
@@ -77,6 +78,7 @@ const MainLayout: React.FC = () => {
           <Route path="/archived-datasets" element={<ArchivedDatasetsPage />} />
           <Route path="/ai-commentary" element={<AICommentaryAdminPage />} />
           <Route path="/tutorial" element={<TutorialPage />} />
+          <Route path="/search" element={<QuestionSearchPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>

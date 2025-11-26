@@ -34,7 +34,7 @@ serve(async (req) => {
 
     // Set the API endpoints - updated based on actual backend behavior
     const BASE_API_URL = 'https://api.altfragen.io';
-    const UPLOAD_ENDPOINT = `${BASE_API_URL}/upload`;
+    const UPLOAD_ENDPOINT = `${BASE_API_URL}/parser/upload`;
     
     // Convert the File to a Blob
     const arrayBuffer = await pdfFile.arrayBuffer();

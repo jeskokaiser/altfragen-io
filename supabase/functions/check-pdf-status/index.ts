@@ -55,7 +55,7 @@ serve(async (req) => {
 
     // Correct backend status endpoint
     const BASE_API_URL = 'https://api.altfragen.io';
-    const statusEndpoint = `${BASE_API_URL}/status/${taskId}`;
+    const statusEndpoint = `${BASE_API_URL}/parser/status/${taskId}`;
     
     // Add safeguard for empty or "undefined" taskId string
     if (taskId === "undefined" || taskId.trim() === "") {

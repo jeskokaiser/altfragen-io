@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Check, X, Brain, Shield, Upload, FileText, HatGlasses, ChartBar, Mail, Inbox, HeartHandshake } from 'lucide-react';
+import { Check, X, Brain, Shield, Upload, FileText, HatGlasses, ChartBar, Mail, Inbox, HeartHandshake, Leaf, Bot, ReceiptEuro } from 'lucide-react';
 const Subscription = () => {
   const {
     subscribed,
@@ -122,7 +122,7 @@ const Subscription = () => {
               <h3 className="text-xl font-semibold text-blue-900 dark:text-blue-100">Bis zu fünf KI-Modelle für maximale Genauigkeit</h3>
             </div>
             <p className="text-blue-700 dark:text-blue-300">
-              Wir nutzen die neuesten und leistungsstärksten KI-Reasoning-Modelle mit höchsten Benchmark-Ergebnissen:
+              Wir nutzen die neuesten und leistungsstärksten KI-Modelle mit höchsten Benchmark-Ergebnissen:
             </p>
             <div className="grid md:grid-cols-3 gap-4 mt-4">
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
@@ -136,7 +136,7 @@ const Subscription = () => {
                     ChatGPT 5.1
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Reasoning-Model, sehr gute Leistung im relevanten <a href="https://epoch.ai/benchmarks/gpqa-diamond" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 dark:hover:text-blue-400">GPQA Diamond Benchmark</a></p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
@@ -146,10 +146,10 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Gemini 2.5 Pro
+                    Gemini 3 Pro Preview
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Reasoning-Model, führend im relevanten <a href="https://epoch.ai/benchmarks/gpqa-diamond" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 dark:hover:text-blue-400">GPQA Diamond Benchmark</a></p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
@@ -159,10 +159,10 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Mistral Medium
+                    Mistral Medium 3
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Führendes KI-Model aus Europa</p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
@@ -172,16 +172,16 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Deepseek
+                    Deepseek V3
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Kosteneffizientes KI-Model aus China</p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="line-through font-semibold text-gray-900 dark:text-gray-100">
                     Grok 4
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Aktuell ausgesetzt</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Aktuell ausgesetzt, da möglicherweise voreingenommen</p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
@@ -191,24 +191,12 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Perplexity
+                    Perplexity Sonar
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">~€20/Monat einzeln</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">KI-Model mit integrierter Webrecherche</p>
               </div>
             </div>
-            <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg">
-              <p className="text-blue-800 dark:text-blue-200 font-medium">
-                💰 Einzelkauf aller Modelle: ~€100/Monat
-              </p>
-              <p className="text-green-700 dark:text-green-300 font-semibold text-lg mt-1">
-                Mit Altfragen.io Premium: ab €9/Monat oder €29/Semester (6 Monate)
-              </p>
-            </div>
-            <p className="text-blue-700 dark:text-blue-300 text-sm">
-              Drei verschiedene Modelle sorgen für höhere Genauigkeit bei schwierigen Fragen. 
-              Du sparst Zeit und Geld im Vergleich zum Einzelkauf und Setup der Modelle.
-            </p>
           </div>
         </Card>
       </div>
@@ -230,17 +218,22 @@ const Subscription = () => {
                   >
                     Monatlich
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle('semester')}
-                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                      billingCycle === 'semester'
-                        ? 'bg-black text-white dark:bg-white dark:text-black'
-                        : 'text-muted-foreground'
-                    }`}
-                  >
-                    Semester
-                  </button>
+                  <div className="relative inline-block">
+                    <button
+                      type="button"
+                      onClick={() => setBillingCycle('semester')}
+                      className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                        billingCycle === 'semester'
+                          ? 'bg-black text-white dark:bg-white dark:text-black'
+                          : 'text-muted-foreground'
+                      }`}
+                    >
+                      Semester
+                    </button>
+                    <span className="absolute -top-3 -right-3 bg-green-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md dark:bg-green-500">
+                      -46%
+                    </span>
+                  </div>
                 </div>
               </div>
         <div className="grid md:grid-cols-2 gap-6">
@@ -327,7 +320,7 @@ const Subscription = () => {
       <div className="max-w-2xl mx-auto text-center space-y-6">
        
       <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Dein Abo tut Gutes</h3>
+          <h3 className="text-lg font-semibold"><HeartHandshake className="inline-block w-6 h-6" /> Dein Abo tut Gutes</h3>
           <p className="text-sm text-muted-foreground">
             Altfragen.io hat das{' '}
             <a
@@ -351,9 +344,17 @@ const Subscription = () => {
             .
           </p>
         </div>
+
+        <div className="space-y-4">
+        <h3 className="text-lg font-semibold"><Leaf className="inline-block w-6 h-6" /> Schone die Umwelt</h3>
+          <p className="text-sm text-muted-foreground">
+            Statt dass jede Person einzeln die Lösung der Altfragen bei verschiedenen Modellen anfragt, bündeln wir Anfragen zentral und speichern die Ergebnisse in unserer Datenbank. 
+            So wird dieselbe Rechenleistung mehrfach genutzt, was im Vergleich zu vielen einzelnen Anfragen weniger <a href="https://gi.de/fileadmin/GI/Allgemein/PDF/2025-06_GI_Studie_KI_RZ_Halbleiter_Auswirkungen_Wasser.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 dark:hover:text-blue-300">Energie und Wasserverbrauch in Rechenzentren</a> bedeutet.
+          </p>
+        </div>
        
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Was sind KI-Kommentare?</h3>
+          <h3 className="text-lg font-semibold"><Bot className="inline-block w-6 h-6" /> Was sind KI-Kommentare?</h3>
           <p className="text-sm text-muted-foreground">
             Jede Frage und Antwort wird mit verschiedenen KI-Modellen analysiert und es werden detaillierte Erklärungen erstellt, 
             die dir helfen zu verstehen, warum bestimmte Antworten richtig oder falsch sind. 
@@ -363,7 +364,7 @@ const Subscription = () => {
       
         
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Abrechnung & Verlängerung</h3>
+          <h3 className="text-lg font-semibold"><ReceiptEuro className="inline-block w-6 h-6" /> Abrechnung & Verlängerung</h3>
           <p className="text-sm text-muted-foreground">
             Dein Premium-Zugang verlängert sich automatisch entsprechend des gewählten Abrechnungszeitraums (monatlich oder alle 6 Monate). 
             Du kannst dein Abo jederzeit in deinem Konto kündigen, bevor sich der nächste Abrechnungszeitraum verlängert.

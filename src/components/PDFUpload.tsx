@@ -515,8 +515,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
             <CardTitle className="text-xl">PDF-Upload</CardTitle>
             <CardDescription>
               {universityId 
-                ? `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.`
-                : "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil."}
+                ? `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.  Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt.`
+                : "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.  Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

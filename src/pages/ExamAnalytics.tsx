@@ -382,9 +382,11 @@ const ExamAnalytics: React.FC = () => {
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/training/session/${stat.id}`)}>
-                      Session fortsetzen
-                    </Button>
+                    {stat.status !== 'completed' && (
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/training/session/${stat.id}`)}>
+                        Session fortsetzen
+                      </Button>
+                    )}
                     <Button variant="secondary" size="sm" onClick={() => navigate(`/training/session/${stat.id}/analytics`)}>
                       Session-Details
                     </Button>

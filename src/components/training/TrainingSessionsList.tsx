@@ -108,7 +108,7 @@ const TrainingSessionsList: React.FC = () => {
   }
 
   const totalSessions = sessions?.length || 0;
-  const hasReachedLimit = !subscribed && totalSessions >= 2;
+  const hasReachedLimit = !subscribed && totalSessions >= 5;
 
   // Group sessions by type
   const examSessions = sessionsWithExams.filter(s => s.exam);
@@ -122,15 +122,15 @@ const TrainingSessionsList: React.FC = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle className="flex items-center gap-2">
             {hasReachedLimit ? (
-              <>Session-Limit erreicht ({totalSessions}/2)</>
+              <>Session-Limit erreicht ({totalSessions}/5)</>
             ) : (
-              <>Noch {2 - totalSessions} Session verfügbar ({totalSessions}/2)</>
+              <>Noch {5 - totalSessions} Session{5 - totalSessions !== 1 ? 's' : ''} verfügbar ({totalSessions}/5)</>
             )}
           </AlertTitle>
           <AlertDescription className="mt-2">
             {hasReachedLimit ? (
               <div>
-                <p className="mb-2">Du hast das kostenlose Limit von 2 Trainingssessions erreicht. Lösche eine Session oder upgrade zu Premium für unbegrenzte Sessions.</p>
+                <p className="mb-2">Du hast das kostenlose Limit von 5 Trainingssessions erreicht. Lösche eine Session oder upgrade zu Premium für unbegrenzte Sessions.</p>
                 <Button 
                   size="sm" 
                   variant="default"

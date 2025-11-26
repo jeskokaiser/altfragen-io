@@ -8,6 +8,7 @@ interface AuthContextType {
   universityId: string | null;
   isEmailVerified: boolean;
   universityName: string | null;
+  username: string | null;
   logout: () => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   universityId: null,
   isEmailVerified: false,
   universityName: null,
+  username: null,
   logout: async () => {}
 });
 
@@ -26,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [universityId, setUniversityId] = useState<string | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [universityName, setUniversityName] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   const logout = async () => {
     try {
@@ -59,6 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUniversityId(null);
         setIsEmailVerified(false);
         setUniversityName(null);
+        setUsername(null);
         setLoading(false);
       }
     });
@@ -89,7 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Fetch user profile information
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('university_id, is_email_verified')
+        .select('university_id, is_email_verified, username')
         .eq('id', userId)
         .single();
 
@@ -144,6 +148,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUniversityId(null);
         setUniversityName(null);
       }
+
+      // Set username
+      setUsername(profileData.username || null);
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
     } finally {
@@ -158,6 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       universityId, 
       isEmailVerified, 
       universityName,
+      username,
       logout
     }}>
       {children}

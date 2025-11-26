@@ -490,6 +490,7 @@ export type Database = {
           subscription_consent: boolean | null
           subscription_consent_at: string | null
           university_id: string | null
+          username: string | null
         }
         Insert: {
           created_at?: string
@@ -505,6 +506,7 @@ export type Database = {
           subscription_consent?: boolean | null
           subscription_consent_at?: string | null
           university_id?: string | null
+          username?: string | null
         }
         Update: {
           created_at?: string
@@ -520,6 +522,7 @@ export type Database = {
           subscription_consent?: boolean | null
           subscription_consent_at?: string | null
           university_id?: string | null
+          username?: string | null
         }
         Relationships: [
           {

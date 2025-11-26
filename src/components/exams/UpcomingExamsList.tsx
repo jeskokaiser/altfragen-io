@@ -46,9 +46,9 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
 
   const { sessions } = useTrainingSessions(currentUserId);
 
-  // Check if user has reached the session limit (2 for free users)
+  // Check if user has reached the session limit (5 for free users)
   const totalSessions = sessions?.length || 0;
-  const hasReachedSessionLimit = !subscribed && totalSessions >= 2;
+  const hasReachedSessionLimit = !subscribed && totalSessions >= 5;
 
   // Load stats for all exams on mount
   useEffect(() => {
@@ -90,19 +90,19 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
     <div className="space-y-4">
       {/* Session limit warning for free users */}
       {!subscribed && totalSessions >= 1 && (
-        <Alert variant={totalSessions >= 2 ? "destructive" : "default"} className="border-2">
+        <Alert variant={totalSessions >= 5 ? "destructive" : "default"} className="border-2">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle className="flex items-center gap-2">
-            {totalSessions >= 2 ? (
+            {totalSessions >= 5 ? (
               <>Session-Limit erreicht</>
             ) : (
-              <>Noch 1 Session verfügbar</>
+              <>Noch {5 - totalSessions} Session{5 - totalSessions !== 1 ? 's' : ''} verfügbar</>
             )}
           </AlertTitle>
           <AlertDescription className="mt-2">
-            {totalSessions >= 2 ? (
+            {totalSessions >= 5 ? (
               <div className="space-y-2">
-                <p>Du hast das kostenlose Limit von 2 Trainingsessions erreicht. Lösche eine vorhandene Session oder upgrade zu Premium.</p>
+                <p>Du hast das kostenlose Limit von 5 Trainingsessions erreicht. Lösche eine vorhandene Session oder upgrade zu Premium.</p>
                 <div className="flex gap-2 mt-2">
                   <Button 
                     size="sm" 
@@ -123,7 +123,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
               </div>
             ) : (
               <div className="space-y-2">
-                <p>Du hast bereits 1 von 2 kostenlosen Trainingssessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.</p>
+                <p>Du hast bereits {totalSessions} von 5 kostenlosen Trainingssessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.</p>
                 <Button 
                   size="sm" 
                   variant="outline"
@@ -267,7 +267,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
                     </TooltipTrigger>
                     {hasReachedSessionLimit && (
                       <TooltipContent>
-                        <p>Du hast das Limit von 2 Sessions erreicht.</p>
+                        <p>Du hast das Limit von 5 Sessions erreicht.</p>
                         <p className="font-semibold">Upgrade auf Premium für unbegrenzte Sessions!</p>
                       </TooltipContent>
                     )}

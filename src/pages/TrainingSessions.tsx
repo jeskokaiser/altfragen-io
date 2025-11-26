@@ -23,9 +23,9 @@ const TrainingSessionsPage: React.FC = () => {
 
   const availableQuestions = useMemo(() => questions || [], [questions]);
   
-  // Check if user has reached the session limit (2 for free users)
+  // Check if user has reached the session limit (5 for free users)
   const totalSessions = sessions?.length || 0;
-  const hasReachedSessionLimit = !subscribed && totalSessions >= 2;
+  const hasReachedSessionLimit = !subscribed && totalSessions >= 5;
 
   // Generate default title with current date whenever the dialog opens
   const defaultTitle = useMemo(() => {
