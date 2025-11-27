@@ -137,6 +137,22 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
     return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
   }
 
+  // Fetch training sessions linked to this exam to filter session progress
+  const { data: allSessions, error: sessionsErr } = await sb
+    .from('training_sessions')
+    .select('id, filter_settings')
+    .eq('user_id', userId);
+  
+  if (sessionsErr) throw sessionsErr;
+  
+  // Get session IDs linked to this exam
+  const linkedSessionIds = (allSessions || [])
+    .filter((s: any) => {
+      const fs = s.filter_settings as any;
+      return fs && fs.source === 'exam' && fs.examId === examId;
+    })
+    .map((s: any) => s.id);
+
   // Fetch user progress from both tables in batches to avoid URL length limits
   const BATCH_SIZE = 300;
   const batches: string[][] = [];
@@ -144,32 +160,30 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
     batches.push(questionIds.slice(i, i + BATCH_SIZE));
   }
 
-  // Query both tables in parallel
+  // Query session progress only (no user_progress fallback)
   const batchPromises = batches.map(batch => {
-    const userProgressPromise = sb
-      .from('user_progress')
-      .select('question_id, is_correct, updated_at, created_at')
-      .eq('user_id', userId)
-      .in('question_id', batch);
-
-    const sessionProgressPromise = sb
-      .from('session_question_progress')
-      .select('question_id, is_correct, updated_at, created_at')
-      .eq('user_id', userId)
-      .in('question_id', batch);
-
-    return Promise.all([userProgressPromise, sessionProgressPromise]);
+    // Filter session progress to only include sessions linked to this exam
+    if (linkedSessionIds.length > 0) {
+      return sb
+        .from('session_question_progress')
+        .select('question_id, is_correct, updated_at, created_at')
+        .eq('user_id', userId)
+        .in('question_id', batch)
+        .in('session_id', linkedSessionIds);
+    } else {
+      // If no exam sessions, return empty result
+      return Promise.resolve({ data: [], error: null });
+    }
   });
 
   const batchResults = await Promise.allSettled(batchPromises);
   
-  // Process session_question_progress first (newer system, takes priority)
+  // Process session_question_progress only
   const sessionProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> = [];
-  const userProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> = [];
   
   batchResults.forEach(result => {
     if (result.status === 'fulfilled') {
-      const [userProgressResult, sessionProgressResult] = result.value;
+      const sessionProgressResult = result.value;
       
       // Process session_question_progress entries (take latest per question per batch)
       if (sessionProgressResult.data) {
@@ -187,42 +201,17 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
           sessionProgress.push({ question_id: key, ...value });
         });
       }
-      
-      // Process user_progress entries (take latest per question per batch)
-      if (userProgressResult.data) {
-        const userBatchMap = new Map<string, { is_correct: boolean | null; ts: number }>();
-        userProgressResult.data.forEach((p: any) => {
-          const qid = p.question_id as string;
-          if (!qid) return;
-          const ts = new Date(p.updated_at || p.created_at).getTime();
-          const existing = userBatchMap.get(qid);
-          if (!existing || ts > existing.ts) {
-            userBatchMap.set(qid, { is_correct: p.is_correct, ts });
-          }
-        });
-        userBatchMap.forEach((value, key) => {
-          userProgress.push({ question_id: key, ...value });
-        });
-      }
     }
   });
 
-  // Merge: prioritize session_question_progress, fall back to user_progress
+  // Final deduplication across all batches to get the absolute latest per question
   const latestByQuestion: Record<string, { is_correct: boolean | null; ts: number }> = {};
   
-  // First, add all session progress
+  // Add all session progress and take the absolute latest per question
   sessionProgress.forEach(p => {
     const qid = p.question_id;
     const existing = latestByQuestion[qid];
     if (!existing || p.ts > existing.ts) {
-      latestByQuestion[qid] = { is_correct: p.is_correct, ts: p.ts };
-    }
-  });
-  
-  // Then, add user progress only if question not already present
-  userProgress.forEach(p => {
-    const qid = p.question_id;
-    if (!latestByQuestion[qid] || p.ts > latestByQuestion[qid].ts) {
       latestByQuestion[qid] = { is_correct: p.is_correct, ts: p.ts };
     }
   });

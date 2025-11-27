@@ -242,6 +242,13 @@ const Terms = () => {
           Im Übrigen verbleiben alle Rechte an den Nutzerinhalten bei Ihnen. Sie 
           können Ihre Inhalte grundsätzlich selbst löschen; in technischen Backups 
           können gelöschte Inhalte noch für einen begrenzten Zeitraum fortbestehen.
+          <br />
+          <span className="block mt-2">
+            <strong>Wichtiger Hinweis:</strong> Inhalte, die Sie freiwillig anderen Nutzerinnen und Nutzern 
+            (z.&nbsp;B. Ihrer Universität oder dem allgemeinen Fragenpool) zur Verfügung gestellt haben, 
+            können nachträglich <strong>nicht mehr gelöscht werden</strong>, da sie Teil des gemeinsamen Datenbestands 
+            werden.
+          </span>
         </p>
         <p>
           <strong>6.4 </strong>

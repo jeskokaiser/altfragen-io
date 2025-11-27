@@ -2,16 +2,69 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { GraduationCap, CheckCircle2, Rocket, Brain, ArrowRight, BookOpen, TrendingUp, BarChart, Star, Users, Award, Clock, Zap, MessageSquare, Target, Bell } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { 
+  GraduationCap, 
+  ArrowRight, 
+  Star, 
+  Users, 
+  Award, 
+  Search,
+  MessageSquare,
+  Brain,
+  BookOpen,
+  BarChart,
+  Filter,
+  Sparkles,
+  CheckCircle2,
+  Zap,
+  Calendar,
+  Target,
+  Bell
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/Footer";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
+// YouTube video ID - replace with your actual video ID
+const YOUTUBE_VIDEO_ID = "YOUR_VIDEO_ID_HERE";
+
+// Testimonials data
+const testimonials = [
+  {
+    rating: 5,
+    quote: "Ich kann die Altfragen jetzt viel schneller durchgehen – das spart enorm Zeit.",
+  },
+  {
+    rating: 5,
+    quote: "Ich liebe, dass ich die Altfragen überall durchgehen kann, sogar im Bus.",
+  },
+  {
+    rating: 4.5,
+    quote: "Die Aufteilung nach Fächern ist super und ich finde sofort alles.",
+  },
+  {
+    rating: 4.5,
+    quote: "Die Vollständigkeit und die Möglichkeit, Fragen selbst zu bearbeiten, sind top.",
+  },
+  {
+    rating: 5,
+    quote: "Die Plattform fühlt sich leicht an und funktioniert einfach.",
+  },
+  {
+    rating: 5,
+    quote: "Altfragen.io ist genau das Tool, das ich für die Examensvorbereitung gebraucht habe.",
+  },
+];
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
 
   const handleGetStarted = () => {
     if (user) {
@@ -22,9 +75,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 overflow-x-hidden">
       {/* Header Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60">
         <div className="container mx-auto px-4 flex h-16 items-center justify-between">
           <Link to="/" className="font-bold text-xl flex items-center gap-2">
             <GraduationCap className="h-6 w-6" />
@@ -44,239 +97,313 @@ const Index = () => {
           </nav>
         </div>
       </header>
-      {/* Hero Section with enhanced design */}
-      <section className="relative overflow-hidden py-24 md:py-32 lg:py-40">
-        {/* Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-72 h-72 bg-purple-300/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-          <div className="absolute top-0 right-1/4 w-72 h-72 bg-blue-300/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-1/3 w-72 h-72 bg-indigo-300/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden py-20 md:py-32">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-200/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-200/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-1/3 w-96 h-96 bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-8">
               <Star className="w-4 h-4 mr-2" />
-              Die Altfragen Lernplattform für Student:innen
+              Die intelligente Lernplattform für Student:innen
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
-              Effizientes Lernen mit{" "}
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
+            Effizientes Lernen mit{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600">
                 Altfragen.io
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Die intelligente Plattform für die Klausurvorbereitung mit Altfragen. 
-              Lade deine Altfragensammlung hoch und trainiere mit einer intuitiven Nutzeroberfläche.
+            <p className="text-xl md:text-2xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+              Die moderne Plattform für deine Klausurvorbereitung. 
+              Intelligente Features, die dein Lernen revolutionieren.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Button 
                 onClick={handleGetStarted} 
                 size="lg" 
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-7 text-xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 group rounded-xl"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 group rounded-xl"
               >
-                {user ? "Zum Dashboard" : "Jetzt kostenlos starten"} 
-                <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" />
+                {user ? "Zum Dashboard" : "Kostenlos starten"} 
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-    
             </div>
 
             {/* Social Proof */}
-            <div className="flex items-center justify-center mt-12 space-x-8 text-slate-500">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-slate-500 text-sm">
               <div className="flex items-center">
-                <Users className="w-5 h-5 mr-2" />
-                <span className="text-sm">30.000+ Fragen hochgeladen</span>
+                <Users className="w-4 h-4 mr-2" />
+                <span>30.000+ Fragen</span>
               </div>
               <div className="flex items-center">
-                <Award className="w-5 h-5 mr-2" />
-                <span className="text-sm">Vertraut von über 400 Student:innen</span>
+                <Award className="w-4 h-4 mr-2" />
+                <span>500+ Student:innen</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Screenshot Section with enhanced styling */}
-      <section className="container mx-auto px-4 py-20 relative">
-        <div className="max-w-6xl mx-auto">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-all duration-500 group">
-            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 rounded-2xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/5 rounded-2xl"></div>
-            <img 
-              src="/Screenshot_1.png" 
-              alt="Screenshot des Dashboards" 
-              className="w-full h-auto relative z-10 rounded-2xl" 
-              style={{
-                maxHeight: '700px',
-                objectFit: 'contain'
-              }} 
-            />
-            {/* Floating elements for visual interest */}
-            <div className="absolute -top-6 -right-6 w-12 h-12 bg-blue-500 rounded-full opacity-20 group-hover:scale-110 transition-transform duration-300"></div>
-            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-purple-500 rounded-full opacity-30 group-hover:scale-110 transition-transform duration-300"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section with enhanced design */}
-      <section className="container mx-auto px-4 py-24">
+      {/* Key Features Grid */}
+      <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900">
-            Warum Altfragen.io?
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">
+            Alles, was du brauchst
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Unsere Plattform bietet alles, was du für eine effiziente Prüfungsvorbereitung brauchst – 
-            entwickelt von Student:innen für Student:innen.
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            Moderne Features für eine effiziente Prüfungsvorbereitung
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           <FeatureCard 
-            icon={<BookOpen className="w-10 h-10" />} 
-            title="Individuelle Fragendatenbank" 
-            description="Lade Altfragen individuell für deine Prüfung hoch und erstelle deine persönliche Sammlung." 
-            color="purple" 
+            icon={<Search className="w-6 h-6" />} 
+            title="Intelligente Suche" 
+            description="Durchsuche tausende Fragen mit erweiterten Filtern nach Fach, Modul, Semester, Jahr, Schwierigkeit und mehr." 
+            color="blue"
+            gradient="from-blue-500 to-cyan-500"
           />
           <FeatureCard 
-            icon={<BarChart className="w-10 h-10" />} 
-            title="Intelligente Auswertung" 
-            description="Detaillierte Analyse deiner Lernfortschritte und personalisierte Empfehlungen." 
-            color="blue" 
+            icon={<MessageSquare className="w-6 h-6" />} 
+            title="Kommentare & Notizen" 
+            description="Private Notizen für dich und öffentliche Diskussionen mit anderen Student:innen zu jeder Frage." 
+            color="purple"
+            gradient="from-purple-500 to-pink-500"
           />
           <FeatureCard 
-            icon={<TrendingUp className="w-10 h-10" />} 
-            title="Effizientes Lernen" 
-            description="Fokussiere dich auf die relevanten Themen durch smarte Filteroptionen." 
-            color="indigo" 
+            icon={<Brain className="w-6 h-6" />} 
+            title="Multi-Model KI" 
+            description="5 KI-Modelle (ChatGPT, Gemini, Mistral, Perplexity, DeepSeek) für umfassende Erklärungen jeder Frage." 
+            color="emerald"
+            gradient="from-emerald-500 to-teal-500"
           />
           <FeatureCard 
-            icon={<Users className="w-10 h-10" />} 
-            title="Universitäts-Community" 
-            description="Teile Fragen mit anderen Student:innen deiner Universität und profitiere von geteiltem Wissen." 
-            color="violet" 
+            icon={<BarChart className="w-6 h-6" />} 
+            title="Training & Prüfungen" 
+            description="Verbesserte Sessions mit Analytics, bevorstehende Prüfungen und detaillierte Fortschrittsverfolgung." 
+            color="indigo"
+            gradient="from-indigo-500 to-purple-500"
           />
         </div>
       </section>
 
-      {/* Question Sharing Feature Section */}
-      <section className="container mx-auto px-4 py-24">
+      {/* Question Search Feature */}
+      <section className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100">
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
-                  <Users className="w-4 h-4 mr-2" />
-                  Community Feature
+                  <Search className="w-4 h-4 mr-2" />
+                  Neue Funktion
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  Gemeinsam lernen, besser werden
+                  Finde genau die Fragen, die du brauchst
                 </h2>
                 <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Verbinde dich mit anderen Student:innen deiner Universität und teile deine Altfragen. 
-                  An unserer Startuniversität im Fach Medizin lernt bereits jede vierte Student:in mit Altfragen.io.
+                  Unsere erweiterte Suchfunktion ermöglicht es dir, präzise nach Fragen zu suchen. 
+                  Filtere nach Fach, Modul, Semester, Jahr, Schwierigkeit, Sichtbarkeit und Dateiname. 
+                  Sortiere und navigiere durch deine Ergebnisse mit Pagination.
                 </p>
                 <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Automatische Universitätserkennung</h3>
-                      <p className="text-slate-600">Deine Universität wird automatisch anhand deiner E-Mail-Adresse erkannt</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Sichere Datenfreigabe</h3>
-                      <p className="text-slate-600">Nur Student:innen deiner Universität können auf geteilte Fragen zugreifen</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Größere Fragendatenbank</h3>
-                      <p className="text-slate-600">Zugriff auf Fragen von anderen Student:innen derselben Fächer</p>
-                    </div>
-                  </div>
+                  <FeatureItem 
+                    icon={<Filter className="w-5 h-5" />}
+                    title="Erweiterte Filter"
+                    description="7 verschiedene Filteroptionen für präzise Suchergebnisse"
+                  />
+                  <FeatureItem 
+                    icon={<Zap className="w-5 h-5" />}
+                    title="Schnelle Navigation"
+                    description="Sortierung und Pagination für effizientes Durchsuchen"
+                  />
+                  <FeatureItem 
+                    icon={<Target className="w-5 h-5" />}
+                    title="Präzise Ergebnisse"
+                    description="Finde genau die Fragen, die für deine Prüfung relevant sind"
+                  />
                 </div>
               </div>
               <div className="relative">
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900">Geteilte Fragen</h4>
+                    <h4 className="font-semibold text-slate-900">Fragensuche</h4>
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="text-sm text-slate-600">Universität Hamburg</span>
+                      <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                      <span className="text-sm text-slate-600">Aktiv</span>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Modul D1</span>
-                      <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">422 Fragen</span>
+                    <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-slate-900">Filter anwenden</span>
+                        <Filter className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Modul: D1</span>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Jahr: 2023</span>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Schwierigkeit: Mittel</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Modul B2</span>
-                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">653 Fragen</span>
+                    <div className="p-3 bg-slate-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-900">127 Fragen gefunden</span>
+                      <p className="text-xs text-slate-500 mt-1">Seite 1 von 13</p>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Modul F3</span>
-                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">1011 Fragen</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <p className="text-xs text-slate-500 text-center">
-                      Insgesamt 8005 geteilte Fragen verfügbar
-                    </p>
                   </div>
                 </div>
-                {/* Floating elements */}
-                <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-400 rounded-full opacity-20"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-400 rounded-full opacity-30"></div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* AI Comments Feature Section */}
-      <section className="container mx-auto px-4 py-24">
+      {/* Comments & Notes Feature */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-8 md:p-12 shadow-xl border border-purple-100">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="relative order-2 md:order-1">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">Kommentare & Notizen</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                      <span className="text-sm text-slate-600">Live</span>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-400">
+                      <div className="flex items-start space-x-3">
+                        <MessageSquare className="w-5 h-5 text-purple-600 mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <h5 className="font-medium text-slate-900">Öffentlicher Kommentar</h5>
+                            <span className="text-xs text-slate-500">Max M.</span>
+                          </div>
+                          <p className="text-sm text-slate-600">Gute Frage! Die Antwort B ist korrekt, weil...</p>
+                          <div className="mt-2 flex items-center space-x-2">
+                            <button className="text-xs text-purple-600 hover:text-purple-700">Antworten</button>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs text-slate-500">2 Antworten</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-slate-300">
+                      <div className="flex items-start space-x-2">
+                        <span className="text-xs font-medium text-slate-700">📝 Private Notiz</span>
+                        <p className="text-xs text-slate-600">Wichtig: Diese Frage wiederholen vor der Prüfung</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2">
+                <div className="inline-flex items-center px-4 py-2 bg-purple-100 border border-purple-200 rounded-full text-purple-700 text-sm font-medium mb-6">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Kollaboration
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
+                  Lerne gemeinsam mit anderen
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Nutze private Notizen für deine persönlichen Gedanken und tausche dich 
+                  mit anderen Student:innen über öffentliche, verschachtelte Kommentare aus. 
+                  Diskutiere Antworten, teile Erklärungen und lerne voneinander.
+                </p>
+                <div className="space-y-4">
+                  <FeatureItem 
+                    icon={<MessageSquare className="w-5 h-5" />}
+                    title="Öffentliche Diskussionen"
+                    description="Threaded Comments für strukturierte Gespräche zu jeder Frage"
+                  />
+                  <FeatureItem 
+                    icon={<BookOpen className="w-5 h-5" />}
+                    title="Private Notizen"
+                    description="Persönliche Notizen, die nur du sehen kannst"
+                  />
+                  <FeatureItem 
+                    icon={<Users className="w-5 h-5" />}
+                    title="Community-Lernen"
+                    description="Profitiere von den Erklärungen und Diskussionen anderer"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Multi-Model AI Feature */}
+      <section className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
           <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-xl border border-emerald-100">
             <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center px-4 py-2 bg-emerald-100 border border-emerald-200 rounded-full text-emerald-700 text-sm font-medium mb-6">
+                  <Brain className="w-4 h-4 mr-2" />
+                  KI-gestützte Erklärungen
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
+                  5 KI-Modelle für umfassende Erklärungen
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Jede Frage wird von fünf verschiedenen KI-Modellen analysiert: ChatGPT, Gemini, Mistral, 
+                  Perplexity und DeepSeek. Vergleiche ihre Erklärungen, wähle dein bevorzugtes Modell 
+                  und verstehe jede Antwort im Detail.
+                </p>
+                <div className="space-y-4">
+                  <FeatureItem 
+                    icon={<Sparkles className="w-5 h-5" />}
+                    title="5 KI-Modelle"
+                    description="ChatGPT, Gemini, Mistral, Perplexity und DeepSeek im Vergleich"
+                  />
+                  <FeatureItem 
+                    icon={<Target className="w-5 h-5" />}
+                    title="Detaillierte Analyse"
+                    description="Jede Antwortoption wird einzeln erklärt - verstehe warum sie richtig oder falsch ist"
+                  />
+                  <FeatureItem 
+                    icon={<Zap className="w-5 h-5" />}
+                    title="Modell-Auswahl"
+                    description="Wähle deine bevorzugten Modelle für personalisierte Erklärungen"
+                  />
+                </div>
+              </div>
               <div className="relative">
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold text-slate-900">KI-Kommentare</h4>
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                      <span className="text-sm text-slate-600">Automatisch generiert</span>
+                      <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-slate-600">5 Modelle aktiv</span>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div className="p-4 bg-emerald-50 rounded-lg border-l-4 border-emerald-400">
                       <div className="flex items-start space-x-3">
-                        <MessageSquare className="w-5 h-5 text-emerald-600 mt-1" />
+                        <Brain className="w-5 h-5 text-emerald-600 mt-1" />
                         <div>
                           <h5 className="font-medium text-slate-900 mb-1">Allgemeine Erklärung</h5>
-                          <p className="text-sm text-slate-600">Diese Frage testet das Verständnis der Herzphysiologie, insbesondere den Einfluss des Sympathikus auf die Kontraktilität...</p>
+                          <p className="text-sm text-slate-600">Diese Frage testet das Verständnis der Herzphysiologie...</p>
                         </div>
                       </div>
                     </div>
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Target className="w-4 h-4 text-red-600" />
-                        <span className="text-sm font-medium text-red-700">Antwort A: Falsch</span>
+                    <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
+                      <div className="flex -space-x-2">
+                        <div className="w-6 h-6 rounded-full bg-emerald-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-emerald-700">C</div>
+                        <div className="w-6 h-6 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-blue-700">G</div>
+                        <div className="w-6 h-6 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-purple-700">M</div>
+                        <div className="w-6 h-6 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-orange-700">P</div>
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-indigo-700">D</div>
                       </div>
-                      <p className="text-xs text-slate-600">Der Sympathikus erhöht die Kontraktilität, reduziert sie nicht.</p>
+                      <span className="text-xs text-slate-600">5 Modelle analysieren diese Frage</span>
                     </div>
                     <div className="p-3 bg-green-50 rounded-lg">
                       <div className="flex items-center space-x-2 mb-2">
@@ -286,55 +413,6 @@ const Index = () => {
                       <p className="text-xs text-slate-600">Korrekt! Noradrenalin verstärkt die Herzkontraktion über β1-Rezeptoren.</p>
                     </div>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <p className="text-xs text-slate-500 text-center">
-                      Powered by OpenAI, Grok/Mistral & Gemini
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute -top-4 -right-4 w-8 h-8 bg-emerald-400 rounded-full opacity-20"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-teal-400 rounded-full opacity-30"></div>
-              </div>
-              <div>
-                <div className="inline-flex items-center px-4 py-2 bg-emerald-100 border border-emerald-200 rounded-full text-emerald-700 text-sm font-medium mb-6">
-                  <Brain className="w-4 h-4 mr-2" />
-                  KI-gestützte Erklärungen
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  Verstehe jede Frage im Detail
-                </h2>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Unsere KI analysiert jede Frage und Antwort und erstellt detaillierte Erklärungen. 
-                  Verstehe nicht nur die richtige Antwort, sondern auch warum die anderen falsch sind.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Drei KI-Modelle im Vergleich</h3>
-                      <p className="text-slate-600">OpenAI, Grok bzw.Mistral und Gemini analysieren jede Frage für umfassende Erklärungen</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Detaillierte Antwortanalyse</h3>
-                      <p className="text-slate-600">Jede Antwortoption wird einzeln erklärt - verstehe warum sie richtig oder falsch ist</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Automatische Generierung</h3>
-                      <p className="text-slate-600">Kommentare werden automatisch für alle Fragen erstellt - kein manueller Aufwand</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -342,207 +420,204 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Real-time Collaboration Section */}
-      <section className="container mx-auto px-4 py-24">
+      {/* Training & Exams Feature */}
+      <section className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-indigo-100">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-200 rounded-full text-indigo-700 text-sm font-medium">
-                    <Zap className="w-4 h-4 mr-2" />
-                    Echtzeit-Zusammenarbeit
-                  </div>
-                  <div className="inline-flex items-center px-4 py-2 bg-amber-100 border border-amber-200 rounded-full text-amber-800 text-sm font-medium">
-                    Bald verfügbar!
-                  </div>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  Sammelt Fragen gemeinsam in Echtzeit
-                </h2>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Nach der Prüfung könnt ihr als Gruppe sofort eine Collaboration-Session starten und 
-                  alle erinnerten Fragen gemeinsam sammeln. Arbeitet zusammen, während die Erinnerung noch frisch ist.
-                </p>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Live-Synchronisation</h3>
-                      <p className="text-slate-600">Alle Teilnehmer sehen neue Fragen sofort, während sie erstellt werden</p>
+              <div className="relative order-2 md:order-1">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-slate-900">Training & Prüfungen</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-indigo-400 rounded-full"></div>
+                      <span className="text-sm text-slate-600">Aktiv</span>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <div className="space-y-3">
+                    <div className="p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-slate-900">Aktive Session</span>
+                        <Calendar className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <p className="text-xs text-slate-600">15/30 Fragen beantwortet</p>
+                      <div className="mt-2 w-full bg-slate-200 rounded-full h-2">
+                        <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '50%' }}></div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Gemeinsame Überprüfung</h3>
-                      <p className="text-slate-600">Korrigiert und vervollständigt Fragen gemeinsam für beste Qualität</p>
+                    <div className="p-3 bg-slate-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-slate-900">Bevorstehende Prüfung</span>
+                        <span className="text-xs text-indigo-600 bg-indigo-100 px-2 py-1 rounded">In 5 Tagen</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">Anatomie Klausur - Modul D1</p>
                     </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 mb-1">Sofortige Veröffentlichung</h3>
-                      <p className="text-slate-600">Publiziert den kompletten Fragensatz direkt in eure Trainingssammlung</p>
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <BarChart className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-slate-900">Fortschritt: 73%</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">Durchschnittliche Schwierigkeit: Mittel</p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="relative">
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900">Live Collaboration</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-sm text-slate-600">4 Teilnehmer aktiv</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                      <div className="flex-1">
-                        <span className="text-sm font-medium text-slate-900">Max erstellt Frage...</span>
-                        <div className="flex items-center mt-1">
-                          <Clock className="w-3 h-3 text-blue-500 mr-1" />
-                          <span className="text-xs text-blue-600">Gerade eben</span>
-                        </div>
-                      </div>
-                      <div className="animate-pulse">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Frage 1: Anatomie - Herz</span>
-                      <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">Überprüft</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">Frage 2: Physiologie - Atmung</span>
-                      <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">Entwurf</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <p className="text-xs text-slate-500 text-center">
-                      12 Fragen gesammelt • Session läuft seit 15 Min
-                    </p>
-                  </div>
+              <div className="order-1 md:order-2">
+                <div className="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-200 rounded-full text-indigo-700 text-sm font-medium mb-6">
+                  <BarChart className="w-4 h-4 mr-2" />
+                  Verbessertes Training
                 </div>
-                {/* Floating elements */}
-                <div className="absolute -top-4 -right-4 w-8 h-8 bg-indigo-400 rounded-full opacity-20"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-purple-400 rounded-full opacity-30"></div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
+                  Trainiere effizienter mit Analytics
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Verbesserte Training-Sessions mit detaillierter Analytics, bevorstehende Prüfungen 
+                  mit Bearbeitungsfunktionen und intelligente Filter für optimale Lernfortschritte. 
+                  Verfolge deinen Fortschritt präzise und fokussiere dich auf das, was wichtig ist.
+                </p>
+                <div className="space-y-4">
+                  <FeatureItem 
+                    icon={<Calendar className="w-5 h-5" />}
+                    title="Bevorstehende Prüfungen"
+                    description="Verwalte deine Prüfungen mit Bearbeitungsfunktionen und Analytics"
+                  />
+                  <FeatureItem 
+                    icon={<BarChart className="w-5 h-5" />}
+                    title="Detaillierte Analytics"
+                    description="Umfassende Statistiken zu deinen Training-Sessions"
+                  />
+                  <FeatureItem 
+                    icon={<Target className="w-5 h-5" />}
+                    title="Intelligente Filter"
+                    description="Bessere Schwierigkeitsfilter und Fortschrittsverfolgung"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it Works Section with enhanced styling */}
-      <section className="relative py-24">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-blue-50/50"></div>
-        <div className="container mx-auto px-4 relative z-10">
+      {/* How it Works */}
+      <section className="relative py-20">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">
               So einfach geht's
             </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              In nur drei einfachen Schritten zu deiner optimalen Prüfungsvorbereitung
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              In drei einfachen Schritten zu deiner optimalen Prüfungsvorbereitung
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <StepCard 
               number="1" 
               title="Registrieren" 
-              description="Erstelle kostenlos dein persönliches Konto in wenigen Sekunden" 
+              description="Erstelle kostenlos dein Konto" 
             />
             <StepCard 
               number="2" 
-              title="Fragen hochladen" 
-              description="Lade deine Altfragen als CSV Datei hoch und organisiere sie nach Themen" 
+              title="Fragen auswählen" 
+              description="Lade deine Altfragen hoch oder nutze geteilte Fragen von deiner Universität" 
             />
             <StepCard 
               number="3" 
               title="Lernen & Verbessern" 
-              description="Tracke deinen Fortschritt und optimiere gezielt dein Wissen" 
+              description="Nutze KI-Features für optimale Prüfungsvorbereitung" 
             />
           </div>
         </div>
       </section>
 
-      {/* Enhanced Testimonial Section */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative bg-gradient-to-br from-white to-blue-50/50 rounded-3xl p-12 shadow-xl border border-slate-100">
-            <div className="absolute top-6 left-6 text-6xl text-blue-200 font-serif">&quot;</div>
-            <div className="flex flex-col items-center text-center relative z-10">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-8 shadow-lg">
-                <GraduationCap className="w-12 h-12 text-blue-600" />
-              </div>
-              <blockquote className="text-2xl md:text-3xl font-medium text-slate-700 mb-8 leading-relaxed">
-                Altfragen.io hat meine Art mich auf Prüfungen vorzubereiten revolutioniert. 
-                Die Plattform ist intuitiv und das durcharbeiten von PDFs ist endlich vorbei! 
-              </blockquote>
-              <cite className="text-slate-500 font-semibold text-lg">
-                – Jessi, Medizinstudentin im 9. Semester
-              </cite>
-              <div className="flex mt-4 space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Second Screenshot Section */}
-      <section className="container mx-auto px-4 py-20">
+       {/* Video Section */}
+       <section className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-all duration-500 group">
-            <div className="absolute inset-0 bg-gradient-to-tl from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
-            <img 
-              src="/Screenshot_2.png" 
-              alt="Screenshot des Trainingsmoduls" 
-              className="w-full h-auto relative z-10 rounded-2xl" 
-              style={{
-                maxHeight: '700px',
-                objectFit: 'contain'
-              }} 
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Fachschaften Contact Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100 text-center">
-            <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
-              <Users className="w-4 h-4 mr-2" />
-              Für Fachschaften
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.01] transition-all duration-500">
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
+            <div className="relative z-10 w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-2xl"
+                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
+                title="Altfragen.io Plattform Erklärung"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ border: 0 }}
+              />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">
-              Altfragen.io für euer gesamtes Semester nutzen?
-            </h2>
-            <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-              Meldet euch gerne, wenn ihr die Plattform für geteilte Fragen der Universität einsetzen möchtet. Es entstehen keinerlei Kosten. Wir freuen uns von euch zu hören!
-            </p>
-            <a
-              href="mailto:hallo@altfragen.io"
-              className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg transition-colors"
-            >
-              hallo@altfragen.io
-            </a>
           </div>
         </div>
       </section>
 
-      {/* Enhanced CTA Section */}
-      <section className="relative overflow-hidden py-24">
+
+      {/* Testimonials Carousel */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">
+              Was unsere Nutzer:innen sagen
+            </h2>
+            <p className="text-lg text-slate-600">
+              Echte Bewertungen von Student:innen, die mit Altfragen.io lernen
+            </p>
+          </div>
+          
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {testimonials.map((testimonial, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                  <div className="relative bg-gradient-to-br from-white to-blue-50/50 rounded-2xl p-6 md:p-8 shadow-lg border border-slate-100 h-full flex flex-col">
+                    <div className="flex flex-col h-full relative z-10">
+                      {/* Rating */}
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex space-x-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                className={cn(
+                                  "w-4 h-4",
+                                  i < Math.floor(testimonial.rating) 
+                                    ? "fill-yellow-400 text-yellow-400" 
+                                    : "fill-slate-200 text-slate-200"
+                                )} 
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Quote */}
+                      <blockquote className="text-base md:text-lg font-medium text-slate-700 mb-4 leading-relaxed flex-grow">
+                        {testimonial.quote}
+                      </blockquote>
+                      
+                      {/* Anonymous badge */}
+                      <div className="mt-auto pt-4 border-t border-slate-200">
+                        <div className="flex items-center text-sm text-slate-500">
+                          <Users className="w-4 h-4 mr-2" />
+                          <span>Anonyme Nutzer:in</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-12 lg:-left-16" />
+            <CarouselNext className="hidden md:flex -right-12 lg:-right-16" />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative overflow-hidden py-20">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900"></div>
         <div className="absolute inset-0 opacity-20">
           <div className="w-full h-full bg-repeat" style={{
@@ -554,17 +629,17 @@ const Index = () => {
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
             Bereit für effizienteres Lernen?
           </h2>
-          <p className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Starte noch heute und verbessere deine Prüfungsvorbereitung mit Altfragen.io. 
+          <p className="text-xl md:text-2xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Starte noch heute und profitiere von allen neuen Features. 
             Kostenlos und ohne Verpflichtungen.
           </p>
           <Button 
             onClick={handleGetStarted} 
             size="lg" 
-            className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white px-12 py-8 text-xl font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 group rounded-xl"
+            className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 group rounded-xl"
           >
             {user ? "Zum Dashboard" : "Kostenlos registrieren"}
-            <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>
       </section>
@@ -578,56 +653,48 @@ const FeatureCard = ({
   icon,
   title,
   description,
-  color
+  color,
+  gradient
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
-  color: "purple" | "blue" | "indigo" | "violet";
+  color: string;
+  gradient: string;
 }) => {
-  const getGradient = () => {
-    switch (color) {
-      case "purple":
-        return "from-purple-50 to-purple-100 border-purple-200 hover:shadow-purple-200/50";
-      case "blue":
-        return "from-blue-50 to-blue-100 border-blue-200 hover:shadow-blue-200/50";
-      case "indigo":
-        return "from-indigo-50 to-indigo-100 border-indigo-200 hover:shadow-indigo-200/50";
-      case "violet":
-        return "from-violet-50 to-violet-100 border-violet-200 hover:shadow-violet-200/50";
-      default:
-        return "from-purple-50 to-purple-100 border-purple-200 hover:shadow-purple-200/50";
-    }
-  };
-
-  const getIconColor = () => {
-    switch (color) {
-      case "purple":
-        return "text-purple-600";
-      case "blue":
-        return "text-blue-600";
-      case "indigo":
-        return "text-indigo-600";
-      case "violet":
-        return "text-violet-600";
-      default:
-        return "text-purple-600";
-    }
-  };
-
   return (
-    <div className={cn(
-      "p-8 rounded-2xl bg-gradient-to-br shadow-lg hover:shadow-xl transition-all duration-300 border transform hover:-translate-y-2 group",
-      getGradient()
-    )}>
-      <div className={cn("mb-6 group-hover:scale-110 transition-transform duration-300", getIconColor())}>
+    <div className="group relative p-6 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-lg transition-all duration-300">
+      <div className={cn(
+        "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300",
+        `bg-gradient-to-br ${gradient}`
+      )}>
         {icon}
       </div>
-      <h3 className="text-xl font-bold mb-4 text-slate-900">{title}</h3>
-      <p className="text-slate-600 leading-relaxed">{description}</p>
+      <h3 className="text-xl font-bold mb-2 text-slate-900">{title}</h3>
+      <p className="text-slate-600 leading-relaxed text-sm">{description}</p>
     </div>
   );
 };
+
+const FeatureItem = ({
+  icon,
+  title,
+  description
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) => (
+  <div className="flex items-start space-x-3">
+    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 mt-1 flex-shrink-0">
+      {icon}
+    </div>
+    <div>
+      <h3 className="font-semibold text-slate-900 mb-1">{title}</h3>
+      <p className="text-slate-600 text-sm">{description}</p>
+    </div>
+  </div>
+);
 
 const StepCard = ({
   number,
@@ -639,11 +706,11 @@ const StepCard = ({
   description: string;
 }) => (
   <div className="text-center relative group">
-    <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-8 shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110">
+    <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6 shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110">
       {number}
     </div>
-    <h3 className="text-2xl font-bold mb-4 text-slate-900">{title}</h3>
-    <p className="text-slate-600 leading-relaxed text-lg">{description}</p>
+    <h3 className="text-xl font-bold mb-3 text-slate-900">{title}</h3>
+    <p className="text-slate-600 leading-relaxed">{description}</p>
   </div>
 );
 

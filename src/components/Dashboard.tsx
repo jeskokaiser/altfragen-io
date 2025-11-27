@@ -210,7 +210,7 @@ const Dashboard = () => {
   const handleDeleteExam = useCallback(async (examId: string) => {
     if (!user?.id) return;
     const exam = (exams || []).find(e => e.id === examId);
-    const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions, aber NICHT die Fragen selbst.`;
+    const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions und den dazugehörigen Lernfortschitt, aber NICHT die Fragen selbst.`;
     if (!window.confirm(confirmMsg)) return;
     
     try {

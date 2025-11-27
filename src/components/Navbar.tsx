@@ -55,7 +55,6 @@ const Navbar: React.FC = () => {
   
   const userMenuItems = [
       { label: 'IMPPulse', href: '/imppulse', icon: <Bell className="mr-2 h-4 w-4" /> },
-      { label: 'Zusammenarbeit', href: '/collab', icon: <UserPlus className="mr-2 h-4 w-4" /> },
       { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
       { 
         label: 'Feedback/Bug melden', 

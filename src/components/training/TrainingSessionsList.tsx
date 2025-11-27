@@ -336,7 +336,7 @@ const TrainingSessionsList: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Session wirklich löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Möchtest du die Session "<span className="font-semibold">{sessionToDelete?.title}</span>" wirklich löschen? 
+              Möchtest du die Session "<span className="font-semibold">{sessionToDelete?.title}</span>" wirklich löschen? Dadurch wird auch der dazugehörige Lernfortschitt gelöscht.
               Diese Aktion kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>

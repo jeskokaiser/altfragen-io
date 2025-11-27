@@ -11,10 +11,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import EditQuestionModal from '@/components/training/EditQuestionModal';
-import { Pencil, Lock, GraduationCap, Globe, Calendar, BookOpen } from 'lucide-react';
+import { Pencil, Lock, GraduationCap, Globe, Calendar, BookOpen, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import CommentsSection from '@/components/training/CommentsSection';
 
 interface SearchResultsListProps {
   questions: Question[];
@@ -32,6 +39,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+  const [commentsQuestionId, setCommentsQuestionId] = useState<string | null>(null);
 
   const toggleExpand = (questionId: string) => {
     const newExpanded = new Set(expandedQuestions);
@@ -140,16 +148,28 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                         </Button>
                       )}
                     </div>
-                    {canEdit && (
+                    <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => handleEditClick(question)}
+                        onClick={() => setCommentsQuestionId(question.id)}
+                        title="Kommentare & Notizen anzeigen"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <MessageSquare className="h-4 w-4" />
                       </Button>
-                    )}
+                      {canEdit && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEditClick(question)}
+                          title="Frage bearbeiten"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -220,6 +240,23 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
             }}
             onQuestionUpdated={handleQuestionUpdated}
           />
+        )}
+
+        {/* Comments & Notes Sheet */}
+        {commentsQuestionId && (
+          <Sheet open={!!commentsQuestionId} onOpenChange={(open) => !open && setCommentsQuestionId(null)}>
+            <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Kommentare & Notizen</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <CommentsSection
+                  questionId={commentsQuestionId}
+                  questionVisibility={questions.find(q => q.id === commentsQuestionId)?.visibility || 'private'}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
         )}
       </>
     );
@@ -313,18 +350,26 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                     </div>
                   </TableCell>
                   <TableCell>
-                    {canEdit ? (
+                    <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleEditClick(question)}
-                        title="Frage bearbeiten"
+                        onClick={() => setCommentsQuestionId(question.id)}
+                        title="Kommentare & Notizen anzeigen"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <MessageSquare className="h-4 w-4" />
                       </Button>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
+                      {canEdit ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(question)}
+                          title="Frage bearbeiten"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -343,6 +388,23 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
           }}
           onQuestionUpdated={handleQuestionUpdated}
         />
+      )}
+
+      {/* Comments & Notes Sheet */}
+      {commentsQuestionId && (
+        <Sheet open={!!commentsQuestionId} onOpenChange={(open) => !open && setCommentsQuestionId(null)}>
+          <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Kommentare & Notizen</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <CommentsSection
+                questionId={commentsQuestionId}
+                questionVisibility={questions.find(q => q.id === commentsQuestionId)?.visibility || 'private'}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
     </>
   );

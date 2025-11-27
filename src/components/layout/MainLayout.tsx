@@ -12,9 +12,6 @@ import CheckoutStatusNotification from '@/components/subscription/CheckoutStatus
 // Import pages
 import DashboardPage from '@/pages/Dashboard';
 import TrainingPage from '@/pages/Training';
-import CollabSessionsPage from '@/pages/CollabSessions';
-import CreateSessionPage from '@/pages/CreateSession';
-import SessionDetailsPage from '@/pages/SessionDetails';
 import SettingsPage from '@/pages/Settings';
 import SubscriptionPage from '@/pages/Subscription';
 import UnclearQuestionsPage from '@/pages/UnclearQuestions';
@@ -69,9 +66,6 @@ const MainLayout: React.FC = () => {
           <Route path="/training/session/:sessionId/analytics" element={<TrainingSessionAnalyticsPage />} />
           <Route path="/training/one-off" element={<TrainingSessionOneOffPage />} />
           <Route path="/exam/:examId/analytics" element={<ExamAnalyticsPage />} />
-          <Route path="/collab" element={<CollabSessionsPage />} />
-          <Route path="/create-session" element={<CreateSessionPage />} />
-          <Route path="/session/:sessionId" element={<SessionDetailsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/subscription" element={<SubscriptionPage />} />
           <Route path="/unclear-questions/:filename" element={<UnclearQuestionsPage />} />
