@@ -20,10 +20,11 @@ import { useQuestionFiltering } from '@/hooks/useQuestionFiltering';
 import { useQuestionGrouping } from '@/hooks/useQuestionGrouping';
 import { useUpcomingExams } from '@/hooks/useUpcomingExams';
 import UpcomingExamCreateDialog from './exams/UpcomingExamCreateDialog';
+import UpcomingExamEditDialog from './exams/UpcomingExamEditDialog';
 import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
 import { getLinkedQuestionIdsForExam, deleteUpcomingExam } from '@/services/UpcomingExamService';
-import { fetchQuestionDetails } from '@/services/DatabaseService';
+import { fetchQuestionDetails, fetchUserDifficultiesForQuestions } from '@/services/DatabaseService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { toast } from 'sonner';
@@ -46,11 +47,15 @@ const Dashboard = () => {
   const [isDatasetSelectorOpen, setIsDatasetSelectorOpen] = useState(false);
   const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
   const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
+  const [isEditExamOpen, setIsEditExamOpen] = useState(false);
+  const [examToEdit, setExamToEdit] = useState<string | null>(null);
   const [isQuestionSelectorOpen, setIsQuestionSelectorOpen] = useState(false);
   const [examIdForLinking, setExamIdForLinking] = useState<string | null>(null);
   const [isCreateTrainingSessionOpen, setIsCreateTrainingSessionOpen] = useState(false);
   const [createSessionQuestions, setCreateSessionQuestions] = useState<Question[]>([]);
-  const [createSessionDefaultTitle, setCreateSessionDefaultTitle] = useState<string>('Training Session');
+  const [createSessionDefaultTitle, setCreateSessionDefaultTitle] = useState<string>(
+    `${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} – Training Session`
+  );
   const [createSessionExamId, setCreateSessionExamId] = useState<string | null>(null);
 
   // Fetch all dashboard data
@@ -146,6 +151,11 @@ const Dashboard = () => {
     setIsCreateExamOpen(true);
   }, []);
 
+  const handleOpenEditExam = useCallback((examId: string) => {
+    setExamToEdit(examId);
+    setIsEditExamOpen(true);
+  }, []);
+
   const handleOpenQuestionSelector = useCallback((examId: string) => {
     setExamIdForLinking(examId);
     setIsQuestionSelectorOpen(true);
@@ -173,20 +183,34 @@ const Dashboard = () => {
       // Use already loaded dashboard questions to avoid long Supabase URL
       const sourceQuestions = (questions || []).filter(q => idSet.has(q.id));
       if (sourceQuestions.length === 0) return;
-      setCreateSessionQuestions(sourceQuestions);
+      
+      // Load user-specific difficulties for these questions
+      if (user?.id) {
+        const userDifficulties = await fetchUserDifficultiesForQuestions(user.id, ids);
+        // Merge user difficulties into questions
+        const questionsWithUserDifficulty = sourceQuestions.map(q => ({
+          ...q,
+          difficulty: userDifficulties[q.id] ?? q.difficulty
+        }));
+        setCreateSessionQuestions(questionsWithUserDifficulty);
+      } else {
+        setCreateSessionQuestions(sourceQuestions);
+      }
+      
       const exam = (exams || []).find(e => e.id === examId);
-      setCreateSessionDefaultTitle(exam?.title ? `Training – ${exam.title}` : 'Training Session');
+      const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      setCreateSessionDefaultTitle(exam?.title ? `${today} – ${exam.title}` : `${today} – Training Session`);
       setCreateSessionExamId(examId);
       setIsCreateTrainingSessionOpen(true);
     } catch (e) {
       console.error('Failed to prepare training session from exam', e);
     }
-  }, [exams, questions]);
+  }, [exams, questions, user?.id]);
 
   const handleDeleteExam = useCallback(async (examId: string) => {
     if (!user?.id) return;
     const exam = (exams || []).find(e => e.id === examId);
-    const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions, aber NICHT die Fragen selbst.`;
+    const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions und den dazugehörigen Lernfortschitt, aber NICHT die Fragen selbst.`;
     if (!window.confirm(confirmMsg)) return;
     
     try {
@@ -367,6 +391,7 @@ const Dashboard = () => {
           onAddQuestions={handleOpenQuestionSelector}
           onStartTraining={handleStartTrainingFromExam}
           onDeleteExam={handleDeleteExam}
+          onEditExam={handleOpenEditExam}
           currentUserId={user.id}
           onOpenAnalytics={(examId) => navigate(`/exam/${examId}/analytics`)}
         />
@@ -387,6 +412,12 @@ const Dashboard = () => {
         onOpenChange={setIsCreateExamOpen}
         userId={user.id}
         universityId={universityId}
+      />
+      <UpcomingExamEditDialog
+        open={isEditExamOpen}
+        onOpenChange={setIsEditExamOpen}
+        exam={exams?.find(e => e.id === examToEdit) || null}
+        userId={user.id}
       />
       <ExamQuestionSelectorDialog 
         open={isQuestionSelectorOpen}

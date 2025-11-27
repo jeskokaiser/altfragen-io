@@ -49,38 +49,7 @@ const ExamAnalytics: React.FC = () => {
     enabled: !!examId
   });
 
-  // Fetch user progress for all exam questions
-  const { data: userProgress, isLoading: isProgressLoading } = useQuery({
-    queryKey: ['exam-progress', examId, user?.id, questions?.length],
-    queryFn: async () => {
-      if (!user?.id || !questions || questions.length === 0) return [];
-      
-      const questionIds = questions.map(q => q.id);
-      const BATCH_SIZE = 300;
-      const batches: string[][] = [];
-      for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-        batches.push(questionIds.slice(i, i + BATCH_SIZE));
-      }
-
-      const batchPromises = batches.map(batch =>
-        supabase
-          .from('user_progress')
-          .select('question_id, is_correct, updated_at, created_at')
-          .eq('user_id', user.id)
-          .in('question_id', batch)
-      );
-
-      const results = await Promise.allSettled(batchPromises);
-      const allProgress = results
-        .filter(r => r.status === 'fulfilled')
-        .flatMap((r: any) => r.value.data || []);
-
-      return allProgress;
-    },
-    enabled: !!user?.id && !!questions && questions.length > 0
-  });
-
-  // Fetch training sessions for this exam
+  // Fetch training sessions for this exam (needed to filter session progress)
   const { data: sessions } = useQuery({
     queryKey: ['exam-sessions', examId, user?.id],
     queryFn: async () => {
@@ -101,6 +70,90 @@ const ExamAnalytics: React.FC = () => {
     enabled: !!user?.id && !!examId
   });
 
+  // Get session IDs for filtering progress
+  const examSessionIds = sessions?.map((s: any) => s.id) || [];
+
+  // Fetch session progress for all exam questions (only from exam-linked sessions)
+  const { data: mergedProgress, isLoading: isProgressLoading } = useQuery({
+    queryKey: ['exam-progress', examId, user?.id, questions?.length, examSessionIds.sort().join(',')],
+    queryFn: async () => {
+      if (!user?.id || !questions || questions.length === 0) return [];
+      
+      // Get current session IDs (in case they changed)
+      const currentSessionIds = sessions?.map((s: any) => s.id) || [];
+      
+      const questionIds = questions.map(q => q.id);
+      const BATCH_SIZE = 300;
+      const batches: string[][] = [];
+      for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
+        batches.push(questionIds.slice(i, i + BATCH_SIZE));
+      }
+
+      // Query session progress only (no user_progress fallback)
+      const batchPromises = batches.map(batch => {
+        // Filter session progress to only include sessions linked to this exam
+        if (currentSessionIds.length > 0) {
+          return supabase
+            .from('session_question_progress')
+            .select('question_id, is_correct, updated_at, created_at')
+            .eq('user_id', user.id)
+            .in('question_id', batch)
+            .in('session_id', currentSessionIds);
+        } else {
+          // If no exam sessions, return empty result
+          return Promise.resolve({ data: [], error: null });
+        }
+      });
+
+      const batchResults = await Promise.allSettled(batchPromises);
+      
+      // Process session_question_progress only
+      const sessionProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> = [];
+      
+      batchResults.forEach(result => {
+        if (result.status === 'fulfilled') {
+          const sessionProgressResult = result.value;
+          
+          // Process session_question_progress entries (take latest per question per batch)
+          if (sessionProgressResult.data) {
+            const sessionBatchMap = new Map<string, { is_correct: boolean | null; ts: number }>();
+            sessionProgressResult.data.forEach((p: any) => {
+              const qid = p.question_id as string;
+              if (!qid) return;
+              const ts = new Date(p.updated_at || p.created_at).getTime();
+              const existing = sessionBatchMap.get(qid);
+              if (!existing || ts > existing.ts) {
+                sessionBatchMap.set(qid, { is_correct: p.is_correct, ts });
+              }
+            });
+            sessionBatchMap.forEach((value, key) => {
+              sessionProgress.push({ question_id: key, ...value });
+            });
+          }
+        }
+      });
+
+      // Final deduplication across all batches to get the absolute latest per question
+      const latestByQuestion: Record<string, { is_correct: boolean | null; ts: number }> = {};
+      
+      // Add all session progress and take the absolute latest per question
+      sessionProgress.forEach(p => {
+        const qid = p.question_id;
+        const existing = latestByQuestion[qid];
+        if (!existing || p.ts > existing.ts) {
+          latestByQuestion[qid] = { is_correct: p.is_correct, ts: p.ts };
+        }
+      });
+
+      // Convert to array format for compatibility
+      return Object.entries(latestByQuestion).map(([question_id, data]) => ({
+        question_id,
+        is_correct: data.is_correct
+      }));
+    },
+    enabled: !!user?.id && !!questions && questions.length > 0 && sessions !== undefined
+  });
+
   // Fetch session-specific progress for all training sessions
   const { data: sessionProgress } = useQuery({
     queryKey: ['exam-session-progress', examId, user?.id, sessions?.length],
@@ -110,7 +163,7 @@ const ExamAnalytics: React.FC = () => {
       const sessionIds = sessions.map((s: any) => s.id);
       const { data, error } = await supabase
         .from('session_question_progress')
-        .select('session_id, question_id, is_correct')
+        .select('session_id, question_id, is_correct, updated_at, created_at')
         .eq('user_id', user.id)
         .in('session_id', sessionIds);
       
@@ -122,7 +175,7 @@ const ExamAnalytics: React.FC = () => {
 
   // Calculate overall statistics
   const overallStats = useMemo(() => {
-    if (!questions || !userProgress) {
+    if (!questions || !mergedProgress) {
       return {
         totalQuestions: 0,
         answeredQuestions: 0,
@@ -135,8 +188,10 @@ const ExamAnalytics: React.FC = () => {
     }
 
     const totalQuestions = questions.length;
-    const answeredQuestions = userProgress.length;
-    const correctAnswers = userProgress.filter((p: any) => p.is_correct === true).length;
+    const answeredQuestions = mergedProgress.length;
+    // Only count explicitly true as correct (null or false are not correct)
+    const correctAnswers = mergedProgress.filter((p: any) => p.is_correct === true).length;
+    // Wrong = all answered minus correct (includes false and null)
     const wrongAnswers = answeredQuestions - correctAnswers;
 
     const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
@@ -152,11 +207,11 @@ const ExamAnalytics: React.FC = () => {
       correctPercentage,
       wrongPercentage
     };
-  }, [questions, userProgress]);
+  }, [questions, mergedProgress]);
 
   // Calculate statistics by subject
   const subjectStats = useMemo(() => {
-    if (!questions || !userProgress) return {};
+    if (!questions || !mergedProgress) return {};
 
     const stats: Record<string, { total: number; answered: number; correct: number }> = {};
 
@@ -167,7 +222,7 @@ const ExamAnalytics: React.FC = () => {
       stats[q.subject].total += 1;
     });
 
-    userProgress.forEach((progress: any) => {
+    mergedProgress.forEach((progress: any) => {
       const question = questions.find(q => q.id === progress.question_id);
       if (question) {
         stats[question.subject].answered += 1;
@@ -183,7 +238,7 @@ const ExamAnalytics: React.FC = () => {
         acc[subject] = stats;
         return acc;
       }, {} as Record<string, { total: number; answered: number; correct: number }>);
-  }, [questions, userProgress]);
+  }, [questions, mergedProgress]);
 
   // Calculate per-session statistics
   const sessionStats = useMemo(() => {
@@ -194,9 +249,22 @@ const ExamAnalytics: React.FC = () => {
       const sessionQuestions = questions.filter(q => sessionQuestionIds.includes(q.id));
       const sessionProgressData = sessionProgress.filter((p: any) => p.session_id === session.id);
 
+      // Deduplicate by question_id, taking the latest entry per question
+      const latestByQuestion: Record<string, { is_correct: boolean | null; ts: number }> = {};
+      sessionProgressData.forEach((p: any) => {
+        const qid = p.question_id;
+        if (!qid) return;
+        // Use updated_at or created_at, defaulting to 0 if neither exists
+        const ts = p.updated_at ? new Date(p.updated_at).getTime() : (p.created_at ? new Date(p.created_at).getTime() : 0);
+        const existing = latestByQuestion[qid];
+        if (!existing || ts > existing.ts) {
+          latestByQuestion[qid] = { is_correct: p.is_correct, ts };
+        }
+      });
+
       const total = sessionQuestions.length;
-      const answered = sessionProgressData.length;
-      const correct = sessionProgressData.filter((p: any) => p.is_correct === true).length;
+      const answered = Object.keys(latestByQuestion).length;
+      const correct = Object.values(latestByQuestion).filter(v => v.is_correct === true).length;
       const wrong = answered - correct;
 
       return {
@@ -246,7 +314,7 @@ const ExamAnalytics: React.FC = () => {
           <h1 className="text-2xl font-bold">{exam.title}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
             <Calendar className="h-4 w-4" />
-            <span>Fällig am {new Date(exam.due_date).toLocaleDateString()}</span>
+            <span>Prüfung am {new Date(exam.due_date).toLocaleDateString()}</span>
             {exam.subject && <span>• {exam.subject}</span>}
           </div>
         </div>
@@ -382,9 +450,11 @@ const ExamAnalytics: React.FC = () => {
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/training/session/${stat.id}`)}>
-                      Session fortsetzen
-                    </Button>
+                    {stat.status !== 'completed' && (
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/training/session/${stat.id}`)}>
+                        Session fortsetzen
+                      </Button>
+                    )}
                     <Button variant="secondary" size="sm" onClick={() => navigate(`/training/session/${stat.id}/analytics`)}>
                       Session-Details
                     </Button>

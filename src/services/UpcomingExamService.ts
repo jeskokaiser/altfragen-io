@@ -137,35 +137,82 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
     return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
   }
 
-  // Fetch user progress for those questions in batches to avoid URL length limits
+  // Fetch training sessions linked to this exam to filter session progress
+  const { data: allSessions, error: sessionsErr } = await sb
+    .from('training_sessions')
+    .select('id, filter_settings')
+    .eq('user_id', userId);
+  
+  if (sessionsErr) throw sessionsErr;
+  
+  // Get session IDs linked to this exam
+  const linkedSessionIds = (allSessions || [])
+    .filter((s: any) => {
+      const fs = s.filter_settings as any;
+      return fs && fs.source === 'exam' && fs.examId === examId;
+    })
+    .map((s: any) => s.id);
+
+  // Fetch user progress from both tables in batches to avoid URL length limits
   const BATCH_SIZE = 300;
   const batches: string[][] = [];
   for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
     batches.push(questionIds.slice(i, i + BATCH_SIZE));
   }
 
-  const batchPromises = batches.map(batch =>
-    sb
-      .from('user_progress')
-      .select('question_id, is_correct, updated_at, created_at')
-      .eq('user_id', userId)
-      .in('question_id', batch)
-  );
+  // Query session progress only (no user_progress fallback)
+  const batchPromises = batches.map(batch => {
+    // Filter session progress to only include sessions linked to this exam
+    if (linkedSessionIds.length > 0) {
+      return sb
+        .from('session_question_progress')
+        .select('question_id, is_correct, updated_at, created_at')
+        .eq('user_id', userId)
+        .in('question_id', batch)
+        .in('session_id', linkedSessionIds);
+    } else {
+      // If no exam sessions, return empty result
+      return Promise.resolve({ data: [], error: null });
+    }
+  });
 
-  const progressResults = await Promise.allSettled(batchPromises);
-  const progress = progressResults
-    .filter(r => r.status === 'fulfilled')
-    .flatMap((r: any) => r.value.data || []);
+  const batchResults = await Promise.allSettled(batchPromises);
+  
+  // Process session_question_progress only
+  const sessionProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> = [];
+  
+  batchResults.forEach(result => {
+    if (result.status === 'fulfilled') {
+      const sessionProgressResult = result.value;
+      
+      // Process session_question_progress entries (take latest per question per batch)
+      if (sessionProgressResult.data) {
+        const sessionBatchMap = new Map<string, { is_correct: boolean | null; ts: number }>();
+        sessionProgressResult.data.forEach((p: any) => {
+          const qid = p.question_id as string;
+          if (!qid) return;
+          const ts = new Date(p.updated_at || p.created_at).getTime();
+          const existing = sessionBatchMap.get(qid);
+          if (!existing || ts > existing.ts) {
+            sessionBatchMap.set(qid, { is_correct: p.is_correct, ts });
+          }
+        });
+        sessionBatchMap.forEach((value, key) => {
+          sessionProgress.push({ question_id: key, ...value });
+        });
+      }
+    }
+  });
 
-  // Reduce to latest attempt per question
+  // Final deduplication across all batches to get the absolute latest per question
   const latestByQuestion: Record<string, { is_correct: boolean | null; ts: number }> = {};
-  (progress || []).forEach((p: any) => {
-    const ts = new Date(p.updated_at || p.created_at).getTime();
-    const qid = p.question_id as string;
-    if (!qid) return;
-    const prev = latestByQuestion[qid];
-    if (!prev || ts > prev.ts) {
-      latestByQuestion[qid] = { is_correct: p.is_correct, ts };
+  
+  // Add all session progress and take the absolute latest per question
+  sessionProgress.forEach(p => {
+    const qid = p.question_id;
+    const existing = latestByQuestion[qid];
+    if (!existing || p.ts > existing.ts) {
+      latestByQuestion[qid] = { is_correct: p.is_correct, ts: p.ts };
     }
   });
 

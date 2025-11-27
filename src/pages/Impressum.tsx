@@ -12,7 +12,8 @@ const Impressum = () => {
           <CardContent className="space-y-6">
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">Anbieter</h2>
-              <p>Altfragen.io by KSR Labs</p>
+              <p>Altfragen.io ist ein Angebot von</p>
+              <p>KSR Labs</p>
               <p>Jesko Kaiser</p>
               <p>Kegelhofstr. 17</p>
               <p>20251 Hamburg</p>
@@ -23,9 +24,10 @@ const Impressum = () => {
               <p>E-Mail: hallo@altfragen.io</p>
             </section>
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">Umsatzsteuer-ID</h2>
+              <h2 className="text-xl font-semibold">Steuernummer</h2>
               <p>
-                noch nicht vorhanden
+                49/112/04776 <br />
+                Finanzamt Hamburg-Nord
               </p>
             </section>
              <section className="space-y-2">

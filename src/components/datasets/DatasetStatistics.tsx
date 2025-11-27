@@ -24,23 +24,74 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     localStorage.setItem('statsCollapsibleState', JSON.stringify(isOpen));
   }, [isOpen]);
 
-  const { data: userProgress } = useQuery({
+  const { data: mergedProgress } = useQuery({
     queryKey: ['user-progress', user?.id, questions[0]?.filename],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user?.id);
+      if (!user?.id) return [];
 
-      if (error) throw error;
-      return data;
+      // Query both tables
+      const [userProgressResult, sessionProgressResult] = await Promise.all([
+        supabase
+          .from('user_progress')
+          .select('question_id, is_correct, updated_at, created_at')
+          .eq('user_id', user.id),
+        supabase
+          .from('session_question_progress')
+          .select('question_id, is_correct, updated_at, created_at')
+          .eq('user_id', user.id)
+      ]);
+
+      if (userProgressResult.error) throw userProgressResult.error;
+      if (sessionProgressResult.error) throw sessionProgressResult.error;
+
+      // Merge progress: prioritize session_question_progress, take latest per question
+      const progressMap = new Map<string, { question_id: string; is_correct: boolean | null; ts: number; source: 'session' | 'user' }>();
+
+      // First, process session_question_progress (newer system, takes priority)
+      (sessionProgressResult.data || []).forEach((p: any) => {
+        if (!p.question_id) return;
+        const ts = new Date(p.updated_at || p.created_at).getTime();
+        const existing = progressMap.get(p.question_id);
+        
+        if (!existing || ts > existing.ts || (ts === existing.ts && existing.source === 'user')) {
+          progressMap.set(p.question_id, {
+            question_id: p.question_id,
+            is_correct: p.is_correct,
+            ts,
+            source: 'session'
+          });
+        }
+      });
+
+      // Then, process user_progress for questions not already present or if newer
+      (userProgressResult.data || []).forEach((p: any) => {
+        if (!p.question_id) return;
+        const ts = new Date(p.updated_at || p.created_at).getTime();
+        const existing = progressMap.get(p.question_id);
+        
+        if (!existing || (ts > existing.ts && existing.source === 'session')) {
+          // Only replace if significantly newer (session takes priority for equal timestamps)
+          progressMap.set(p.question_id, {
+            question_id: p.question_id,
+            is_correct: p.is_correct,
+            ts,
+            source: 'user'
+          });
+        }
+      });
+
+      // Return simplified format
+      return Array.from(progressMap.values()).map(({ question_id, is_correct }) => ({
+        question_id,
+        is_correct
+      }));
     },
     enabled: !!user
   });
 
   // Filter progress data to only include questions from this dataset
   const datasetQuestionIds = questions.map(q => q.id);
-  const filteredProgress = userProgress?.filter(progress =>
+  const filteredProgress = mergedProgress?.filter(progress =>
     datasetQuestionIds.includes(progress.question_id)
   );
 

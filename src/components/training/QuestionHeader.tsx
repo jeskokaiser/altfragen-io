@@ -27,10 +27,10 @@ const QuestionHeader: React.FC<QuestionHeaderProps> = ({
                 <Button 
           variant="outline" 
           onClick={onQuit} 
-          className={`text-red-500 hover:text-red-600 hover:bg-red-50 ${isMobile ? 'text-sm' : ''}`}
+          className={`text-orange-500 hover:text-orange-600 hover:bg-orange-50 ${isMobile ? 'text-sm' : ''}`}
           size={isMobile ? "sm" : "default"}
         >
-          Training beenden
+          Session unterbrechen
         </Button>
       </div>
     </div>

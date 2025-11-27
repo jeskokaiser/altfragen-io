@@ -1,18 +1,26 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarClock, Plus, Play, Settings, Trash2 } from 'lucide-react';
+import { ClipboardClock, Plus, Play, Settings, Trash2, Pencil, Lock, AlertCircle, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { UpcomingExamWithStats } from '@/types/UpcomingExam';
 import { getExamStatsForUser, type ExamUserStats } from '@/services/UpcomingExamService';
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function daysUntil(isoDate: string): number {
   const now = new Date();
@@ -26,15 +34,21 @@ interface UpcomingExamsListProps {
   onAddQuestions: (examId: string) => void;
   onStartTraining: (examId: string) => void;
   onDeleteExam?: (examId: string) => void;
+  onEditExam?: (examId: string) => void;
   currentUserId?: string;
-  onOpenAnalytics?: (examId: string) => void; // placeholder action
+  onOpenAnalytics?: (examId: string) => void;
 }
 
-const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuestions, onStartTraining, onDeleteExam, currentUserId, onOpenAnalytics }) => {
+const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuestions, onStartTraining, onDeleteExam, onEditExam, currentUserId, onOpenAnalytics }) => {
   const [stats, setStats] = useState<Record<string, ExamUserStats>>({});
   const navigate = useNavigate();
+  const { subscribed } = useSubscription();
 
   const { sessions } = useTrainingSessions(currentUserId);
+
+  // Check if user has reached the session limit (5 for free users)
+  const totalSessions = sessions?.length || 0;
+  const hasReachedSessionLimit = !subscribed && totalSessions >= 5;
 
   // Load stats for all exams on mount
   useEffect(() => {
@@ -73,7 +87,58 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="space-y-4">
+      {/* Session limit warning for free users */}
+      {!subscribed && totalSessions >= 1 && (
+        <Alert variant={totalSessions >= 5 ? "destructive" : "default"} className="border-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="flex items-center gap-2">
+            {totalSessions >= 5 ? (
+              <>Session-Limit erreicht</>
+            ) : (
+              <>Noch {5 - totalSessions} Session{5 - totalSessions !== 1 ? 's' : ''} verfügbar</>
+            )}
+          </AlertTitle>
+          <AlertDescription className="mt-2">
+            {totalSessions >= 5 ? (
+              <div className="space-y-2">
+                <p>Du hast das kostenlose Limit von 5 Trainingsessions erreicht. Lösche eine vorhandene Session oder upgrade zu Premium.</p>
+                <div className="flex gap-2 mt-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate('/training/sessions')}
+                  >
+                    Sessions verwalten
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="default"
+                    onClick={() => navigate('/subscription')}
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Jetzt Upgraden
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p>Du hast bereits {totalSessions} von 5 kostenlosen Trainingssessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.</p>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => navigate('/subscription')}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Mehr erfahren
+                </Button>
+              </div>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="grid gap-4 md:grid-cols-2">
       {exams.map((exam) => {
         const days = daysUntil(exam.due_date);
         const st = stats[exam.id];
@@ -92,14 +157,24 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
                   <span className="font-medium">{exam.title}</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <div className="flex items-center text-sm text-muted-foreground gap-2">
+                    <ClipboardClock className="h-4 w-4" />
+                    <span>Prüfung am {new Date(exam.due_date).toLocaleDateString()}</span>
+                  </div>
                   <Badge variant={days <= 3 ? 'destructive' : 'secondary'}>{days} Tage</Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost" title="Einstellungen" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="ghost" title="Einstellungen">
                         <Settings className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {onEditExam && (
+                        <DropdownMenuItem onClick={() => onEditExam(exam.id)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Bearbeiten
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => onAddQuestions(exam.id)}>
                         <Plus className="mr-2 h-4 w-4" />
                         Fragen verwalten
@@ -119,14 +194,11 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-3">
-              <div className="flex items-center text-sm text-muted-foreground gap-2">
-                <CalendarClock className="h-4 w-4" />
-                <span>Fällig am {new Date(exam.due_date).toLocaleDateString()}</span>
-              </div>
+
               {exam.subject && (
                 <div className="text-sm">Fach: <span className="font-medium">{exam.subject}</span></div>
               )}
-              <div className="text-sm">Verknüpfte Fragen: <span className="font-medium">{exam.linked_question_count}</span></div>
+              <div className="text-sm"><span className="font-medium">{exam.linked_question_count}</span> Fragen</div>
 
               <div className="grid grid-cols-3 gap-3 text-sm">
                 <div className="p-2 rounded-md bg-muted/40">
@@ -144,7 +216,13 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
               </div>
 
               <div className="mt-3 p-3 rounded-md border border-dashed text-sm">
-                <div className="font-medium mb-1">Trainingssessions</div>
+                <div 
+                  className="font-medium mb-1 cursor-pointer hover:text-primary hover:underline transition-colors inline-block"
+                  onClick={() => navigate('/training/sessions')}
+                  title="Alle Trainingssessions anzeigen"
+                >
+                  Trainingssessions
+                </div>
                 {sessionsForExam.length > 0 ? (
                   <div className="space-y-2">
                     {sessionsForExam.slice(0, 3).map((s) => (
@@ -171,9 +249,30 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
                     <Plus className="h-4 w-4 mr-1" /> Fragen hinzufügen
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => onStartTraining(exam.id)} disabled={exam.linked_question_count === 0}>
-                  <Play className="h-4 w-4 mr-1" /> Training starten
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => onStartTraining(exam.id)} 
+                          disabled={exam.linked_question_count === 0 || hasReachedSessionLimit}
+                        >
+                          {hasReachedSessionLimit && <Lock className="h-4 w-4 mr-1" />}
+                          {!hasReachedSessionLimit && <Play className="h-4 w-4 mr-1" />}
+                          Neue Session erstellen
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    {hasReachedSessionLimit && (
+                      <TooltipContent>
+                        <p>Du hast das Limit von 5 Sessions erreicht.</p>
+                        <p className="font-semibold">Upgrade auf Premium für unbegrenzte Sessions!</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
                 <Button size="sm" variant="secondary" onClick={() => onOpenAnalytics ? onOpenAnalytics(exam.id) : undefined} disabled={!onOpenAnalytics}>
                   Auswertung
                 </Button>
@@ -182,6 +281,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
           </Card>
         );
       })}
+      </div>
     </div>
   );
 };

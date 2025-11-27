@@ -63,7 +63,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
       if (!user) return 0;
       
       const { data, error } = await supabase
-        .from('user_unclear_questions')
+        .from('user_ignored_questions')
         .select(`
           id,
           questions:question_id (

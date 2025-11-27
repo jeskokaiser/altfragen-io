@@ -30,7 +30,7 @@ const UnclearQuestions = () => {
 
       // Get unclear questions for this user
       const { data: unclearData, error: unclearError } = await supabase
-        .from('user_unclear_questions')
+        .from('user_ignored_questions')
         .select(`
           id,
           question_id,

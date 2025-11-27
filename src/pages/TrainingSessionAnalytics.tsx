@@ -176,10 +176,12 @@ const TrainingSessionAnalytics: React.FC = () => {
             <span>• {session.current_index + 1} / {session.total_questions} Fragen</span>
           </div>
         </div>
-        <Button onClick={() => navigate(`/training/session/${sessionId}`)}>
-          <Play className="h-4 w-4 mr-2" />
-          Session fortsetzen
-        </Button>
+        {session.status !== 'completed' && (
+          <Button onClick={() => navigate(`/training/session/${sessionId}`)}>
+            <Play className="h-4 w-4 mr-2" />
+            Session fortsetzen
+          </Button>
+        )}
       </div>
 
       {/* Statistics Cards */}

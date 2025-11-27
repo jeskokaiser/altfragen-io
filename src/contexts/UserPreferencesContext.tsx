@@ -27,6 +27,8 @@ interface UserPreferences {
   selectedUniversityDatasets: string[];
   keyboardBindings: KeyboardBindings;
   statisticsDateRange: StatisticsDateRange;
+  selectedAIModels: string[];
+  enhancedAIVersion: 'none' | 'chatgpt' | 'gemini';
 }
 
 interface UserPreferencesContextType {
@@ -37,6 +39,7 @@ interface UserPreferencesContextType {
   restoreDataset: (filename: string) => Promise<void>;
   isDatasetArchived: (filename: string) => boolean;
   updateSelectedUniversityDatasets: (datasets: string[]) => Promise<void>;
+  isModelEnabled: (modelName: string) => boolean;
 }
 
 const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
@@ -53,12 +56,16 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     showSolution: 's', // 's' key for show solution
   };
 
+  const defaultAIModels = ['chatgpt', 'new-gemini', 'mistral', 'perplexity', 'deepseek'];
+  
   const [preferences, setPreferences] = useState<UserPreferences>({ 
     immediateFeedback: false,
     archivedDatasets: [],
     selectedUniversityDatasets: [],
     keyboardBindings: defaultKeyboardBindings,
-    statisticsDateRange: { preset: 'all' }
+    statisticsDateRange: { preset: 'all' },
+    selectedAIModels: defaultAIModels,
+    enhancedAIVersion: 'none'
   });
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -72,7 +79,9 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         archivedDatasets: [],
         selectedUniversityDatasets: [],
         keyboardBindings: defaultKeyboardBindings,
-        statisticsDateRange: { preset: 'all' }
+        statisticsDateRange: { preset: 'all' },
+        selectedAIModels: defaultAIModels,
+        enhancedAIVersion: 'none'
       });
       setIsLoading(false);
     }
@@ -93,12 +102,25 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       }
 
       if (existingPrefs) {
+        const selectedAIModels = (existingPrefs as any).selected_ai_models || defaultAIModels;
+        const enhancedVersion = (existingPrefs as any).enhanced_ai_version;
+        // Handle migration from old boolean to new string format
+        let enhancedAIVersion: 'none' | 'chatgpt' | 'gemini' = 'none';
+        if (enhancedVersion === 'chatgpt' || enhancedVersion === 'gemini') {
+          enhancedAIVersion = enhancedVersion;
+        } else if ((existingPrefs as any).show_enhanced_ai_versions === true) {
+          // Migrate old boolean: default to chatgpt if it was enabled
+          enhancedAIVersion = 'chatgpt';
+        }
+        
         setPreferences({ 
           immediateFeedback: existingPrefs.immediate_feedback,
           archivedDatasets: existingPrefs.archived_datasets || [],
           selectedUniversityDatasets: existingPrefs.selected_university_datasets || [],
           keyboardBindings: (existingPrefs as any).keyboard_bindings || defaultKeyboardBindings,
-          statisticsDateRange: (existingPrefs as any).statistics_date_range || { preset: 'all' }
+          statisticsDateRange: (existingPrefs as any).statistics_date_range || { preset: 'all' },
+          selectedAIModels: Array.isArray(selectedAIModels) ? selectedAIModels : defaultAIModels,
+          enhancedAIVersion
         });
       } else {
         const { error: insertError } = await supabase
@@ -109,7 +131,9 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
             archived_datasets: [],
             selected_university_datasets: [],
             keyboard_bindings: defaultKeyboardBindings as any,
-            statistics_date_range: { preset: 'all' } as any
+            statistics_date_range: { preset: 'all' } as any,
+            selected_ai_models: defaultAIModels as any,
+            enhanced_ai_version: 'none'
           });
 
         if (insertError) throw insertError;
@@ -118,7 +142,9 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           archivedDatasets: [],
           selectedUniversityDatasets: [],
           keyboardBindings: defaultKeyboardBindings,
-          statisticsDateRange: { preset: 'all' }
+          statisticsDateRange: { preset: 'all' },
+          selectedAIModels: defaultAIModels,
+          enhancedAIVersion: 'none'
         });
       }
     } catch (error) {
@@ -141,6 +167,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           selected_university_datasets: newPreferences.selectedUniversityDatasets ?? preferences.selectedUniversityDatasets,
           keyboard_bindings: (newPreferences.keyboardBindings ?? preferences.keyboardBindings) as any,
           statistics_date_range: (newPreferences.statisticsDateRange ?? preferences.statisticsDateRange) as any,
+          selected_ai_models: (newPreferences.selectedAIModels ?? preferences.selectedAIModels) as any,
+          enhanced_ai_version: (newPreferences.enhancedAIVersion ?? preferences.enhancedAIVersion) as any,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -179,6 +207,10 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     await updatePreferences({ selectedUniversityDatasets: datasets });
   };
 
+  const isModelEnabled = (modelName: string): boolean => {
+    return preferences.selectedAIModels.includes(modelName);
+  };
+
   return (
     <UserPreferencesContext.Provider value={{ 
       preferences, 
@@ -187,7 +219,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
       archiveDataset,
       restoreDataset,
       isDatasetArchived,
-      updateSelectedUniversityDatasets
+      updateSelectedUniversityDatasets,
+      isModelEnabled
     }}>
       {children}
     </UserPreferencesContext.Provider>

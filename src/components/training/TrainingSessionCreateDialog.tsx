@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,9 +23,16 @@ interface TrainingSessionCreateDialogProps {
 const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = ({ open, onOpenChange, questions, defaultTitle, onCreated, context }) => {
   const { user } = useAuth();
   const { createSession } = useTrainingSessions(user?.id);
-  const [title, setTitle] = useState(defaultTitle || 'Training Session');
+  const [title, setTitle] = useState(defaultTitle || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<FilterFormRef>(null);
+
+  // Update title when defaultTitle changes or dialog opens
+  useEffect(() => {
+    if (open && defaultTitle) {
+      setTitle(defaultTitle);
+    }
+  }, [open, defaultTitle]);
 
   const subjects = useMemo(() => Array.from(new Set(questions.map(q => q.subject).filter(Boolean))), [questions]);
   const years = useMemo(() => Array.from(new Set(questions.map(q => q.year).filter(Boolean))) as string[], [questions]);
@@ -61,7 +68,7 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
       }
 
       const session = await createSession({
-        title: title || 'Training Session',
+        title: title,
         filter_settings: { ...values, ...(context || {}) },
         question_ids: prioritized.map(q => q.id),
       });

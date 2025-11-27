@@ -26,6 +26,14 @@ export const filterQuestions = async (
     console.error('Error filtering unclear questions:', error);
   }
   
+  // Apply questionsWithImagesOnly filter (applies even in random mode)
+  if (values.questionsWithImagesOnly) {
+    console.log('Filtering questions with images only...');
+    const beforeCount = filteredQuestions.length;
+    filteredQuestions = filteredQuestions.filter(q => q.image_key && q.image_key.trim() !== '');
+    console.log(`After images filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
+  }
+  
   // Apply new filters if enabled and userId is available (these apply even in random mode)
   if (userId && (values.newQuestionsOnly || values.excludeTodaysQuestions)) {
     console.log('Applying new question filters...');
@@ -78,7 +86,16 @@ export const filterQuestions = async (
     }
   }
   
-  // If random selection is enabled, skip subject/difficulty/year filtering
+  // Apply difficulty filter (applies even in random mode)
+  if (values.difficulty !== 'all') {
+    const selectedDifficulty = parseInt(values.difficulty);
+    filteredQuestions = filteredQuestions.filter(q => {
+      const questionDifficulty = q.difficulty ?? 3;
+      return questionDifficulty === selectedDifficulty;
+    });
+  }
+  
+  // If random selection is enabled, skip subject/year/semester filtering
   if (values.isRandomSelection) {
     return filteredQuestions;
   }
@@ -124,15 +141,20 @@ export const filterQuestions = async (
   });
   console.log('After year range filter:', filteredQuestions.length);
   
-  // Finally apply difficulty filter
-  if (values.difficulty !== 'all') {
-    const selectedDifficulty = parseInt(values.difficulty);
-    console.log('Filtering by difficulty:', selectedDifficulty);
-    filteredQuestions = filteredQuestions.filter(q => {
-      const questionDifficulty = q.difficulty ?? 3;
-      return questionDifficulty === selectedDifficulty;
-    });
-    console.log('After difficulty filter:', filteredQuestions.length);
+  // Apply specific exam year filter if not 'all'
+  if (values.examYear && values.examYear !== 'all') {
+    console.log('Filtering by specific exam year:', values.examYear);
+    const beforeCount = filteredQuestions.length;
+    filteredQuestions = filteredQuestions.filter(q => q.year === values.examYear);
+    console.log(`After exam year filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
+  }
+  
+  // Apply specific exam semester filter if not 'all'
+  if (values.examSemester && values.examSemester !== 'all') {
+    console.log('Filtering by specific exam semester:', values.examSemester);
+    const beforeCount = filteredQuestions.length;
+    filteredQuestions = filteredQuestions.filter(q => q.semester === values.examSemester);
+    console.log(`After exam semester filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
   }
 
   return filteredQuestions;

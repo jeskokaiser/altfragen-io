@@ -98,6 +98,32 @@ export class TrainingSessionService {
     if (error) throw error;
   }
 
+  // Get progress for a specific question in a session
+  static async getQuestionProgress(params: {
+    sessionId: string;
+    userId: string;
+    questionId: string;
+  }): Promise<{
+    last_answer: string | null;
+    initial_answer: string | null;
+    attempts_count: number;
+    is_correct: boolean | null;
+    viewed_solution: boolean;
+  } | null> {
+    const { sessionId, userId, questionId } = params;
+
+    const { data, error } = await supabase
+      .from('session_question_progress')
+      .select('last_answer, initial_answer, attempts_count, is_correct, viewed_solution')
+      .eq('session_id', sessionId)
+      .eq('user_id', userId)
+      .eq('question_id', questionId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
   // Per-question per-session progress to support resume and stats
   static async recordAttempt(params: {
     sessionId: string;
@@ -112,7 +138,7 @@ export class TrainingSessionService {
     // Upsert into session_question_progress
     const { data: existing, error: fetchError } = await supabase
       .from('session_question_progress')
-      .select('id, attempts_count, is_correct')
+      .select('id, attempts_count, is_correct, initial_answer')
       .eq('session_id', sessionId)
       .eq('user_id', userId)
       .eq('question_id', questionId)
@@ -121,6 +147,7 @@ export class TrainingSessionService {
     if (fetchError) throw fetchError;
 
     if (!existing) {
+      // First attempt - save as initial answer
       const { error: insertError } = await supabase
         .from('session_question_progress')
         .insert({
@@ -131,9 +158,11 @@ export class TrainingSessionService {
           attempts_count: 1,
           is_correct: isCorrect,
           viewed_solution: viewedSolution ?? false,
+          initial_answer: answer,
         });
       if (insertError) throw insertError;
     } else {
+      // Update existing progress - preserve initial_answer if it exists
       const { error: updateError } = await supabase
         .from('session_question_progress')
         .update({
@@ -141,6 +170,8 @@ export class TrainingSessionService {
           attempts_count: (existing.attempts_count || 0) + 1,
           is_correct: isCorrect ? true : existing.is_correct,
           viewed_solution: viewedSolution ?? false,
+          // Only set initial_answer if it doesn't exist yet
+          ...((!existing.initial_answer) && { initial_answer: answer }),
         })
         .eq('id', existing.id);
       if (updateError) throw updateError;

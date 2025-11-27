@@ -152,7 +152,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           user_id: updatedQuestion.user_id,
           is_unclear: updatedQuestion.is_unclear,
           marked_unclear_at: updatedQuestion.marked_unclear_at,
-          ai_commentary_status: updatedQuestion.ai_commentary_status,
+          ai_commentary_status: updatedQuestion.ai_commentary_status as 'pending' | 'processing' | 'completed' | 'failed' | undefined,
           ai_commentary_queued_at: updatedQuestion.ai_commentary_queued_at,
           ai_commentary_processed_at: updatedQuestion.ai_commentary_processed_at
         };
@@ -248,7 +248,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Bild entfernen</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Sind Sie sicher, dass Sie das Bild von dieser Frage entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+                          Bist du sicher, dass du das Bild von dieser Frage entfernen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

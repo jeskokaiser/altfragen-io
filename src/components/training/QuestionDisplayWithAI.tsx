@@ -9,7 +9,7 @@ import NavigationButtons from './NavigationButtons';
 import EditQuestionModal from './EditQuestionModal';
 import DifficultyControls from './DifficultyControls';
 import QuestionImage from '@/components/questions/QuestionImage';
-import { X } from 'lucide-react';
+import { Pencil, X, Image as ImageIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
 import { AICommentaryData } from '@/types/AIAnswerComments';
@@ -18,11 +18,18 @@ import { useTrainingKeyboard, TrainingKeyboardActions } from '@/hooks/useTrainin
 import { AmbossAnswer } from './AmbossAnswer';
 import { MultiModelAIComment } from './MultiModelAIComment';
 import { GeneralAIComments } from './GeneralAIComments';
+import { ModelName } from './ModelIcon';
+import { AIModelSelector } from './AIModelSelector';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
+import CommentsSection from './CommentsSection';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { MessageSquare } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -63,6 +70,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [showSolution, setShowSolution] = useState(false);
   const [usageIncrementedForQuestion, setUsageIncrementedForQuestion] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [initialAnswer, setInitialAnswer] = useState<string | null>(null);
+  const [canShowAIContent, setCanShowAIContent] = useState(false);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -71,7 +81,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     subscribed, 
     remainingFreeViews, 
     requirePremiumForAI,
-    isFreeTier 
+    isFreeTier,
+    canAccessAIComments,
+    dailyUsage,
+    DAILY_LIMIT
   } = usePremiumFeatures();
 
   // Fetch AI commentary data
@@ -82,32 +95,73 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   });
 
   useEffect(() => {
-    // Only reset state if we're actually moving to a different question
-    if (currentQuestion.id !== questionData.id) {
-    setShowFeedback(false);
-    setCurrentQuestion(questionData);
-    setIsCorrect(false);
-    setShowSolution(false);
-    setUsageIncrementedForQuestion(null); // Reset for new question
+    const isNewQuestion = currentQuestion.id !== questionData.id;
+    
+    // Reset state when moving to a different question
+    if (isNewQuestion) {
+      setShowFeedback(false);
+      setCurrentQuestion(questionData);
+      setIsCorrect(false);
+      setShowSolution(false);
+      setUsageIncrementedForQuestion(null);
       setWrongAnswers([]);
       setFirstWrongAnswer(null);
       setSelectedAnswer(null);
+      setInitialAnswer(null);
+      setCanShowAIContent(false);
+    }
     
-    // Initialize state from userAnswerState if it exists
+    // Initialize/restore state from userAnswerState if it exists
+    // This runs both on first render and when navigating back to a question
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
-      setWrongAnswers(userAnswerState.attempts.filter(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()));
-      setFirstWrongAnswer(userAnswerState.attempts.find(attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()) || null);
+      const wrongAttempts = userAnswerState.attempts.filter(
+        attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()
+      );
+      const firstWrong = userAnswerState.attempts.find(
+        attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()
+      );
+      
+      setWrongAnswers(wrongAttempts);
+      setFirstWrongAnswer(firstWrong || null);
       setShowFeedback(true);
       setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
       setSelectedAnswer(userAnswerState.value);
+      
+      // Set initial answer from user answer state if available
+      if (userAnswerState.originalAnswer) {
+        setInitialAnswer(userAnswerState.originalAnswer);
+      } else if (userAnswerState.attempts.length > 0) {
+        setInitialAnswer(userAnswerState.attempts[0]);
+      }
       
       // Check if solution was viewed
       if (userAnswerState.viewedSolution) {
         setShowSolution(true);
       }
-      }
     }
-  }, [questionData.id, userAnswerState]);
+    
+    // Update currentQuestion reference if it's a new question
+    if (isNewQuestion) {
+      setCurrentQuestion(questionData);
+    }
+  }, [questionData.id, questionData.correctAnswer, userAnswerState]);
+  
+  // Sync canShowAIContent with access state and question state
+  useEffect(() => {
+    if (!showFeedback) {
+      // Don't show AI content if feedback isn't shown
+      setCanShowAIContent(false);
+    } else if (subscribed) {
+      // Premium users can always see AI content
+      setCanShowAIContent(true);
+    } else if (currentQuestion.id === usageIncrementedForQuestion) {
+      // Already incremented for this question - check current access
+      setCanShowAIContent(canAccessAIComments);
+    } else {
+      // Haven't incremented yet - don't show AI content
+      setCanShowAIContent(false);
+    }
+  }, [showFeedback, subscribed, canAccessAIComments, currentQuestion.id, usageIncrementedForQuestion]);
 
   // Database progress saving logic
   const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean, viewedSolution: boolean = false) => {
@@ -199,15 +253,47 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     // Track which answer was selected
     setSelectedAnswer(answer);
     
+    // Track initial answer (first click only)
+    if (!initialAnswer) {
+      setInitialAnswer(answer);
+    }
+    
     // For free users, increment AI comment usage when revealing answer (which shows percentages and AI comments)
     if (!subscribed && currentQuestion.id !== usageIncrementedForQuestion) {
       const willReveal = preferences?.immediateFeedback || isAnswerCorrect;
       if (willReveal) {
-        await requirePremiumForAI(() => {
-          console.log('AI comment usage incremented for revealing answer');
-        });
-        setUsageIncrementedForQuestion(currentQuestion.id);
+        // Check access before incrementing - if they're at the limit, don't increment
+        if (canAccessAIComments) {
+          let usageSuccess = false;
+          await requirePremiumForAI(() => {
+            console.log('AI comment usage incremented for revealing answer');
+            usageSuccess = true;
+          });
+          if (usageSuccess) {
+            setUsageIncrementedForQuestion(currentQuestion.id);
+            // After incrementing, check if they still have access (might have hit limit)
+            // The hook state will update, so check it in the next render cycle
+            setCanShowAIContent(dailyUsage + 1 < DAILY_LIMIT);
+          } else {
+            setCanShowAIContent(false);
+          }
+        } else {
+          // No access - don't show AI content
+          setCanShowAIContent(false);
+        }
+      } else {
+        // Won't reveal yet - don't show AI content
+        setCanShowAIContent(false);
       }
+    } else if (subscribed) {
+      // Premium users can always see AI content
+      setCanShowAIContent(true);
+    } else if (currentQuestion.id === usageIncrementedForQuestion) {
+      // Already incremented for this question - check current access
+      setCanShowAIContent(canAccessAIComments);
+    } else {
+      // Not revealed yet - don't show AI content
+      setCanShowAIContent(false);
     }
     
     // Update UI immediately for instant feedback
@@ -301,10 +387,26 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const handleShowSolution = async () => {
     // For free users, increment AI comment usage when showing solution
     if (!subscribed && currentQuestion.id !== usageIncrementedForQuestion) {
-      await requirePremiumForAI(() => {
-        console.log('AI comment usage incremented for showing solution');
-      });
-      setUsageIncrementedForQuestion(currentQuestion.id);
+      if (canAccessAIComments) {
+        let usageSuccess = false;
+        await requirePremiumForAI(() => {
+          console.log('AI comment usage incremented for showing solution');
+          usageSuccess = true;
+        });
+        if (usageSuccess) {
+          setUsageIncrementedForQuestion(currentQuestion.id);
+          // After incrementing, check if they still have access
+          setCanShowAIContent(dailyUsage + 1 < DAILY_LIMIT);
+        } else {
+          setCanShowAIContent(false);
+        }
+      } else {
+        setCanShowAIContent(false);
+      }
+    } else if (subscribed) {
+      setCanShowAIContent(true);
+    } else if (currentQuestion.id === usageIncrementedForQuestion) {
+      setCanShowAIContent(canAccessAIComments);
     }
     
     // Set the correct answer as selected so it auto-expands
@@ -328,22 +430,58 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const shouldShowImage = currentQuestion.image_key && 
     (!currentQuestion.show_image_after_answer || (currentQuestion.show_image_after_answer && showFeedback));
 
-  const options = (['A', 'B', 'C', 'D', 'E'] as const).map(letter => ({
-      letter,
-      text: currentQuestion[`option${letter}` as keyof Question] as string,
-  })).filter(option => option.text);
+  // Determine which enhanced AI version to use
+  // Enhanced question text should be shown immediately if user has access (not blocked by showFeedback)
+  const enhancedVersion = preferences?.enhancedAIVersion ?? 'none';
+  const canUseEnhanced = (subscribed || canAccessAIComments) && enhancedVersion !== 'none';
+  const useChatGPT = canUseEnhanced && enhancedVersion === 'chatgpt' && aiCommentary?.answerComments?.chatgpt_regenerated_question;
+  const useGemini = canUseEnhanced && enhancedVersion === 'gemini' && aiCommentary?.answerComments?.gemini_regenerated_question;
+  
+  // Use enhanced question if available and enabled, otherwise use original
+  const displayQuestion = useChatGPT
+    ? aiCommentary.answerComments.chatgpt_regenerated_question 
+    : useGemini
+      ? aiCommentary.answerComments.gemini_regenerated_question
+      : currentQuestion.question;
 
-  return (
-    <div className={`w-full max-w-4xl mx-auto ${isMobile ? 'px-2' : ''}`}>
-      <QuestionHeader
-        currentIndex={currentIndex}
-        totalQuestions={totalQuestions}
-        onQuit={onQuit}
-      />
+  const options = (['A', 'B', 'C', 'D', 'E'] as const).map(letter => {
+    const optionKey = `option${letter}` as keyof Question;
+    const originalText = currentQuestion[optionKey] as string;
+    let text = originalText;
+    let isAIGenerated = false;
+    
+    // Check if original option was empty
+    const originalEmpty = !originalText || originalText.trim() === '';
+    
+    // Use enhanced option if available and enabled
+    if ((useChatGPT || useGemini) && aiCommentary?.answerComments) {
+      const optionLower = letter.toLowerCase();
+      
+      if (useChatGPT) {
+        const chatgptKey = `chatgpt_regenerated_option_${optionLower}` as keyof typeof aiCommentary.answerComments;
+        if (aiCommentary.answerComments[chatgptKey]) {
+          text = aiCommentary.answerComments[chatgptKey] as string;
+          // Mark as AI-generated if original was empty
+          isAIGenerated = originalEmpty;
+        }
+      } else if (useGemini) {
+        const geminiKey = `gemini_regenerated_option_${optionLower}` as keyof typeof aiCommentary.answerComments;
+        if (aiCommentary.answerComments[geminiKey]) {
+          text = aiCommentary.answerComments[geminiKey] as string;
+          // Mark as AI-generated if original was empty
+          isAIGenerated = originalEmpty;
+        }
+      }
+    }
+    
+    return { letter, text, isAIGenerated };
+  }).filter(option => option.text);
 
+  const questionContent = (
+    <>
       <Card className={`${isMobile ? 'p-3' : 'p-0'}`}>
         <div className="p-4">
-          <div className={`flex flex-col sm:flex-row sm:items-stretch gap-3 mb-4`}>
+          <div className="flex flex-row flex-wrap items-start gap-3 mb-4">
             <div className="flex-grow">
               <DifficultyControls
                 questionId={currentQuestion.id}
@@ -352,27 +490,55 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                 disabled={false}
                 semester={currentQuestion.semester}
                 year={currentQuestion.year}
+                subject={currentQuestion.subject}
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex gap-2 justify-end">
+              <AIModelSelector />
               <Button
                 variant="outline"
-                size={isMobile ? "sm" : "default"}
+                size="sm"
+                onClick={() => setIsEditModalOpen(true)}
+                className="flex items-center gap-2"
+                >
+                <Pencil className="h-4 w-4" />
+                Bearbeiten
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleIgnoreQuestion}
                 className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 border-red-200"
                 disabled={unclearLoading}
               >
                 <X className="h-4 w-4" />
-                <span className="hidden sm:inline">Frage ignorieren</span>
-                <span className="sm:hidden">Ignore</span>
+                Frage ignorieren
               </Button>
             </div>
           </div>
 
           {shouldShowImage && <QuestionImage imageKey={currentQuestion.image_key} />}
+          
+          {/* Hint when image is hidden due to settings */}
+          {currentQuestion.image_key && !shouldShowImage && (
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-start gap-2">
+              <ImageIcon className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                Ein Bild ist verfügbar, wird aber erst nach der Beantwortung angezeigt. 
+                Diese Einstellung kann in "Bearbeiten" geändert werden.
+              </p>
+            </div>
+          )}
 
           <article className="prose max-w-none mb-4">
-            <p>{currentQuestion.question}</p>
+            <div className="flex items-start gap-2">
+              <p className="flex-1">{displayQuestion}</p>
+              {(useChatGPT || useGemini) && (
+                <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-md font-medium shrink-0">
+                  {useChatGPT ? 'ChatGPT' : 'Gemini'}-verbessert
+                </span>
+              )}
+            </div>
           </article>
 
           {showFeedback && (
@@ -392,7 +558,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         </div>
         
         <div className="rounded-b-lg">
-            {options.map(({ letter, text }) => {
+            {options.map(({ letter, text, isAIGenerated }) => {
                 const isCorrectOption = letter === currentQuestion.correctAnswer.charAt(0).toUpperCase();
                 
                 // Get real statistics from database if available
@@ -401,10 +567,40 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                   ? (stats[letter.toLowerCase() as keyof typeof stats] as number) || 0
                   : null; // null indicates no data available
                 
-                const wasAttempted = !showFeedback && wrongAnswers.includes(letter);
+                // Show wrong attempts even when feedback is revealed (when returning to previous question)
+                const wasAttempted = wrongAnswers.includes(letter);
                 // Pass isSelected to AmbossAnswer - this is now just for identification, not auto-expansion
                 const isSelected = selectedAnswer?.charAt(0).toUpperCase() === letter ||
                                    wrongAnswers.includes(letter);
+
+                // Extract which models chose this answer option (only if user has access and can show AI content)
+                const modelIcons: ModelName[] = [];
+                if (aiCommentary && showFeedback && canShowAIContent) {
+                  const optionLower = letter.toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'e';
+                  const models = aiCommentary.models;
+                  
+                  // Check each new model's chosenAnswer and filter by user preferences
+                  if (models.chatgpt?.chosenAnswer?.toUpperCase() === letter && preferences.selectedAIModels?.includes('chatgpt')) {
+                    modelIcons.push('chatgpt');
+                  }
+                  if (models['new-gemini']?.chosenAnswer?.toUpperCase() === letter && preferences.selectedAIModels?.includes('new-gemini')) {
+                    modelIcons.push('new-gemini');
+                  }
+                  if (models.mistral?.chosenAnswer?.toUpperCase() === letter && preferences.selectedAIModels?.includes('mistral')) {
+                    modelIcons.push('mistral');
+                  }
+                  if (models.perplexity?.chosenAnswer?.toUpperCase() === letter && preferences.selectedAIModels?.includes('perplexity')) {
+                    modelIcons.push('perplexity');
+                  }
+                  if (models.deepseek?.chosenAnswer?.toUpperCase() === letter && preferences.selectedAIModels?.includes('deepseek')) {
+                    modelIcons.push('deepseek');
+                  }
+                }
+
+                // Show upgrade prompt if free user reached limit and trying to view AI comments
+                const shouldShowUpgradePrompt = isFreeTier && !canShowAIContent && showFeedback;
+                const allowPreRevealAI = !showFeedback && (isSelected || wasAttempted);
+                const shouldShowLoader = aiLoading && (canShowAIContent || allowPreRevealAI);
 
                 return (
                     <AmbossAnswer
@@ -418,9 +614,20 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                         wasAttempted={wasAttempted}
                         isSelected={isSelected}
                         showPercentage={true}
+                        modelIcons={modelIcons}
+                        showUpgradePrompt={shouldShowUpgradePrompt}
+                        isAIGenerated={isAIGenerated}
                     >
-                        {aiCommentary && (
+                        {(shouldShowLoader || (aiCommentary && (canShowAIContent || allowPreRevealAI))) && (
+                          shouldShowLoader ? (
+                            <div className="space-y-2">
+                              <Skeleton className="h-3 w-3/4" />
+                              <Skeleton className="h-3 w-5/6" />
+                              <Skeleton className="h-3 w-2/3" />
+                            </div>
+                          ) : (
                             <MultiModelAIComment commentaryData={aiCommentary} optionLetter={letter} />
+                          )
                         )}
                     </AmbossAnswer>
                 );
@@ -433,15 +640,17 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         onNext={handleNext}
         isFirstQuestion={currentIndex === 0}
         isLastQuestion={currentIndex === totalQuestions - 1}
-        hasUserAnswer={(!!userAnswer && isCorrect) || (showFeedback && preferences?.immediateFeedback)}
+        hasUserAnswer={isCorrect}
         wrongAttempts={wrongAnswers.length}
         showSolution={showSolution}
       />
 
-      <GeneralAIComments 
-        commentaryData={aiCommentary}
-        isRevealed={showFeedback}
-      />
+      {canShowAIContent && (
+        <GeneralAIComments 
+          commentaryData={aiCommentary}
+          isRevealed={showFeedback}
+        />
+      )}
 
       {showFeedback && currentQuestion.first_answer_stats && (
         <div className="mt-3 flex justify-center">
@@ -455,8 +664,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         <div className="mt-2 flex justify-center">
           <p className="text-xs text-slate-400">
             {remainingFreeViews > 0 
-              ? `${remainingFreeViews} kostenlose KI-Kommentare heute verfügbar`
-              : 'Tägliches Limit erreicht. Upgrade für unbegrenzte KI-Kommentare.'}
+              ? `${remainingFreeViews} kostenlose KI-Features heute verfügbar (Kommentare, Modell-Icons, erweiterte Versionen)`
+              : 'Tägliches Limit erreicht. Upgrade für unbegrenzte KI-Features.'}
           </p>
         </div>
       )}
@@ -480,6 +689,94 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         onClose={() => setIsEditModalOpen(false)}
         onQuestionUpdated={handleQuestionUpdate}
       />
+    </>
+  );
+
+  // Mobile: Use Sheet for sidebar
+  if (isMobile) {
+    return (
+      <div className={`w-full max-w-4xl mx-auto px-2`}>
+        <QuestionHeader
+          currentIndex={currentIndex}
+          totalQuestions={totalQuestions}
+          onQuit={onQuit}
+        />
+        
+        <Sheet open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="default"
+              size="icon"
+              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+            >
+              <MessageSquare className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <CommentsSection
+              questionId={currentQuestion.id}
+              questionVisibility={currentQuestion.visibility || 'private'}
+            />
+          </SheetContent>
+        </Sheet>
+
+        {questionContent}
+      </div>
+    );
+  }
+
+  // Desktop: Use collapsible sidebar
+  return (
+    <div className="w-full max-w-7xl mx-auto flex gap-4 pt-20">
+      <div className={`flex-1 min-w-0 transition-all ${isCommentsOpen ? 'mr-[400px]' : ''}`}>
+        <QuestionHeader
+          currentIndex={currentIndex}
+          totalQuestions={totalQuestions}
+          onQuit={onQuit}
+        />
+
+        {questionContent}
+      </div>
+
+      {/* Floating comment icon button */}
+      <Button
+        variant="default"
+        size="icon"
+        onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+        className={`fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg z-50 transition-all ${
+          isCommentsOpen ? 'opacity-50' : ''
+        }`}
+      >
+        <MessageSquare className="h-6 w-6" />
+      </Button>
+
+      <Collapsible open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
+        <div
+          className={`fixed right-0 top-16 h-[calc(100vh-4rem)] w-[400px] bg-background border-l shadow-lg transition-transform duration-300 z-40 overflow-y-auto ${
+            isCommentsOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="p-4 border-b flex items-center justify-between bg-background">
+            <h2 className="font-semibold flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Kommentare & Notizen
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCommentsOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="p-4">
+            <CommentsSection
+              questionId={currentQuestion.id}
+              questionVisibility={currentQuestion.visibility || 'private'}
+            />
+          </div>
+        </div>
+      </Collapsible>
     </div>
   );
 };
