@@ -29,6 +29,7 @@ import CommentsSection from './CommentsSection';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MessageSquare } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -598,6 +599,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
                 // Show upgrade prompt if free user reached limit and trying to view AI comments
                 const shouldShowUpgradePrompt = isFreeTier && !canShowAIContent && showFeedback;
+                const allowPreRevealAI = !showFeedback && (isSelected || wasAttempted);
+                const shouldShowLoader = aiLoading && (canShowAIContent || allowPreRevealAI);
 
                 return (
                     <AmbossAnswer
@@ -615,8 +618,16 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                         showUpgradePrompt={shouldShowUpgradePrompt}
                         isAIGenerated={isAIGenerated}
                     >
-                        {aiCommentary && canShowAIContent && (
+                        {(shouldShowLoader || (aiCommentary && (canShowAIContent || allowPreRevealAI))) && (
+                          shouldShowLoader ? (
+                            <div className="space-y-2">
+                              <Skeleton className="h-3 w-3/4" />
+                              <Skeleton className="h-3 w-5/6" />
+                              <Skeleton className="h-3 w-2/3" />
+                            </div>
+                          ) : (
                             <MultiModelAIComment commentaryData={aiCommentary} optionLetter={letter} />
+                          )
                         )}
                     </AmbossAnswer>
                 );

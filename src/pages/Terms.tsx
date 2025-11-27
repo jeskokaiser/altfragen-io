@@ -2,7 +2,7 @@ const Terms = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl text-left">
       <h1 className="text-3xl font-bold mb-2">Nutzungsbedingungen für Altfragen.io</h1>
-      <p className="text-sm text-slate-500 mb-6">Stand: November 2025</p>
+      <p className="text-sm text-slate-500 mb-6">Stand: 26. November 2025</p>
 
       {/* Inhaltsverzeichnis */}
       <div className="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
@@ -243,6 +243,18 @@ const Terms = () => {
           können Ihre Inhalte grundsätzlich selbst löschen; in technischen Backups 
           können gelöschte Inhalte noch für einen begrenzten Zeitraum fortbestehen.
         </p>
+        <p>
+          <strong>6.4 </strong>
+          Zur Bereitstellung von KI-Funktionen werden Ihre Nutzerinhalte an verschiedene 
+          KI-Provider (z.B. OpenAI, Anthropic, Google, Mistral) übermittelt. Diese 
+          Provider können Ihre Daten gemäß ihren eigenen Nutzungsbedingungen verwenden, 
+          einschließlich der möglichen Nutzung für das Training ihrer KI-Modelle. Der 
+          Betreiber gibt den KI-Providern keine explizite Freigabe zur Nutzung Ihrer 
+          Daten für Trainingszwecke, kann jedoch nicht ausschließen, dass die Provider 
+          Ihre Daten entsprechend ihren eigenen Richtlinien für solche Zwecke verwenden. 
+          Durch die Nutzung von Altfragen.io und insbesondere der KI-Funktionen 
+          stimmen Sie dieser Weitergabe und möglichen Nutzung zu.
+        </p>
         <br />
         <h2 id="section-7" className="text-xl font-semibold mt-8 mb-3">
           7. Überwachung und Moderation von Inhalten
@@ -309,6 +321,16 @@ const Terms = () => {
           Beschränkungen (Rate Limits) unterliegen. Es besteht kein Anspruch darauf, 
           dass für jede Frage oder jeden Inhalt ein KI-Kommentar erstellt wird, 
           auch nicht bei Nutzung eines kostenpflichtigen Abonnements.
+        </p>
+        <p>
+          <strong>9.3 </strong>
+          Zur Bereitstellung der KI-Funktionen werden Ihre Nutzerinhalte (Fragen, 
+          Antworten, Kommentare etc.) an externe KI-Provider übermittelt. Diese Provider 
+          können Ihre Daten gemäß ihren eigenen Nutzungsbedingungen verwenden, 
+          einschließlich der möglichen Nutzung für das Training ihrer KI-Modelle, auch 
+          wenn der Betreiber den Providern eine solche Nutzung nicht explizit freigibt. 
+          Nähere Informationen hierzu finden Sie auch in Abschnitt 6.4 dieser 
+          Nutzungsbedingungen.
         </p>
         <br />
         <h2 id="section-10" className="text-xl font-semibold mt-8 mb-3">

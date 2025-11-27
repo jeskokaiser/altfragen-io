@@ -59,26 +59,19 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
 
   const handleClick = () => {
     const hasChildren = Boolean(explanation || children);
-    
-    if (hasChildren) {
-      // If there are AI comments, clicking anywhere on the answer option toggles expansion
-      // This allows collapsing/expanding even if the right answer hasn't been selected yet
-      setIsExpanded(!isExpanded);
-      
-      // Only trigger answer submission if not revealed yet
-      if (!isRevealed) {
-        onClick();
-      }
-    } else {
-      // No children/AI comments - normal behavior
-      if (isRevealed) {
-        // When revealed but no comments, do nothing on click
-        return;
-      } else {
-        // When not revealed, trigger answer selection
-        onClick();
-      }
+    // Before reveal, always allow expanding to show AI comments (or fallback),
+    // and also trigger the answer selection.
+    if (!isRevealed) {
+      setIsExpanded((prev) => !prev);
+      onClick();
+      return;
     }
+
+    // After reveal, only toggle expansion if there is content to show.
+    if (hasChildren) {
+      setIsExpanded((prev) => !prev);
+    }
+    // When revealed and no comments, do nothing.
   };
   const stateClasses = isRevealed
     ? isCorrect

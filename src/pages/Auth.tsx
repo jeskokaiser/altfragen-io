@@ -175,11 +175,15 @@ const Auth = () => {
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
+    // Require at least one symbol to align with strong Supabase password policy
+    const hasSymbol = /[!@#$%^&*()_+\-=[\]{};':"\\|<>?,./`~]/.test(password);
+
     const errors = [];
     if (password.length < minLength) errors.push(`mindestens ${minLength} Zeichen`);
     if (!hasUpperCase) errors.push('einen Großbuchstaben');
     if (!hasLowerCase) errors.push('einen Kleinbuchstaben');
     if (!hasNumbers) errors.push('eine Zahl');
+    if (!hasSymbol) errors.push('ein Sonderzeichen');
     return errors;
   };
 
@@ -321,7 +325,14 @@ const Auth = () => {
       
     } catch (error: any) {
       console.error('Error updating password:', error);
-      toast.error(error.message || 'Fehler beim Aktualisieren des Passworts');
+      if (error?.status === 422 || (error?.message && /password/i.test(error.message))) {
+        toast.error(
+          'Dein Passwort erfüllt nicht die Sicherheitsanforderungen. ' +
+          'Bitte wähle ein stärkeres, noch nicht verwendetes Passwort mit Groß- und Kleinbuchstaben, Zahlen und Sonderzeichen.'
+        );
+      } else {
+        toast.error(error?.message || 'Fehler beim Aktualisieren des Passworts. Bitte versuche es erneut.');
+      }
       setLoading(false);
       setIsUpdatingPassword(false);
     }
@@ -447,7 +458,15 @@ const Auth = () => {
       toast.success('Bitte überprüfe deine E-Mail, um deine Registrierung abzuschließen.');
       navigate('/auth?verification=pending');
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Signup error:', error);
+      if (error?.status === 422 || (error?.message && /password/i.test(error.message))) {
+        toast.error(
+          'Dein Passwort erfüllt nicht die Sicherheitsanforderungen. ' +
+          'Bitte wähle ein stärkeres, noch nicht verwendetes Passwort mit Groß- und Kleinbuchstaben, Zahlen und Sonderzeichen.'
+        );
+      } else {
+        toast.error(error?.message || 'Fehler bei der Registrierung. Bitte versuche es erneut.');
+      }
     }
   };
 
@@ -583,7 +602,7 @@ const Auth = () => {
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
-                einen Kleinbuchstaben und eine Zahl enthalten.
+                einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
               </AlertDescription>
             </Alert>
 
@@ -670,7 +689,7 @@ const Auth = () => {
                 <Info className="h-4 w-4" />
                 <AlertDescription>
                   Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
-                  einen Kleinbuchstaben und eine Zahl enthalten.
+                  einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
                 </AlertDescription>
               </Alert>}
 
