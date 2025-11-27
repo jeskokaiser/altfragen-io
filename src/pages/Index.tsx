@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/carousel";
 
 // YouTube video ID - replace with your actual video ID
-const YOUTUBE_VIDEO_ID = "YOUR_VIDEO_ID_HERE";
+const YOUTUBE_VIDEO_ID = "XgqpQkbZrQQ";
 
 // Testimonials data
 const testimonials = [
