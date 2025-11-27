@@ -20,6 +20,7 @@ import {
 import { updateUsername } from '@/services/AccountService';
 import DeleteAccountSection from '@/components/settings/DeleteAccountSection';
 import KeyboardBindingsSettings from '@/components/settings/KeyboardBindingsSettings';
+import IgnoredQuestionsSection from '@/components/settings/IgnoredQuestionsSection';
 
 const Settings = () => {
   const {
@@ -157,7 +158,7 @@ const Settings = () => {
         <div className="space-y-4 pt-4 border-t">
           <div className="space-y-2">
             <Label>KI-Modell Auswahl</Label>
-            <p className="text-sm text-muted-foreground">Wählen Sie aus, welche KI-Modelle in den Kommentaren angezeigt werden sollen.</p>
+            <p className="text-sm text-muted-foreground">Wähle aus, welche KI-Modelle in den Kommentaren angezeigt werden sollen.</p>
           </div>
           <div className="space-y-3">
             {aiModels.map((model) => {
@@ -184,7 +185,7 @@ const Settings = () => {
         <div className="space-y-4 pt-4 border-t mt-6">
           <div className="space-y-2">
             <Label htmlFor="enhanced-ai-version">Erweiterte KI-Versionen</Label>
-            <p className="text-sm text-muted-foreground">Wählen Sie, welche verbesserte Version von Fragen und Antworten angezeigt werden soll (falls verfügbar).</p>
+            <p className="text-sm text-muted-foreground">Wähle, welche verbesserte Version von Fragen und Antworten angezeigt werden soll (falls verfügbar).</p>
           </div>
           <Select
             value={preferences.enhancedAIVersion ?? 'none'}
@@ -205,6 +206,8 @@ const Settings = () => {
       </Card>
 
       <KeyboardBindingsSettings />
+
+      <IgnoredQuestionsSection />
 
       <DeleteAccountSection />
     </div>

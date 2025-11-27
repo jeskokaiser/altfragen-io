@@ -248,7 +248,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Bild entfernen</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Sind Sie sicher, dass Sie das Bild von dieser Frage entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+                          Bist du sicher, dass du das Bild von dieser Frage entfernen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

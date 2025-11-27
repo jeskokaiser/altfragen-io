@@ -280,7 +280,7 @@ const QuestionSearch: React.FC = () => {
             <div className="text-center py-12">
               <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Geben Sie einen Suchbegriff ein oder verwenden Sie die Filter, um Fragen zu finden.
+                Gib einen Suchbegriff ein oder verwende die Filter, um Fragen zu finden.
               </p>
             </div>
           )}

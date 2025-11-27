@@ -53,7 +53,7 @@ const AddQuestionForm: React.FC<AddQuestionFormProps> = ({ sessionId, onQuestion
       // Get user ID from auth context
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user) {
-        toast.error('Sie müssen eingeloggt sein, um Fragen hinzuzufügen');
+        toast.error('Du musst eingeloggt sein, um Fragen hinzuzufügen');
         return;
       }
 
