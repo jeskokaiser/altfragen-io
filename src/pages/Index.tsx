@@ -31,8 +31,10 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-// YouTube video ID - replace with your actual video ID
-const YOUTUBE_VIDEO_ID = "XgqpQkbZrQQ";
+// Self-hosted demo video URL served by backend under /videos
+const DEMO_VIDEO_URL = "https://api.altfragen.io/videos/landing.mp4";
+// Thumbnail from public folder
+const DEMO_VIDEO_THUMBNAIL_URL = "/thumbnail.png";
 
 // Testimonials data
 const testimonials = [
@@ -530,20 +532,31 @@ const Index = () => {
         </div>
       </section>
 
-       {/* Video Section */}
+       {/* Video Section - self-hosted landing video */}
        <section className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">
+              Plattform-Walkthrough
+            </h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              Schaue dir durch Features von Altfragen.io an, 
+              von der Registrierung bis zu den KI-Funktionen.
+            </p>
+          </div>
           <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.01] transition-all duration-500">
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
-            <div className="relative z-10 w-full" style={{ paddingBottom: '56.25%' }}>
-              <iframe
+            <div className="relative z-10 w-full bg-black" style={{ paddingBottom: '56.25%' }}>
+              <video
                 className="absolute top-0 left-0 w-full h-full rounded-2xl"
-                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}`}
-                title="Altfragen.io Plattform Erklärung"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                style={{ border: 0 }}
-              />
+                src={DEMO_VIDEO_URL}
+                poster={DEMO_VIDEO_THUMBNAIL_URL}
+                controls
+                playsInline
+                preload="metadata"
+              >
+                Dein Browser unterstützt das Abspielen dieses Videos nicht.
+              </video>
             </div>
           </div>
         </div>
