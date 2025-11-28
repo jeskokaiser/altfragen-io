@@ -40,11 +40,20 @@ serve(async (req)=>{
       throw new Error("Missing required environment variables");
     }
     
+    // Validate semester price ID if semester subscription is requested
+    if (priceType === 'semester' && !semesterPriceId) {
+      logStep("Semester subscription requested but STRIPE_PRICE_SEMESTER_ID is not set", {
+        priceType,
+        hasSemesterPriceId: !!semesterPriceId
+      });
+      throw new Error("Semester subscription is not available. STRIPE_PRICE_SEMESTER_ID environment variable is missing.");
+    }
+    
     // Select the appropriate price ID
     let selectedPriceId;
 
-    if (priceType === 'semester' && semesterPriceId) {
-      selectedPriceId = semesterPriceId;
+    if (priceType === 'semester') {
+      selectedPriceId = semesterPriceId!; // We've validated it exists above
     } else {
       selectedPriceId = monthlyPriceId;
     }
@@ -113,6 +122,8 @@ serve(async (req)=>{
       billing_address_collection: "auto",
       subscription_data: {
         metadata: {
+          price_type: priceType,
+          created_via: 'checkout'
         }
       }
     });

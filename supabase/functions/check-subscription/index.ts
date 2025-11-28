@@ -28,12 +28,24 @@ const shouldSkipStripeCheck = (subscriberData: any): boolean => {
     }
   }
   
-  // For unsubscribed users, check if we've checked recently (within 30 minutes)
+  // For unsubscribed users, use shorter cache to detect new subscriptions quickly
+  // If they never had a subscription (no subscription_end), check more frequently
   if (!subscriberData.subscribed && subscriberData.updated_at) {
     const lastUpdate = new Date(subscriberData.updated_at);
-    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-    if (lastUpdate > thirtyMinutesAgo) {
-      return true; // Skip Stripe check
+    
+    // If user never had a subscription (subscription_end is null), check every 5 minutes
+    // This helps detect new subscriptions quickly after checkout
+    if (!subscriberData.subscription_end) {
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+      if (lastUpdate > fiveMinutesAgo) {
+        return true; // Skip Stripe check (but only for 5 minutes)
+      }
+    } else {
+      // If user had a subscription that expired, we can cache longer (30 minutes)
+      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+      if (lastUpdate > thirtyMinutesAgo) {
+        return true; // Skip Stripe check
+      }
     }
   }
   
@@ -69,10 +81,12 @@ serve(async (req) => {
     }
 
     // Price IDs are optional but recommended for proper tier identification
+    // If missing, we'll fall back to checking subscription metadata
     if (!semesterPriceId || !monthlyPriceId) {
-      logStep("Missing price ID environment variables", {
+      logStep("WARNING: Missing price ID environment variables - will use metadata fallback", {
         hasSemesterPriceId: !!semesterPriceId,
-        hasMonthlyPriceId: !!monthlyPriceId
+        hasMonthlyPriceId: !!monthlyPriceId,
+        note: "Subscriptions will still be recognized as active, but tier identification may rely on metadata"
       });
     }
 
@@ -106,6 +120,25 @@ serve(async (req) => {
       auth: { persistSession: false } 
     });
 
+    // Check for force refresh parameter (from query string or request body)
+    let forceRefresh = false;
+    try {
+      const url = new URL(req.url);
+      forceRefresh = url.searchParams.get('forceRefresh') === 'true';
+    } catch (e) {
+      // URL parsing failed, try request body
+    }
+    
+    // Also check request body for forceRefresh
+    if (!forceRefresh && req.method === 'POST') {
+      try {
+        const body = await req.json().catch(() => ({}));
+        forceRefresh = body.forceRefresh === true;
+      } catch (e) {
+        // Body parsing failed, ignore
+      }
+    }
+    
     // First, check if we have cached data that's still valid
     const { data: cachedSubscriber } = await supabaseClient
       .from("subscribers")
@@ -113,12 +146,14 @@ serve(async (req) => {
       .eq("email", user.email)
       .single();
 
-    if (cachedSubscriber && shouldSkipStripeCheck(cachedSubscriber)) {
+    if (!forceRefresh && cachedSubscriber && shouldSkipStripeCheck(cachedSubscriber)) {
       logStep("Using cached subscription data", { 
+        subscribed: cachedSubscriber.subscribed,
         subscriptionTier: cachedSubscriber.subscription_tier,
         subscriptionEnd: cachedSubscriber.subscription_end,
         lastUpdated: cachedSubscriber.updated_at,
-        cacheAge: Math.round((Date.now() - new Date(cachedSubscriber.updated_at).getTime()) / (1000 * 60)) + ' minutes'
+        cacheAge: Math.round((Date.now() - new Date(cachedSubscriber.updated_at).getTime()) / (1000 * 60)) + ' minutes',
+        reason: cachedSubscriber.subscribed ? 'active subscription' : 'recent check'
       });
       
       return new Response(JSON.stringify({
@@ -129,6 +164,18 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
+    }
+    
+    if (forceRefresh) {
+      logStep("Force refresh requested - bypassing cache");
+    } else if (cachedSubscriber) {
+      logStep("Cache expired or invalid - will check Stripe", {
+        subscribed: cachedSubscriber.subscribed,
+        subscriptionTier: cachedSubscriber.subscription_tier,
+        cacheAge: Math.round((Date.now() - new Date(cachedSubscriber.updated_at).getTime()) / (1000 * 60)) + ' minutes'
+      });
+    } else {
+      logStep("No cached data found - will check Stripe");
     }
 
     logStep("Cache miss or subscription expiring soon, querying Stripe", { 
@@ -188,17 +235,41 @@ serve(async (req) => {
       
       // Determine subscription tier from price ID
       const priceId = subscription.items.data[0].price.id;
+      logStep("Checking price ID", { 
+        priceId, 
+        semesterPriceId, 
+        monthlyPriceId,
+        hasSemesterPriceId: !!semesterPriceId,
+        hasMonthlyPriceId: !!monthlyPriceId
+      });
       
-      if (priceId === semesterPriceId) {
+      // Check semester first (more specific)
+      if (semesterPriceId && priceId === semesterPriceId) {
         subscriptionTier = "Semester";
-      } else if (priceId === monthlyPriceId) {
+        logStep("Identified as Semester subscription", { priceId });
+      } else if (monthlyPriceId && priceId === monthlyPriceId) {
         subscriptionTier = "Monthly";
+        logStep("Identified as Monthly subscription", { priceId });
       } else {
-        // Fallback for unknown price IDs (legacy subscriptions, custom plans, etc.)
-        subscriptionTier = "Unknown";
-        logStep("Unknown price ID encountered", { priceId });
+        // Fallback: try to determine from subscription metadata or price details
+        const metadata = subscription.metadata;
+        if (metadata?.price_type === 'semester' || metadata?.price_type === 'Semester') {
+          subscriptionTier = "Semester";
+          logStep("Identified as Semester from metadata", { priceId, metadata });
+        } else if (metadata?.price_type === 'monthly' || metadata?.price_type === 'Monthly') {
+          subscriptionTier = "Monthly";
+          logStep("Identified as Monthly from metadata", { priceId, metadata });
+        } else {
+          // Last resort: mark as Unknown but subscription is still active
+          subscriptionTier = "Unknown";
+          logStep("Unknown price ID encountered - subscription still active", { 
+            priceId, 
+            availablePriceIds: { semesterPriceId, monthlyPriceId },
+            metadata 
+          });
+        }
       }
-      logStep("Determined subscription tier", { priceId, subscriptionTier });
+      logStep("Determined subscription tier", { priceId, subscriptionTier, hasActiveSub });
     } else {
       logStep("No active subscription found");
     }

@@ -154,11 +154,13 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         throw new Error('No valid session found');
       }
 
-      console.log('Invoking check-subscription function');
+      console.log('Invoking check-subscription function', { forceRefresh });
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.session.access_token}`,
         },
+        // Pass forceRefresh in body to bypass cache
+        body: forceRefresh ? { forceRefresh: true } : undefined,
       });
 
       if (error) {
