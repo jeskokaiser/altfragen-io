@@ -129,7 +129,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
         </Alert>
       )}
 
-      <Tabs defaultValue="csv" className="w-full max-w-4xl">
+      <Tabs defaultValue="csv" className="w-full">
         <TabsList className="grid grid-cols-2">
           <TabsTrigger 
             value="csv" 

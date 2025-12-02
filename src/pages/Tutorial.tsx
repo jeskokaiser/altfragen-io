@@ -139,7 +139,7 @@ const Tutorial = () => {
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li><strong className="font-semibold">Flexibles Training:</strong> Wähle in den Einstellungen, ob du sofort Feedback erhalten möchtest oder mehrere Versuche pro Frage nutzen willst</li>
                 <li><strong className="font-semibold">Sofortiges Feedback:</strong> Nach der Antwort siehst du die richtige Lösung und hilfreiche Kommentare</li>
-                <li><strong className="font-semibold">KI-Kommentare:</strong> Erhalte detaillierte KI-Erklärungen zu jeder Antwortoption. Das kostenlose Konto bietet tägliche KI-Kommentare, Premium-Nutzer erhalten unbegrenzte Zugriffe</li>
+                <li><strong className="font-semibold">KI-Kommentare:</strong> Erhalte detaillierte KI-Kommentare zu jeder Antwortoption. Das kostenlose Konto bietet tägliche KI-Kommentare, Premium-Nutzer erhalten unbegrenzte Zugriffe</li>
                 <li><strong className="font-semibold">Automatische Speicherung:</strong> Dein Fortschritt wird automatisch gespeichert, du kannst jederzeit pausieren und später weitermachen</li>
               </ul>
             </TutorialStep>

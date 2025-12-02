@@ -461,7 +461,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           Batch Dokument Upload
         </CardTitle>
         <CardDescription>
-          Lade mehrere PDF- oder DOCX-Dateien gleichzeitig hoch und weise jeweils Prüfungsname, Semester und Jahr zu.
+          Lade mehrere PDF- oder DOCX-Dateien gleichzeitig hoch und weise jeweils Prüfungsname, Semester und Jahr zu. Es ist erforderlich, dass die Dateien wie in <a href="https://www.altfragen.io/images/example-batch-upload.png" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">diesem Beispiel</a> formatiert sind. Für Fachschaften kann die Extraktion auf Anfrage an andere Schemata angepasst werden.
         </CardDescription>
         <div className="text-sm text-muted-foreground">
           {getUniversityContextMessage()}

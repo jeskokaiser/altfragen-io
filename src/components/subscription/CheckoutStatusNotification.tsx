@@ -3,16 +3,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { RefreshCw, X, Clock, CheckCircle } from 'lucide-react';
-import { showToast } from '@/utils/toast';
+import { RefreshCw, X, Clock } from 'lucide-react';
 
 const CheckoutStatusNotification: React.FC = () => {
   const { user } = useAuth();
   const { subscribed, checkSubscription, loading } = useSubscription();
   const [isVisible, setIsVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [checkoutTime, setCheckoutTime] = useState<Date | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState('');
 
   useEffect(() => {
     if (!user?.id || subscribed || loading) return;
@@ -23,10 +20,9 @@ const CheckoutStatusNotification: React.FC = () => {
       const now = new Date();
       const timeSinceCheckout = now.getTime() - initTime.getTime();
 
-      // Show notification if checkout was within the last 15 minutes
-      if (timeSinceCheckout < 15 * 60 * 1000) {
+      // Show notification if checkout was within the last 5 minutes
+      if (timeSinceCheckout < 5 * 60 * 1000) {
         setIsVisible(true);
-        setCheckoutTime(initTime);
       } else {
         // Clean up old checkout tracking
         localStorage.removeItem(`checkout_initiated_${user.id}`);
@@ -34,43 +30,10 @@ const CheckoutStatusNotification: React.FC = () => {
     }
   }, [user?.id, subscribed, loading]);
 
-  // Update time remaining counter
-  useEffect(() => {
-    if (!isVisible || !checkoutTime) return;
-
-    const updateTimer = () => {
-      const now = new Date();
-      const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
-      const maxWaitTime = 10 * 60 * 1000; // 10 minutes
-      const remaining = Math.max(0, maxWaitTime - timeSinceCheckout);
-
-      if (remaining > 0) {
-        const minutes = Math.floor(remaining / 60000);
-        const seconds = Math.floor((remaining % 60000) / 1000);
-        setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      } else {
-        setTimeRemaining('');
-        // Auto-dismiss after 10 minutes
-        handleDismiss();
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [isVisible, checkoutTime]);
-
   const handleRefreshStatus = async () => {
     try {
       setIsRefreshing(true);
-      await checkSubscription(true);
-      
-      // Show toast based on result
-      setTimeout(() => {
-        if (!subscribed) {
-          showToast.info('Status wird noch verarbeitet. Zahlungen können bis zu 10 Minuten dauern.');
-        }
-      }, 500);
+      await checkSubscription();
     } finally {
       setIsRefreshing(false);
     }
@@ -82,17 +45,6 @@ const CheckoutStatusNotification: React.FC = () => {
       localStorage.removeItem(`checkout_initiated_${user.id}`);
     }
   };
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    if (!isVisible || subscribed) return;
-
-    const autoRefreshInterval = setInterval(() => {
-      handleRefreshStatus();
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(autoRefreshInterval);
-  }, [isVisible, subscribed]);
 
   if (!isVisible || subscribed || loading) {
     return null;
@@ -124,14 +76,8 @@ const CheckoutStatusNotification: React.FC = () => {
             </div>
             
             <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
-              Deine Zahlung wird von Stripe verarbeitet. Dies kann bis zu 10 Minuten dauern.
+              Deine Zahlung wird verarbeitet. Der Status wird automatisch aktualisiert.
             </p>
-            
-            {timeRemaining && (
-              <div className="text-xs text-amber-600 dark:text-amber-400 mb-3">
-                Max. Wartezeit: {timeRemaining}
-              </div>
-            )}
             
             <div className="flex gap-2">
               <Button

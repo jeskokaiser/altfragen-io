@@ -117,7 +117,7 @@ const Index = () => {
             
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
             Effizientes Lernen mit{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 dark">
                 Altfragen.io
               </span>
             </h1>

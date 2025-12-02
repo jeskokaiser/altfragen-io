@@ -8,7 +8,7 @@ interface SubscriptionContextType {
   subscriptionTier: string | null;
   subscriptionEnd: string | null;
   loading: boolean;
-  checkSubscription: (forceRefresh?: boolean) => Promise<void>;
+  checkSubscription: () => Promise<void>;
   createCheckoutSession: (priceType?: 'monthly' | 'semester', consentGiven?: boolean) => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
@@ -30,93 +30,8 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const shouldUseCachedData = (cachedData: any): boolean => {
-    if (!cachedData || !cachedData.timestamp) return false;
-    
-    const now = new Date();
-    const cacheTime = new Date(cachedData.timestamp);
-    
-    // Check for recent checkout activity - be more aggressive with cache invalidation
-    const recentCheckoutTime = localStorage.getItem(`checkout_initiated_${user?.id}`);
-    if (recentCheckoutTime) {
-      const checkoutInitiated = new Date(recentCheckoutTime);
-      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-      
-      // If checkout was initiated within the last 30 minutes, use shorter cache
-      if (checkoutInitiated > thirtyMinutesAgo) {
-        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-        const shouldUseShortCache = cacheTime < fiveMinutesAgo;
-        
-        if (shouldUseShortCache) {
-          console.log('Using shorter cache due to recent checkout activity');
-          return false; // Force refresh
-        }
-      } else {
-        // Clean up old checkout timestamp
-        localStorage.removeItem(`checkout_initiated_${user?.id}`);
-      }
-    }
-    
-    // If user is subscribed and has subscription_end
-    if (cachedData.subscribed && cachedData.subscription_end) {
-      const subscriptionEnd = new Date(cachedData.subscription_end);
-      
-      // If subscription ends more than 1 day from now, cache is valid for 23 hours
-      const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      if (subscriptionEnd > oneDayFromNow) {
-        const twentyThreeHoursAgo = new Date(now.getTime() - 23 * 60 * 60 * 1000);
-        return cacheTime > twentyThreeHoursAgo;
-      }
-      
-      // If subscription ends within 1 day, cache for 2 hours only
-      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-      return cacheTime > twoHoursAgo;
-    }
-    
-    // For unsubscribed users, cache for 30 minutes
-    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-    return cacheTime > thirtyMinutesAgo;
-  };
 
-  const getCachedSubscriptionData = () => {
-    if (!user?.id) return null;
-    
-    try {
-      const cached = localStorage.getItem(`subscription_${user.id}`);
-      return cached ? JSON.parse(cached) : null;
-    } catch (error) {
-      console.error('Error reading cached subscription data:', error);
-      return null;
-    }
-  };
-
-  const setCachedSubscriptionData = (data: any) => {
-    if (!user?.id) return;
-    
-    try {
-      const cacheData = {
-        ...data,
-        timestamp: new Date().toISOString(),
-        userId: user.id
-      };
-      localStorage.setItem(`subscription_${user.id}`, JSON.stringify(cacheData));
-    } catch (error) {
-      console.error('Error caching subscription data:', error);
-    }
-  };
-
-  const invalidateSubscriptionCache = () => {
-    if (!user?.id) return;
-    
-    try {
-      localStorage.removeItem(`subscription_${user.id}`);
-      console.log('Subscription cache invalidated for user:', user.id);
-    } catch (error) {
-      console.error('Error invalidating subscription cache:', error);
-    }
-  };
-
-  const checkSubscription = async (forceRefresh: boolean = false) => {
+  const checkSubscription = async () => {
     if (!user) {
       console.log('No user found, setting unsubscribed state');
       setSubscribed(false);
@@ -126,63 +41,38 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       return;
     }
 
-    // Check cached data first (unless forced refresh)
-    if (!forceRefresh) {
-      const cachedData = getCachedSubscriptionData();
-      if (cachedData && shouldUseCachedData(cachedData)) {
-        console.log('Using cached subscription data from localStorage', {
-          subscribed: cachedData.subscribed,
-          tier: cachedData.subscription_tier,
-          cacheAge: Math.round((Date.now() - new Date(cachedData.timestamp).getTime()) / (1000 * 60)) + ' minutes'
-        });
-        
-        setSubscribed(cachedData.subscribed || false);
-        setSubscriptionTier(cachedData.subscription_tier || null);
-        setSubscriptionEnd(cachedData.subscription_end || null);
-        setLoading(false);
-        return;
-      }
-    }
-
     try {
-      console.log('Cache miss or forced refresh - calling edge function for user:', user.id);
+      console.log('Querying subscribers table for user:', user.id);
       setLoading(true);
       
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.access_token) {
-        console.error('No valid session found');
-        throw new Error('No valid session found');
-      }
-
-      console.log('Invoking check-subscription function', { forceRefresh });
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.session.access_token}`,
-        },
-        // Pass forceRefresh in body to bypass cache
-        body: forceRefresh ? { forceRefresh: true } : undefined,
-      });
+      // Query subscribers table directly - webhook updates this in real-time
+      const { data: subscriberData, error } = await supabase
+        .from('subscribers')
+        .select('subscribed, subscription_tier, subscription_end')
+        .or(`user_id.eq.${user.id},email.eq.${user.email}`)
+        .maybeSingle();
 
       if (error) {
-        console.error('Subscription check error details:', error);
+        console.error('Subscription query error:', error);
         throw new Error(error.message || 'Failed to check subscription');
       }
 
-      console.log('Subscription check result:', data);
+      console.log('Subscription check result:', subscriberData);
       
-      if (data) {
+      if (subscriberData) {
         const subscriptionData = {
-          subscribed: data.subscribed || false,
-          subscription_tier: data.subscription_tier || null,
-          subscription_end: data.subscription_end || null
+          subscribed: subscriberData.subscribed || false,
+          subscription_tier: subscriberData.subscription_tier || null,
+          subscription_end: subscriberData.subscription_end || null
         };
         
         // Check if subscription status changed from unsubscribed to subscribed
-        const cachedData = getCachedSubscriptionData();
-        const wasUnsubscribed = cachedData && !cachedData.subscribed;
+        // Only show toast if there was a recent checkout (to avoid showing on every page refresh)
+        const wasUnsubscribed = !subscribed;
         const isNowSubscribed = subscriptionData.subscribed;
+        const hasRecentCheckout = localStorage.getItem(`checkout_initiated_${user.id}`);
         
-        if (wasUnsubscribed && isNowSubscribed) {
+        if (wasUnsubscribed && isNowSubscribed && hasRecentCheckout) {
           console.log('🎉 Subscription status changed from unsubscribed to subscribed!');
           showToast.success('🎉 Premium erfolgreich aktiviert! Du hast jetzt Zugang zu allen Premium-Features.');
           
@@ -194,23 +84,11 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         setSubscribed(subscriptionData.subscribed);
         setSubscriptionTier(subscriptionData.subscription_tier);
         setSubscriptionEnd(subscriptionData.subscription_end);
-        
-        // Cache the data
-        setCachedSubscriptionData(subscriptionData);
       } else {
-        // Handle case where data is null/undefined
-        const subscriptionData = {
-          subscribed: false,
-          subscription_tier: null,
-          subscription_end: null
-        };
-        
+        // No subscriber record found - user is not subscribed
         setSubscribed(false);
         setSubscriptionTier(null);
         setSubscriptionEnd(null);
-        
-        // Cache the empty data
-        setCachedSubscriptionData(subscriptionData);
       }
     } catch (error) {
       console.error('Überprüfung des Abonnements fehlgeschlagen:', error);
@@ -267,9 +145,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
       console.log('Checkout session created:', data);
       if (data?.url) {
-        // Invalidate cache before redirecting to ensure fresh check on return
-        invalidateSubscriptionCache();
-        
         // Redirect in same tab for better UX
         window.location.href = data.url;
       } else {
@@ -313,9 +188,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
       console.log('Customer portal session created:', data);
       if (data?.url) {
-        // Invalidate cache before redirecting to ensure fresh check on return
-        invalidateSubscriptionCache();
-        
         // Redirect to the authenticated portal URL in the same tab
         window.location.href = data.url;
       } else {
@@ -336,24 +208,21 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   }, [user]);
 
-  // Clean up localStorage cache for other users (keep only current user's cache)
+  // Clean up localStorage checkout tracking for other users
   useEffect(() => {
     if (user?.id) {
       try {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key?.startsWith('subscription_') && key !== `subscription_${user.id}`) {
-            keysToRemove.push(key);
-          }
-          // Also clean up old checkout tracking for other users
+          // Clean up old checkout tracking for other users
           if (key?.startsWith('checkout_initiated_') && key !== `checkout_initiated_${user.id}`) {
             keysToRemove.push(key);
           }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
       } catch (error) {
-        console.error('Error cleaning up old subscription cache:', error);
+        console.error('Error cleaning up old checkout tracking:', error);
       }
     }
   }, [user?.id]);
@@ -370,18 +239,8 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
       
-      // Invalidate cache and force refresh subscription status
-      invalidateSubscriptionCache();
-      
-      // Use multiple refresh attempts with increasing delays
-      const refreshAttempts = [1000, 3000, 8000]; // 1s, 3s, 8s
-      
-      refreshAttempts.forEach((delay, index) => {
-        setTimeout(() => {
-          console.log(`Checkout success refresh attempt ${index + 1}`);
-          checkSubscription(true);
-        }, delay);
-      });
+      // Refresh subscription status
+      checkSubscription();
       
     } else if (hasCheckoutCancelled) {
       showToast.info('Der Checkout wurde abgebrochen');
@@ -394,7 +253,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       }
     }
     
-    // Additional check: if user returns to the app and we have checkout tracking, do a refresh
+    // Additional check: if user returns to the app and we have checkout tracking, do a one-time refresh
     if (user?.id && !hasCheckoutSuccess && !hasCheckoutCancelled) {
       const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
       if (checkoutInitiated) {
@@ -402,47 +261,17 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         const now = new Date();
         const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
         
-        // If checkout was initiated within the last 10 minutes, do a background refresh
-        if (timeSinceCheckout < 10 * 60 * 1000) {
-          console.log('Background subscription refresh due to recent checkout activity');
+        // If checkout was initiated within the last 5 minutes, do a one-time refresh
+        if (timeSinceCheckout < 5 * 60 * 1000) {
+          console.log('One-time subscription refresh due to recent checkout activity');
           setTimeout(() => {
-            checkSubscription(true);
+            checkSubscription();
           }, 2000);
+        } else {
+          // Clean up old checkout tracking
+          localStorage.removeItem(`checkout_initiated_${user.id}`);
         }
       }
-    }
-  }, [user?.id]);
-
-  // Periodic background refresh for users with recent checkout activity
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
-    if (!checkoutInitiated) return;
-    
-    const checkoutTime = new Date(checkoutInitiated);
-    const now = new Date();
-    const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
-    
-    // If checkout was within the last 30 minutes, set up periodic checks
-    if (timeSinceCheckout < 30 * 60 * 1000) {
-      const interval = setInterval(() => {
-        const currentTime = new Date();
-        const currentTimeSinceCheckout = currentTime.getTime() - checkoutTime.getTime();
-        
-        // Stop checking after 30 minutes
-        if (currentTimeSinceCheckout > 30 * 60 * 1000) {
-          localStorage.removeItem(`checkout_initiated_${user.id}`);
-          clearInterval(interval);
-          return;
-        }
-        
-        // Check subscription status every 2 minutes
-        console.log('Periodic subscription check due to recent checkout');
-        checkSubscription(true);
-      }, 2 * 60 * 1000); // Every 2 minutes
-      
-      return () => clearInterval(interval);
     }
   }, [user?.id]);
 

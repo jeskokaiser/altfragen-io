@@ -36,14 +36,17 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
       const now = new Date();
       const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
       
-      // Show prompt if checkout was within the last 20 minutes and user is not subscribed
-      if (timeSinceCheckout < 20 * 60 * 1000) {
+      // Show prompt if checkout was within the last 5 minutes and user is not subscribed
+      if (timeSinceCheckout < 5 * 60 * 1000) {
         setShowCheckoutPrompt(true);
         
-        // Auto-refresh subscription status
+        // Auto-refresh subscription status once
         setTimeout(() => {
           handleRefreshStatus();
         }, 1000);
+      } else {
+        // Clean up old checkout tracking
+        localStorage.removeItem(`checkout_initiated_${user.id}`);
       }
     }
   }, [user?.id, subscribed]);
@@ -51,14 +54,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
   const handleRefreshStatus = async () => {
     try {
       setIsRefreshing(true);
-      await checkSubscription(true);
-      
-      // If still not subscribed after refresh, show helpful message
-      setTimeout(() => {
-        if (!subscribed && showCheckoutPrompt) {
-          showToast.info('Status wird noch verarbeitet? Stripe Zahlungen können bis zu 10 Minuten dauern.');
-        }
-      }, 500);
+      await checkSubscription();
     } finally {
       setIsRefreshing(false);
     }
@@ -98,7 +94,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
                 Premium-Status wird verarbeitet
               </div>
               <div className="text-xs text-amber-700 dark:text-amber-300 mb-2">
-                Stripe-Zahlungen können bis zu 10 Minuten dauern. Wir prüfen automatisch deinen Status.
+                Der Status wird automatisch aktualisiert, sobald die Zahlung verarbeitet wurde.
               </div>
               <div className="flex gap-2">
                 <Button

@@ -74,7 +74,7 @@ const Subscription = () => {
     premium: true,
     icon: ChartBar
   }, {
-    name: 'Mehr als zwei Fragensessions gleichzeitig',
+    name: 'Mehr als fünf Fragensessions gleichzeitig',
     free: false,
     premium: true,
     icon: Inbox

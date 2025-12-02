@@ -30,6 +30,7 @@ import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCr
 import { toast } from 'sonner';
 import StatisticsDateRangeSelector from './datasets/StatisticsDateRangeSelector';
 import { StatisticsDateRange } from '@/contexts/UserPreferencesContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
@@ -58,6 +59,22 @@ const Dashboard = () => {
   );
   const [createSessionExamId, setCreateSessionExamId] = useState<string | null>(null);
 
+  // Private AI commentary quota & credits
+  const [aiCreditsLoading, setAiCreditsLoading] = useState(true);
+  const [aiCreditsError, setAiCreditsError] = useState<string | null>(null);
+  const [aiCredits, setAiCredits] = useState<{
+    isPremium: boolean;
+    monthStart: string;
+    baseMonthlyFreeLimit: number;
+    freeUsedCount: number;
+    remainingFree: number;
+    paidCreditsRemaining: number;
+    totalRemaining: number;
+    processingBlocked: boolean;
+  } | null>(null);
+  const [isCreatingCreditsCheckout, setIsCreatingCreditsCheckout] = useState(false);
+  const [aiCreditsPacks, setAiCreditsPacks] = useState<number>(1);
+
   // Fetch all dashboard data
   const {
     questions,
@@ -68,6 +85,89 @@ const Dashboard = () => {
     totalAnsweredCount,
     totalAttemptsCount,
   } = useDashboardData(user?.id, universityId, preferences?.statisticsDateRange);
+
+  // Fetch private AI commentary quota / credit status
+  useEffect(() => {
+    const loadCredits = async () => {
+      if (!user) {
+        setAiCreditsLoading(false);
+        return;
+      }
+
+      try {
+        setAiCreditsLoading(true);
+        setAiCreditsError(null);
+
+        const { data: session } = await supabase.auth.getSession();
+        const accessToken = session.session?.access_token;
+        if (!accessToken) {
+          throw new Error('Keine gültige Session gefunden');
+        }
+
+        const { data, error } = await supabase.functions.invoke('ai-comment-credits-status', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (error) {
+          console.error('Fehler beim Laden der AI-Credit-Übersicht:', error);
+          setAiCreditsError('Fehler beim Laden der AI-Credit-Übersicht');
+        } else {
+          setAiCredits(data);
+        }
+      } catch (err) {
+        console.error('Unerwarteter Fehler beim Laden der AI-Credit-Übersicht:', err);
+        setAiCreditsError('Unerwarteter Fehler beim Laden der AI-Credit-Übersicht');
+      } finally {
+        setAiCreditsLoading(false);
+      }
+    };
+
+    loadCredits();
+  }, [user?.id]);
+
+  const handleBuyAiCredits = useCallback(async () => {
+    if (!user || isCreatingCreditsCheckout) return;
+
+    try {
+      setIsCreatingCreditsCheckout(true);
+
+      const { data: session } = await supabase.auth.getSession();
+      const accessToken = session.session?.access_token;
+      if (!accessToken) {
+        throw new Error('Keine gültige Session gefunden');
+      }
+
+      const packs = Math.max(1, Math.min(20, Math.floor(aiCreditsPacks || 1)));
+
+      const { data, error } = await supabase.functions.invoke('create-ai-credits-checkout', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: {
+          quantity: packs,
+        },
+      });
+
+      if (error) {
+        console.error('Fehler beim Erstellen der AI-Credit-Checkout-Session:', error);
+        toast.error(error.message || 'Fehler beim Starten des Checkouts');
+        return;
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error('Keine Checkout-URL erhalten');
+      }
+    } catch (err) {
+      console.error('Unerwarteter Fehler beim Starten des AI-Credit-Checkouts:', err);
+      toast.error('Unerwarteter Fehler beim Starten des AI-Credit-Checkouts');
+    } finally {
+      setIsCreatingCreditsCheckout(false);
+    }
+  }, [user, isCreatingCreditsCheckout, aiCreditsPacks]);
 
   // Update selected university datasets when preferences change
   useEffect(() => {
@@ -404,6 +504,149 @@ const Dashboard = () => {
           </h2>
         </div>
         <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
+      </section>
+
+      {/* Private AI commentary quota / credits */}
+      <section className="space-y-4">
+        <Card>
+          <CardHeader className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+            <CardTitle className="text-lg font-medium flex items-center gap-2">
+              <ListPlus className="h-5 w-5" />
+              Private KI-Kommentare
+            </CardTitle>
+            {aiCredits && (
+              <span className="text-xs md:text-sm text-muted-foreground">
+                Abrechnungsmonat {new Date(aiCredits.monthStart).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+              </span>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {aiCreditsLoading && (
+              <p className="text-sm text-muted-foreground">Lade Status der privaten KI-Kommentare …</p>
+            )}
+
+            {aiCreditsError && !aiCreditsLoading && (
+              <p className="text-sm text-red-500">{aiCreditsError}</p>
+            )}
+
+            {!aiCreditsLoading && !aiCreditsError && aiCredits && (
+              <>
+                {/** Der Block passt Anzeige klar an: Non-Premium sieht 0/0 und eindeutig "Nur für Premium" */}
+                {(() => {
+                  const isPremium = aiCredits.isPremium;
+                  const baseLimit = isPremium ? aiCredits.baseMonthlyFreeLimit : 0;
+                  const usedFree = isPremium
+                    ? aiCredits.baseMonthlyFreeLimit - aiCredits.remainingFree
+                    : 0;
+                  const remainingFreeDisplay = isPremium ? aiCredits.remainingFree : 0;
+                  const availabilityLabel = !isPremium
+                    ? 'Nur für Premium'
+                    : aiCredits.processingBlocked
+                      ? 'Pausiert'
+                      : 'Aktiv';
+                  const availabilityColorClass = !isPremium
+                    ? 'text-yellow-500'
+                    : aiCredits.processingBlocked
+                      ? 'text-red-500'
+                      : 'text-emerald-500';
+                  const availabilityDescription = !isPremium
+                    ? 'Private KI-Kommentare stehen nur Premium-Nutzern zur Verfügung.'
+                    : aiCredits.processingBlocked
+                      ? 'Du hast dein Kontingent für private Fragen ausgeschöpft.'
+                      : 'Private Fragen werden bevorzugt verarbeitet, solange Kontingent verfügbar ist.';
+
+                  return (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <div className="space-y-1">
+                          <span className="text-sm text-muted-foreground">Kostenlose private Fragen (Monat)</span>
+                          <p className="text-2xl font-bold">
+                            {usedFree}/{baseLimit}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Verbleibend in diesem Monat: {remainingFreeDisplay}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-sm text-muted-foreground">Gekaufte Credits</span>
+                          <p className="text-2xl font-bold">
+                            {isPremium ? aiCredits.paidCreditsRemaining : 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            1 Credit = 1 zusätzliche privater KI-Kommentar
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-sm text-muted-foreground">Verfügbarkeit</span>
+                          <p className={`text-2xl font-bold ${availabilityColorClass}`}>
+                            {availabilityLabel}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {availabilityDescription}
+                          </p>
+                        </div>
+                      </div>
+
+                      {!isPremium && (
+                        <p className="text-sm text-muted-foreground">
+                          Upgrade auf eine Premium-Mitgliedschaft, um private Fragen mit KI-Kommentaren verarbeiten zu lassen.
+                        </p>
+                      )}
+
+                      {isPremium && (
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">
+                                Anzahl Pakete mit 100 Credits:
+                              </span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={20}
+                                value={aiCreditsPacks}
+                                onChange={(e) =>
+                                  setAiCreditsPacks(
+                                    Math.max(
+                                      1,
+                                      Math.min(
+                                        20,
+                                        Number.isNaN(Number(e.target.value))
+                                          ? 1
+                                          : Number(e.target.value)
+                                      )
+                                    )
+                                  )
+                                }
+                                className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                              />
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <p className="text-sm text-muted-foreground">
+                                entspricht {aiCreditsPacks * 100} zusätzlichen privaten KI-Kommentaren für{' '}
+                                {aiCreditsPacks * 2}€.
+                              </p>
+                              <Button
+                                onClick={handleBuyAiCredits}
+                                disabled={isCreatingCreditsCheckout}
+                              >
+                                {isCreatingCreditsCheckout
+                                  ? 'Weiterleitung zum Checkout …'
+                                  : `${aiCreditsPacks * 100} private KI-Kommentare für ${
+                                      aiCreditsPacks * 2
+                                    }€ kaufen`}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </>
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       {/* Dialogs */}

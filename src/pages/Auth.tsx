@@ -196,6 +196,42 @@ const Auth = () => {
     return email.split('@')[1] || '';
   };
 
+  const validateDisposableEmail = async (email: string): Promise<{ valid: boolean; error?: string }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-email', {
+        body: { email },
+      });
+
+      // If there's an error (network or function error), fail open
+      if (error) {
+        console.warn('Error validating email with Edge Function:', error);
+        // Fail open: if validation service is unavailable, allow signup
+        return { valid: true };
+      }
+
+      // Check if validation data exists and email is invalid
+      if (data) {
+        if (data.valid === false) {
+          console.log('Disposable email detected:', email, data);
+          return {
+            valid: false,
+            error: 'Disposable E-Mail-Adressen sind nicht erlaubt',
+          };
+        }
+        // Email is valid
+        return { valid: true };
+      }
+
+      // No data returned - fail open
+      console.warn('No validation data returned from Edge Function');
+      return { valid: true };
+    } catch (error) {
+      console.warn('Exception during email validation:', error);
+      // Fail open: if validation service fails, allow signup with warning
+      return { valid: true };
+    }
+  };
+
   const handleResetPassword = async () => {
     try {
       setLoading(true);
@@ -406,6 +442,13 @@ const Auth = () => {
 
   const performSignup = async () => {
     try {
+      // Validate email against disposable email blocklist
+      const emailValidation = await validateDisposableEmail(email);
+      if (!emailValidation.valid) {
+        toast.error(emailValidation.error || 'Disposable E-Mail-Adressen sind nicht erlaubt');
+        return;
+      }
+
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,

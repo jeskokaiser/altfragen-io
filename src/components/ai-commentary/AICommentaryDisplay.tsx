@@ -62,7 +62,7 @@ const AICommentaryDisplay: React.FC<AICommentaryDisplayProps> = ({
   const handleRefreshStatus = async () => {
     try {
       setIsRefreshing(true);
-      await checkSubscription(true);
+      await checkSubscription();
     } finally {
       setIsRefreshing(false);
     }
