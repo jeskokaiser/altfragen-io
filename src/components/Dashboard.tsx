@@ -594,51 +594,59 @@ const Dashboard = () => {
                       )}
 
                       {isPremium && (
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-muted-foreground">
-                                Anzahl Pakete mit 100 Credits:
-                              </span>
-                              <input
-                                type="number"
-                                min={1}
-                                max={20}
-                                value={aiCreditsPacks}
-                                onChange={(e) =>
-                                  setAiCreditsPacks(
-                                    Math.max(
-                                      1,
-                                      Math.min(
-                                        20,
-                                        Number.isNaN(Number(e.target.value))
-                                          ? 1
-                                          : Number(e.target.value)
+                        <>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Bis zu 100 private Fragen pro Monat werden mit allen aktivierten KI-Modellen kommentiert. 
+                            Alle weiteren privaten Fragen werden im Hintergrund von Mistral und DeepSeek bearbeitet; 
+                            zu Beginn des nächsten Monats werden zunächst die ältesten teilweise kommentierten Fragen 
+                            mit den fehlenden Modellen ergänzt, bis das neue Monatskontingent ausgeschöpft ist.
+                          </p>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">
+                                  Anzahl Pakete mit 100 Credits:
+                                </span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={20}
+                                  value={aiCreditsPacks}
+                                  onChange={(e) =>
+                                    setAiCreditsPacks(
+                                      Math.max(
+                                        1,
+                                        Math.min(
+                                          20,
+                                          Number.isNaN(Number(e.target.value))
+                                            ? 1
+                                            : Number(e.target.value)
+                                        )
                                       )
                                     )
-                                  )
-                                }
-                                className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
-                              />
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <p className="text-sm text-muted-foreground">
-                                entspricht {aiCreditsPacks * 100} zusätzlichen privaten KI-Kommentaren für{' '}
-                                {aiCreditsPacks * 2}€.
-                              </p>
-                              <Button
-                                onClick={handleBuyAiCredits}
-                                disabled={isCreatingCreditsCheckout}
-                              >
-                                {isCreatingCreditsCheckout
-                                  ? 'Weiterleitung zum Checkout …'
-                                  : `${aiCreditsPacks * 100} private KI-Kommentare für ${
-                                      aiCreditsPacks * 2
-                                    }€ kaufen`}
-                              </Button>
+                                  }
+                                  className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                />
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <p className="text-sm text-muted-foreground">
+                                  entspricht {aiCreditsPacks * 100} zusätzlichen privaten KI-Kommentaren mit voller Modellabdeckung für{' '}
+                                  {aiCreditsPacks * 2}€.
+                                </p>
+                                <Button
+                                  onClick={handleBuyAiCredits}
+                                  disabled={isCreatingCreditsCheckout}
+                                >
+                                  {isCreatingCreditsCheckout
+                                    ? 'Weiterleitung zum Checkout …'
+                                    : `${aiCreditsPacks * 100} private KI-Kommentare für ${
+                                        aiCreditsPacks * 2
+                                      }€ kaufen`}
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </>
                       )}
                     </>
                   );
