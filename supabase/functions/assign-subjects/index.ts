@@ -6,127 +6,48 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
 };
-
-// Configuration for robust processing
-const CONFIG = {
-  BATCH_SIZE: 3, // Smaller batches for better reliability
-  MAX_RETRIES: 3,
-  RETRY_DELAY: 1000, // 1 second
-  REQUEST_DELAY: 800, // Delay between OpenAI requests
-  CHUNK_SIZE: 20, // Process in chunks to avoid timeouts
-  CHUNK_DELAY: 2000, // 2 seconds between chunks
-};
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  retries: number = CONFIG.MAX_RETRIES,
-  delay: number = CONFIG.RETRY_DELAY
-): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    if (retries <= 0) throw error;
-    
-    console.log(`Retrying in ${delay}ms... (${retries} retries left)`);
-    await sleep(delay);
-    return retryWithBackoff(fn, retries - 1, delay * 2); // Exponential backoff
-  }
-}
-
-async function assignSubjectToQuestion(
-  question: any,
-  availableSubjects: string[],
-  openAIApiKey: string,
-  supabase: any,
-  userId: string
-): Promise<any> {
-  const prompt = `You are a subject classifier for academic questions. Given the following question and list of available subjects, select the most appropriate subject.
-
-Question: "${question.question}"
-
-Available subjects: ${availableSubjects.join(', ')}
-
-Please respond with ONLY the exact subject name from the list above that best matches this question. Do not add any explanation or additional text.`;
-
-  const assignSubject = async () => {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a precise subject classifier. Always respond with only the exact subject name from the provided list.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.1,
-        max_tokens: 50,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content.trim();
-  };
-
-  try {
-    let assignedSubject = await retryWithBackoff(assignSubject);
-
-    // Validate that the assigned subject is in the available list
-    if (!availableSubjects.includes(assignedSubject)) {
-      console.warn(`Invalid subject "${assignedSubject}" for question ${question.id}, using first available subject`);
-      assignedSubject = availableSubjects[0];
-    }
-
-    // Update the question in the database with retry
-    const updateQuestion = async () => {
-      const { error } = await supabase
-        .from('questions')
-        .update({ subject: assignedSubject })
-        .eq('id', question.id)
-        .eq('user_id', userId);
-
-      if (error) {
-        throw new Error(`Database update error: ${error.message}`);
-      }
-    };
-
-    await retryWithBackoff(updateQuestion);
-
-    console.log(`Successfully updated question ${question.id} with subject: ${assignedSubject}`);
-    
-    return {
-      ...question,
-      subject: assignedSubject,
-      success: true
-    };
-
-  } catch (error) {
-    console.error(`Error processing question ${question.id}:`, error);
-    return {
-      ...question,
-      subject: availableSubjects[0], // Fallback subject
-      success: false,
-      error: error.message
-    };
-  }
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Handle status check requests
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    const jobId = url.searchParams.get('jobId');
+    
+    if (!jobId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing jobId parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: job, error } = await supabase
+      .from('subject_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .single();
+
+    if (error) {
+      return new Response(
+        JSON.stringify({ error: 'Job not found', details: error.message }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify(job),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
@@ -139,95 +60,87 @@ serve(async (req) => {
       );
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const totalQuestions = questions.length;
-    const updatedQuestions = [];
-    let processed = 0;
-    let errors = 0;
+    const jobId = crypto.randomUUID();
 
-    console.log(`Starting to process ${totalQuestions} questions in chunks of ${CONFIG.CHUNK_SIZE}`);
+    const payload = {
+      questions,
+      availableSubjects,
+      userId,
+    };
 
-    // Process questions in chunks to avoid timeouts
-    for (let chunkStart = 0; chunkStart < totalQuestions; chunkStart += CONFIG.CHUNK_SIZE) {
-      const chunk = questions.slice(chunkStart, chunkStart + CONFIG.CHUNK_SIZE);
-      console.log(`Processing chunk ${Math.floor(chunkStart / CONFIG.CHUNK_SIZE) + 1}/${Math.ceil(totalQuestions / CONFIG.CHUNK_SIZE)} (${chunk.length} questions)`);
+    const { error: insertError } = await supabase
+      .from('subject_jobs')
+      .insert({
+        id: jobId,
+        type: 'assign',
+        status: 'pending',
+        user_id: userId,
+        available_subjects: availableSubjects,
+        progress: 0,
+        total: totalQuestions,
+        errors: 0,
+        message: `Queued subject assignment job for ${totalQuestions} questions`,
+        payload,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
 
-      // Process questions in smaller batches within each chunk
-      for (let i = 0; i < chunk.length; i += CONFIG.BATCH_SIZE) {
-        const batch = chunk.slice(i, i + CONFIG.BATCH_SIZE);
-        
-        // Process batch with controlled concurrency
-        const batchPromises = batch.map(async (question, index) => {
-          // Stagger requests to avoid rate limiting
-          await sleep(index * 200);
-          return assignSubjectToQuestion(question, availableSubjects, openAIApiKey, supabase, userId);
-        });
-
-        const batchResults = await Promise.allSettled(batchPromises);
-        
-        // Process results
-        for (const result of batchResults) {
-          if (result.status === 'fulfilled') {
-            updatedQuestions.push(result.value);
-            if (!result.value.success) errors++;
-          } else {
-            console.error('Batch processing error:', result.reason);
-            errors++;
-            // Add failed question with fallback subject
-            const failedQuestion = batch[batchResults.indexOf(result)];
-            updatedQuestions.push({
-              ...failedQuestion,
-              subject: availableSubjects[0],
-              success: false,
-              error: result.reason?.message || 'Unknown error'
-            });
-          }
-          processed++;
-        }
-
-        // Progress logging
-        console.log(`Progress: ${processed}/${totalQuestions} questions processed (${errors} errors)`);
-
-        // Delay between batches to avoid overwhelming the API
-        if (i + CONFIG.BATCH_SIZE < chunk.length) {
-          await sleep(CONFIG.REQUEST_DELAY);
-        }
-      }
-
-      // Delay between chunks for larger workloads
-      if (chunkStart + CONFIG.CHUNK_SIZE < totalQuestions) {
-        console.log(`Completed chunk, waiting ${CONFIG.CHUNK_DELAY}ms before next chunk...`);
-        await sleep(CONFIG.CHUNK_DELAY);
-      }
+    if (insertError) {
+      console.error('Error creating assign-subject job:', insertError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create subject assignment job', details: insertError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const successCount = updatedQuestions.filter(q => q.success !== false).length;
+    // Trigger worker to process the job (fire and forget)
+    // Note: This runs asynchronously and won't block the response
+    const workerUrl = Deno.env.get('SUBJECT_WORKER_URL') || 'https://api.altfragen.io/subject-worker';
+    const triggerUrl = `${workerUrl}/process-job/${jobId}`;
+    console.log(`Triggering worker at: ${triggerUrl}`);
     
-    console.log(`Completed processing: ${successCount}/${totalQuestions} questions successfully updated, ${errors} errors`);
+    // Fire and forget - don't await to avoid blocking
+    fetch(triggerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(async (response) => {
+        console.log(`Worker trigger response status: ${response.status}`);
+        if (!response.ok) {
+          const text = await response.text();
+          console.error(`Worker trigger failed with status ${response.status}: ${text}`);
+        } else {
+          // Check if response has content before parsing JSON
+          const text = await response.text();
+          if (text && text.trim()) {
+            try {
+              const data = JSON.parse(text);
+              console.log('Worker trigger successful:', data);
+            } catch (e) {
+              console.log('Worker trigger successful (non-JSON response):', text);
+            }
+          } else {
+            console.log('Worker trigger successful (empty response)');
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Failed to trigger worker (non-critical):', err.message || err);
+        // Don't fail the request if worker trigger fails - worker will poll for pending jobs
+      });
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        updatedQuestions,
-        stats: {
-          total: totalQuestions,
-          successful: successCount,
-          errors: errors,
-          processed: processed
-        },
-        message: `Successfully processed ${successCount} out of ${totalQuestions} questions${errors > 0 ? ` (${errors} questions had errors and used fallback subjects)` : ''}`
+        jobId,
+        totalQuestions,
+        message: `Started subject assignment job for ${totalQuestions} questions. Use the jobId to check progress.`,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

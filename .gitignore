@@ -25,3 +25,4 @@ dist-ssr
 *.sw?
 .cursor
 supabase/functions/check-pdf-status/main.py
+.temp

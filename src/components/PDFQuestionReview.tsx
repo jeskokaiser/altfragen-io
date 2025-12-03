@@ -211,10 +211,11 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     
     // Show initial progress toast
     showToast.info('KI-Fach-Zuweisung gestartet', {
-      description: `Verarbeitung von ${questions.length} Fragen wird gestartet...`
+      description: `Job erstellt, Verarbeitung läuft im Hintergrund...`
     });
     
     try {
+      // Create job
       const { data, error } = await supabase.functions.invoke('assign-subjects', {
         body: {
           questions: questions,
@@ -227,34 +228,81 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
         throw error;
       }
 
-      if (data.success && data.updatedQuestions) {
-        // Update the questions state with the AI-assigned subjects
-        setQuestions(data.updatedQuestions);
-        
-        // Show detailed completion stats
-        const stats = data.stats || {};
-        const successRate = stats.successful ? Math.round((stats.successful / stats.total) * 100) : 100;
-        
-        showToast.success('Fächer erfolgreich zugewiesen', {
-          description: `${stats.successful || data.updatedQuestions.length} von ${stats.total || questions.length} Fragen (${successRate}%) erfolgreich verarbeitet${stats.errors > 0 ? `. ${stats.errors} Fragen verwendeten Fallback-Fächer.` : ''}`,
-          duration: 6000
-        });
-        
-        // Show progress completion
-        setAssignmentProgress({
-          processed: stats.total || questions.length,
-          total: stats.total || questions.length,
-          currentChunk: stats.totalChunks || 1,
-          totalChunks: stats.totalChunks || 1
-        });
-        
-        // Clear progress after a short delay
-        setTimeout(() => {
-          setAssignmentProgress(null);
-        }, 2000);
-      } else {
-        throw new Error(data.error || 'Unbekannter Fehler');
+      if (!data.success || !data.jobId) {
+        throw new Error(data.error || 'Job konnte nicht erstellt werden');
       }
+
+      const jobId = data.jobId;
+
+      // Poll for job status
+      const pollInterval = setInterval(async () => {
+        try {
+          const { data: jobData, error: jobError } = await supabase.functions.invoke(`assign-subjects?jobId=${jobId}`, {
+            method: 'GET'
+          });
+
+          if (jobError) {
+            console.error('Error polling job status:', jobError);
+            return;
+          }
+
+          const job = jobData;
+          if (!job) return;
+
+          // Update progress
+          setAssignmentProgress({
+            processed: job.progress || 0,
+            total: job.total || questions.length,
+            currentChunk: Math.ceil((job.progress || 0) / 15),
+            totalChunks: Math.ceil((job.total || questions.length) / 15)
+          });
+
+          // Check if job is complete
+          if (job.status === 'completed') {
+            clearInterval(pollInterval);
+            setIsAssigningSubjects(false);
+
+            // Fetch updated questions from the job result
+            const result = job.result || {};
+            const successCount = result.successful || job.progress || 0;
+            const totalProcessed = result.total || questions.length;
+            const errors = result.errors || 0;
+            const successRate = totalProcessed > 0 ? Math.round((successCount / totalProcessed) * 100) : 100;
+
+            // Reload questions from database to get updated subjects
+            // For now, we'll just show the completion message
+            // The user can refresh to see updated subjects
+            showToast.success('Fächer erfolgreich zugewiesen', {
+              description: `${successCount} von ${totalProcessed} Fragen (${successRate}%) erfolgreich verarbeitet${errors > 0 ? `. ${errors} Fragen verwendeten Fallback-Fächer.` : ''}`,
+              duration: 6000
+            });
+
+            // Clear progress after a short delay
+            setTimeout(() => {
+              setAssignmentProgress(null);
+            }, 2000);
+
+            // Optionally reload the page or refresh questions
+            // window.location.reload();
+          } else if (job.status === 'failed') {
+            clearInterval(pollInterval);
+            setIsAssigningSubjects(false);
+            showToast.error('Fehler beim Zuweisen der Fächer', {
+              description: job.message || 'Die Verarbeitung ist fehlgeschlagen',
+              duration: 6000
+            });
+            setAssignmentProgress(null);
+          }
+        } catch (pollError: any) {
+          console.error('Error polling job status:', pollError);
+        }
+      }, 3000); // Poll every 3 seconds
+
+      // Cleanup on component unmount or after 10 minutes
+      setTimeout(() => {
+        clearInterval(pollInterval);
+      }, 600000); // 10 minutes max
+
     } catch (error: any) {
       console.error('Error assigning subjects:', error);
       showToast.error('Fehler beim Zuweisen der Fächer', {
@@ -262,7 +310,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
         duration: 6000
       });
       setAssignmentProgress(null);
-    } finally {
       setIsAssigningSubjects(false);
     }
   };

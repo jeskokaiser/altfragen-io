@@ -68,6 +68,7 @@ const SubjectReassignmentPanel: React.FC = () => {
     try {
       console.log('Starting subject reassignment:', { examName, universityId, onlyNullSubjects, subjects: subjectList });
       
+      // Create job
       const { data, error } = await supabase.functions.invoke('reassign-subjects', {
         body: {
           examName: examName.trim(),
@@ -79,17 +80,66 @@ const SubjectReassignmentPanel: React.FC = () => {
 
       if (error) {
         console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to reassign subjects');
+        throw new Error(error.message || 'Failed to create reassignment job');
       }
 
-      console.log('Reassignment completed:', data);
-      setResult(data);
-      toast.success(data.message || 'Subject reassignment completed successfully');
+      if (!data.success || !data.jobId) {
+        throw new Error(data.error || 'Job konnte nicht erstellt werden');
+      }
+
+      const jobId = data.jobId;
+      toast.success('Job erstellt, Verarbeitung läuft im Hintergrund...');
+
+      // Poll for job status
+      const pollInterval = setInterval(async () => {
+        try {
+          const { data: jobData, error: jobError } = await supabase.functions.invoke(`reassign-subjects?jobId=${jobId}`, {
+            method: 'GET'
+          });
+
+          if (jobError) {
+            console.error('Error polling job status:', jobError);
+            return;
+          }
+
+          const job = jobData;
+          if (!job) return;
+
+          // Update result with current progress
+          setResult({
+            success: job.status !== 'failed',
+            stats: {
+              total: job.total || 0,
+              successful: (job.result?.successful) || (job.progress - (job.errors || 0)),
+              errors: job.errors || 0,
+              processed: job.progress || 0
+            },
+            message: job.message || 'Processing...'
+          });
+
+          // Check if job is complete
+          if (job.status === 'completed') {
+            clearInterval(pollInterval);
+            setIsProcessing(false);
+            toast.success(job.message || 'Subject reassignment completed successfully');
+          } else if (job.status === 'failed') {
+            clearInterval(pollInterval);
+            setIsProcessing(false);
+            toast.error(job.message || 'Subject reassignment failed');
+          }
+        } catch (pollError: any) {
+          console.error('Error polling job status:', pollError);
+        }
+      }, 3000); // Poll every 3 seconds
+
+      // Cleanup on component unmount or after 10 minutes
+      setTimeout(() => {
+        clearInterval(pollInterval);
+      }, 600000); // 10 minutes max
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during subject reassignment:', error);
       toast.error(`Error: ${error.message}`);
-    } finally {
       setIsProcessing(false);
     }
   };
