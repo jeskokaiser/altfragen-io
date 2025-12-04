@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import TrainingSessionsList from '@/components/training/TrainingSessionsList';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { Button } from '@/components/ui/button';
@@ -17,9 +18,17 @@ import {
 const TrainingSessionsPage: React.FC = () => {
   const { user, universityId } = useAuth();
   const { subscribed } = useSubscription();
+  const location = useLocation();
   const { questions, isQuestionsLoading } = useDashboardData(user?.id, universityId);
-  const { sessions } = useTrainingSessions(user?.id);
+  const { sessions, refetch } = useTrainingSessions(user?.id);
   const [open, setOpen] = useState(false);
+
+  // Refetch sessions when navigating to this page to ensure fresh data
+  useEffect(() => {
+    if (user?.id && location.pathname === '/training/sessions') {
+      refetch();
+    }
+  }, [location.pathname, user?.id, refetch]);
 
   const availableQuestions = useMemo(() => questions || [], [questions]);
   

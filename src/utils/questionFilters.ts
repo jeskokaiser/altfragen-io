@@ -38,51 +38,96 @@ export const filterQuestions = async (
   if (userId && (values.newQuestionsOnly || values.excludeTodaysQuestions)) {
     console.log('Applying new question filters...');
     
-    // Get all user progress data for filtering
-    const { data: userProgress, error: progressError } = await supabase
-      .from('user_progress')
-      .select('question_id, created_at, updated_at')
-      .eq('user_id', userId);
+    // Get progress data from both session_question_progress (prioritized) and user_progress (fallback)
+    const questionIds = filteredQuestions.map(q => q.id);
+    const BATCH_SIZE = 500;
+    const progressMap = new Map<string, { created_at: string; updated_at: string | null }>();
     
-    if (progressError) {
-      console.error('Error fetching user progress for filtering:', progressError);
-    } else {
-      const userProgressMap = new Map<string, { created_at: string; updated_at: string | null }>();
-      userProgress?.forEach(progress => {
-        userProgressMap.set(progress.question_id, {
-          created_at: progress.created_at,
-          updated_at: progress.updated_at
+    // Process in batches
+    for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
+      const batch = questionIds.slice(i, i + BATCH_SIZE);
+      
+      const [sessionProgressResult, userProgressResult] = await Promise.all([
+        supabase
+          .from('session_question_progress')
+          .select('question_id, created_at, updated_at')
+          .eq('user_id', userId)
+          .in('question_id', batch)
+          .order('updated_at', { ascending: false }),
+        supabase
+          .from('user_progress')
+          .select('question_id, created_at, updated_at')
+          .eq('user_id', userId)
+          .in('question_id', batch)
+      ]);
+      
+      // Process session_question_progress first (newer system, takes priority)
+      // Aggregate latest progress per question across all sessions
+      if (sessionProgressResult.data) {
+        const sessionProgressByQuestion = new Map<string, any>();
+        sessionProgressResult.data.forEach(progress => {
+          const existing = sessionProgressByQuestion.get(progress.question_id);
+          // Keep the most recent progress per question
+          if (!existing || (progress.updated_at && (!existing.updated_at || progress.updated_at > existing.updated_at))) {
+            sessionProgressByQuestion.set(progress.question_id, progress);
+          }
         });
-      });
-      
-      // Filter new questions only
-      if (values.newQuestionsOnly) {
-        console.log('Filtering new questions only...');
-        const beforeCount = filteredQuestions.length;
-        filteredQuestions = filteredQuestions.filter(q => !userProgressMap.has(q.id));
-        console.log(`After new questions filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
-      }
-      
-      // Filter out today's questions
-      if (values.excludeTodaysQuestions) {
-        console.log('Filtering out today\'s questions...');
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-        const todayISOString = today.toISOString();
         
-        const beforeCount = filteredQuestions.length;
-        filteredQuestions = filteredQuestions.filter(q => {
-          const progress = userProgressMap.get(q.id);
-          if (!progress) return true; // Include questions never answered
-          
-          // Check if question was answered today (either created or updated today)
-          const createdToday = progress.created_at >= todayISOString;
-          const updatedToday = progress.updated_at && progress.updated_at >= todayISOString;
-          
-          return !createdToday && !updatedToday;
+        sessionProgressByQuestion.forEach(progress => {
+          progressMap.set(progress.question_id, {
+            created_at: progress.created_at,
+            updated_at: progress.updated_at
+          });
         });
-        console.log(`After excluding today's questions filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
       }
+      
+      // Process user_progress as fallback (only for questions not in session_question_progress)
+      if (userProgressResult.data) {
+        userProgressResult.data.forEach(progress => {
+          if (!progressMap.has(progress.question_id)) {
+            progressMap.set(progress.question_id, {
+              created_at: progress.created_at,
+              updated_at: progress.updated_at
+            });
+          }
+        });
+      }
+      
+      if (sessionProgressResult.error) {
+        console.error('Error fetching session progress for filtering:', sessionProgressResult.error);
+      }
+      if (userProgressResult.error) {
+        console.error('Error fetching user progress for filtering:', userProgressResult.error);
+      }
+    }
+    
+    // Filter new questions only
+    if (values.newQuestionsOnly) {
+      console.log('Filtering new questions only...');
+      const beforeCount = filteredQuestions.length;
+      filteredQuestions = filteredQuestions.filter(q => !progressMap.has(q.id));
+      console.log(`After new questions filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
+    }
+    
+    // Filter out today's questions
+    if (values.excludeTodaysQuestions) {
+      console.log('Filtering out today\'s questions...');
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const todayISOString = today.toISOString();
+      
+      const beforeCount = filteredQuestions.length;
+      filteredQuestions = filteredQuestions.filter(q => {
+        const progress = progressMap.get(q.id);
+        if (!progress) return true; // Include questions never answered
+        
+        // Check if question was answered today (either created or updated today)
+        const createdToday = progress.created_at >= todayISOString;
+        const updatedToday = progress.updated_at && progress.updated_at >= todayISOString;
+        
+        return !createdToday && !updatedToday;
+      });
+      console.log(`After excluding today's questions filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
     }
   }
   

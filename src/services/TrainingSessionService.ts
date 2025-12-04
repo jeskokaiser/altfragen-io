@@ -164,12 +164,23 @@ export class TrainingSessionService {
       if (insertError) throw insertError;
     } else {
       // Update existing progress - preserve initial_answer if it exists
+      // Handle is_correct logic:
+      // - If viewing solution: keep existing is_correct if true, otherwise false
+      // - If answer is correct: only set to true if it's the first attempt
+      // - If answer is wrong: set to false (don't preserve previous correct state)
+      const nextIsCorrect =
+        answer === 'solution_viewed'
+          ? (existing.is_correct === true ? true : false)
+          : isCorrect
+            ? (isFirstAttempt ? true : false)
+            : false;
+
       const { error: updateError } = await supabase
         .from('session_question_progress')
         .update({
           last_answer: answer,
           attempts_count: (existing.attempts_count || 0) + 1,
-          is_correct: isCorrect ? true : existing.is_correct,
+          is_correct: nextIsCorrect,
           viewed_solution: viewedSolution ?? false,
           // Only set initial_answer if it doesn't exist yet
           ...((!existing.initial_answer) && { initial_answer: answer }),

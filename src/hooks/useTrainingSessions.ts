@@ -34,6 +34,7 @@ export const useTrainingSessions = (userId: string | undefined) => {
     error: listQuery.error,
     createSession: createMutation.mutateAsync,
     deleteSession: removeMutation.mutateAsync,
+    refetch: listQuery.refetch,
   };
 };
 
@@ -48,12 +49,20 @@ export const useTrainingSession = (sessionId: string | undefined, userId: string
 
   const updateIndex = useMutation({
     mutationFn: (currentIndex: number) => TrainingSessionService.updateIndex(sessionId!, currentIndex),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] });
+      // Also invalidate the list to update progress indicators
+      queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] });
+    }
   });
 
   const updateStatus = useMutation({
     mutationFn: (status: 'active' | 'paused' | 'completed') => TrainingSessionService.updateStatus(sessionId!, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] });
+      // Also invalidate the list to update status badges and progress
+      queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] });
+    }
   });
 
   return {

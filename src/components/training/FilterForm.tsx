@@ -1,4 +1,4 @@
-import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
@@ -17,6 +17,7 @@ interface FilterFormProps {
   subjects: string[];
   years: string[];
   onSubmit: (values: FormValues) => void;
+  onChange?: (values: FormValues) => void;
 }
 
 export interface FilterFormRef {
@@ -24,7 +25,7 @@ export interface FilterFormRef {
   submit: () => void;
 }
 
-const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years, onSubmit }, ref) => {
+const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years, onSubmit, onChange }, ref) => {
   const numericYears = useMemo(() => {
     return years
       .map(year => parseInt(year))
@@ -59,6 +60,70 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
   const yearRange = form.watch('yearRange');
   const wrongQuestionsOnly = form.watch('wrongQuestionsOnly');
   const newQuestionsOnly = form.watch('newQuestionsOnly');
+  
+  // Watch all form fields that could change
+  const subject = form.watch('subject');
+  const difficulty = form.watch('difficulty');
+  const questionCount = form.watch('questionCount');
+  const sortDirection = form.watch('sortDirection');
+  const excludeTodaysQuestions = form.watch('excludeTodaysQuestions');
+  const questionsWithImagesOnly = form.watch('questionsWithImagesOnly');
+  const examYear = form.watch('examYear');
+  const examSemester = form.watch('examSemester');
+
+  // Watch all form values and notify parent on change
+  const onChangeRef = React.useRef(onChange);
+  const lastValuesRef = React.useRef<string>('');
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  
+  // Keep ref updated
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  
+  // Watch all form values and only notify when they actually change
+  useEffect(() => {
+    // Clear any pending timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    // Get current values
+    const currentValues = form.getValues();
+    const valuesString = JSON.stringify(currentValues);
+    
+    // Only call onChange if values actually changed
+    if (valuesString !== lastValuesRef.current) {
+      lastValuesRef.current = valuesString;
+      // Debounce the onChange call
+      timeoutRef.current = setTimeout(() => {
+        if (onChangeRef.current) {
+          onChangeRef.current(currentValues);
+        }
+      }, 100);
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [
+    isRandomMode,
+    isSortingEnabled,
+    yearRange,
+    wrongQuestionsOnly,
+    newQuestionsOnly,
+    subject,
+    difficulty,
+    questionCount,
+    sortDirection,
+    excludeTodaysQuestions,
+    questionsWithImagesOnly,
+    examYear,
+    examSemester,
+    form
+  ]);
 
   useImperativeHandle(ref, () => ({
     getValues: () => form.getValues(),
