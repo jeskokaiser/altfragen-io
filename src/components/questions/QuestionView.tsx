@@ -59,16 +59,24 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   };
 
   const handleAnswerSubmitted = (answer: string, correct: boolean, showSol?: boolean) => {
-    onAnswer(answer, wrongAnswers.length === 0, showSol || false);
+    const isSolutionViewed = answer === 'solution_viewed';
+
+    // For first-attempt logic, ignore the special "solution_viewed" sentinel so that
+    // a later concrete option (A–E) can still count as the first real attempt.
+    const isFirstAttempt = wrongAnswers.length === 0 && !isSolutionViewed;
+
+    onAnswer(answer, isFirstAttempt, showSol || false);
     setShowFeedback(true);
     setIsCorrect(correct);
     
     if (showSol !== undefined) {
       setShowSolution(showSol);
     }
-    
-    // Treat solution_viewed as a wrong attempt for statistics as well
-    if (!correct) {
+
+    // Track only concrete wrong answer options (A–E) in wrongAnswers.
+    // The "solution_viewed" sentinel is handled in higher-level statistics logic,
+    // but should not affect first-attempt detection in this component.
+    if (!correct && !isSolutionViewed) {
       setWrongAnswers(prev => [...prev, answer]);
     }
   };
