@@ -289,6 +289,10 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
             }
+            if (pollTimeoutRef.current) {
+              clearTimeout(pollTimeoutRef.current);
+              pollTimeoutRef.current = null;
+            }
             setIsAssigningSubjects(false);
 
             // Fetch updated questions from the job result
@@ -317,6 +321,10 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
+            }
+            if (pollTimeoutRef.current) {
+              clearTimeout(pollTimeoutRef.current);
+              pollTimeoutRef.current = null;
             }
             setIsAssigningSubjects(false);
             showToast.error('Fehler beim Zuweisen der Fächer', {

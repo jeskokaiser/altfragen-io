@@ -149,12 +149,20 @@ const SubjectReassignmentPanel: React.FC = () => {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
             }
+            if (pollTimeoutRef.current) {
+              clearTimeout(pollTimeoutRef.current);
+              pollTimeoutRef.current = null;
+            }
             setIsProcessing(false);
             toast.success(job.message || 'Subject reassignment completed successfully');
           } else if (job.status === 'failed') {
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current);
               pollIntervalRef.current = null;
+            }
+            if (pollTimeoutRef.current) {
+              clearTimeout(pollTimeoutRef.current);
+              pollTimeoutRef.current = null;
             }
             setIsProcessing(false);
             toast.error(job.message || 'Subject reassignment failed');
