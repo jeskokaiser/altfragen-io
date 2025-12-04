@@ -613,7 +613,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                         onClick={() => handleAnswerClick(letter)}
                         wasAttempted={wasAttempted}
                         isSelected={isSelected}
-                        showPercentage={true}
+                        showPercentage={subscribed || canShowAIContent}
                         modelIcons={modelIcons}
                         showUpgradePrompt={shouldShowUpgradePrompt}
                         isAIGenerated={isAIGenerated}
