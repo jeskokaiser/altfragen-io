@@ -516,7 +516,12 @@ const Dashboard = () => {
             </CardTitle>
             {aiCredits && (
               <span className="text-xs md:text-sm text-muted-foreground">
-                Abrechnungsmonat {new Date(aiCredits.monthStart).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                30-Tage-Zeitraum ab{' '}
+                {new Date(aiCredits.monthStart).toLocaleDateString('de-DE', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })}
               </span>
             )}
           </CardHeader>
@@ -559,12 +564,14 @@ const Dashboard = () => {
                     <>
                       <div className="grid gap-4 md:grid-cols-3">
                         <div className="space-y-1">
-                          <span className="text-sm text-muted-foreground">Kostenlose private Fragen (Monat)</span>
+                          <span className="text-sm text-muted-foreground">
+                            Kostenlose private Fragen (letzte 30 Tage)
+                          </span>
                           <p className="text-2xl font-bold">
                             {usedFree}/{baseLimit}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Verbleibend in diesem Monat: {remainingFreeDisplay}
+                            Verbleibend im aktuellen 30-Tage-Zeitraum: {remainingFreeDisplay}
                           </p>
                         </div>
                         <div className="space-y-1">
@@ -573,7 +580,7 @@ const Dashboard = () => {
                             {isPremium ? aiCredits.paidCreditsRemaining : 0}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            1 Credit = 1 zusätzliche privater KI-Kommentar
+                            1 Credit = 1 zusätzlicher privater KI-Kommentar
                           </p>
                         </div>
                         <div className="space-y-1">
@@ -596,10 +603,11 @@ const Dashboard = () => {
                       {isPremium && (
                         <>
                           <p className="text-xs text-muted-foreground mt-2">
-                            Bis zu 100 private Fragen pro Monat werden mit allen aktivierten KI-Modellen kommentiert. 
-                            Alle weiteren privaten Fragen werden im Hintergrund von Mistral und DeepSeek bearbeitet; 
-                            zu Beginn des nächsten Monats werden zunächst die ältesten teilweise kommentierten Fragen 
-                            mit den fehlenden Modellen ergänzt, bis das neue Monatskontingent ausgeschöpft ist.
+                            Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit allen aktivierten
+                            KI-Modellen kommentiert. Alle weiteren privaten Fragen werden im Hintergrund von Mistral
+                            und DeepSeek bearbeitet; sobald ein neuer 30-Tage-Zeitraum beginnt, werden zunächst die
+                            ältesten teilweise kommentierten Fragen mit den fehlenden Modellen ergänzt, bis das neue
+                            Kontingent ausgeschöpft ist.
                           </p>
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-3">

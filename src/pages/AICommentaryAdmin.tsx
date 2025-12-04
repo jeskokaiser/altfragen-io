@@ -1,14 +1,12 @@
 
 import React from 'react';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import AICommentarySettings from '@/components/ai-commentary/AICommentarySettings';
-import AICommentaryStats from '@/components/ai-commentary/AICommentaryStats';
 import SubjectReassignmentPanel from '@/components/admin/SubjectReassignmentPanel';
 import CampaignManagement from '@/components/admin/CampaignManagement';
-import { Settings, BarChart3, RefreshCw, AlertCircle, Megaphone } from 'lucide-react';
+import { RefreshCw, AlertCircle, Megaphone } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AICommentaryAdmin: React.FC = () => {
@@ -46,16 +44,8 @@ const AICommentaryAdmin: React.FC = () => {
         <h1 className="text-3xl font-bold">Admin Panel</h1>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            AI Settings
-          </TabsTrigger>
+      <Tabs defaultValue="subjects" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="subjects" className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             Subjects
@@ -65,14 +55,6 @@ const AICommentaryAdmin: React.FC = () => {
             Kampagnen
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <AICommentaryStats />
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <AICommentarySettings />
-        </TabsContent>
 
         <TabsContent value="subjects" className="space-y-6">
           <SubjectReassignmentPanel />

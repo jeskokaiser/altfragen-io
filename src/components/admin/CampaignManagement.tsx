@@ -51,6 +51,17 @@ const CampaignManagement: React.FC = () => {
     display_type: 'banner'
   });
 
+  // Local state for datetime-local inputs so users can type freely without the value
+  // being reformatted on every keystroke (which caused the "jumping" time issue).
+  const [startDateInput, setStartDateInput] = useState<string>('');
+  const [endDateInput, setEndDateInput] = useState<string>('');
+
+  // Keep the text inputs in sync when the underlying ISO values change (e.g. when editing a campaign)
+  useEffect(() => {
+    setStartDateInput(formData.start_date ? formData.start_date.slice(0, 16) : '');
+    setEndDateInput(formData.end_date ? formData.end_date.slice(0, 16) : '');
+  }, [formData.start_date, formData.end_date]);
+
   useEffect(() => {
     loadCampaigns();
   }, []);
@@ -646,16 +657,28 @@ const CampaignManagement: React.FC = () => {
                     <Label>Startdatum (optional)</Label>
                     <Input
                       type="datetime-local"
-                      value={formData.start_date ? formData.start_date.slice(0, 16) : ''}
-                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                      value={startDateInput}
+                      onChange={(e) => setStartDateInput(e.target.value)}
+                      onBlur={() =>
+                        setFormData(prev => ({
+                          ...prev,
+                          start_date: startDateInput ? new Date(startDateInput).toISOString() : null
+                        }))
+                      }
                     />
                   </div>
                   <div>
                     <Label>Enddatum (optional)</Label>
                     <Input
                       type="datetime-local"
-                      value={formData.end_date ? formData.end_date.slice(0, 16) : ''}
-                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                      value={endDateInput}
+                      onChange={(e) => setEndDateInput(e.target.value)}
+                      onBlur={() =>
+                        setFormData(prev => ({
+                          ...prev,
+                          end_date: endDateInput ? new Date(endDateInput).toISOString() : null
+                        }))
+                      }
                     />
                   </div>
                 </div>

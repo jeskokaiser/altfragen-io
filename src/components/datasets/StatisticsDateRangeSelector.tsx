@@ -40,6 +40,42 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
     custom: 'Benutzerdefiniert',
   };
 
+  // When selecting a date from the calendar, preserve the existing time portion (if any)
+  const mergeDatePreserveTime = (current: Date | undefined, picked: Date | undefined) => {
+    if (!picked) return undefined;
+    if (!current) return picked;
+
+    const merged = new Date(picked);
+    merged.setHours(
+      current.getHours(),
+      current.getMinutes(),
+      current.getSeconds(),
+      current.getMilliseconds()
+    );
+    return merged;
+  };
+
+  const handleStartSelect = (date: Date | undefined) => {
+    setCustomStart((current) => mergeDatePreserveTime(current, date));
+  };
+
+  const handleEndSelect = (date: Date | undefined) => {
+    setCustomEnd((current) => mergeDatePreserveTime(current, date));
+  };
+
+  // Compare only calendar days when disabling end dates before the start date
+  const isEndDateDisabled = (date: Date) => {
+    if (!customStart) return false;
+
+    const startDay = new Date(customStart);
+    startDay.setHours(0, 0, 0, 0);
+
+    const candidate = new Date(date);
+    candidate.setHours(0, 0, 0, 0);
+
+    return candidate < startDay;
+  };
+
   const handlePresetChange = (preset: StatisticsDateRange['preset']) => {
     if (preset === 'custom') {
       setIsCustomOpen(true);
@@ -109,7 +145,7 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
               <Calendar
                 mode="single"
                 selected={customStart}
-                onSelect={setCustomStart}
+                onSelect={handleStartSelect}
                 locale={de}
                 className="rounded-md border"
               />
@@ -119,10 +155,10 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
               <Calendar
                 mode="single"
                 selected={customEnd}
-                onSelect={setCustomEnd}
+                onSelect={handleEndSelect}
                 locale={de}
                 className="rounded-md border"
-                disabled={(date) => customStart ? date < customStart : false}
+                disabled={isEndDateDisabled}
               />
             </div>
             <div className="flex gap-2 justify-end">
