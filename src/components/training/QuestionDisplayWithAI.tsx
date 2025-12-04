@@ -114,12 +114,16 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     // Initialize/restore state from userAnswerState if it exists
     // This runs both on first render and when navigating back to a question
     if (userAnswerState?.attempts && userAnswerState.attempts.length > 0) {
-      const wrongAttempts = userAnswerState.attempts.filter(
-        attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()
-      );
-      const firstWrong = userAnswerState.attempts.find(
-        attempt => attempt.charAt(0).toLowerCase() !== questionData.correctAnswer.charAt(0).toLowerCase()
-      );
+      // When restoring state, ignore the special sentinel "solution_viewed" for
+      // wrong-attempt tracking so that firstWrongAnswer always refers to a real
+      // answer option (A–E) and not the "show solution" action.
+      const isRealWrongAttempt = (attempt: string) =>
+        attempt !== 'solution_viewed' &&
+        attempt.charAt(0).toLowerCase() !==
+          questionData.correctAnswer.charAt(0).toLowerCase();
+
+      const wrongAttempts = userAnswerState.attempts.filter(isRealWrongAttempt);
+      const firstWrong = userAnswerState.attempts.find(isRealWrongAttempt);
       
       setWrongAnswers(wrongAttempts);
       setFirstWrongAnswer(firstWrong || null);
@@ -238,7 +242,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     onAnswer(answer, isFirstAttemptFlag, viewedSolution || false);
 
     if (!correct) {
-      if (!firstWrongAnswer) {
+      // Don't treat the special "solution_viewed" sentinel as the first wrong answer option.
+      // firstWrongAnswer should always refer to a concrete choice (A–E) so that
+      // subsequent real attempts still count as "first attempt" when appropriate.
+      if (!firstWrongAnswer && answer !== 'solution_viewed') {
         setFirstWrongAnswer(answer);
       }
       // Only track concrete option letters in wrongAnswers; solution_viewed is a separate action

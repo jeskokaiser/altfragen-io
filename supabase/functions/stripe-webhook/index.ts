@@ -298,6 +298,29 @@ serve(async (req) => {
       customerId: subscription.customer,
     });
 
+    // Robust handling for initial "incomplete" state:
+    // When a subscription is created via Checkout, Stripe first sends
+    // customer.subscription.created with status "incomplete" BEFORE
+    // payment succeeds. We don't want to mark the user as unsubscribed
+    // in this transient state, especially if they already had access.
+    //
+    // Instead we:
+    // - Ignore "created" events with status "incomplete"
+    // - Rely on:
+    //   - checkout.session.completed (subscription mode), and/or
+    //   - later customer.subscription.updated events
+    // to reflect the final status (active / trialing / canceled).
+    if (
+      event.type === "customer.subscription.created" &&
+      subscription.status === "incomplete"
+    ) {
+      log("Ignoring transient incomplete subscription on creation", {
+        subscriptionId: subscription.id,
+        status: subscription.status,
+      });
+      return new Response("OK", { status: 200 });
+    }
+
     await syncSubscriptionState(
       supabase,
       stripe,
