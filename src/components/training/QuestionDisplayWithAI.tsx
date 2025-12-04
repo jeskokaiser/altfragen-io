@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Question } from '@/types/Question';
@@ -39,7 +39,7 @@ interface QuestionDisplayWithAIProps {
   onPrevious: () => void;
   onAnswer: (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => void;
   // Optional: per-session recording; when provided, we call it instead of default save to user_progress
-  onSessionRecordAttempt?: (answer: string, isCorrect: boolean, viewedSolution?: boolean) => Promise<void>;
+  onSessionRecordAttempt?: (answer: string, isCorrect: boolean, viewedSolution?: boolean, isFirstAttempt?: boolean) => Promise<void>;
   userAnswer: string;
   userAnswerState?: AnswerState;
   onQuit: () => void;
@@ -73,6 +73,14 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [initialAnswer, setInitialAnswer] = useState<string | null>(null);
   const [canShowAIContent, setCanShowAIContent] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  // Refs to store toggle functions for each answer option
+  const toggleExpandRefs = {
+    A: useRef<(() => void) | null>(null),
+    B: useRef<(() => void) | null>(null),
+    C: useRef<(() => void) | null>(null),
+    D: useRef<(() => void) | null>(null),
+    E: useRef<(() => void) | null>(null),
+  };
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -179,7 +187,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   ) => {
     if (onSessionRecordAttempt) {
       // Delegate to session recording when running inside a session
-      await onSessionRecordAttempt(answer, isAnswerCorrect, viewedSolution);
+      await onSessionRecordAttempt(answer, isAnswerCorrect, viewedSolution, isFirstAttempt);
       return;
     }
     if (!user) return;
@@ -274,7 +282,34 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const handleAnswerClick = async (answer: string) => {
-    if (showFeedback) return;
+    const answerLetter = answer.charAt(0).toUpperCase() as 'A' | 'B' | 'C' | 'D' | 'E';
+    
+    // Check if this answer is already selected or was attempted
+    const isAlreadySelected = selectedAnswer?.charAt(0).toUpperCase() === answerLetter;
+    const wasAlreadyAttempted = wrongAnswers.includes(answerLetter);
+    const isAlreadySelectedOrAttempted = isAlreadySelected || wasAlreadyAttempted;
+    
+    // If feedback is already shown, or if answer is already selected/attempted (before feedback),
+    // toggle the expansion for this answer
+    if (showFeedback || isAlreadySelectedOrAttempted) {
+      const toggleFn = toggleExpandRefs[answerLetter].current;
+      if (toggleFn) {
+        toggleFn();
+      }
+      // Still update selectedAnswer so the toggle works correctly
+      if (!showFeedback) {
+        setSelectedAnswer(answer);
+      }
+      // If feedback is shown, we're done - just toggle
+      if (showFeedback) {
+        return;
+      }
+      // If before feedback but already selected/attempted, we still want to process the answer
+      // (in case they want to change their answer), but also toggle expansion
+      // Actually, wait - if they press the same key again before feedback, they probably want to toggle
+      // So let's return here to just toggle
+      return;
+    }
 
     const isAnswerCorrect = answer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
     const isSolutionViewed = answer === 'solution_viewed';
@@ -656,6 +691,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                         modelIcons={modelIcons}
                         showUpgradePrompt={shouldShowUpgradePrompt}
                         isAIGenerated={isAIGenerated}
+                        onToggleExpandRef={toggleExpandRefs[letter]}
                     >
                         {(shouldShowLoader || (aiCommentary && (canShowAIContent || allowPreRevealAI))) && (
                           shouldShowLoader ? (

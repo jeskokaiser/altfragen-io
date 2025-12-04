@@ -160,7 +160,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
           userAnswer={currentAnswerState?.value || ''}
           userAnswerState={currentAnswerState}
           onQuit={handleQuit}
-          onSessionRecordAttempt={async (answer, isCorrect, viewedSolution) => {
+          onSessionRecordAttempt={async (answer, isCorrect, viewedSolution, isFirstAttempt) => {
             if (!session || !user || !currentQuestion) return;
             
             // Safety check: if isCorrect is not explicitly provided, calculate it
@@ -178,6 +178,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
               answer,
               isCorrect: finalIsCorrect,
               viewedSolution,
+              isFirstAttempt,
             });
           }}
         />

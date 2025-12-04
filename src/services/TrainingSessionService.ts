@@ -132,8 +132,9 @@ export class TrainingSessionService {
     answer: string;
     isCorrect: boolean;
     viewedSolution?: boolean;
+    isFirstAttempt?: boolean;
   }): Promise<void> {
-    const { sessionId, userId, questionId, answer, isCorrect, viewedSolution } = params;
+    const { sessionId, userId, questionId, answer, isCorrect, viewedSolution, isFirstAttempt } = params;
 
     // Upsert into session_question_progress
     const { data: existing, error: fetchError } = await supabase
