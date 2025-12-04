@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Question } from '@/types/Question';
@@ -74,13 +74,21 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [canShowAIContent, setCanShowAIContent] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   // Refs to store toggle functions for each answer option
-  const toggleExpandRefs = {
-    A: useRef<(() => void) | null>(null),
-    B: useRef<(() => void) | null>(null),
-    C: useRef<(() => void) | null>(null),
-    D: useRef<(() => void) | null>(null),
-    E: useRef<(() => void) | null>(null),
-  };
+  // Create individual refs that persist across renders
+  const toggleExpandRefA = useRef<(() => void) | null>(null);
+  const toggleExpandRefB = useRef<(() => void) | null>(null);
+  const toggleExpandRefC = useRef<(() => void) | null>(null);
+  const toggleExpandRefD = useRef<(() => void) | null>(null);
+  const toggleExpandRefE = useRef<(() => void) | null>(null);
+  
+  // Compose refs into an object that persists across renders
+  const toggleExpandRefs = useMemo(() => ({
+    A: toggleExpandRefA,
+    B: toggleExpandRefB,
+    C: toggleExpandRefC,
+    D: toggleExpandRefD,
+    E: toggleExpandRefE,
+  }), []);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -160,17 +168,18 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   
   // Sync canShowAIContent with access state and question state
   useEffect(() => {
-    if (!showFeedback) {
-      // Don't show AI content if feedback isn't shown
-      setCanShowAIContent(false);
-    } else if (subscribed) {
+    if (subscribed) {
       // Premium users can always see AI content
       setCanShowAIContent(true);
     } else if (currentQuestion.id === usageIncrementedForQuestion) {
       // Already incremented for this question - check current access
+      // Allow showing AI content even before feedback if usage was incremented
       setCanShowAIContent(canAccessAIComments);
+    } else if (!showFeedback) {
+      // Don't show AI content if feedback isn't shown and usage hasn't been incremented
+      setCanShowAIContent(false);
     } else {
-      // Haven't incremented yet - don't show AI content
+      // Feedback is shown but usage hasn't been incremented - don't show AI content
       setCanShowAIContent(false);
     }
   }, [showFeedback, subscribed, canAccessAIComments, currentQuestion.id, usageIncrementedForQuestion]);
@@ -673,7 +682,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
                 // Show upgrade prompt if free user reached limit and trying to view AI comments
                 const shouldShowUpgradePrompt = isFreeTier && !canShowAIContent && showFeedback;
-                const allowPreRevealAI = !showFeedback && (isSelected || wasAttempted);
+                // Allow pre-reveal AI only if:
+                // 1. Feedback is not shown yet
+                // 2. Answer is selected or attempted
+                // 3. User has access (canShowAIContent already checks if usage was incremented)
+                const allowPreRevealAI = !showFeedback && (isSelected || wasAttempted) && canShowAIContent;
                 const shouldShowLoader = aiLoading && (canShowAIContent || allowPreRevealAI);
 
                 return (

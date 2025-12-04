@@ -107,13 +107,20 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
   const handleClick = () => {
     const hasCommentsContent = Boolean(explanation || children);
     const canExpand = hasCommentsContent || showUpgradePrompt;
-    // Before reveal, always allow expanding to show AI comments (or fallback),
-    // and also trigger the answer selection.
+    
+    // Before reveal:
+    // - If answer is NOT already selected/attempted: toggle expansion AND trigger answer selection (first click)
+    // - If answer IS already selected/attempted: only toggle expansion (subsequent clicks to collapse/expand)
     if (!isRevealed) {
       if (canExpand) {
         setIsExpanded((prev) => !prev);
       }
-      onClick();
+      // Only call onClick() if this is the first time interacting with this answer
+      // (not selected and not previously attempted)
+      if (!isSelected && !wasAttempted) {
+        onClick();
+      }
+      // If already selected/attempted, just toggle expansion (don't call onClick to avoid double-toggle)
       return;
     }
 
