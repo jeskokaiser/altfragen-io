@@ -1,5 +1,6 @@
 export interface FormValues {
-  subject: string;
+  subject?: string; // Deprecated: use subjects array instead, kept for backward compatibility
+  subjects: string[]; // Array of selected subjects, empty array means 'all'
   questionCount: number; // Changed from string to number
   difficulty: string;
   isRandomSelection: boolean;

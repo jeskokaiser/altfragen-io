@@ -264,9 +264,21 @@ const TrainingSessionsList: React.FC = () => {
                           <span className="truncate">{session.title}</span>
                         </CardTitle>
                         <div className="text-sm text-muted-foreground space-y-1">
-                          {fs?.subject && fs.subject !== 'all' && (
-                            <div>Fach: <span className="font-medium">{fs.subject}</span></div>
-                          )}
+                          {(() => {
+                            // Support both new subjects array and legacy subject string
+                            const subjects = fs?.subjects && Array.isArray(fs.subjects) && fs.subjects.length > 0
+                              ? fs.subjects
+                              : (fs?.subject && fs.subject !== 'all' ? [fs.subject] : []);
+                            
+                            if (subjects.length > 0) {
+                              return (
+                                <div>Fach: <span className="font-medium">
+                                  {subjects.length === 1 ? subjects[0] : `${subjects.length} Fächer`}
+                                </span></div>
+                              );
+                            }
+                            return null;
+                          })()}
                           {fs?.difficulty && fs.difficulty !== 'all' && (
                             <div>Schwierigkeit: <span className="font-medium capitalize">{fs.difficulty}</span></div>
                           )}

@@ -147,12 +147,12 @@ export const useDashboardData = (
       const [sessionProgressResult, userProgressResult] = await Promise.all([
         supabase
           .from('session_question_progress')
-          .select('question_id, updated_at')
+          .select('question_id, updated_at, created_at')
           .eq('user_id', userId)
           .gte('updated_at', todayISO),
         supabase
           .from('user_progress')
-          .select('question_id, updated_at')
+          .select('question_id, updated_at, created_at')
           .eq('user_id', userId)
           .gte('updated_at', todayISO)
       ]);
@@ -176,6 +176,107 @@ export const useDashboardData = (
       });
 
       return uniqueQuestions.size;
+    },
+    enabled: !!userId
+  });
+
+  // Calculate "wiederholt" (repeated) questions - questions answered today that were not answered for the first time today
+  const todayRepeatedCountQuery = useQuery({
+    queryKey: ['today-repeated', userId],
+    queryFn: async () => {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const todayISO = today.toISOString();
+
+      // Get all questions answered today
+      const [sessionProgressToday, userProgressToday] = await Promise.all([
+        supabase
+          .from('session_question_progress')
+          .select('question_id, created_at, session_id')
+          .eq('user_id', userId)
+          .gte('created_at', todayISO),
+        supabase
+          .from('user_progress')
+          .select('question_id, created_at')
+          .eq('user_id', userId)
+          .gte('created_at', todayISO)
+      ]);
+
+      if (sessionProgressToday.error) throw sessionProgressToday.error;
+      if (userProgressToday.error) throw userProgressToday.error;
+
+      // Collect all questions answered today
+      const questionsFromToday = new Set<string>();
+      const sessionProgressByQuestion = new Map<string, number>(); // Track how many sessions per question today
+      
+      (sessionProgressToday.data || []).forEach((p: any) => {
+        if (p.question_id) {
+          questionsFromToday.add(p.question_id);
+          sessionProgressByQuestion.set(
+            p.question_id,
+            (sessionProgressByQuestion.get(p.question_id) || 0) + 1
+          );
+        }
+      });
+      
+      (userProgressToday.data || []).forEach((p: any) => {
+        if (p.question_id) questionsFromToday.add(p.question_id);
+      });
+
+      if (questionsFromToday.size === 0) return 0;
+
+      // Check which questions have progress from before today OR were answered in multiple sessions today
+      const questionIdsArray = Array.from(questionsFromToday);
+      const BATCH_SIZE = 300;
+      const batches: string[][] = [];
+      for (let i = 0; i < questionIdsArray.length; i += BATCH_SIZE) {
+        batches.push(questionIdsArray.slice(i, i + BATCH_SIZE));
+      }
+
+      const beforeTodayPromises = batches.map(batch => {
+        return Promise.all([
+          supabase
+            .from('session_question_progress')
+            .select('question_id')
+            .eq('user_id', userId)
+            .in('question_id', batch)
+            .lt('created_at', todayISO),
+          supabase
+            .from('user_progress')
+            .select('question_id')
+            .eq('user_id', userId)
+            .in('question_id', batch)
+            .lt('created_at', todayISO)
+        ]);
+      });
+
+      const beforeTodayResults = await Promise.all(beforeTodayPromises);
+      
+      // Collect questions that have progress before today
+      const questionsWithPreviousProgress = new Set<string>();
+      beforeTodayResults.forEach(([sessionResult, userResult]) => {
+        (sessionResult.data || []).forEach((p: any) => {
+          if (p.question_id) questionsWithPreviousProgress.add(p.question_id);
+        });
+        (userResult.data || []).forEach((p: any) => {
+          if (p.question_id) questionsWithPreviousProgress.add(p.question_id);
+        });
+      });
+
+      // Count questions that are "wiederholt":
+      // 1. Questions answered today that have progress from before today, OR
+      // 2. Questions answered today in multiple sessions (the second+ session makes it "wiederholt")
+      //    Note: If a question is answered in Session 1 (first time ever) and Session 2 today,
+      //    it counts as "Neu" from Session 1, but the Session 2 answer makes it "wiederholt"
+      const repeatedQuestions = Array.from(questionsFromToday).filter(qid => {
+        const hasPreviousProgress = questionsWithPreviousProgress.has(qid);
+        const answeredInMultipleSessions = (sessionProgressByQuestion.get(qid) || 0) > 1;
+        // A question is "wiederholt" if it has previous progress OR was answered in multiple sessions today
+        // (because answering it in a second session means it's being repeated)
+        return hasPreviousProgress || answeredInMultipleSessions;
+      });
+
+      return repeatedQuestions.length;
     },
     enabled: !!userId
   });
@@ -289,6 +390,7 @@ export const useDashboardData = (
     questionsError: questionsQuery.error,
     todayNewCount: todayNewCountQuery.data,
     todayPracticeCount: todayPracticeCountQuery.data,
+    todayRepeatedCount: todayRepeatedCountQuery.data,
     totalAnsweredCount: totalAnsweredCountQuery.data,
     totalAttemptsCount: totalAttemptsCountQuery.data,
   };

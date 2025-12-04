@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StatisticsDateRange } from '@/contexts/UserPreferencesContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,12 +25,40 @@ interface StatisticsDateRangeSelectorProps {
 
 export default function StatisticsDateRangeSelector({ value, onChange }: StatisticsDateRangeSelectorProps) {
   const [isCustomOpen, setIsCustomOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverTriggerRef = useRef<HTMLButtonElement>(null);
   const [customStart, setCustomStart] = useState<Date | undefined>(
     value.start ? new Date(value.start) : undefined
   );
   const [customEnd, setCustomEnd] = useState<Date | undefined>(
     value.end ? new Date(value.end) : undefined
   );
+
+  // Position the popover trigger to match the button position
+  useEffect(() => {
+    if (isCustomOpen && buttonRef.current && popoverTriggerRef.current) {
+      const updatePosition = () => {
+        if (buttonRef.current && popoverTriggerRef.current) {
+          const rect = buttonRef.current.getBoundingClientRect();
+          popoverTriggerRef.current.style.position = 'fixed';
+          popoverTriggerRef.current.style.left = `${rect.left}px`;
+          popoverTriggerRef.current.style.top = `${rect.top}px`;
+          popoverTriggerRef.current.style.width = `${rect.width}px`;
+          popoverTriggerRef.current.style.height = `${rect.height}px`;
+        }
+      };
+      
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+      
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
+    }
+  }, [isCustomOpen]);
 
   const presetLabels: Record<StatisticsDateRange['preset'], string> = {
     all: 'Gesamte Zeit',
@@ -76,9 +104,16 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
     return candidate < startDay;
   };
 
-  const handlePresetChange = (preset: StatisticsDateRange['preset']) => {
+  const handlePresetChange = (preset: StatisticsDateRange['preset'], event?: Event) => {
     if (preset === 'custom') {
-      setIsCustomOpen(true);
+      // Prevent dropdown from closing immediately
+      event?.preventDefault?.();
+      // Close dropdown first, then open popover
+      setIsDropdownOpen(false);
+      // Use setTimeout to ensure dropdown closes before popover opens
+      setTimeout(() => {
+        setIsCustomOpen(true);
+      }, 150);
     } else {
       onChange({ preset });
     }
@@ -106,9 +141,9 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
 
   return (
     <div className="flex items-center gap-2">
-      <DropdownMenu>
+      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gap-2">
+          <Button ref={buttonRef} variant="outline" className="gap-2">
             <CalendarIcon className="h-4 w-4" />
             {getDisplayText()}
             <ChevronDown className="h-4 w-4" />
@@ -127,18 +162,37 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
           <DropdownMenuItem onClick={() => handlePresetChange('90days')}>
             {presetLabels['90days']}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handlePresetChange('custom')}>
+          <DropdownMenuItem 
+            onSelect={(e) => {
+              e.preventDefault();
+              handlePresetChange('custom', e);
+            }}
+          >
             {presetLabels.custom}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* Custom Date Range Picker Dialog */}
-      <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen}>
+      <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen} modal={true}>
         <PopoverTrigger asChild>
-          <span></span>
+          <button 
+            ref={popoverTriggerRef}
+            className="opacity-0 pointer-events-none" 
+            aria-hidden="true"
+            style={{ 
+              position: 'fixed',
+              zIndex: -1,
+              visibility: isCustomOpen ? 'visible' : 'hidden'
+            }}
+          />
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-4" align="end">
+        <PopoverContent 
+          className="w-auto p-4" 
+          align="end" 
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          sideOffset={5}
+        >
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Startdatum</label>

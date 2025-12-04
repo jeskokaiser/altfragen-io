@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardClock, Plus, Play, Settings, Trash2, Pencil, Lock, AlertCircle, Crown } from 'lucide-react';
+import { ClipboardClock, Plus, Play, Settings, Trash2, Pencil, Lock, AlertCircle, Crown, BarChart3 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { UpcomingExamWithStats } from '@/types/UpcomingExam';
 import { getExamStatsForUser, type ExamUserStats } from '@/services/UpcomingExamService';
@@ -231,7 +231,17 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
                           <div className="font-medium truncate">{s.title}</div>
                           <div className="text-xs text-muted-foreground">{s.current_index + 1}/{s.total_questions} • {s.status}</div>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/training/session/${s.id}`)}>Fortsetzen</Button>
+                        {s.status === 'completed' ? (
+                          <Button size="sm" variant="outline" onClick={() => navigate(`/training/session/${s.id}/analytics`)}>
+                            <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                            Auswertung
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => navigate(`/training/session/${s.id}`)}>
+                            <Play className="h-3.5 w-3.5 mr-1" />
+                            Fortsetzen
+                          </Button>
+                        )}
                       </div>
                     ))}
                     {sessionsForExam.length > 3 && (

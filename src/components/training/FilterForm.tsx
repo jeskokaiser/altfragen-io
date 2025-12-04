@@ -38,7 +38,7 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
 
   const form = useForm<FormValues>({
     defaultValues: {
-      subject: 'all',
+      subjects: [],
       difficulty: 'all',
       questionCount: 20,
       isRandomSelection: false,
@@ -62,7 +62,7 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
   const newQuestionsOnly = form.watch('newQuestionsOnly');
   
   // Watch all form fields that could change
-  const subject = form.watch('subject');
+  const selectedSubjects = form.watch('subjects');
   const difficulty = form.watch('difficulty');
   const questionCount = form.watch('questionCount');
   const sortDirection = form.watch('sortDirection');
@@ -114,7 +114,7 @@ const FilterForm = forwardRef<FilterFormRef, FilterFormProps>(({ subjects, years
     yearRange,
     wrongQuestionsOnly,
     newQuestionsOnly,
-    subject,
+    selectedSubjects,
     difficulty,
     questionCount,
     sortDirection,

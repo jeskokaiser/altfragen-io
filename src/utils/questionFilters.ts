@@ -11,6 +11,12 @@ export const filterQuestions = async (
 ): Promise<Question[]> => {
   console.log('Starting filterQuestions with', questions.length, 'questions');
   
+  // Normalize FormValues to ensure subjects is always an array
+  const normalizedValues: FormValues = {
+    ...values,
+    subjects: Array.isArray(values.subjects) ? values.subjects : []
+  };
+  
   // Start with all questions
   let filteredQuestions = [...questions];
   
@@ -27,7 +33,7 @@ export const filterQuestions = async (
   }
   
   // Apply questionsWithImagesOnly filter (applies even in random mode)
-  if (values.questionsWithImagesOnly) {
+  if (normalizedValues.questionsWithImagesOnly) {
     console.log('Filtering questions with images only...');
     const beforeCount = filteredQuestions.length;
     filteredQuestions = filteredQuestions.filter(q => q.image_key && q.image_key.trim() !== '');
@@ -35,7 +41,7 @@ export const filterQuestions = async (
   }
   
   // Apply new filters if enabled and userId is available (these apply even in random mode)
-  if (userId && (values.newQuestionsOnly || values.excludeTodaysQuestions)) {
+  if (userId && (normalizedValues.newQuestionsOnly || normalizedValues.excludeTodaysQuestions)) {
     console.log('Applying new question filters...');
     
     // Get progress data from both session_question_progress (prioritized) and user_progress (fallback)
@@ -102,7 +108,7 @@ export const filterQuestions = async (
     }
     
     // Filter new questions only
-    if (values.newQuestionsOnly) {
+    if (normalizedValues.newQuestionsOnly) {
       console.log('Filtering new questions only...');
       const beforeCount = filteredQuestions.length;
       filteredQuestions = filteredQuestions.filter(q => !progressMap.has(q.id));
@@ -110,7 +116,7 @@ export const filterQuestions = async (
     }
     
     // Filter out today's questions
-    if (values.excludeTodaysQuestions) {
+    if (normalizedValues.excludeTodaysQuestions) {
       console.log('Filtering out today\'s questions...');
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
@@ -132,8 +138,8 @@ export const filterQuestions = async (
   }
   
   // Apply difficulty filter (applies even in random mode)
-  if (values.difficulty !== 'all') {
-    const selectedDifficulty = parseInt(values.difficulty);
+  if (normalizedValues.difficulty !== 'all') {
+    const selectedDifficulty = parseInt(normalizedValues.difficulty);
     filteredQuestions = filteredQuestions.filter(q => {
       const questionDifficulty = q.difficulty ?? 3;
       return questionDifficulty === selectedDifficulty;
@@ -141,18 +147,18 @@ export const filterQuestions = async (
   }
   
   // If random selection is enabled, skip subject/year/semester filtering
-  if (values.isRandomSelection) {
+  if (normalizedValues.isRandomSelection) {
     return filteredQuestions;
   }
   
   // Check for contradictory filters
-  if (values.newQuestionsOnly && values.wrongQuestionsOnly) {
+  if (normalizedValues.newQuestionsOnly && normalizedValues.wrongQuestionsOnly) {
     console.warn('Both newQuestionsOnly and wrongQuestionsOnly are enabled - this will return no questions');
     return []; // Return empty array since these filters are mutually exclusive
   }
   
   // Filter wrong questions first if enabled
-  if (values.wrongQuestionsOnly && questionResults) {
+  if (normalizedValues.wrongQuestionsOnly && questionResults) {
     console.log('Filtering wrong questions...');
     console.log('Before wrong questions filter:', filteredQuestions.length);
     filteredQuestions = filteredQuestions.filter(q => {
@@ -163,15 +169,27 @@ export const filterQuestions = async (
     console.log('After wrong questions filter:', filteredQuestions.length);
   }
   
-  // Then apply subject filter
-  if (values.subject !== 'all') {
-    console.log('Filtering by subject:', values.subject);
-    filteredQuestions = filteredQuestions.filter(q => q.subject === values.subject);
-    console.log('After subject filter:', filteredQuestions.length);
+  // Then apply subject filter (support both new subjects array and legacy subject string)
+  // Empty array means "all subjects" (no filtering)
+  const selectedSubjects: string[] = normalizedValues.subjects.length > 0
+    ? normalizedValues.subjects
+    : (normalizedValues.subject && normalizedValues.subject !== 'all' ? [normalizedValues.subject] : []);
+  
+  // Only filter if we have specific subjects selected
+  if (selectedSubjects.length > 0) {
+    console.log('Filtering by subjects:', selectedSubjects);
+    const beforeCount = filteredQuestions.length;
+    filteredQuestions = filteredQuestions.filter(q => {
+      if (!q.subject) return false;
+      return selectedSubjects.includes(q.subject);
+    });
+    console.log(`After subject filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
+  } else {
+    console.log('No subject filter applied (all subjects)');
   }
   
   // Apply year range filter
-  const [minYear, maxYear] = values.yearRange;
+  const [minYear, maxYear] = normalizedValues.yearRange;
   console.log('Filtering by year range:', minYear, 'to', maxYear);
   filteredQuestions = filteredQuestions.filter(q => {
     // Include questions with no year data if the range covers the default range
@@ -187,18 +205,18 @@ export const filterQuestions = async (
   console.log('After year range filter:', filteredQuestions.length);
   
   // Apply specific exam year filter if not 'all'
-  if (values.examYear && values.examYear !== 'all') {
-    console.log('Filtering by specific exam year:', values.examYear);
+  if (normalizedValues.examYear && normalizedValues.examYear !== 'all') {
+    console.log('Filtering by specific exam year:', normalizedValues.examYear);
     const beforeCount = filteredQuestions.length;
-    filteredQuestions = filteredQuestions.filter(q => q.year === values.examYear);
+    filteredQuestions = filteredQuestions.filter(q => q.year === normalizedValues.examYear);
     console.log(`After exam year filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
   }
   
   // Apply specific exam semester filter if not 'all'
-  if (values.examSemester && values.examSemester !== 'all') {
-    console.log('Filtering by specific exam semester:', values.examSemester);
+  if (normalizedValues.examSemester && normalizedValues.examSemester !== 'all') {
+    console.log('Filtering by specific exam semester:', normalizedValues.examSemester);
     const beforeCount = filteredQuestions.length;
-    filteredQuestions = filteredQuestions.filter(q => q.semester === values.examSemester);
+    filteredQuestions = filteredQuestions.filter(q => q.semester === normalizedValues.examSemester);
     console.log(`After exam semester filter: ${filteredQuestions.length} (removed ${beforeCount - filteredQuestions.length})`);
   }
 

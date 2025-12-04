@@ -82,6 +82,7 @@ const Dashboard = () => {
     questionsError,
     todayNewCount,
     todayPracticeCount,
+    todayRepeatedCount,
     totalAnsweredCount,
     totalAttemptsCount,
   } = useDashboardData(user?.id, universityId, preferences?.statisticsDateRange);
@@ -438,9 +439,7 @@ const Dashboard = () => {
               </div>
               <div className="space-y-1">
                 <span className="text-sm text-muted-foreground">Wiederholt</span>
-                <p className="text-2xl font-bold">
-                  {Math.max(0, (todayPracticeCount ?? 0) - (todayNewCount ?? 0))}
-                </p>
+                <p className="text-2xl font-bold">{todayRepeatedCount ?? 0}</p>
               </div>
               <div className="space-y-1">
                 <span className="text-sm text-muted-foreground">Gesamt</span>
