@@ -168,7 +168,15 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   }, [showFeedback, subscribed, canAccessAIComments, currentQuestion.id, usageIncrementedForQuestion]);
 
   // Database progress saving logic
-  const saveAnswerProgress = async (answer: string, isAnswerCorrect: boolean, viewedSolution: boolean = false) => {
+  // NOTE: Do not rely on component state like wrongAnswers inside this function.
+  // All information that affects persistence (e.g. "first attempt") must be passed
+  // in via parameters to avoid stale-closure issues.
+  const saveAnswerProgress = async (
+    answer: string,
+    isAnswerCorrect: boolean,
+    viewedSolution: boolean = false,
+    isFirstAttempt: boolean = false
+  ) => {
     if (onSessionRecordAttempt) {
       // Delegate to session recording when running inside a session
       await onSessionRecordAttempt(answer, isAnswerCorrect, viewedSolution);
@@ -206,7 +214,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           answer === 'solution_viewed'
             ? (existingProgress.is_correct === true ? true : false)
             : isAnswerCorrect
-              ? (preferences?.immediateFeedback || wrongAnswers.length === 0)
+              ? (preferences?.immediateFeedback || isFirstAttempt)
               : existingProgress.is_correct;
 
         const { error: updateError } = await supabase
@@ -237,10 +245,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
   const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
     const isSolutionViewed = answer === 'solution_viewed';
-    // For solution_viewed we still treat this as a wrong attempt for statistics,
-    // but we don't want to double-count it as a specific wrong option or mark it
-    // as a "first attempt". First-attempt detection should only consider concrete
-    // answer options (A–E), mirroring QuestionView.
+    // Compute "first attempt" once, based on the state *before* we schedule any updates.
+    // This avoids relying on state that may have changed by the time async logic runs.
     const isFirstAttemptFlag =
       wrongAnswers.length === 0 && !firstWrongAnswer && !isSolutionViewed;
 
@@ -271,6 +277,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     if (showFeedback) return;
 
     const isAnswerCorrect = answer.charAt(0).toLowerCase() === currentQuestion.correctAnswer.charAt(0).toLowerCase();
+    const isSolutionViewed = answer === 'solution_viewed';
+    // Snapshot whether this was the first real attempt *before* scheduling any state updates
+    // so we don't depend on potentially stale state inside async callbacks.
+    const isFirstAttemptSnapshot =
+      wrongAnswers.length === 0 && !firstWrongAnswer && !isSolutionViewed;
     
     // Track which answer was selected
     setSelectedAnswer(answer);
@@ -328,13 +339,16 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         setFirstWrongAnswer(answer);
       }
       setWrongAnswers(prev => [...prev, answer]);
-      onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, false);
+      onAnswer(answer, isFirstAttemptSnapshot, false);
       
       // No toast needed - AI comments show immediately
     }
     
-    // Save to database in the background (non-blocking)
-    saveAnswerProgress(answer, isAnswerCorrect, false).catch(error => {
+    // Save to database in the background (non-blocking), passing in the
+    // precomputed "first attempt" flag so we don't rely on closure state.
+    // IMPORTANT: Any caller of saveAnswerProgress must compute isFirstAttempt
+    // synchronously before scheduling state updates and pass it explicitly here.
+    saveAnswerProgress(answer, isAnswerCorrect, false, isFirstAttemptSnapshot).catch(error => {
       console.error('Error saving answer progress:', error);
       // Don't show error toast for background saves to avoid disrupting flow
     });
@@ -438,8 +452,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     // Reveal the answer immediately
     handleAnswerSubmitted('solution_viewed', false, true);
     
-    // Save as viewed solution in database (non-blocking)
-    saveAnswerProgress('solution_viewed', false, true).catch(error => {
+    // Save as viewed solution in database (non-blocking). Viewing the solution
+    // is explicitly *not* counted as a first attempt, so we pass false.
+    // IMPORTANT: Do not derive any "first attempt" flags inside saveAnswerProgress;
+    // they must always be computed by the caller and passed in.
+    saveAnswerProgress('solution_viewed', false, true, false).catch(error => {
       console.error('Error saving solution view:', error);
     });
   };
