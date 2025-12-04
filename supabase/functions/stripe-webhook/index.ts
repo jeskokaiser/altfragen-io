@@ -10,6 +10,201 @@ const log = (step: string, details?: unknown) => {
   );
 };
 
+// Helper to sync subscription state between Stripe and Supabase
+const PREMIUM_STATUSES = new Set<Stripe.Subscription.Status>([
+  "active",
+  "trialing",
+]);
+
+async function syncSubscriptionState(
+  supabase: ReturnType<typeof createClient>,
+  stripe: Stripe,
+  subscription: Stripe.Subscription,
+  monthlyPriceId?: string | null,
+  semesterPriceId?: string | null,
+) {
+  log("Syncing subscription state", {
+    subscriptionId: subscription.id,
+    status: subscription.status,
+    customer: subscription.customer,
+  });
+
+  // Determine if subscription should be treated as active/premium
+  const hasActiveSub = PREMIUM_STATUSES.has(subscription.status);
+
+  let subscriptionEnd: string | null = null;
+  if (subscription.current_period_end) {
+    const periodEndTimestamp = subscription.current_period_end * 1000;
+    if (periodEndTimestamp && !isNaN(periodEndTimestamp)) {
+      subscriptionEnd = new Date(periodEndTimestamp).toISOString();
+    }
+  }
+
+  // Determine subscription tier from price ID or metadata
+  let subscriptionTier: string | null = null;
+  if (hasActiveSub) {
+    const priceId = subscription.items.data[0]?.price?.id;
+
+    if (semesterPriceId && priceId === semesterPriceId) {
+      subscriptionTier = "Semester";
+    } else if (monthlyPriceId && priceId === monthlyPriceId) {
+      subscriptionTier = "Monthly";
+    } else {
+      const metadata = subscription.metadata;
+      if (metadata?.price_type === "semester" || metadata?.price_type === "Semester") {
+        subscriptionTier = "Semester";
+      } else if (
+        metadata?.price_type === "monthly" || metadata?.price_type === "Monthly"
+      ) {
+        subscriptionTier = "Monthly";
+      } else if (priceId) {
+        subscriptionTier = "Unknown";
+      } else {
+        subscriptionTier = null;
+      }
+    }
+
+    log("Determined subscription tier in helper", {
+      subscriptionId: subscription.id,
+      subscriptionTier,
+      subscriptionEnd,
+    });
+  } else {
+    subscriptionTier = null;
+    subscriptionEnd = null;
+    log("Subscription not in premium status, clearing tier and end", {
+      subscriptionId: subscription.id,
+      status: subscription.status,
+    });
+  }
+
+  // Get customer and email
+  const customerId = subscription.customer as string | null;
+  if (!customerId) {
+    log("No customer ID on subscription, cannot sync state", {
+      subscriptionId: subscription.id,
+    });
+    return;
+  }
+
+  const customer = await stripe.customers.retrieve(customerId);
+
+  if (customer.deleted || !("email" in customer) || !customer.email) {
+    log("Customer not found or has no email in helper", { customerId });
+    return;
+  }
+
+  const email = customer.email;
+
+  // Try to find existing subscriber by stripe_customer_id first, then by email
+  const { data: existingSubscriber, error: subscriberLookupError } = await supabase
+    .from("subscribers")
+    .select("id, user_id, email, stripe_customer_id")
+    .or(`stripe_customer_id.eq.${customerId},email.eq.${email}`)
+    .maybeSingle();
+
+  if (subscriberLookupError && subscriberLookupError.code !== "PGRST116") {
+    log("Error looking up existing subscriber", {
+      error: subscriberLookupError.message,
+      customerId,
+      email,
+    });
+  }
+
+  let userId: string | null = existingSubscriber?.user_id || null;
+
+  // Optional improvement: try to associate user_id via profiles table if missing
+  if (!userId) {
+    try {
+      const { data: profileByEmail, error: profileLookupError } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (profileLookupError && profileLookupError.code !== "PGRST116") {
+        log("Error looking up profile by email for user_id association", {
+          error: profileLookupError.message,
+          email,
+        });
+      } else if (profileByEmail?.id) {
+        userId = profileByEmail.id;
+        log("Associated user_id from profiles table", {
+          email,
+          userId,
+        });
+      }
+    } catch (assocError) {
+      log("Unexpected error while associating user_id", { error: assocError });
+    }
+  }
+
+  if (!userId) {
+    log("User ID still not found - will upsert subscriber with email only", {
+      email,
+      customerId,
+    });
+  }
+
+  // Upsert subscribers row
+  try {
+    const { error: upsertError } = await supabase.from("subscribers").upsert(
+      {
+        email,
+        user_id: userId,
+        stripe_customer_id: customerId,
+        subscribed: hasActiveSub,
+        subscription_tier: subscriptionTier,
+        subscription_end: subscriptionEnd,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "email" },
+    );
+
+    if (upsertError) {
+      log("Failed to upsert subscribers row in helper", {
+        error: upsertError.message,
+        email,
+        customerId,
+      });
+    } else {
+      log("Subscribers table upserted in helper", {
+        email,
+        userId,
+        customerId,
+        subscribed: hasActiveSub,
+        subscriptionTier,
+        subscriptionEnd,
+      });
+    }
+  } catch (dbError) {
+    log("Unexpected error while upserting subscribers row in helper", {
+      error: dbError,
+    });
+  }
+
+  // Update profiles.is_premium if we have a userId
+  if (userId) {
+    try {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ is_premium: hasActiveSub })
+        .eq("id", userId);
+
+      if (profileError) {
+        log("Profile update failed in helper", { error: profileError.message });
+      } else {
+        log("Profile updated successfully in helper", {
+          userId,
+          is_premium: hasActiveSub,
+        });
+      }
+    } catch (profileError) {
+      log("Profile update error in helper", { error: profileError });
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -21,6 +216,7 @@ serve(async (req) => {
   }
 
   // Supabase Edge Functions require authentication via apikey query parameter
+  // NOTE: Set "Verify JWT with legacy secret" OFF in Edge function details in Supabase
   // The webhook URL in Stripe MUST include: ?apikey=[your-anon-key]
   // This is required by Supabase's gateway before the request reaches our function
   const url = new URL(req.url);
@@ -102,110 +298,13 @@ serve(async (req) => {
       customerId: subscription.customer,
     });
 
-    // Get customer email to find user
-    const customer = await stripe.customers.retrieve(
-      subscription.customer as string
+    await syncSubscriptionState(
+      supabase,
+      stripe,
+      subscription,
+      monthlyPriceId,
+      semesterPriceId,
     );
-    
-    if (customer.deleted || !("email" in customer) || !customer.email) {
-      log("Customer not found or has no email", { customerId: subscription.customer });
-      return new Response("OK", { status: 200 });
-    }
-
-    const email = customer.email;
-    const hasActiveSub = subscription.status === "active";
-    let subscriptionTier: string | null = null;
-    let subscriptionEnd: string | null = null;
-
-    if (hasActiveSub) {
-      // Set subscriptionEnd if current_period_end is valid
-      if (subscription.current_period_end) {
-        const periodEndTimestamp = subscription.current_period_end * 1000;
-        if (periodEndTimestamp && !isNaN(periodEndTimestamp)) {
-          subscriptionEnd = new Date(periodEndTimestamp).toISOString();
-        }
-      }
-      
-      // Determine subscription tier from price ID
-      const priceId = subscription.items.data[0]?.price?.id;
-      
-      if (semesterPriceId && priceId === semesterPriceId) {
-        subscriptionTier = "Semester";
-      } else if (monthlyPriceId && priceId === monthlyPriceId) {
-        subscriptionTier = "Monthly";
-      } else {
-        // Check metadata as fallback
-        const metadata = subscription.metadata;
-        if (metadata?.price_type === 'semester' || metadata?.price_type === 'Semester') {
-          subscriptionTier = "Semester";
-        } else if (metadata?.price_type === 'monthly' || metadata?.price_type === 'Monthly') {
-          subscriptionTier = "Monthly";
-        } else {
-          subscriptionTier = "Unknown";
-        }
-      }
-
-      log("Determined subscription tier", { priceId, subscriptionTier, subscriptionEnd });
-    } else {
-      // Explicitly set to null when subscription is not active
-      subscriptionTier = null;
-      subscriptionEnd = null;
-      log("Subscription not active, setting tier and end to null", { status: subscription.status });
-    }
-
-    // Find user by email in subscribers table
-    // If user_id is not set yet, it will be set when the user logs in and queries the subscribers table
-    const { data: userData } = await supabase
-      .from("subscribers")
-      .select("user_id, email")
-      .eq("email", email)
-      .maybeSingle();
-
-    const userId: string | null = userData?.user_id || null;
-    
-    if (!userId) {
-      log("User ID not found for email - will update with email only. user_id will be set when user logs in", { email });
-    }
-
-    // Update subscribers table
-    try {
-      await supabase.from("subscribers").upsert({
-        email: email,
-        user_id: userId, // May be null if user not found yet
-        stripe_customer_id: subscription.customer as string,
-        subscribed: hasActiveSub,
-        subscription_tier: subscriptionTier,
-        subscription_end: subscriptionEnd,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
-      
-      log("Subscribers table updated", { 
-        userId, 
-        email,
-        subscribed: hasActiveSub, 
-        subscriptionTier 
-      });
-    } catch (dbError) {
-      log("Failed to update subscribers table", { error: dbError });
-    }
-
-    // Update profiles table if we have a userId
-    if (userId) {
-      try {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ is_premium: hasActiveSub })
-          .eq("id", userId);
-        
-        if (profileError) {
-          log("Profile update failed", { error: profileError.message });
-        } else {
-          log("Profile updated successfully", { userId, is_premium: hasActiveSub });
-        }
-      } catch (profileError) {
-        log("Profile update error", { error: profileError });
-      }
-    }
 
     return new Response("OK", { status: 200 });
   }
@@ -214,9 +313,51 @@ serve(async (req) => {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // Handle subscription checkouts (already handled by subscription events above)
+    // Handle subscription checkouts
     if (session.mode === "subscription") {
-      log("Subscription checkout completed - will be handled by subscription events");
+      log("Subscription checkout completed", {
+        sessionId: session.id,
+        subscription: session.subscription,
+        customer: session.customer,
+      });
+
+      if (!session.subscription) {
+        log("No subscription attached to checkout session, cannot sync");
+        return new Response("OK", { status: 200 });
+      }
+
+      try {
+        let subscription: Stripe.Subscription | null = null;
+
+        if (typeof session.subscription === "string") {
+          subscription = await stripe.subscriptions.retrieve(
+            session.subscription,
+          );
+        } else {
+          subscription = session.subscription as Stripe.Subscription;
+        }
+
+        if (!subscription) {
+          log("Failed to load subscription from checkout session", {
+            sessionId: session.id,
+          });
+          return new Response("OK", { status: 200 });
+        }
+
+        await syncSubscriptionState(
+          supabase,
+          stripe,
+          subscription,
+          monthlyPriceId,
+          semesterPriceId,
+        );
+      } catch (subError) {
+        log("Error syncing subscription from checkout.session.completed", {
+          error: subError,
+          sessionId: session.id,
+        });
+      }
+
       return new Response("OK", { status: 200 });
     }
 

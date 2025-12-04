@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,12 +13,21 @@ import { getLinkedQuestionIdsForExam } from '@/services/UpcomingExamService';
 import { fetchQuestionDetails } from '@/services/DatabaseService';
 import { Question } from '@/types/Question';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 const ExamAnalytics: React.FC = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { subscribed } = useSubscription();
   const [isSubjectStatsOpen, setIsSubjectStatsOpen] = useState(true);
+  const [groupingMode, setGroupingMode] = useState<'semester' | 'year' | 'filename'>('semester');
 
   // Fetch exam details
   const { data: exam, isLoading: isExamLoading } = useQuery({
@@ -281,6 +291,61 @@ const ExamAnalytics: React.FC = () => {
     });
   }, [sessions, questions, sessionProgress]);
 
+  // Calculate statistics grouped by semester+year / year / filename
+  const groupedStats = useMemo(() => {
+    if (!questions || !mergedProgress) return [];
+
+    type GroupKey = 'semester' | 'year' | 'filename';
+
+    const field: GroupKey = groupingMode;
+
+    const latestByQuestion: Record<string, { is_correct: boolean | null }> = {};
+    mergedProgress.forEach((p: any) => {
+      latestByQuestion[p.question_id] = { is_correct: p.is_correct };
+    });
+
+    const groups: Record<
+      string,
+      { label: string; total: number; answered: number; correct: number }
+    > = {};
+
+    questions.forEach(q => {
+      let key: string;
+
+      if (field === 'semester') {
+        // Semester und Jahr immer als Einheit betrachten (z.B. \"SS 2025\")
+        const sem = q.semester || 'Unbekanntes Semester';
+        const year = q.year || 'Unbekanntes Jahr';
+        key = `${sem} ${year}`.trim();
+      } else if (field === 'year') {
+        key = q.year || 'Unbekanntes Jahr';
+      } else {
+        key = q.filename || 'Unbekannte Klausur';
+      }
+
+      if (!groups[key]) {
+        groups[key] = {
+          label: key,
+          total: 0,
+          answered: 0,
+          correct: 0
+        };
+      }
+
+      groups[key].total += 1;
+
+      const progress = latestByQuestion[q.id];
+      if (progress) {
+        groups[key].answered += 1;
+        if (progress.is_correct === true) {
+          groups[key].correct += 1;
+        }
+      }
+    });
+
+    return Object.values(groups).sort((a, b) => b.total - a.total);
+  }, [questions, mergedProgress, groupingMode]);
+
   if (isExamLoading || isQuestionsLoading || isProgressLoading) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -321,9 +386,10 @@ const ExamAnalytics: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overall" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overall">Gesamtstatistik</TabsTrigger>
           <TabsTrigger value="sessions">Nach Sessions</TabsTrigger>
+          <TabsTrigger value="grouped">Nach Semester/Jahr/Klausur</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overall" className="space-y-6 mt-6">
@@ -381,29 +447,79 @@ const ExamAnalytics: React.FC = () => {
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isSubjectStatsOpen ? 'transform rotate-180' : ''}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="px-4 pb-4">
-                <div className="space-y-4">
-                  {Object.entries(subjectStats).map(([subject, stats]) => (
-                    <div key={subject} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">{subject}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {stats.answered} / {stats.total} beantwortet
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Progress 
-                          value={(stats.correct / stats.total) * 100} 
-                          className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
-                        >
-                          <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
-                        </Progress>
-                        <span className="text-sm text-muted-foreground w-20 text-right">
-                          {stats.correct} richtig
-                        </span>
+                {!subscribed && (
+                  <div className="relative">
+                    <div className="pointer-events-none select-none filter blur-sm opacity-70">
+                      <div className="space-y-4">
+                        {Object.entries(subjectStats).slice(0, 4).map(([subject, stats]) => (
+                          <div key={subject} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium">{subject}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {stats.answered} / {stats.total} beantwortet
+                              </span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Progress
+                                value={(stats.correct / stats.total) * 100}
+                                className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
+                              >
+                                <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
+                              </Progress>
+                              <span className="text-sm text-muted-foreground w-20 text-right">
+                                {stats.correct} richtig
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+                      <div className="rounded-lg bg-background/90 shadow-md border px-4 py-3 max-w-xl space-y-2">
+                        <p className="text-sm font-semibold flex items-center justify-center gap-2">
+                          Detailierte Fach-Statistiken sind ein Premium-Feature.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Mit Premium siehst du auf einen Blick, in welchen Fächern du stark bist und
+                          wo noch Lücken sind – perfekt, um deine Lernzeit gezielt zu planen.
+                        </p>
+                        <Button
+                          size="sm"
+                          className="mt-1"
+                          onClick={() => navigate('/subscription')}
+                        >
+                          Mehr über Premium erfahren
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {subscribed && (
+                  <div className="space-y-4">
+                    {Object.entries(subjectStats).map(([subject, stats]) => (
+                      <div key={subject} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{subject}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {stats.answered} / {stats.total} beantwortet
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Progress
+                            value={(stats.correct / stats.total) * 100}
+                            className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
+                          >
+                            <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
+                          </Progress>
+                          <span className="text-sm text-muted-foreground w-20 text-right">
+                            {stats.correct} richtig
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CollapsibleContent>
             </Collapsible>
           </Card>
@@ -463,6 +579,134 @@ const ExamAnalytics: React.FC = () => {
               </Card>
             ))
           )}
+        </TabsContent>
+
+        <TabsContent value="grouped" className="space-y-4 mt-6">
+          <Card>
+            <CardHeader className="pb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <CardTitle className="text-lg font-semibold">
+                Statistik nach Semester / Jahr / Klausur
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Gruppierung:</span>
+                <Select
+                  value={groupingMode}
+                  onValueChange={value =>
+                    setGroupingMode(value as 'semester' | 'year' | 'filename')
+                  }
+                >
+                  <SelectTrigger className="w-[220px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semester">Nach Semester</SelectItem>
+                    <SelectItem value="year">Nach Jahr</SelectItem>
+                    <SelectItem value="filename">Nach Klausur/Dateiname</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!subscribed && (
+                <div className="relative">
+                  <div className="pointer-events-none select-none filter blur-sm opacity-70">
+                    <div className="space-y-3">
+                      {groupedStats.slice(0, 4).map(group => {
+                        const answeredPercentage = group.total
+                          ? (group.answered / group.total) * 100
+                          : 0;
+                        const correctPercentage = group.answered
+                          ? (group.correct / group.answered) * 100
+                          : 0;
+
+                        return (
+                          <div
+                            key={group.label}
+                            className="p-3 rounded-md border bg-muted/40 space-y-2"
+                          >
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-medium">{group.label}</span>
+                              <span className="text-muted-foreground">
+                                {group.answered} / {group.total} beantwortet
+                              </span>
+                            </div>
+                            <Progress
+                              value={answeredPercentage}
+                              className="h-1.5 bg-zinc-100 dark:bg-zinc-800"
+                            />
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Trefferquote: {correctPercentage.toFixed(0)}%</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+                    <div className="rounded-lg bg-background/90 shadow-md border px-4 py-3 max-w-xl space-y-2">
+                      <p className="text-sm font-semibold flex items-center justify-center gap-2">
+                        Detaillierte Klausur-Statistiken sind ein Premium-Feature.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Mit Premium siehst du deine Trefferquoten pro Semester, Jahr und einzelner
+                        Klausur, erkennst Lücken frühzeitig und kannst deine Vorbereitung gezielt
+                        steuern.
+                      </p>
+                      <Button
+                        size="sm"
+                        className="mt-1"
+                        onClick={() => navigate('/subscription')}
+                      >
+                        Mehr über Premium erfahren
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {subscribed && (
+                <>
+                  {groupedStats.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Für diese Prüfung liegen noch keine Statistikdaten vor.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {groupedStats.map(group => {
+                        const answeredPercentage = group.total
+                          ? (group.answered / group.total) * 100
+                          : 0;
+                        const correctPercentage = group.answered
+                          ? (group.correct / group.answered) * 100
+                          : 0;
+
+                        return (
+                          <div
+                            key={group.label}
+                            className="p-3 rounded-md border bg-card/60 space-y-2"
+                          >
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-medium">{group.label}</span>
+                              <span className="text-muted-foreground">
+                                {group.answered} / {group.total} beantwortet
+                              </span>
+                            </div>
+                            <Progress
+                              value={answeredPercentage}
+                              className="h-1.5 bg-zinc-100 dark:bg-zinc-800"
+                            />
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Trefferquote: {correctPercentage.toFixed(0)}%</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

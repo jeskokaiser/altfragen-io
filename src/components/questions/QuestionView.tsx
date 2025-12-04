@@ -67,7 +67,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
       setShowSolution(showSol);
     }
     
-    if (!correct && answer !== 'solution_viewed') {
+    // Treat solution_viewed as a wrong attempt for statistics as well
+    if (!correct) {
       setWrongAnswers(prev => [...prev, answer]);
     }
   };

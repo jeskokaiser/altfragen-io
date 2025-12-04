@@ -170,7 +170,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       await onSessionRecordAttempt(answer, isAnswerCorrect, viewedSolution);
       return;
     }
-    if (!user || answer === 'solution_viewed') return;
+    if (!user) return;
 
     try {
       const { data: existingProgress, error: fetchError } = await supabase
@@ -189,18 +189,28 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
             user_id: user.id,
             question_id: currentQuestion.id,
             user_answer: answer,
-            is_correct: isAnswerCorrect,
+            // Treat solution_viewed as an explicit wrong attempt
+            is_correct: answer === 'solution_viewed' ? false : isAnswerCorrect,
             attempts_count: 1
           });
 
         if (insertError) throw insertError;
       } else {
+        // When the user views the solution without answering, count it as a wrong attempt.
+        // However, don't downgrade an already-correct question: keep existing is_correct if it is true.
+        const nextIsCorrect =
+          answer === 'solution_viewed'
+            ? (existingProgress.is_correct === true ? true : false)
+            : isAnswerCorrect
+              ? (preferences?.immediateFeedback || wrongAnswers.length === 0)
+              : existingProgress.is_correct;
+
         const { error: updateError } = await supabase
           .from('user_progress')
           .update({
             user_answer: answer,
             attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: isAnswerCorrect ? (preferences?.immediateFeedback || wrongAnswers.length === 0) : existingProgress.is_correct
+            is_correct: nextIsCorrect
           })
           .eq('user_id', user.id)
           .eq('question_id', currentQuestion.id);
@@ -222,19 +232,19 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
-    // Don't add to wrongAnswers if it's a "solution_viewed" action
-    if (answer !== 'solution_viewed') {
-    onAnswer(answer, wrongAnswers.length === 0 && !firstWrongAnswer, viewedSolution || false);
-      
-      if (!correct) {
-        if (!firstWrongAnswer) {
-          setFirstWrongAnswer(answer);
-        }
+    // For solution_viewed we still treat this as a wrong attempt for statistics,
+    // but we don't want to double-count it as a specific wrong option.
+    const isFirstAttemptFlag = wrongAnswers.length === 0 && !firstWrongAnswer;
+    onAnswer(answer, isFirstAttemptFlag, viewedSolution || false);
+
+    if (!correct) {
+      if (!firstWrongAnswer) {
+        setFirstWrongAnswer(answer);
+      }
+      // Only track concrete option letters in wrongAnswers; solution_viewed is a separate action
+      if (answer !== 'solution_viewed') {
         setWrongAnswers(prev => [...prev, answer]);
       }
-    } else {
-      // For solution_viewed, just update the answer state
-      onAnswer(answer, false, true);
     }
     
     setShowFeedback(true);

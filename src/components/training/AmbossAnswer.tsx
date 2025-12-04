@@ -58,17 +58,20 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
   }, [isRevealed, wasRevealed]);
 
   const handleClick = () => {
-    const hasChildren = Boolean(explanation || children);
+    const hasCommentsContent = Boolean(explanation || children);
+    const canExpand = hasCommentsContent || showUpgradePrompt;
     // Before reveal, always allow expanding to show AI comments (or fallback),
     // and also trigger the answer selection.
     if (!isRevealed) {
-      setIsExpanded((prev) => !prev);
+      if (canExpand) {
+        setIsExpanded((prev) => !prev);
+      }
       onClick();
       return;
     }
 
     // After reveal, only toggle expansion if there is content to show.
-    if (hasChildren) {
+    if (canExpand) {
       setIsExpanded((prev) => !prev);
     }
     // When revealed and no comments, do nothing.
@@ -99,9 +102,10 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
     )
   ) : null;
 
-  const hasChildren = Boolean(explanation || children);
-  // Show expand icon if there are children, regardless of reveal status
-  const expandIcon = hasChildren && (
+  const hasCommentsContent = Boolean(explanation || children);
+  const canExpand = hasCommentsContent || showUpgradePrompt;
+  // Show expand icon if there is expandable content (comments or upgrade prompt)
+  const expandIcon = canExpand && (
     isExpanded ? (
       <ChevronUp className="h-4 w-4 text-slate-600 dark:text-slate-300 ml-2" />
     ) : (
@@ -154,7 +158,7 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
       </div>
       {isExpanded && (
         <div className="cursor-pointer">
-          {hasChildren ? (
+          {hasCommentsContent && !showUpgradePrompt ? (
             <div
               className={cn(
                 'border-t-[1px] text-sm',
