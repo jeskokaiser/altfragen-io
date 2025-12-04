@@ -236,20 +236,25 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   const handleAnswerSubmitted = (answer: string, correct: boolean, viewedSolution?: boolean) => {
+    const isSolutionViewed = answer === 'solution_viewed';
     // For solution_viewed we still treat this as a wrong attempt for statistics,
-    // but we don't want to double-count it as a specific wrong option.
-    const isFirstAttemptFlag = wrongAnswers.length === 0 && !firstWrongAnswer;
+    // but we don't want to double-count it as a specific wrong option or mark it
+    // as a "first attempt". First-attempt detection should only consider concrete
+    // answer options (A–E), mirroring QuestionView.
+    const isFirstAttemptFlag =
+      wrongAnswers.length === 0 && !firstWrongAnswer && !isSolutionViewed;
+
     onAnswer(answer, isFirstAttemptFlag, viewedSolution || false);
 
     if (!correct) {
       // Don't treat the special "solution_viewed" sentinel as the first wrong answer option.
       // firstWrongAnswer should always refer to a concrete choice (A–E) so that
       // subsequent real attempts still count as "first attempt" when appropriate.
-      if (!firstWrongAnswer && answer !== 'solution_viewed') {
+      if (!firstWrongAnswer && !isSolutionViewed) {
         setFirstWrongAnswer(answer);
       }
       // Only track concrete option letters in wrongAnswers; solution_viewed is a separate action
-      if (answer !== 'solution_viewed') {
+      if (!isSolutionViewed) {
         setWrongAnswers(prev => [...prev, answer]);
       }
     }
