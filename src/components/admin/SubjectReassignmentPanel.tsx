@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,22 @@ const SubjectReassignmentPanel: React.FC = () => {
   const [subjects, setSubjects] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<ProcessingResult | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup polling intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Fetch universities for the dropdown
   const { data: universities } = useQuery({
@@ -90,8 +106,18 @@ const SubjectReassignmentPanel: React.FC = () => {
       const jobId = data.jobId;
       toast.success('Job erstellt, Verarbeitung läuft im Hintergrund...');
 
+      // Clear any existing polling interval before starting a new one
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
+
       // Poll for job status
-      const pollInterval = setInterval(async () => {
+      pollIntervalRef.current = setInterval(async () => {
         try {
           const { data: jobData, error: jobError } = await supabase.functions.invoke(`reassign-subjects?jobId=${jobId}`, {
             method: 'GET'
@@ -119,11 +145,17 @@ const SubjectReassignmentPanel: React.FC = () => {
 
           // Check if job is complete
           if (job.status === 'completed') {
-            clearInterval(pollInterval);
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
             setIsProcessing(false);
             toast.success(job.message || 'Subject reassignment completed successfully');
           } else if (job.status === 'failed') {
-            clearInterval(pollInterval);
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
             setIsProcessing(false);
             toast.error(job.message || 'Subject reassignment failed');
           }
@@ -132,13 +164,25 @@ const SubjectReassignmentPanel: React.FC = () => {
         }
       }, 3000); // Poll every 3 seconds
 
-      // Cleanup on component unmount or after 10 minutes
-      setTimeout(() => {
-        clearInterval(pollInterval);
+      // Cleanup after 10 minutes max
+      pollTimeoutRef.current = setTimeout(() => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
       }, 600000); // 10 minutes max
       
     } catch (error: any) {
       console.error('Error during subject reassignment:', error);
+      // Clean up polling on error
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
       toast.error(`Error: ${error.message}`);
       setIsProcessing(false);
     }

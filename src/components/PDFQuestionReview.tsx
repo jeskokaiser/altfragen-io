@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -62,6 +62,8 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     totalChunks: number;
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const currentQuestion = questions[currentIndex];
 
@@ -90,6 +92,20 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [activeTab, currentIndex, questions.length]);
+
+  // Cleanup polling intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
+    };
+  }, []);
   
   const updateQuestion = (index: number, updates: Partial<Question>) => {
     const updatedQuestions = [...questions];
@@ -234,8 +250,18 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
 
       const jobId = data.jobId;
 
+      // Clear any existing polling interval before starting a new one
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
+
       // Poll for job status
-      const pollInterval = setInterval(async () => {
+      pollIntervalRef.current = setInterval(async () => {
         try {
           const { data: jobData, error: jobError } = await supabase.functions.invoke(`assign-subjects?jobId=${jobId}`, {
             method: 'GET'
@@ -259,7 +285,10 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
 
           // Check if job is complete
           if (job.status === 'completed') {
-            clearInterval(pollInterval);
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
             setIsAssigningSubjects(false);
 
             // Fetch updated questions from the job result
@@ -285,7 +314,10 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             // Optionally reload the page or refresh questions
             // window.location.reload();
           } else if (job.status === 'failed') {
-            clearInterval(pollInterval);
+            if (pollIntervalRef.current) {
+              clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
+            }
             setIsAssigningSubjects(false);
             showToast.error('Fehler beim Zuweisen der Fächer', {
               description: job.message || 'Die Verarbeitung ist fehlgeschlagen',
@@ -298,13 +330,25 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
         }
       }, 3000); // Poll every 3 seconds
 
-      // Cleanup on component unmount or after 10 minutes
-      setTimeout(() => {
-        clearInterval(pollInterval);
+      // Cleanup after 10 minutes max
+      pollTimeoutRef.current = setTimeout(() => {
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
       }, 600000); // 10 minutes max
 
     } catch (error: any) {
       console.error('Error assigning subjects:', error);
+      // Clean up polling on error
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
+      }
       showToast.error('Fehler beim Zuweisen der Fächer', {
         description: error.message || 'Bitte versuche es später erneut',
         duration: 6000
