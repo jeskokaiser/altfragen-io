@@ -56,10 +56,65 @@ const CampaignManagement: React.FC = () => {
   const [startDateInput, setStartDateInput] = useState<string>('');
   const [endDateInput, setEndDateInput] = useState<string>('');
 
+  // Convert datetime-local string to ISO string preserving the user's intended local time
+  // datetime-local inputs return values like "2025-12-15T14:00" (local time, no timezone)
+  // When a user selects "14:00" in their local timezone (e.g., UTC+2), we need to store
+  // the UTC equivalent (e.g., 12:00 UTC) so it correctly represents 14:00 in their timezone
+  // The issue with new Date(datetimeLocal).toISOString() is that some browsers may
+  // incorrectly treat the input as UTC instead of local time. We explicitly parse and
+  // construct the date as local time to ensure correct conversion.
+  const convertDateTimeLocalToISO = (datetimeLocal: string): string => {
+    if (!datetimeLocal) return '';
+    
+    // Parse the datetime-local string manually to ensure it's treated as local time
+    const [datePart, timePart] = datetimeLocal.split('T');
+    if (!datePart || !timePart) {
+      console.error('Invalid datetime-local format:', datetimeLocal);
+      return datetimeLocal;
+    }
+    
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    
+    // Create a Date object using local timezone constructor (this treats the values as local)
+    const localDate = new Date(year, month - 1, day, hours, minutes || 0, 0, 0);
+    
+    // Validate the date
+    if (isNaN(localDate.getTime())) {
+      console.error('Invalid date created from:', datetimeLocal);
+      return datetimeLocal;
+    }
+    
+    // Convert to ISO string (this will correctly convert local time to UTC)
+    return localDate.toISOString();
+  };
+
+  // Convert ISO string back to datetime-local format (local time for display)
+  // When reading from database, ISO dates are in UTC, so we need to convert to local time
+  const convertISOToDateTimeLocal = (isoString: string): string => {
+    if (!isoString) return '';
+    
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) {
+      console.error('Invalid ISO date:', isoString);
+      return '';
+    }
+    
+    // Get local date components
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   // Keep the text inputs in sync when the underlying ISO values change (e.g. when editing a campaign)
+  // Convert ISO dates from database (UTC) back to local time for display in datetime-local inputs
   useEffect(() => {
-    setStartDateInput(formData.start_date ? formData.start_date.slice(0, 16) : '');
-    setEndDateInput(formData.end_date ? formData.end_date.slice(0, 16) : '');
+    setStartDateInput(formData.start_date ? convertISOToDateTimeLocal(formData.start_date) : '');
+    setEndDateInput(formData.end_date ? convertISOToDateTimeLocal(formData.end_date) : '');
   }, [formData.start_date, formData.end_date]);
 
   useEffect(() => {
@@ -86,10 +141,10 @@ const CampaignManagement: React.FC = () => {
       const normalizedFormData: CampaignFormData = {
         ...formData,
         start_date: startDateInput
-          ? new Date(startDateInput).toISOString()
+          ? convertDateTimeLocalToISO(startDateInput)
           : null,
         end_date: endDateInput
-          ? new Date(endDateInput).toISOString()
+          ? convertDateTimeLocalToISO(endDateInput)
           : null,
       };
 
@@ -678,12 +733,12 @@ const CampaignManagement: React.FC = () => {
                       type="datetime-local"
                       value={startDateInput}
                       onChange={(e) => setStartDateInput(e.target.value)}
-                      onBlur={() =>
+                      onBlur={() => {
                         setFormData(prev => ({
                           ...prev,
-                          start_date: startDateInput ? new Date(startDateInput).toISOString() : null
-                        }))
-                      }
+                          start_date: startDateInput ? convertDateTimeLocalToISO(startDateInput) : null
+                        }));
+                      }}
                     />
                   </div>
                   <div>
@@ -692,12 +747,12 @@ const CampaignManagement: React.FC = () => {
                       type="datetime-local"
                       value={endDateInput}
                       onChange={(e) => setEndDateInput(e.target.value)}
-                      onBlur={() =>
+                      onBlur={() => {
                         setFormData(prev => ({
                           ...prev,
-                          end_date: endDateInput ? new Date(endDateInput).toISOString() : null
-                        }))
-                      }
+                          end_date: endDateInput ? convertDateTimeLocalToISO(endDateInput) : null
+                        }));
+                      }}
                     />
                   </div>
                 </div>
