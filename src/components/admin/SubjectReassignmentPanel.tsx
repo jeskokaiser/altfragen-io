@@ -133,7 +133,8 @@ const SubjectReassignmentPanel: React.FC = () => {
 
           // Update result with current progress
           setResult({
-            success: job.status !== 'failed',
+            // Only mark as successful when the job has actually completed
+            success: job.status === 'completed',
             stats: {
               total: job.total || 0,
               successful: (job.result?.successful) || (job.progress - (job.errors || 0)),
