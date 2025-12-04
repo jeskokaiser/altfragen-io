@@ -81,22 +81,41 @@ const CampaignManagement: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      if (!formData.title || !formData.description) {
+      // Ensure the latest values from the datetime-local inputs are included,
+      // even if the user submits while the field is still focused (no blur).
+      const normalizedFormData: CampaignFormData = {
+        ...formData,
+        start_date: startDateInput
+          ? new Date(startDateInput).toISOString()
+          : null,
+        end_date: endDateInput
+          ? new Date(endDateInput).toISOString()
+          : null,
+      };
+
+      if (!normalizedFormData.title || !normalizedFormData.description) {
         toast.error('Titel und Beschreibung sind erforderlich');
         return;
       }
 
       // Validation based on action type
-      if ((formData.action_type === 'navigate' || formData.action_type === 'external_link') && !formData.action_url) {
+      if (
+        (normalizedFormData.action_type === 'navigate' ||
+          normalizedFormData.action_type === 'external_link') &&
+        !normalizedFormData.action_url
+      ) {
         toast.error('URL ist für diese Aktion erforderlich');
         return;
       }
 
       if (editingCampaign) {
-        await CampaignService.updateEnhancedCampaign(editingCampaign.id, formData);
+        await CampaignService.updateEnhancedCampaign(
+          editingCampaign.id,
+          normalizedFormData
+        );
         toast.success('Kampagne erfolgreich aktualisiert');
       } else {
-        await CampaignService.createEnhancedCampaign(formData);
+        await CampaignService.createEnhancedCampaign(normalizedFormData);
         toast.success('Kampagne erfolgreich erstellt');
       }
 
