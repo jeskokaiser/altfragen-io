@@ -47,6 +47,7 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
   const [wasRevealed, setWasRevealed] = useState(false);
   const hasAutoExpandedRef = useRef(false);
   const prevSelectedRef = useRef(false);
+  const answerContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   // Reset when moving to a new question
@@ -83,6 +84,24 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
       }
     }
   }, [isRevealed, isSelected, explanation, children, showUpgradePrompt]);
+
+  // Scroll answer option into view when it becomes expanded to ensure full AI comments are visible
+  useEffect(() => {
+    if (isExpanded && answerContainerRef.current) {
+      // Use setTimeout to ensure the DOM has updated with the expanded content
+      setTimeout(() => {
+        const element = answerContainerRef.current;
+        if (element) {
+          const elementTop = element.getBoundingClientRect().top + window.pageYOffset;
+          const offset = 100; // Offset to account for navbar and some padding
+          window.scrollTo({
+            top: elementTop - offset,
+            behavior: 'smooth',
+          });
+        }
+      }, 100);
+    }
+  }, [isExpanded]);
 
   const toggleExpand = useCallback(() => {
     const hasCommentsContent = Boolean(explanation || children);
@@ -167,6 +186,7 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
 
   return (
     <div
+      ref={answerContainerRef}
       className={cn(
         'leading-snug relative cursor-pointer -my-px border-y-[1px]',
         stateClasses
