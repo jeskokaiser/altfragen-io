@@ -30,6 +30,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MessageSquare } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getCommentsForQuestion } from '@/services/CommentService';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -73,6 +74,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [initialAnswer, setInitialAnswer] = useState<string | null>(null);
   const [canShowAIContent, setCanShowAIContent] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   // Refs to store toggle functions for each answer option
   // Create individual refs that persist across renders
   const toggleExpandRefA = useRef<(() => void) | null>(null);
@@ -109,6 +113,46 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     queryFn: () => AIAnswerCommentaryService.getCommentaryForQuestion(currentQuestion.id),
     enabled: !!currentQuestion.id
   });
+
+  // Fetch comments to check if any exist (for red indicator)
+  const { data: comments } = useQuery({
+    queryKey: ['question-comments', currentQuestion.id, user?.id],
+    queryFn: () => getCommentsForQuestion(currentQuestion.id, user?.id || ''),
+    enabled: !!currentQuestion.id && !!user?.id,
+  });
+
+  // Check if there are any comments or notes present
+  const hasCommentsOrNotes = comments && comments.length > 0;
+
+  // Handle sidebar resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const newWidth = window.innerWidth - e.clientX;
+      // Constrain width between 300px and 800px
+      const constrainedWidth = Math.max(300, Math.min(800, newWidth));
+      setSidebarWidth(constrainedWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
   useEffect(() => {
     const isNewQuestion = currentQuestion.id !== questionData.id;
@@ -795,9 +839,12 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
             <Button
               variant="default"
               size="icon"
-              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 relative"
             >
               <MessageSquare className="h-6 w-6" />
+              {hasCommentsOrNotes && (
+                <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 border-2 border-white dark:border-black rounded-full"></span>
+              )}
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
@@ -815,53 +862,87 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
   // Desktop: Use collapsible sidebar
   return (
-    <div className="w-full max-w-7xl mx-auto flex gap-4 pt-20">
-      <div className={`flex-1 min-w-0 transition-all ${isCommentsOpen ? 'mr-[400px]' : ''}`}>
-        <QuestionHeader
-          currentIndex={currentIndex}
-          totalQuestions={totalQuestions}
-          onQuit={onQuit}
-        />
+    <div className="w-full pt-20">
+      <div className="max-w-7xl mx-auto flex justify-center items-start">
+        <div className="w-full max-w-4xl">
+          <QuestionHeader
+            currentIndex={currentIndex}
+            totalQuestions={totalQuestions}
+            onQuit={onQuit}
+          />
 
-        {questionContent}
+          {questionContent}
+        </div>
+        {isCommentsOpen && (
+          <div 
+            className={`flex-shrink ${!isResizing ? 'transition-all duration-300' : ''}`}
+            style={{ width: `${Math.max(0, sidebarWidth)}px`, minWidth: 0 }}
+          />
+        )}
       </div>
 
       {/* Floating comment icon button */}
-      <Button
-        variant="default"
-        size="icon"
-        onClick={() => setIsCommentsOpen(!isCommentsOpen)}
-        className={`fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg z-50 transition-all ${
-          isCommentsOpen ? 'opacity-50' : ''
-        }`}
-      >
-        <MessageSquare className="h-6 w-6" />
-      </Button>
+      <div className="fixed bottom-8 right-8 flex flex-col items-center z-50 gap-2">
+        <Button
+          variant="default"
+          size="icon"
+          onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+          className={`h-20 w-20 rounded-full shadow-xl border-4 border-blue-500 focus:ring-4 focus:ring-blue-300 group transition-all dark:border-blue-400 dark:focus:ring-blue-900 dark:bg-black relative ${
+            isCommentsOpen ? 'opacity-50' : ''
+          }`}
+          aria-label="Kommentare & Notizen öffnen"
+          tabIndex={0}
+        >
+          <MessageSquare className="h-16 w-16 text-white drop-shadow-lg" />
+          {hasCommentsOrNotes && (
+            <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 border-2 border-white dark:border-black rounded-full"></span>
+          )}
+        </Button>
+        <span className="text-base font-bold drop-shadow-sm bg-white/90 rounded-lg px-2 py-0.5 mt-1 shadow-md select-none pointer-events-none dark:bg-slate-800/90 dark:text-blue-100">
+          Kommentare
+        </span>
+      </div>
 
       <Collapsible open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
         <div
-          className={`fixed right-0 top-16 h-[calc(100vh-4rem)] w-[400px] bg-background border-l shadow-lg transition-transform duration-300 z-40 overflow-y-auto ${
+          ref={sidebarRef}
+          className={`fixed right-0 top-16 h-[calc(100vh-4rem)] bg-background border-l shadow-lg z-40 overflow-hidden ${
             isCommentsOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
+          } ${!isResizing ? 'transition-transform duration-300' : ''}`}
+          style={{ width: `${sidebarWidth}px` }}
         >
-          <div className="p-4 border-b flex items-center justify-between bg-background">
-            <h2 className="font-semibold flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Kommentare & Notizen
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCommentsOpen(false)}
+          {/* Resize handle */}
+          {isCommentsOpen && (
+            <div
+              className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 transition-colors z-50 group"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setIsResizing(true);
+              }}
             >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="p-4">
-            <CommentsSection
-              questionId={currentQuestion.id}
-              questionVisibility={currentQuestion.visibility || 'private'}
-            />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-16 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          )}
+          <div className="h-full overflow-y-auto">
+            <div className="p-4 border-b flex items-center justify-between bg-background">
+              <h2 className="font-semibold flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Kommentare & Notizen
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCommentsOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <CommentsSection
+                questionId={currentQuestion.id}
+                questionVisibility={currentQuestion.visibility || 'private'}
+              />
+            </div>
           </div>
         </div>
       </Collapsible>

@@ -183,7 +183,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
                   Fehler beim Laden der Kommentare
                 </div>
               ) : (
-                <ScrollArea className="h-[300px] pr-4">
+                <ScrollArea className="h-[calc(100vh-28rem)] min-h-[400px] pr-4">
                   <CommentList
                     comments={publicComments}
                     currentUserId={user.id}
