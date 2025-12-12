@@ -97,7 +97,27 @@ serve(async (req) => {
       throw new Error("Failed to load profile");
     }
 
-    if (!profile?.is_premium) {
+    const { data: subscriber, error: subscriberError } = await supabaseClient
+      .from("subscribers")
+      .select("subscribed, subscription_end")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (subscriberError && subscriberError.code !== "PGRST116") {
+      log("Failed to load subscriber", { error: subscriberError.message });
+    }
+
+    const now = new Date();
+    const subscriptionEnd = subscriber?.subscription_end
+      ? new Date(subscriber.subscription_end)
+      : null;
+    const hasActiveSubscription =
+      !!subscriber?.subscribed &&
+      (!subscriptionEnd || subscriptionEnd.getTime() > now.getTime());
+
+    const isPremium = !!profile?.is_premium || hasActiveSubscription;
+
+    if (!isPremium) {
       log("Non-premium user attempted to buy AI credits", { userId: user.id });
       return new Response(
         JSON.stringify({

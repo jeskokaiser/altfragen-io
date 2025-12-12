@@ -433,6 +433,26 @@ serve(async (req) => {
         quantity,
       });
 
+      // New canonical ledger (idempotent via unique(source, ref))
+      try {
+        const { error: ledgerError } = await supabase
+          .from("ai_private_credits_ledger")
+          .insert({
+            user_id: userId,
+            credits_delta: creditsToAdd,
+            source: "stripe_checkout_session",
+            ref: session.id,
+            event_ts: now.toISOString(),
+          });
+
+        if (ledgerError) {
+          // Do not fail the webhook; we still keep legacy counters in sync.
+          log("Failed to insert ai_private_credits_ledger", { error: ledgerError.message });
+        }
+      } catch (e) {
+        log("Unexpected error inserting ai_private_credits_ledger", { error: String(e) });
+      }
+
       // Try to upsert a row for this user/month
       const { data: existing, error: fetchError } = await supabase
         .from("user_private_ai_quota")

@@ -101,49 +101,43 @@ serve(async (req) => {
 
     const isPremium = !!profile?.is_premium || hasActiveSubscription;
 
-    // Determine current calendar month (first day, UTC) to match backend logic
-    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
-      .toISOString()
-      .slice(0, 10); // YYYY-MM-DD
-
     const BASE_MONTHLY_FREE_LIMIT = 100;
 
-    // 1) Fetch monthly usage row for this user/month (free quota)
-    const { data: monthRow, error: monthError } = await supabaseClient
-      .from("user_private_ai_quota")
-      .select("free_used_count,month_start")
-      .eq("user_id", user.id)
-      .eq("month_start", monthStart)
-      .maybeSingle();
+    // Rolling 30-day window (displayed as \"30-Tage-Zeitraum ab <date>\")
+    const windowStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
 
-    if (monthError && monthError.code !== "PGRST116") {
-      console.error("[AI-CREDITS-STATUS] Failed to load monthly quota", monthError);
-    }
-
-    const freeUsedCount = monthRow?.free_used_count ?? 0;
-    const remainingFree = Math.max(0, BASE_MONTHLY_FREE_LIMIT - freeUsedCount);
-
-    // 2) Sum all paid credits across all months (global pool)
-    const { data: allQuotaRows, error: allQuotaError } = await supabaseClient
-      .from("user_private_ai_quota")
-      .select("paid_credits_remaining")
-      .eq("user_id", user.id);
-
-    if (allQuotaError) {
-      console.error("[AI-CREDITS-STATUS] Failed to load paid credits", allQuotaError);
-    }
-
-    const paidCreditsRemaining = (allQuotaRows || []).reduce(
-      (sum: number, row: any) => sum + (row?.paid_credits_remaining ?? 0),
-      0,
+    // Canonical usage from ledger (rolling 30 days)
+    const { data: fullUsed30d, error: usedError } = await supabaseClient.rpc(
+      "ai_private_full_used_30d",
+      { p_user_id: user.id },
     );
+
+    if (usedError) {
+      console.error("[AI-CREDITS-STATUS] Failed to load rolling 30d usage", usedError);
+    }
+
+    const used = Number(fullUsed30d ?? 0);
+    const freeUsedCount = Math.max(0, Math.min(BASE_MONTHLY_FREE_LIMIT, used));
+    const remainingFree = Math.max(0, BASE_MONTHLY_FREE_LIMIT - used);
+
+    // Canonical credits remaining from ledger (sum of deltas)
+    const { data: creditsRemainingRaw, error: creditsError } =
+      await supabaseClient.rpc("ai_private_credits_remaining", { p_user_id: user.id });
+
+    if (creditsError) {
+      console.error("[AI-CREDITS-STATUS] Failed to load credits remaining", creditsError);
+    }
+
+    const paidCreditsRemaining = Math.max(0, Number(creditsRemainingRaw ?? 0));
 
     const totalRemaining = remainingFree + paidCreditsRemaining;
     const processingBlocked = !isPremium || totalRemaining <= 0;
 
     const body = {
       isPremium,
-      monthStart,
+      monthStart: windowStart,
       baseMonthlyFreeLimit: BASE_MONTHLY_FREE_LIMIT,
       freeUsedCount,
       remainingFree,
