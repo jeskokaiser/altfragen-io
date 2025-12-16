@@ -5,7 +5,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield, Bug, Bell, Search as SearchIcon } from 'lucide-react';
+import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield, Bug, Bell, Search as SearchIcon, ClipboardList } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -49,6 +49,7 @@ const Navbar: React.FC = () => {
   const mainNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { label: 'Suchen', href: '/search', icon: <SearchIcon className="h-4 w-4 mr-2" /> },
+    { label: 'Rekonstruktion', href: '/recon', icon: <ClipboardList className="h-4 w-4 mr-2" /> },
     { label: 'Premium', href: '/subscription', icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} /> },
     ...(isAdmin ? [{ label: 'Admin', href: '/ai-commentary', icon: <Shield className="mr-2 h-4 w-4 text-red-600" /> }] : []),
   ];

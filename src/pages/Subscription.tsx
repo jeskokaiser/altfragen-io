@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Check, X, Brain, Shield, Upload, FileText, HatGlasses, ChartBar, Mail, Inbox, HeartHandshake, Leaf, Bot, ReceiptEuro } from 'lucide-react';
+import { Check, X, Brain, Shield, Upload, FileText, HatGlasses, ChartBar, Mail, Inbox, HeartHandshake, Leaf, Bot, ReceiptEuro, Server } from 'lucide-react';
 const Subscription = () => {
   const {
     subscribed,
@@ -31,6 +31,12 @@ const Subscription = () => {
     free: true,
     premium: true,
     icon: Shield
+  },
+  {
+    name: 'Server in Deutschland',
+    free: true,
+    premium: true,
+    icon: Server
   }, {
     name: 'Unbegrenzte Fragenerstellung und -beantwortung',
     free: true,

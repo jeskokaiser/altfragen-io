@@ -24,6 +24,10 @@ import TrainingSessionOneOffPage from '@/pages/TrainingSessionOneOff';
 import ExamAnalyticsPage from '@/pages/ExamAnalytics';
 import TrainingSessionAnalyticsPage from '@/pages/TrainingSessionAnalytics';
 import QuestionSearchPage from '@/pages/QuestionSearch';
+import ReconIndexPage from '@/pages/ReconIndex';
+import ReconWorkspacePage from '@/pages/ReconWorkspace';
+import ReconSlotPage from '@/pages/ReconSlot';
+import ReconQuestionPage from '@/pages/ReconQuestion';
 
 const MainLayout: React.FC = () => {
   const { isReady, isAuthenticated } = useAuthGuard();
@@ -61,6 +65,10 @@ const MainLayout: React.FC = () => {
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/training" element={<TrainingPage />} />
+          <Route path="/recon" element={<ReconIndexPage />} />
+          <Route path="/recon/:workspaceId" element={<ReconWorkspacePage />} />
+          <Route path="/recon/:workspaceId/slot/:slotId" element={<ReconSlotPage />} />
+          <Route path="/recon/:workspaceId/q/:canonicalId" element={<ReconQuestionPage />} />
           <Route path="/training/sessions" element={<TrainingSessionsPage />} />
           <Route path="/training/session/:sessionId" element={<TrainingSessionRunnerPage />} />
           <Route path="/training/session/:sessionId/analytics" element={<TrainingSessionAnalyticsPage />} />
