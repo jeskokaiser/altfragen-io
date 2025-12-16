@@ -190,13 +190,13 @@ export const ExamCohortComparisonSection: React.FC<
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-semibold">
-          Vergleichsgruppenanalyse
+          Benchmarking
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isCohortLoading && (
           <p className="text-sm text-muted-foreground">
-            Lade Vergleichsgruppenanalyse...
+            Lade Benchmarking...
           </p>
         )}
 
@@ -211,7 +211,7 @@ export const ExamCohortComparisonSection: React.FC<
           cohortStats &&
           cohortStats.sampleSize < 5 && (
             <p className="text-sm text-muted-foreground">
-              Zu wenig Daten für Vergleichsgruppenanalyse an deiner Uni
+              Zu wenig Daten für Benchmarking an deiner Uni
               für diese Prüfung.
             </p>
           )}
@@ -224,7 +224,7 @@ export const ExamCohortComparisonSection: React.FC<
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-4 text-center">
                   <div className="rounded-lg bg-background/90 shadow-md border px-4 py-3 max-w-xl space-y-2">
                     <p className="text-sm font-semibold">
-                      Vergleichsgruppenanalyse ist ein Premium-Feature.
+                      Benchmarking ist ein Premium-Feature.
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Sieh genau, wie du im Vergleich zu anderen Studierenden

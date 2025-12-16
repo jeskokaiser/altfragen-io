@@ -479,11 +479,12 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       }
     },
     onShowSolution: () => {
-      // No-op, solution is shown on selection
+      // Call handleShowSolution when keyboard shortcut is pressed
+      handleShowSolution();
     },
     canConfirm: !showFeedback, // Can "confirm" (i.e., answer) if feedback is not shown yet
     canNavigate: showFeedback, // Can navigate to next/prev when feedback is shown
-    canShowSolution: false, // Not a separate step anymore
+    canShowSolution: !showFeedback && !preferences?.immediateFeedback, // Can show solution when button is visible
   };
 
   // Enable keyboard shortcuts
@@ -563,6 +564,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const canUseEnhanced = (subscribed || canAccessAIComments) && enhancedVersion !== 'none';
   const useChatGPT = canUseEnhanced && enhancedVersion === 'chatgpt' && aiCommentary?.answerComments?.chatgpt_regenerated_question;
   const useGemini = canUseEnhanced && enhancedVersion === 'gemini' && aiCommentary?.answerComments?.gemini_regenerated_question;
+  
+  // Show loading state if AI commentary is loading and user has enhanced AI enabled
+  // This prevents showing original question/options before AI-enhanced version loads
+  const showEnhancedLoading = aiLoading && canUseEnhanced;
   
   // Use enhanced question if available and enabled, otherwise use original
   const displayQuestion = useChatGPT
@@ -659,11 +664,21 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
           <article className="prose max-w-none mb-4">
             <div className="flex items-start gap-2">
-              <p className="flex-1">{displayQuestion}</p>
-              {(useChatGPT || useGemini) && (
-                <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-md font-medium shrink-0">
-                  {useChatGPT ? 'ChatGPT' : 'Gemini'}-verbessert
-                </span>
+              {showEnhancedLoading ? (
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-4/5" />
+                </div>
+              ) : (
+                <>
+                  <p className="flex-1">{displayQuestion}</p>
+                  {(useChatGPT || useGemini) && (
+                    <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-md font-medium shrink-0">
+                      {useChatGPT ? 'ChatGPT' : 'Gemini'}-verbessert
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </article>
@@ -685,7 +700,31 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         </div>
         
         <div className="rounded-b-lg">
-            {options.map(({ letter, text, isAIGenerated }) => {
+            {showEnhancedLoading ? (
+              // Show skeleton loaders for all answer options while AI-enhanced content loads
+              (['A', 'B', 'C', 'D', 'E'] as const).map(letter => {
+                const originalText = currentQuestion[`option${letter}` as keyof Question] as string;
+                // Only show skeleton for options that exist
+                if (!originalText || originalText.trim() === '') return null;
+                
+                return (
+                  <div key={letter} className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                    <div className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center font-semibold text-gray-400 dark:text-gray-500">
+                          {letter}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-5/6" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }).filter(Boolean)
+            ) : (
+              options.map(({ letter, text, isAIGenerated }) => {
                 const isCorrectOption = letter === currentQuestion.correctAnswer.charAt(0).toUpperCase();
                 
                 // Get real statistics from database if available
@@ -763,7 +802,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                         )}
                     </AmbossAnswer>
                 );
-            })}
+            })
+            )}
         </div>
       </Card>
 

@@ -133,10 +133,10 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    ChatGPT 5.1
+                    ChatGPT 5.2
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Reasoning-Model, sehr gute Leistung im relevanten <a href="https://epoch.ai/benchmarks/gpqa-diamond" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 dark:hover:text-blue-400">GPQA Diamond Benchmark</a></p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Reasoning-Model, führend im relevanten <a href="https://epoch.ai/benchmarks/gpqa-diamond" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 dark:hover:text-blue-400">GPQA Diamond Benchmark</a></p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
@@ -181,7 +181,7 @@ const Subscription = () => {
                 <h4 className="line-through font-semibold text-gray-900 dark:text-gray-100">
                     Grok 4
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Aktuell ausgesetzt, da möglicherweise voreingenommen</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Aktuell ausgesetzt</p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">

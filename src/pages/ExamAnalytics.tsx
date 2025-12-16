@@ -391,7 +391,7 @@ const ExamAnalytics: React.FC = () => {
           <TabsTrigger value="overall">Gesamtstatistik</TabsTrigger>
           <TabsTrigger value="sessions">Nach Sessions</TabsTrigger>
           <TabsTrigger value="grouped">Nach Semester/Jahr/Klausur</TabsTrigger>
-          <TabsTrigger value="cohort">Vergleichsgruppenanalyse</TabsTrigger>
+          <TabsTrigger value="cohort">Benchmarking</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overall" className="space-y-6 mt-6">

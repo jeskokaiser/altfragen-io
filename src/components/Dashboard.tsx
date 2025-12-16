@@ -99,27 +99,69 @@ const Dashboard = () => {
         setAiCreditsLoading(true);
         setAiCreditsError(null);
 
-        const { data: session } = await supabase.auth.getSession();
-        const accessToken = session.session?.access_token;
-        if (!accessToken) {
-          throw new Error('Keine gültige Session gefunden');
+        // Get premium status from profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_premium')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          throw new Error('Fehler beim Laden des Profils');
         }
 
-        const { data, error } = await supabase.functions.invoke('ai-comment-credits-status', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+        const isPremium = profile?.is_premium ?? false;
+        const BASE_MONTHLY_FREE_LIMIT = 100;
+
+        // Calculate rolling 30-day window start (for display)
+        const now = new Date();
+        const windowStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+
+        // Get usage from quota ledger (rolling 30 days) via RPC
+        const { data: fullUsed30d, error: usedError } = await supabase.rpc(
+          'ai_private_full_used_30d',
+          { p_user_id: user.id }
+        );
+
+        if (usedError) {
+          console.error('Fehler beim Laden der Quota-Nutzung:', usedError);
+          throw new Error('Fehler beim Laden der Quota-Nutzung');
+        }
+
+        const used = Number(fullUsed30d ?? 0);
+        const freeUsedCount = Math.max(0, Math.min(BASE_MONTHLY_FREE_LIMIT, used));
+        const remainingFree = Math.max(0, BASE_MONTHLY_FREE_LIMIT - used);
+
+        // Get remaining credits from credits ledger via RPC
+        const { data: creditsRemainingRaw, error: creditsError } = await supabase.rpc(
+          'ai_private_credits_remaining',
+          { p_user_id: user.id }
+        );
+
+        if (creditsError) {
+          console.error('Fehler beim Laden der Credits:', creditsError);
+          throw new Error('Fehler beim Laden der Credits');
+        }
+
+        const paidCreditsRemaining = Math.max(0, Number(creditsRemainingRaw ?? 0));
+        const totalRemaining = remainingFree + paidCreditsRemaining;
+        const processingBlocked = !isPremium || totalRemaining <= 0;
+
+        setAiCredits({
+          isPremium,
+          monthStart: windowStart,
+          baseMonthlyFreeLimit: BASE_MONTHLY_FREE_LIMIT,
+          freeUsedCount,
+          remainingFree,
+          paidCreditsRemaining,
+          totalRemaining,
+          processingBlocked,
         });
-
-        if (error) {
-          console.error('Fehler beim Laden der AI-Credit-Übersicht:', error);
-          setAiCreditsError('Fehler beim Laden der AI-Credit-Übersicht');
-        } else {
-          setAiCredits(data);
-        }
       } catch (err) {
         console.error('Unerwarteter Fehler beim Laden der AI-Credit-Übersicht:', err);
-        setAiCreditsError('Unerwarteter Fehler beim Laden der AI-Credit-Übersicht');
+        setAiCreditsError(err instanceof Error ? err.message : 'Unerwarteter Fehler beim Laden der AI-Credit-Übersicht');
       } finally {
         setAiCreditsLoading(false);
       }
