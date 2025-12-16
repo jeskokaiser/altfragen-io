@@ -307,21 +307,27 @@ const ExamAnalytics: React.FC = () => {
 
     const groups: Record<
       string,
-      { label: string; total: number; answered: number; correct: number }
+      { label: string; total: number; answered: number; correct: number; year: number }
     > = {};
 
     questions.forEach(q => {
       let key: string;
+      let year: number;
 
       if (field === 'semester') {
         // Semester und Jahr immer als Einheit betrachten (z.B. \"SS 2025\")
         const sem = q.semester || 'Unbekanntes Semester';
-        const year = q.year || 'Unbekanntes Jahr';
-        key = `${sem} ${year}`.trim();
+        const yearStr = q.year || 'Unbekanntes Jahr';
+        key = `${sem} ${yearStr}`.trim();
+        // Extract year from year string (could be "2025" or "Unbekanntes Jahr")
+        year = parseInt(yearStr) || 0;
       } else if (field === 'year') {
         key = q.year || 'Unbekanntes Jahr';
+        year = parseInt(key) || 0;
       } else {
         key = q.filename || 'Unbekannte Klausur';
+        // For filename mode, use the question's year
+        year = parseInt(q.year || '0') || 0;
       }
 
       if (!groups[key]) {
@@ -329,7 +335,8 @@ const ExamAnalytics: React.FC = () => {
           label: key,
           total: 0,
           answered: 0,
-          correct: 0
+          correct: 0,
+          year: year
         };
       }
 
@@ -344,7 +351,7 @@ const ExamAnalytics: React.FC = () => {
       }
     });
 
-    return Object.values(groups).sort((a, b) => b.total - a.total);
+    return Object.values(groups).sort((a, b) => b.year - a.year);
   }, [questions, mergedProgress, groupingMode]);
 
   if (isExamLoading || isQuestionsLoading || isProgressLoading) {
