@@ -1,8 +1,8 @@
 // --- Cohort scoring configuration (easy to tweak) ---
-export const COHORT_PRIOR_M = 30; // pseudo-questions for Bayesian shrinkage
-export const COHORT_N_REF = 200; // reference activity level for a(n)
-export const COHORT_QUALITY_WEIGHT = 0.8;
-export const COHORT_ACTIVITY_WEIGHT = 0.2;
+export const COHORT_PRIOR_M = 75; // pseudo-questions for Bayesian shrinkage
+export const COHORT_N_REF = 3000; // reference activity level for a(n)
+export const COHORT_QUALITY_WEIGHT = 0.85;
+export const COHORT_ACTIVITY_WEIGHT = 0.15;
 
 // --- Cohort score helpers (keep in sync with backend implementation) ---
 
