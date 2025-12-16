@@ -163,12 +163,25 @@ const TrainingSessionAnalytics: React.FC = () => {
     );
   }
 
+  // Extract exam ID from filter_settings if this session is linked to an exam
+  const examId = (session.filter_settings as any)?.source === 'exam' 
+    ? (session.filter_settings as any)?.examId 
+    : null;
+
   return (
     <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/training/sessions')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
+        {examId && (
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(`/exam/${examId}/analytics`)}
+          >
+            Gesamtauswertung
+          </Button>
+        )}
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{session.title}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">

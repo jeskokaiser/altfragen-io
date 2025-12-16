@@ -7,11 +7,13 @@ import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
 import QuestionDisplayWithAI from '@/components/training/QuestionDisplayWithAI';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
+import { useQueryClient } from '@tanstack/react-query';
 
 const TrainingSessionRunnerPage: React.FC = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { session, isLoading, setIndex, setStatus, refresh } = useTrainingSession(sessionId, user?.id);
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -92,12 +94,23 @@ const TrainingSessionRunnerPage: React.FC = () => {
     if (!session) return;
     const nextIndex = currentIndex + 1;
     if (nextIndex >= (session.total_questions || 0)) {
-      // Update status to completed in background
-      setStatus('completed').catch(error => {
+      // Update status to completed and wait for it to finish
+      try {
+        await setStatus('completed');
+        // Invalidate all relevant query keys to ensure analytics page shows fresh data
+        if (sessionId) {
+          queryClient.invalidateQueries({ queryKey: ['training-session', sessionId] });
+          queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, user?.id] });
+          queryClient.invalidateQueries({ queryKey: ['session-questions', sessionId] });
+          queryClient.invalidateQueries({ queryKey: ['session-progress', sessionId] });
+        }
+        // Navigate to session analytics page
+        navigate(`/training/session/${sessionId}/analytics`);
+      } catch (error) {
         console.error('Error updating session status:', error);
-      });
-      // Navigate to session analytics page
-      navigate(`/training/session/${sessionId}/analytics`);
+        // Still navigate even if status update fails
+        navigate(`/training/session/${sessionId}/analytics`);
+      }
       return;
     }
     // Update UI immediately
@@ -120,8 +133,21 @@ const TrainingSessionRunnerPage: React.FC = () => {
   };
 
   const handleQuit = async () => {
-    await setStatus('paused');
-    navigate(`/training/session/${sessionId}/analytics`);
+    try {
+      await setStatus('paused');
+      // Invalidate all relevant query keys to ensure analytics page shows fresh data
+      if (sessionId) {
+        queryClient.invalidateQueries({ queryKey: ['training-session', sessionId] });
+        queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['session-questions', sessionId] });
+        queryClient.invalidateQueries({ queryKey: ['session-progress', sessionId] });
+      }
+      navigate(`/training/session/${sessionId}/analytics`);
+    } catch (error) {
+      console.error('Error updating session status:', error);
+      // Still navigate even if status update fails
+      navigate(`/training/session/${sessionId}/analytics`);
+    }
   };
 
   // This handler is just for notifying the component about state changes

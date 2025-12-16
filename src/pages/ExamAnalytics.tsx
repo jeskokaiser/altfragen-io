@@ -20,11 +20,12 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { ExamCohortComparisonSection } from '@/components/exams/ExamCohortComparisonSection';
 
 const ExamAnalytics: React.FC = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, universityId, universityName } = useAuth();
   const { subscribed } = useSubscription();
   const [isSubjectStatsOpen, setIsSubjectStatsOpen] = useState(true);
   const [groupingMode, setGroupingMode] = useState<'semester' | 'year' | 'filename'>('semester');
@@ -386,10 +387,11 @@ const ExamAnalytics: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overall" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overall">Gesamtstatistik</TabsTrigger>
           <TabsTrigger value="sessions">Nach Sessions</TabsTrigger>
           <TabsTrigger value="grouped">Nach Semester/Jahr/Klausur</TabsTrigger>
+          <TabsTrigger value="cohort">Vergleichsgruppenanalyse</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overall" className="space-y-6 mt-6">
@@ -707,6 +709,14 @@ const ExamAnalytics: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="cohort" className="space-y-4 mt-6">
+          <ExamCohortComparisonSection
+            examId={examId}
+            examName={exam.exam_name ?? exam.title ?? null}
+            subscribed={subscribed}
+          />
         </TabsContent>
       </Tabs>
     </div>

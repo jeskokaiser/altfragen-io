@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import TrainingSessionsList from '@/components/training/TrainingSessionsList';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useUpcomingExams } from '@/hooks/useUpcomingExams';
 import { Plus, Lock } from 'lucide-react';
 import {
   Tooltip,
@@ -21,6 +22,7 @@ const TrainingSessionsPage: React.FC = () => {
   const location = useLocation();
   const { questions, isQuestionsLoading } = useDashboardData(user?.id, universityId);
   const { sessions, refetch } = useTrainingSessions(user?.id);
+  const { exams } = useUpcomingExams(user?.id);
   const [open, setOpen] = useState(false);
 
   // Refetch sessions when navigating to this page to ensure fresh data
@@ -44,9 +46,19 @@ const TrainingSessionsPage: React.FC = () => {
     return '';
   }, [open]);
 
+  // Get the first exam for the analytics link
+  const firstExam = exams && exams.length > 0 ? exams[0] : null;
+
   return (
     <div className="container mx-auto py-8 max-w-5xl">
       <div className="mb-6">
+        <div className="mb-4">
+          {firstExam ? (
+            <Link to={`/dashboard`} className="text-primary hover:underline text-sm font-medium">
+              ← Dashboard
+            </Link>
+          ) : null}
+        </div>
         <div className="flex items-start justify-between mb-2">
           <div>
             <h1 className="text-3xl font-bold mb-2">Meine Trainings-Sessions</h1>
