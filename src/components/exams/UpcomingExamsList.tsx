@@ -8,6 +8,7 @@ import { getExamStatsForUser, type ExamUserStats } from '@/services/UpcomingExam
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,14 +42,42 @@ interface UpcomingExamsListProps {
 
 const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuestions, onStartTraining, onDeleteExam, onEditExam, currentUserId, onOpenAnalytics }) => {
   const [stats, setStats] = useState<Record<string, ExamUserStats>>({});
+  const [maxFreeSessions, setMaxFreeSessions] = useState<number>(10); // Default to 10 if not set in DB
   const navigate = useNavigate();
   const { subscribed } = useSubscription();
 
   const { sessions } = useTrainingSessions(currentUserId);
 
-  // Check if user has reached the session limit (5 for free users)
+  // Fetch max_free_sessions from database
+  useEffect(() => {
+    const fetchMaxFreeSessions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('ai_commentary_settings')
+          .select('max_free_sessions')
+          .single();
+
+        if (error) {
+          console.error('Error fetching max_free_sessions:', error);
+          // Keep default value of 5
+        } else {
+          // Use the value from DB if it's not null, otherwise keep default of 5
+          // Type assertion needed as max_free_sessions may not be in generated types yet
+          const maxSessions = (data as any)?.max_free_sessions;
+          setMaxFreeSessions(maxSessions ?? 5);
+        }
+      } catch (error) {
+        console.error('Error in fetchMaxFreeSessions:', error);
+        // Keep default value of 5
+      }
+    };
+
+    fetchMaxFreeSessions();
+  }, []);
+
+  // Check if user has reached the session limit
   const totalSessions = sessions?.length || 0;
-  const hasReachedSessionLimit = !subscribed && totalSessions >= 5;
+  const hasReachedSessionLimit = !subscribed && totalSessions >= maxFreeSessions;
 
   // Load stats for all exams on mount
   useEffect(() => {
@@ -90,19 +119,19 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
     <div className="space-y-4">
       {/* Session limit warning for free users */}
       {!subscribed && totalSessions >= 1 && (
-        <Alert variant={totalSessions >= 5 ? "destructive" : "default"} className="border-2">
+        <Alert variant={totalSessions >= maxFreeSessions ? "destructive" : "default"} className="border-2">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle className="flex items-center gap-2">
-            {totalSessions >= 5 ? (
+            {totalSessions >= maxFreeSessions ? (
               <>Session-Limit erreicht</>
             ) : (
-              <>Noch {5 - totalSessions} Session{5 - totalSessions !== 1 ? 's' : ''} verfügbar</>
+              <>Noch {maxFreeSessions - totalSessions} Session{maxFreeSessions - totalSessions !== 1 ? 's' : ''} verfügbar</>
             )}
           </AlertTitle>
           <AlertDescription className="mt-2">
-            {totalSessions >= 5 ? (
+            {totalSessions >= maxFreeSessions ? (
               <div className="space-y-2">
-                <p>Du hast das kostenlose Limit von 5 Trainingsessions erreicht. Lösche eine vorhandene Session oder upgrade zu Premium.</p>
+                <p>Du hast das kostenlose Limit von {maxFreeSessions} Trainingsessions erreicht. Lösche eine vorhandene Session oder upgrade zu Premium.</p>
                 <div className="flex gap-2 mt-2">
                   <Button 
                     size="sm" 
@@ -123,7 +152,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
               </div>
             ) : (
               <div className="space-y-2">
-                <p>Du hast bereits {totalSessions} von 5 kostenlosen Trainingssessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.</p>
+                <p>Du hast bereits {totalSessions} von {maxFreeSessions} kostenlosen Trainingssessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.</p>
                 <Button 
                   size="sm" 
                   variant="outline"
@@ -277,7 +306,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
                     </TooltipTrigger>
                     {hasReachedSessionLimit && (
                       <TooltipContent>
-                        <p>Du hast das Limit von 5 Sessions erreicht.</p>
+                        <p>Du hast das Limit von {maxFreeSessions} Sessions erreicht.</p>
                         <p className="font-semibold">Upgrade auf Premium für unbegrenzte Sessions!</p>
                       </TooltipContent>
                     )}

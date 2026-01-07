@@ -379,31 +379,26 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       setInitialAnswer(answer);
     }
     
-    // For free users, increment AI comment usage when revealing answer (which shows percentages and AI comments)
+    // For free users, increment AI comment usage on the *first* answer click for this question
+    // so that AI comments can open for any selected answer (not only after a correct one).
     if (!subscribed && currentQuestion.id !== usageIncrementedForQuestion) {
-      const willReveal = preferences?.immediateFeedback || isAnswerCorrect;
-      if (willReveal) {
-        // Check access before incrementing - if they're at the limit, don't increment
-        if (canAccessAIComments) {
-          let usageSuccess = false;
-          await requirePremiumForAI(() => {
-            console.log('AI comment usage incremented for revealing answer');
-            usageSuccess = true;
-          });
-          if (usageSuccess) {
-            setUsageIncrementedForQuestion(currentQuestion.id);
-            // After incrementing, check if they still have access (might have hit limit)
-            // The hook state will update, so check it in the next render cycle
-            setCanShowAIContent(dailyUsage + 1 < DAILY_LIMIT);
-          } else {
-            setCanShowAIContent(false);
-          }
+      // Check access before incrementing - if they're at the limit, don't increment
+      if (canAccessAIComments) {
+        let usageSuccess = false;
+        await requirePremiumForAI(() => {
+          console.log('AI comment usage incremented for selecting answer');
+          usageSuccess = true;
+        });
+        if (usageSuccess) {
+          setUsageIncrementedForQuestion(currentQuestion.id);
+          // After incrementing, check if they still have access (might have hit limit)
+          // The hook state will update, so check it in the next render cycle
+          setCanShowAIContent(dailyUsage + 1 < DAILY_LIMIT);
         } else {
-          // No access - don't show AI content
           setCanShowAIContent(false);
         }
       } else {
-        // Won't reveal yet - don't show AI content
+        // No access - don't show AI content
         setCanShowAIContent(false);
       }
     } else if (subscribed) {
