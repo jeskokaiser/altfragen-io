@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardClock, Plus, Play, Settings, Trash2, Pencil, Lock, AlertCircle, Crown, BarChart3 } from 'lucide-react';
+import { ClipboardClock, Plus, Play, Settings, Trash2, Pencil, Lock, AlertCircle, Crown, BarChart3, List } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { UpcomingExamWithStats } from '@/types/UpcomingExam';
 import { getExamStatsForUser, type ExamUserStats } from '@/services/UpcomingExamService';
@@ -274,7 +274,12 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
                       </div>
                     ))}
                     {sessionsForExam.length > 3 && (
-                      <div className="text-xs text-muted-foreground">+ {sessionsForExam.length - 3} weitere</div>
+                      <button
+                        onClick={() => navigate('/training/sessions')}
+                        className="text-xs text-muted-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
+                      >
+                        + {sessionsForExam.length - 3} weitere
+                      </button>
                     )}
                   </div>
                 ) : (
@@ -283,38 +288,45 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({ exams, onAddQuest
               </div>
 
               <div className="mt-auto flex gap-2">
-                {exam.linked_question_count === 0 && (
+                {exam.linked_question_count === 0 ? (
                   <Button size="sm" onClick={() => onAddQuestions(exam.id)}>
                     <Plus className="h-4 w-4 mr-1" /> Fragen hinzufügen
                   </Button>
+                ) : (
+                  <>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => onStartTraining(exam.id)} 
+                              disabled={hasReachedSessionLimit}
+                            >
+                              {hasReachedSessionLimit && <Lock className="h-4 w-4 mr-1" />}
+                              {!hasReachedSessionLimit && <Play className="h-4 w-4 mr-1" />}
+                              Neue Session erstellen
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        {hasReachedSessionLimit && (
+                          <TooltipContent>
+                            <p>Du hast das Limit von {maxFreeSessions} Sessions erreicht.</p>
+                            <p className="font-semibold">Upgrade auf Premium für unbegrenzte Sessions!</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Button size="sm" variant="secondary" onClick={() => navigate('/training/sessions')}>
+                      <List className="h-4 w-4 mr-1" />
+                      Sessions
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => onOpenAnalytics ? onOpenAnalytics(exam.id) : undefined} disabled={!onOpenAnalytics}>
+                      Auswertung
+                    </Button>
+                  </>
                 )}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => onStartTraining(exam.id)} 
-                          disabled={exam.linked_question_count === 0 || hasReachedSessionLimit}
-                        >
-                          {hasReachedSessionLimit && <Lock className="h-4 w-4 mr-1" />}
-                          {!hasReachedSessionLimit && <Play className="h-4 w-4 mr-1" />}
-                          Neue Session erstellen
-                        </Button>
-                      </div>
-                    </TooltipTrigger>
-                    {hasReachedSessionLimit && (
-                      <TooltipContent>
-                        <p>Du hast das Limit von {maxFreeSessions} Sessions erreicht.</p>
-                        <p className="font-semibold">Upgrade auf Premium für unbegrenzte Sessions!</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-                <Button size="sm" variant="secondary" onClick={() => onOpenAnalytics ? onOpenAnalytics(exam.id) : undefined} disabled={!onOpenAnalytics}>
-                  Auswertung
-                </Button>
               </div>
             </CardContent>
           </Card>

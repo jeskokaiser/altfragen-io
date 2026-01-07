@@ -44,6 +44,34 @@ const TrainingSessionsList: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
   const [sessionsWithExams, setSessionsWithExams] = useState<SessionWithExam[]>([]);
+  const [maxFreeSessions, setMaxFreeSessions] = useState<number>(10); // Default to 10 if not set in DB
+
+  // Fetch max_free_sessions from database
+  useEffect(() => {
+    const fetchMaxFreeSessions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('ai_commentary_settings')
+          .select('max_free_sessions')
+          .single();
+
+        if (error) {
+          console.error('Error fetching max_free_sessions:', error);
+          // Keep default value of 10
+        } else {
+          // Use the value from DB if it's not null, otherwise keep default of 10
+          // Type assertion needed as max_free_sessions may not be in generated types yet
+          const maxSessions = (data as any)?.max_free_sessions;
+          setMaxFreeSessions(maxSessions ?? 10);
+        }
+      } catch (error) {
+        console.error('Error in fetchMaxFreeSessions:', error);
+        // Keep default value of 10
+      }
+    };
+
+    fetchMaxFreeSessions();
+  }, []);
 
   // Fetch exam information for sessions
   useEffect(() => {
@@ -108,7 +136,7 @@ const TrainingSessionsList: React.FC = () => {
   }
 
   const totalSessions = sessions?.length || 0;
-  const hasReachedLimit = !subscribed && totalSessions >= 5;
+  const hasReachedLimit = !subscribed && totalSessions >= maxFreeSessions;
 
   // Group sessions by type
   const examSessions = sessionsWithExams.filter(s => s.exam);
@@ -122,15 +150,15 @@ const TrainingSessionsList: React.FC = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle className="flex items-center gap-2">
             {hasReachedLimit ? (
-              <>Session-Limit erreicht ({totalSessions}/5)</>
+              <>Session-Limit erreicht ({totalSessions}/{maxFreeSessions})</>
             ) : (
-              <>Noch {5 - totalSessions} Session{5 - totalSessions !== 1 ? 's' : ''} verfügbar ({totalSessions}/5)</>
+              <>Noch {maxFreeSessions - totalSessions} Session{maxFreeSessions - totalSessions !== 1 ? 's' : ''} verfügbar ({totalSessions}/{maxFreeSessions})</>
             )}
           </AlertTitle>
           <AlertDescription className="mt-2">
             {hasReachedLimit ? (
               <div>
-                <p className="mb-2">Du hast das kostenlose Limit von 5 Trainingssessions erreicht. Lösche eine Session oder upgrade zu Premium für unbegrenzte Sessions.</p>
+                <p className="mb-2">Du hast das kostenlose Limit von {maxFreeSessions} Trainingssessions erreicht. Lösche eine Session oder upgrade zu Premium für unbegrenzte Sessions.</p>
                 <Button 
                   size="sm" 
                   variant="default"
