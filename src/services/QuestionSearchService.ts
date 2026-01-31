@@ -62,12 +62,15 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
         .neq('user_id', userId)
     : null;
 
-  // Public questions query
-  let publicQuery = supabase
-    .from('questions')
-    .select(questionColumns, { count: 'exact' })
-    .eq('visibility', 'public')
-    .neq('user_id', userId);
+  // Public questions query (only if user has a university_id)
+  let publicQuery = universityId
+    ? supabase
+        .from('questions')
+        .select(questionColumns, { count: 'exact' })
+        .eq('visibility', 'public')
+        .is('university_id', null) // Public questions have university_id = NULL
+        .neq('user_id', userId)
+    : null;
 
   // Apply full-text search if provided
   // Using ilike for pattern matching (case-insensitive)
@@ -78,7 +81,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
     if (universityQuery) {
       universityQuery = universityQuery.ilike('question', searchTerm);
     }
-    publicQuery = publicQuery.ilike('question', searchTerm);
+    if (publicQuery) {
+      publicQuery = publicQuery.ilike('question', searchTerm);
+    }
   }
 
   // Apply filters
@@ -89,7 +94,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
       if (universityQuery) {
         universityQuery = universityQuery.eq('subject', filters.subject);
       }
-      publicQuery = publicQuery.eq('subject', filters.subject);
+      if (publicQuery) {
+        publicQuery = publicQuery.eq('subject', filters.subject);
+      }
     }
 
     // Exam name (module) filter
@@ -98,7 +105,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
       if (universityQuery) {
         universityQuery = universityQuery.eq('exam_name', filters.examName);
       }
-      publicQuery = publicQuery.eq('exam_name', filters.examName);
+      if (publicQuery) {
+        publicQuery = publicQuery.eq('exam_name', filters.examName);
+      }
     }
 
     // Semester filter
@@ -107,7 +116,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
       if (universityQuery) {
         universityQuery = universityQuery.eq('exam_semester', filters.semester);
       }
-      publicQuery = publicQuery.eq('exam_semester', filters.semester);
+      if (publicQuery) {
+        publicQuery = publicQuery.eq('exam_semester', filters.semester);
+      }
     }
 
     // Year filter
@@ -116,7 +127,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
       if (universityQuery) {
         universityQuery = universityQuery.eq('exam_year', filters.year);
       }
-      publicQuery = publicQuery.eq('exam_year', filters.year);
+      if (publicQuery) {
+        publicQuery = publicQuery.eq('exam_year', filters.year);
+      }
     }
 
     // Difficulty filter
@@ -125,7 +138,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
       if (universityQuery) {
         universityQuery = universityQuery.eq('difficulty', filters.difficulty);
       }
-      publicQuery = publicQuery.eq('difficulty', filters.difficulty);
+      if (publicQuery) {
+        publicQuery = publicQuery.eq('difficulty', filters.difficulty);
+      }
     }
 
     // Visibility filter
@@ -134,7 +149,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
       if (universityQuery) {
         universityQuery = universityQuery.in('visibility', filters.visibility);
       }
-      publicQuery = publicQuery.in('visibility', filters.visibility);
+      if (publicQuery) {
+        publicQuery = publicQuery.in('visibility', filters.visibility);
+      }
     }
 
     // Filename filter
@@ -143,7 +160,9 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
       if (universityQuery) {
         universityQuery = universityQuery.eq('filename', filters.filename);
       }
-      publicQuery = publicQuery.eq('filename', filters.filename);
+      if (publicQuery) {
+        publicQuery = publicQuery.eq('filename', filters.filename);
+      }
     }
   }
 
@@ -167,13 +186,15 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
   if (universityQuery) {
     universityQuery = universityQuery.order(sortColumn, { ascending }).range(from, to);
   }
-  publicQuery = publicQuery.order(sortColumn, { ascending }).range(from, to);
+  if (publicQuery) {
+    publicQuery = publicQuery.order(sortColumn, { ascending }).range(from, to);
+  }
 
   // Execute queries
   const [personalResult, universityResult, publicResult] = await Promise.all([
     personalQuery,
     universityQuery || Promise.resolve({ data: [], error: null, count: 0 }),
-    publicQuery
+    publicQuery || Promise.resolve({ data: [], error: null, count: 0 })
   ]);
 
   // Combine results
@@ -254,10 +275,13 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
         .eq('visibility', 'university')
     : null;
 
-  const publicSubjectsQuery = supabase
-    .from('questions')
-    .select('subject')
-    .eq('visibility', 'public');
+  const publicSubjectsQuery = universityId
+    ? supabase
+        .from('questions')
+        .select('subject')
+        .eq('visibility', 'public')
+        .is('university_id', null) // Public questions have university_id = NULL
+    : null;
 
   // Get exam names
   const personalExamNamesQuery = supabase
@@ -275,11 +299,14 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
         .not('exam_name', 'is', null)
     : null;
 
-  const publicExamNamesQuery = supabase
-    .from('questions')
-    .select('exam_name')
-    .eq('visibility', 'public')
-    .not('exam_name', 'is', null);
+  const publicExamNamesQuery = universityId
+    ? supabase
+        .from('questions')
+        .select('exam_name')
+        .eq('visibility', 'public')
+        .is('university_id', null) // Public questions have university_id = NULL
+        .not('exam_name', 'is', null)
+    : null;
 
   // Get semesters
   const personalSemestersQuery = supabase
@@ -297,11 +324,14 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
         .not('exam_semester', 'is', null)
     : null;
 
-  const publicSemestersQuery = supabase
-    .from('questions')
-    .select('exam_semester')
-    .eq('visibility', 'public')
-    .not('exam_semester', 'is', null);
+  const publicSemestersQuery = universityId
+    ? supabase
+        .from('questions')
+        .select('exam_semester')
+        .eq('visibility', 'public')
+        .is('university_id', null) // Public questions have university_id = NULL
+        .not('exam_semester', 'is', null)
+    : null;
 
   // Get years
   const personalYearsQuery = supabase
@@ -319,11 +349,14 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
         .not('exam_year', 'is', null)
     : null;
 
-  const publicYearsQuery = supabase
-    .from('questions')
-    .select('exam_year')
-    .eq('visibility', 'public')
-    .not('exam_year', 'is', null);
+  const publicYearsQuery = universityId
+    ? supabase
+        .from('questions')
+        .select('exam_year')
+        .eq('visibility', 'public')
+        .is('university_id', null) // Public questions have university_id = NULL
+        .not('exam_year', 'is', null)
+    : null;
 
   const [
     personalSubjects,
@@ -341,16 +374,16 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
   ] = await Promise.all([
     personalSubjectsQuery,
     universitySubjectsQuery || Promise.resolve({ data: [], error: null }),
-    publicSubjectsQuery,
+    publicSubjectsQuery || Promise.resolve({ data: [], error: null }),
     personalExamNamesQuery,
     universityExamNamesQuery || Promise.resolve({ data: [], error: null }),
-    publicExamNamesQuery,
+    publicExamNamesQuery || Promise.resolve({ data: [], error: null }),
     personalSemestersQuery,
     universitySemestersQuery || Promise.resolve({ data: [], error: null }),
-    publicSemestersQuery,
+    publicSemestersQuery || Promise.resolve({ data: [], error: null }),
     personalYearsQuery,
     universityYearsQuery || Promise.resolve({ data: [], error: null }),
-    publicYearsQuery
+    publicYearsQuery || Promise.resolve({ data: [], error: null })
   ]);
 
   // Helper function to filter out empty/null values

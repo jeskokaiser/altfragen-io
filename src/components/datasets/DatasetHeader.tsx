@@ -1,7 +1,7 @@
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, AlertCircle, Archive, RotateCcw, Lock, GraduationCap, Share2, EyeOff } from 'lucide-react';
+import { Play, AlertCircle, Archive, RotateCcw, Lock, GraduationCap, Globe, Share2, EyeOff } from 'lucide-react';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -98,7 +98,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   const isPrivateDataset = datasetVisibility === 'private' && user?.id === questions[0]?.user_id;
 
   // Check if dataset can be changed to private (only if all questions are private)
-  const canChangeToPrivate = !questions.some(q => q.visibility === 'university');
+  const canChangeToPrivate = !questions.some(q => q.visibility === 'university' || q.visibility === 'public');
 
   const handleUnclearClick = () => {
     onUnclearQuestions();
@@ -108,12 +108,12 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
     onStartTraining(questions);
   };
 
-  const handleChangeVisibility = async (newVisibility: 'private' | 'university') => {
+  const handleChangeVisibility = async (newVisibility: 'private' | 'university' | 'public') => {
     try {
-      // If trying to change from university to private, we need to check if this is allowed
-      if (datasetVisibility === 'university' && newVisibility === 'private') {
+      // If trying to change from university/public to private, we need to check if this is allowed
+      if ((datasetVisibility === 'university' || datasetVisibility === 'public') && newVisibility === 'private') {
         toast.error('Änderung nicht möglich', {
-          description: 'Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.'
+          description: 'Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.'
         });
         return;
       }
@@ -123,7 +123,9 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
       // Show success message
       const visibilityText = newVisibility === 'private' 
         ? 'privat' 
-        : 'mit deiner Universität geteilt';
+        : newVisibility === 'university'
+        ? 'mit deiner Universität geteilt'
+        : 'öffentlich (für alle registrierten Universitäten)';
           
       toast.success(`Sichtbarkeit geändert`, {
         description: `Die Fragen sind jetzt ${visibilityText}`
@@ -143,6 +145,8 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
     switch (datasetVisibility) {
       case 'university':
         return <GraduationCap className="h-4 w-4 text-blue-500" />;
+      case 'public':
+        return <Globe className="h-4 w-4 text-green-500" />;
       default:
         return <Lock className="h-4 w-4 text-gray-500" />;
     }
@@ -152,6 +156,8 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
     switch (datasetVisibility) {
       case 'university':
         return "Universitätsweit (für alle an deiner Uni)";
+      case 'public':
+        return "Öffentlich (für alle registrierten Universitäten)";
       default:
         return "Privat (nur für dich)";
     }
@@ -240,25 +246,34 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>
-                  {datasetVisibility === 'private' ? 'Mit Universität teilen' : 'Sichtbarkeit ändern'}
+                  {datasetVisibility === 'private' ? 'Sichtbarkeit ändern' : 'Sichtbarkeit ändern'}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
                   {datasetVisibility === 'private' ? (
                     <>
-                      <p className="mb-2">Möchtest du diesen Datensatz mit deiner Universität teilen?</p>
+                      <p className="mb-2">Wie möchtest du diesen Datensatz teilen?</p>
                       <p className="font-bold text-yellow-600 dark:text-yellow-500">Achtung: Diese Aktion kann nicht rückgängig gemacht werden.</p>
                     </>
                   ) : (
-                    <p>Die Sichtbarkeit dieses Datensatzes ist bereits auf "Universität" gesetzt und kann nicht mehr geändert werden.</p>
+                    <p>Die Sichtbarkeit dieses Datensatzes ist bereits geteilt und kann nicht mehr geändert werden.</p>
                   )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Abbrechen</AlertDialogCancel>
                 {datasetVisibility === 'private' && (
-                  <AlertDialogAction onClick={() => handleChangeVisibility('university')}>
-                    Mit Universität teilen
-                  </AlertDialogAction>
+                  <>
+                    {universityId && (
+                      <>
+                        <AlertDialogAction onClick={() => handleChangeVisibility('university')}>
+                          Mit Universität teilen
+                        </AlertDialogAction>
+                        <AlertDialogAction onClick={() => handleChangeVisibility('public')}>
+                          Öffentlich teilen
+                        </AlertDialogAction>
+                      </>
+                    )}
+                  </>
                 )}
               </AlertDialogFooter>
             </AlertDialogContent>

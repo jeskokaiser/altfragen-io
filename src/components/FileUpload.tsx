@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
-import { AlertCircle, Lock, GraduationCap, FileText, FileUp, Files } from 'lucide-react';
+import { AlertCircle, Lock, GraduationCap, Globe, FileText, FileUp, Files, Scan } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Select,
@@ -20,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PDFUpload from './PDFUpload';
 import BatchPDFUpload from './BatchPDFUpload';
+import OCRUpload from './OCRUpload';
 
 interface FileUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
@@ -27,9 +29,10 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId, universityName } = useAuth();
+  const { subscribed } = useSubscription();
   const [error, setError] = React.useState<string | null>(null);
-  const [visibility, setVisibility] = useState<'private' | 'university'>('private');
-  const [uploadType, setUploadType] = useState<'csv' | 'pdf' | 'batch-pdf'>('csv');
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>('private');
+  const [uploadType, setUploadType] = useState<'csv' | 'pdf' | 'batch-pdf' | 'ocr'>('csv');
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -77,7 +80,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       
       const visibilityText = visibility === 'private' 
         ? 'privat' 
-        : 'mit deiner Universität geteilt';
+        : visibility === 'university'
+        ? 'mit deiner Universität geteilt'
+        : 'öffentlich (für alle registrierten Universitäten)';
           
       toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
         description: `Die Fragen wurden erfolgreich gespeichert und sind ${visibilityText}`
@@ -96,6 +101,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     switch (visibility) {
       case 'university':
         return <GraduationCap className="h-4 w-4" />;
+      case 'public':
+        return <Globe className="h-4 w-4" />;
       default:
         return <Lock className="h-4 w-4" />;
     }
@@ -130,7 +137,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       )}
 
       <Tabs defaultValue="csv" className="w-full">
-        <TabsList className="grid grid-cols-2">
+        <TabsList className="grid grid-cols-3">
           <TabsTrigger 
             value="csv" 
             onClick={() => setUploadType('csv')}
@@ -146,6 +153,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
           >
             <Files className="h-4 w-4" />
             Batch Dokumente
+          </TabsTrigger>
+          <TabsTrigger 
+            value="ocr" 
+            onClick={() => setUploadType('ocr')}
+            className="flex items-center gap-2"
+          >
+            <Scan className="h-4 w-4" />
+            OCR Upload
           </TabsTrigger>
         </TabsList>
         
@@ -163,7 +178,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                   <label className="text-sm font-medium">Sichtbarkeit der Fragen</label>
                   <Select 
                     value={visibility} 
-                    onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+                    onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Sichtbarkeit wählen" />
@@ -179,6 +194,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                         <div className="flex items-center gap-2">
                           <GraduationCap className="h-4 w-4" />
                           <span>Universität (alle an deiner Uni)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="public" disabled={!universityId}>
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4" />
+                          <span>Öffentlich (alle registrierten Universitäten)</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -222,6 +243,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
         <TabsContent value="batch-pdf">
           <BatchPDFUpload 
+            onQuestionsLoaded={handlePDFQuestionsLoaded} 
+            visibility={visibility}
+          />
+        </TabsContent>
+
+        <TabsContent value="ocr">
+          <OCRUpload 
             onQuestionsLoaded={handlePDFQuestionsLoaded} 
             visibility={visibility}
           />

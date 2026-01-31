@@ -19,11 +19,12 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { useQuestionFiltering } from '@/hooks/useQuestionFiltering';
 import { useQuestionGrouping } from '@/hooks/useQuestionGrouping';
 import { useUpcomingExams } from '@/hooks/useUpcomingExams';
+import { useQueryClient } from '@tanstack/react-query';
 import UpcomingExamCreateDialog from './exams/UpcomingExamCreateDialog';
 import UpcomingExamEditDialog from './exams/UpcomingExamEditDialog';
 import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
-import { getLinkedQuestionIdsForExam, deleteUpcomingExam } from '@/services/UpcomingExamService';
+import { deleteUpcomingExam } from '@/services/UpcomingExamService';
 import { fetchQuestionDetails, fetchUserDifficultiesForQuestions } from '@/services/DatabaseService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
@@ -36,8 +37,9 @@ const Dashboard = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { preferences, isDatasetArchived, updateSelectedUniversityDatasets, updatePreferences } = useUserPreferences();
-  const { exams, isLoading: isExamsLoading, linkQuestions } = useUpcomingExams(user?.id);
+  const { exams, isLoading: isExamsLoading } = useUpcomingExams(user?.id);
   
   // State variables
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
@@ -304,28 +306,107 @@ const Dashboard = () => {
     setIsQuestionSelectorOpen(true);
   }, []);
 
-  const handleLinkQuestionsToExam = useCallback(async (selectedIds: string[]) => {
+  const handleLinkQuestionsToExam = useCallback(async (selectedExamNames: string[]) => {
     if (!examIdForLinking || !user?.id) return;
-    const sourceOf = (qid: string): 'personal' | 'university' => {
-      const q = (questions || []).find(q => q.id === qid);
-      if (!q) return 'personal';
-      const isPersonal = q.user_id === user.id || q.visibility === 'private';
-      return isPersonal ? 'personal' : 'university';
-    };
-    await linkQuestions({ examId: examIdForLinking, questionIds: selectedIds, sourceOf });
+    
+    // Get the exam
+    const exam = (exams || []).find(e => e.id === examIdForLinking);
+    if (!exam) {
+      toast.error('Prüfung nicht gefunden.');
+      setIsQuestionSelectorOpen(false);
+      setExamIdForLinking(null);
+      return;
+    }
+
+    try {
+      // Store selected exam_names in the exam's exam_name field (comma-separated if multiple)
+      const examNameValue = selectedExamNames.length > 0 
+        ? selectedExamNames.join(', ')
+        : null;
+
+      const { error: updateError } = await supabase
+        .from('upcoming_exams')
+        .update({ exam_name: examNameValue })
+        .eq('id', examIdForLinking);
+
+      if (updateError) throw updateError;
+
+      if (selectedExamNames.length > 0) {
+        toast.success(`${selectedExamNames.length} Prüfung(en) wurden ausgewählt: ${selectedExamNames.join(', ')}`);
+      } else {
+        toast.success('Prüfungsauswahl wurde entfernt.');
+      }
+
+      // Invalidate queries to refresh exam data
+      queryClient.invalidateQueries({ queryKey: ['upcoming-exams', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['exam', examIdForLinking] });
+    } catch (error) {
+      console.error('Error updating exam exam_name:', error);
+      toast.error('Fehler beim Speichern der Prüfungsauswahl');
+    }
+    
     setIsQuestionSelectorOpen(false);
     setExamIdForLinking(null);
-  }, [examIdForLinking, questions, user?.id, linkQuestions]);
+  }, [examIdForLinking, exams, user?.id, queryClient]);
 
   const handleStartTrainingFromExam = useCallback(async (examId: string) => {
     try {
-      const links = await getLinkedQuestionIdsForExam(examId);
-      const ids = links.map(l => l.question_id);
-      if (!ids.length) return;
-      const idSet = new Set(ids);
-      // Use already loaded dashboard questions to avoid long Supabase URL
-      const sourceQuestions = (questions || []).filter(q => idSet.has(q.id));
-      if (sourceQuestions.length === 0) return;
+      // Get the exam to find its exam_name(s)
+      const exam = (exams || []).find(e => e.id === examId);
+      if (!exam?.exam_name) {
+        toast.error('Prüfung hat keinen exam_name.');
+        return;
+      }
+
+      // Split comma-separated exam_names
+      const examNames = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+      if (examNames.length === 0) {
+        toast.error('Prüfung hat keine gültigen exam_names.');
+        return;
+      }
+
+      // Query questions directly by exam_name (any of the selected exam_names)
+      const { data: questionData, error: questionsError } = await supabase
+        .from('questions')
+        .select('*')
+        .in('exam_name', examNames);
+      
+      if (questionsError) throw questionsError;
+      if (!questionData || questionData.length === 0) {
+        toast.info('Keine Fragen für diese Prüfung gefunden.');
+        return;
+      }
+
+      // Map to Question type
+      const sourceQuestions: Question[] = questionData.map((q: any) => ({
+        id: q.id,
+        question: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        optionC: q.option_c,
+        optionD: q.option_d,
+        optionE: q.option_e,
+        subject: q.subject,
+        correctAnswer: q.correct_answer,
+        comment: q.comment,
+        filename: q.filename,
+        difficulty: q.difficulty,
+        is_unclear: q.is_unclear,
+        marked_unclear_at: q.marked_unclear_at,
+        university_id: q.university_id,
+        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+        user_id: q.user_id,
+        semester: q.exam_semester || null,
+        year: q.exam_year || null,
+        image_key: q.image_key || null,
+        show_image_after_answer: q.show_image_after_answer || false,
+        exam_name: q.exam_name || null,
+        created_at: q.created_at,
+        question_case: q.question_case || null,
+        case_text: q.case_text || null
+      }));
+
+      const ids = sourceQuestions.map(q => q.id);
       
       // Load user-specific difficulties for these questions
       if (user?.id) {
@@ -340,15 +421,15 @@ const Dashboard = () => {
         setCreateSessionQuestions(sourceQuestions);
       }
       
-      const exam = (exams || []).find(e => e.id === examId);
       const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
       setCreateSessionDefaultTitle(exam?.title ? `${today} – ${exam.title}` : `${today} – Training Session`);
       setCreateSessionExamId(examId);
       setIsCreateTrainingSessionOpen(true);
     } catch (e) {
       console.error('Failed to prepare training session from exam', e);
+      toast.error('Fehler beim Laden der Fragen für die Prüfung');
     }
-  }, [exams, questions, user?.id]);
+  }, [exams, user?.id]);
 
   const handleDeleteExam = useCallback(async (examId: string) => {
     if (!user?.id) return;
@@ -722,8 +803,7 @@ const Dashboard = () => {
       <ExamQuestionSelectorDialog 
         open={isQuestionSelectorOpen}
         onOpenChange={setIsQuestionSelectorOpen}
-        personalDatasets={groupedQuestions}
-        universityDatasets={groupedUniversityQuestions}
+        examId={examIdForLinking}
         onConfirm={handleLinkQuestionsToExam}
       />
       <TrainingSessionCreateDialog

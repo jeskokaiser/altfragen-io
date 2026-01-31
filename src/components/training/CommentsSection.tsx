@@ -23,7 +23,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const allowPublicComments = questionVisibility === 'university';
+  const allowPublicComments = questionVisibility === 'university' || questionVisibility === 'public';
 
   // Fetch all comments (they're filtered by RLS)
   const { data: comments, isLoading, error } = useQuery({

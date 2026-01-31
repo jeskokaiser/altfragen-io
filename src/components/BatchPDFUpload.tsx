@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { showToast } from '@/utils/toast';
 import { Question } from '@/types/Question';
-import { FileUp, Lock, GraduationCap } from 'lucide-react';
+import { FileUp, Lock, GraduationCap, Globe } from 'lucide-react';
 import { BatchPDFFile, BatchPDFUploadProps } from './batch-upload/types';
 import FileSelector from './batch-upload/FileSelector';
 import BatchFileList from './batch-upload/BatchFileList';
@@ -24,7 +24,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
   const { user, universityId, universityName } = useAuth();
   const [files, setFiles] = useState<BatchPDFFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [visibility, setVisibility] = useState<'private' | 'university'>(initialVisibility);
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(initialVisibility);
   const [extractedQuestions, setExtractedQuestions] = useState<Question[] | null>(null);
   const [processingStats, setProcessingStats] = useState<any>(null);
   const [currentFilename, setCurrentFilename] = useState<string>('');
@@ -148,7 +148,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
         is_unclear: q.is_unclear,
         marked_unclear_at: q.marked_unclear_at,
         university_id: q.university_id,
-        visibility: (q.visibility as 'private' | 'university') || 'private',
+        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
         user_id: q.user_id,
         semester: q.exam_semester || null,
         year: q.exam_year || null,
@@ -472,7 +472,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           <Label>Sichtbarkeit der Fragen</Label>
           <Select 
             value={visibility} 
-            onValueChange={(value: 'private' | 'university') => setVisibility(value)}
+            onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Sichtbarkeit wählen" />
@@ -488,6 +488,12 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
                 <div className="flex items-center gap-2">
                   <GraduationCap className="h-4 w-4" />
                   <span>Universität (alle an deiner Uni)</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="public" disabled={!universityId}>
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  <span>Öffentlich (alle registrierten Universitäten)</span>
                 </div>
               </SelectItem>
             </SelectContent>

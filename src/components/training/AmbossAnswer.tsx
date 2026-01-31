@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ModelIcon, ModelName } from './ModelIcon';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 interface AmbossAnswerProps {
   optionLetter: 'A' | 'B' | 'C' | 'D' | 'E';
@@ -219,9 +220,24 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
               ))}
             </div>
           )}
-          <p className="text-slate-500 leading-none text-xs font-sans font-semibold cursor-pointer">
-            {isRevealed && showPercentage ? (percentage !== null ? `${Math.round(percentage)}%` : '-') : ''}
-          </p>
+          {isRevealed && showPercentage && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-slate-500 leading-none text-xs font-sans font-semibold cursor-pointer">
+                    {percentage !== null ? `${Math.round(percentage)}%` : '-'}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {percentage !== null
+                      ? `Anteil der Nutzer, die diese Antwortoption zuerst gewählt haben`
+                      : 'Keine Statistiken verfügbar'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
         <div className="h-[38px] flex justify-center items-center cursor-pointer gap-1">
           {icon}

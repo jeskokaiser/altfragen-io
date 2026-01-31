@@ -28,7 +28,7 @@ type ExamMetadataFormValues = z.infer<typeof examMetadataSchema>;
 
 interface PDFUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
-  visibility: 'private' | 'university';
+  visibility: 'private' | 'university' | 'public';
 }
 
 const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
@@ -39,7 +39,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showMetadataForm, setShowMetadataForm] = useState(true);
   const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
-  const [visibility, setVisibility] = useState<'private' | 'university'>(initialVisibility);
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(initialVisibility);
   const [examNameSuggestions, setExamNameSuggestions] = useState<string[]>([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -228,7 +228,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
         is_unclear: q.is_unclear,
         marked_unclear_at: q.marked_unclear_at,
         university_id: q.university_id,
-        visibility: (q.visibility as 'private' | 'university') || 'private',
+        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
         user_id: q.user_id,
         semester: q.exam_semester || null,
         year: q.exam_year || null,

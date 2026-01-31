@@ -171,7 +171,7 @@ export const deleteComment = async (
 /**
  * Get question visibility to determine if public comments are allowed.
  */
-export const getQuestionVisibility = async (questionId: string): Promise<'private' | 'university' | null> => {
+export const getQuestionVisibility = async (questionId: string): Promise<'private' | 'university' | 'public' | null> => {
   const { data, error } = await supabase
     .from('questions')
     .select('visibility')
@@ -183,6 +183,6 @@ export const getQuestionVisibility = async (questionId: string): Promise<'privat
     return null;
   }
 
-  return data?.visibility as 'private' | 'university' | null;
+  return data?.visibility as 'private' | 'university' | 'public' | null;
 };
 

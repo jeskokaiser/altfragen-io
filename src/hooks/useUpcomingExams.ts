@@ -35,16 +35,24 @@ export const useUpcomingExams = (userId: string | undefined) => {
     }
   });
 
+  // Questions are now automatically linked by exam_name matching
+  // These mutations are kept for backward compatibility but are no-ops
   const linkMut = useMutation({
-    mutationFn: ({ examId, questionIds, sourceOf }: { examId: string; questionIds: string[]; sourceOf: (qid: string) => 'personal' | 'university' }) =>
-      linkQuestionsToExam(examId, questionIds, sourceOf),
+    mutationFn: async ({ examId, questionIds, sourceOf }: { examId: string; questionIds: string[]; sourceOf: (qid: string) => 'personal' | 'university' }) => {
+      // Questions are automatically linked by exam_name, so this is a no-op
+      return linkQuestionsToExam(examId, questionIds, sourceOf);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['upcoming-exams', userId] });
     }
   });
 
   const unlinkMut = useMutation({
-    mutationFn: ({ examId, questionId }: { examId: string; questionId: string }) => unlinkQuestionFromExam(examId, questionId),
+    mutationFn: async ({ examId, questionId }: { examId: string; questionId: string }) => {
+      // Questions are automatically linked by exam_name, so this is a no-op
+      // To unlink, the question's exam_name would need to be changed
+      return unlinkQuestionFromExam(examId, questionId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['upcoming-exams', userId] });
     }

@@ -13,5 +13,5 @@ export interface BatchPDFFile {
 
 export interface BatchPDFUploadProps {
   onQuestionsLoaded: (questions: Question[]) => void;
-  visibility: 'private' | 'university';
+  visibility: 'private' | 'university' | 'public';
 }

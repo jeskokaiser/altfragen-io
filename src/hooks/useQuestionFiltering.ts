@@ -34,7 +34,15 @@ export const useQuestionFiltering = ({
       );
     } else {
       filtered = questions.filter(q => {
-        return q.visibility === 'university' && q.university_id === universityId;
+        // Include university questions from user's university
+        if (q.visibility === 'university' && q.university_id === universityId) {
+          return true;
+        }
+        // Include public questions (only if user has a university_id)
+        if (universityId && q.visibility === 'public' && q.university_id === null) {
+          return true;
+        }
+        return false;
       });
     }
     

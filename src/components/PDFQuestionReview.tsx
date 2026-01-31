@@ -26,7 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface PDFQuestionReviewProps {
   questions: Question[];
-  visibility: 'private' | 'university';
+  visibility: 'private' | 'university' | 'public';
   onSave: (questions: Question[]) => void;
   onCancel: () => void;
   filename: string;

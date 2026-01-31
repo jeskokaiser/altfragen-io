@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import SubjectReassignmentPanel from '@/components/admin/SubjectReassignmentPanel';
 import CampaignManagement from '@/components/admin/CampaignManagement';
-import { RefreshCw, AlertCircle, Megaphone } from 'lucide-react';
+import QuestionEditorPanel from '@/components/admin/QuestionEditorPanel';
+import { RefreshCw, AlertCircle, Megaphone, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AICommentaryAdmin: React.FC = () => {
@@ -45,7 +46,7 @@ const AICommentaryAdmin: React.FC = () => {
       </div>
 
       <Tabs defaultValue="subjects" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="subjects" className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4" />
             Subjects
@@ -53,6 +54,10 @@ const AICommentaryAdmin: React.FC = () => {
           <TabsTrigger value="campaigns" className="flex items-center gap-2">
             <Megaphone className="h-4 w-4" />
             Kampagnen
+          </TabsTrigger>
+          <TabsTrigger value="questions" className="flex items-center gap-2">
+            <Edit className="h-4 w-4" />
+            Fragen bearbeiten
           </TabsTrigger>
         </TabsList>
 
@@ -62,6 +67,10 @@ const AICommentaryAdmin: React.FC = () => {
 
         <TabsContent value="campaigns" className="space-y-6">
           <CampaignManagement />
+        </TabsContent>
+
+        <TabsContent value="questions" className="space-y-6">
+          <QuestionEditorPanel />
         </TabsContent>
       </Tabs>
     </div>

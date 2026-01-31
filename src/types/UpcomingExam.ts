@@ -8,6 +8,7 @@ export interface UpcomingExam {
   university_id: string | null;
   created_at: string;
   updated_at: string;
+  exam_name: string | null;
 }
 
 export interface UpcomingExamWithStats extends UpcomingExam {

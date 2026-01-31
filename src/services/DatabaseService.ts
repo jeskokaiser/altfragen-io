@@ -22,7 +22,9 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       exam_year: q.year || null,
       image_key: q.image_key || null,
       show_image_after_answer: q.show_image_after_answer || false,
-      exam_name: q.exam_name || null
+      exam_name: q.exam_name || null,
+      question_case: q.question_case || null,
+      case_text: q.case_text || null
     }))
   );
 
@@ -53,7 +55,7 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     is_unclear: q.is_unclear,
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university') || 'private',
+    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
     semester: q.exam_semester || null,
     year: q.exam_year || null,
     image_key: q.image_key || null,
@@ -109,25 +111,27 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     is_unclear: q.is_unclear,
     marked_unclear_at: q.marked_unclear_at,
     university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university') || 'private',
+    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
     user_id: q.user_id,
     semester: q.exam_semester || null,
     year: q.exam_year || null,
     image_key: q.image_key || null,
     show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null
+    exam_name: q.exam_name || null,
+    question_case: q.question_case || null,
+    case_text: q.case_text || null
   }));
 };
 
-export const updateQuestionVisibility = async (questionId: string, visibility: 'private' | 'university', universityId?: string | null) => {
+export const updateQuestionVisibility = async (questionId: string, visibility: 'private' | 'university' | 'public', universityId?: string | null) => {
   const { data: existingQuestion } = await supabase
     .from('questions')
     .select('visibility')
     .eq('id', questionId)
     .single();
   
-  if (existingQuestion?.visibility === 'university' && visibility === 'private') {
-    throw new Error('Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.');
+  if ((existingQuestion?.visibility === 'university' || existingQuestion?.visibility === 'public') && visibility === 'private') {
+    throw new Error('Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.');
   }
 
   const { error } = await supabase
@@ -142,16 +146,16 @@ export const updateQuestionVisibility = async (questionId: string, visibility: '
   return true;
 };
 
-export const updateDatasetVisibility = async (filename: string, userId: string, visibility: 'private' | 'university', universityId?: string | null) => {
+export const updateDatasetVisibility = async (filename: string, userId: string, visibility: 'private' | 'university' | 'public', universityId?: string | null) => {
   const { data: existingQuestions } = await supabase
     .from('questions')
     .select('visibility')
     .eq('filename', filename)
     .eq('user_id', userId)
-    .eq('visibility', 'university');
+    .in('visibility', ['university', 'public']);
   
   if (existingQuestions && existingQuestions.length > 0 && visibility === 'private') {
-    throw new Error('Fragen, die mit deiner Universität geteilt wurden, können nicht zurück auf privat gesetzt werden.');
+    throw new Error('Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.');
   }
 
   const { error } = await supabase
@@ -213,9 +217,27 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     universityQuestions = uniQuestions || [];
   }
 
+  // Fetch public questions (only if user has a university_id)
+  let publicQuestions: any[] = [];
+  if (universityId) {
+    const { data: pubQuestions, error: pubError } = await supabase
+      .from('questions')
+      .select(questionColumns)
+      .eq('visibility', 'public')
+      .is('university_id', null) // Public questions have university_id = NULL
+      .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
+      .order('created_at', { ascending: false });
+
+    if (pubError) {
+      throw pubError;
+    }
+    
+    publicQuestions = pubQuestions || [];
+  }
+
   // For now, skip fetching user difficulties in the dashboard to improve performance
   // User difficulties will be fetched on-demand when questions are actually displayed
-  const allQuestions = [...personalQuestions, ...universityQuestions].map(q => ({
+  const allQuestions = [...personalQuestions, ...universityQuestions, ...publicQuestions].map(q => ({
     id: q.id,
     question: q.question,
     optionA: '', // These will be loaded on-demand when needed
@@ -284,29 +306,58 @@ export const fetchAllQuestionsPaginated = async (
 
   let universityQuestions: any[] = [];
   let universityCount = 0;
+  let publicQuestions: any[] = [];
+  let publicCount = 0;
   
-  if (universityId && pageSize > (personalQuestions?.length || 0)) {
-    // Calculate how many university questions we need
+  if (universityId) {
+    // Calculate remaining slots after personal questions
     const remainingSlots = pageSize - (personalQuestions?.length || 0);
-    const universityFrom = Math.max(0, from - (personalCount || 0));
-    const universityTo = universityFrom + remainingSlots - 1;
-
-    const { data: uniQuestions, error: uniError, count: uniCount } = await supabase
-      .from('questions')
-      .select(questionColumns, { count: 'exact' })
-      .eq('university_id', universityId)
-      .eq('visibility', 'university')
-      .neq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(universityFrom, universityTo);
-
-    if (uniError) throw uniError;
     
-    universityQuestions = uniQuestions || [];
-    universityCount = uniCount || 0;
+    if (remainingSlots > 0) {
+      // Calculate how many university questions we need
+      const universityFrom = Math.max(0, from - (personalCount || 0));
+      const universityTo = universityFrom + remainingSlots - 1;
+
+      const { data: uniQuestions, error: uniError, count: uniCount } = await supabase
+        .from('questions')
+        .select(questionColumns, { count: 'exact' })
+        .eq('university_id', universityId)
+        .eq('visibility', 'university')
+        .neq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(universityFrom, universityTo);
+
+      if (uniError) throw uniError;
+      
+      universityQuestions = uniQuestions || [];
+      universityCount = uniCount || 0;
+      
+      // Calculate remaining slots after university questions
+      const remainingAfterUni = pageSize - (personalQuestions?.length || 0) - (universityQuestions?.length || 0);
+      
+      if (remainingAfterUni > 0) {
+        // Fetch public questions
+        const publicFrom = Math.max(0, from - (personalCount || 0) - (universityCount || 0));
+        const publicTo = publicFrom + remainingAfterUni - 1;
+
+        const { data: pubQuestions, error: pubError, count: pubCount } = await supabase
+          .from('questions')
+          .select(questionColumns, { count: 'exact' })
+          .eq('visibility', 'public')
+          .is('university_id', null) // Public questions have university_id = NULL
+          .neq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .range(publicFrom, publicTo);
+
+        if (pubError) throw pubError;
+        
+        publicQuestions = pubQuestions || [];
+        publicCount = pubCount || 0;
+      }
+    }
   }
 
-  const allQuestions = [...personalQuestions || [], ...universityQuestions].map(q => ({
+  const allQuestions = [...personalQuestions || [], ...universityQuestions, ...publicQuestions].map(q => ({
     id: q.id,
     question: q.question,
     optionA: '',
@@ -334,7 +385,7 @@ export const fetchAllQuestionsPaginated = async (
 
   return {
     questions: allQuestions,
-    totalCount: (personalCount || 0) + universityCount,
+    totalCount: (personalCount || 0) + universityCount + publicCount,
     page,
     pageSize,
     hasMore: allQuestions.length === pageSize
@@ -487,4 +538,159 @@ export const fetchQuestionDetails = async (questionIds: string[]) => {
     first_answer_stats_updated_at: q.first_answer_stats_updated_at || null,
     first_answer_sample_size: q.first_answer_sample_size || 0
   }));
+};
+
+export const fetchQuestionsByFilename = async (filename: string, userId: string): Promise<Question[]> => {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('filename', filename)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+
+  return data.map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    difficulty: q.difficulty,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at,
+    university_id: q.university_id,
+    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+    user_id: q.user_id,
+    semester: q.exam_semester || null,
+    year: q.exam_year || null,
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false,
+    exam_name: q.exam_name || null,
+    question_case: q.question_case || null,
+    case_text: q.case_text || null
+  }));
+};
+
+export const fetchQuestionsByExamName = async (
+  examName: string,
+  page: number = 0,
+  pageSize: number = 20
+): Promise<{ questions: Question[]; totalCount: number }> => {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  // First get the count
+  const { count, error: countError } = await supabase
+    .from('questions')
+    .select('*', { count: 'exact', head: true })
+    .eq('exam_name', examName);
+
+  if (countError) throw countError;
+
+  // Then fetch the data - sort by question_case ASC, then question_exam_number ASC
+  // Use nulls last to handle null values properly
+  const { data, error } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('exam_name', examName)
+    .order('question_case', { ascending: true, nullsFirst: false })
+    .order('question_exam_number', { ascending: true, nullsFirst: false })
+    .range(from, to);
+
+  if (error) throw error;
+
+  const questions = data.map(q => ({
+    id: q.id,
+    question: q.question,
+    optionA: q.option_a,
+    optionB: q.option_b,
+    optionC: q.option_c,
+    optionD: q.option_d,
+    optionE: q.option_e,
+    subject: q.subject,
+    correctAnswer: q.correct_answer,
+    comment: q.comment,
+    filename: q.filename,
+    difficulty: q.difficulty,
+    is_unclear: q.is_unclear,
+    marked_unclear_at: q.marked_unclear_at,
+    university_id: q.university_id,
+    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+    user_id: q.user_id,
+    semester: q.exam_semester || null,
+    year: q.exam_year || null,
+    image_key: q.image_key || null,
+    show_image_after_answer: q.show_image_after_answer || false,
+    exam_name: q.exam_name || null,
+    created_at: q.created_at,
+    question_case: q.question_case || null,
+    case_text: q.case_text || null
+  }));
+
+  return {
+    questions,
+    totalCount: count || 0
+  };
+};
+
+export const updateQuestion = async (questionId: string, updates: Partial<Question>): Promise<Question> => {
+  const updateData: any = {};
+
+  if (updates.question !== undefined) updateData.question = updates.question;
+  if (updates.optionA !== undefined) updateData.option_a = updates.optionA;
+  if (updates.optionB !== undefined) updateData.option_b = updates.optionB;
+  if (updates.optionC !== undefined) updateData.option_c = updates.optionC;
+  if (updates.optionD !== undefined) updateData.option_d = updates.optionD;
+  if (updates.optionE !== undefined) updateData.option_e = updates.optionE;
+  if (updates.correctAnswer !== undefined) updateData.correct_answer = updates.correctAnswer;
+  if (updates.comment !== undefined) updateData.comment = updates.comment;
+  if (updates.subject !== undefined) updateData.subject = updates.subject;
+  if (updates.difficulty !== undefined) updateData.difficulty = updates.difficulty;
+  if (updates.image_key !== undefined) updateData.image_key = updates.image_key;
+  if (updates.question_case !== undefined) updateData.question_case = updates.question_case;
+  if (updates.case_text !== undefined) updateData.case_text = updates.case_text;
+
+  const { data: updatedQuestion, error } = await supabase
+    .from('questions')
+    .update(updateData)
+    .eq('id', questionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return {
+    id: updatedQuestion.id,
+    question: updatedQuestion.question,
+    optionA: updatedQuestion.option_a,
+    optionB: updatedQuestion.option_b,
+    optionC: updatedQuestion.option_c,
+    optionD: updatedQuestion.option_d,
+    optionE: updatedQuestion.option_e,
+    subject: updatedQuestion.subject,
+    correctAnswer: updatedQuestion.correct_answer,
+    comment: updatedQuestion.comment,
+    filename: updatedQuestion.filename,
+    difficulty: updatedQuestion.difficulty,
+    is_unclear: updatedQuestion.is_unclear,
+    marked_unclear_at: updatedQuestion.marked_unclear_at,
+    university_id: updatedQuestion.university_id,
+    visibility: (updatedQuestion.visibility as 'private' | 'university' | 'public') || 'private',
+    user_id: updatedQuestion.user_id,
+    semester: updatedQuestion.exam_semester || null,
+    year: updatedQuestion.exam_year || null,
+    image_key: updatedQuestion.image_key || null,
+    show_image_after_answer: updatedQuestion.show_image_after_answer || false,
+    exam_name: updatedQuestion.exam_name || null,
+    created_at: updatedQuestion.created_at,
+    question_case: updatedQuestion.question_case || null,
+    case_text: updatedQuestion.case_text || null
+  };
 };

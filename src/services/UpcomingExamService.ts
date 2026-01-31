@@ -49,6 +49,20 @@ export const deleteUpcomingExam = async (examId: string): Promise<void> => {
   if (error) throw error;
 };
 
+export const findUpcomingExamByTitle = async (userId: string, title: string): Promise<UpcomingExam | null> => {
+  const { data, error } = await sb
+    .from('upcoming_exams')
+    .select('*')
+    .eq('created_by', userId)
+    .eq('title', title)
+    .order('due_date', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data as UpcomingExam | null;
+};
+
 export const listUpcomingExamsForUser = async (userId: string): Promise<UpcomingExamWithStats[]> => {
   const { data: exams, error } = await sb
     .from('upcoming_exams')
@@ -57,18 +71,56 @@ export const listUpcomingExamsForUser = async (userId: string): Promise<Upcoming
     .order('due_date', { ascending: true });
   if (error) throw error;
 
-  const examIds = (exams || []).map((e: UpcomingExam) => e.id);
-  if (examIds.length === 0) return [];
+  if (!exams || exams.length === 0) return [];
 
-  const { data: links, error: linksErr } = await sb
-    .from('upcoming_exam_questions')
-    .select('exam_id, question_id')
-    .in('exam_id', examIds);
-  if (linksErr) throw linksErr;
+  // Get all unique exam_names from exams (handle comma-separated values)
+  const allExamNames = new Set<string>();
+  (exams as UpcomingExam[]).forEach(exam => {
+    if (exam.exam_name) {
+      // Split comma-separated exam_names
+      exam.exam_name.split(',').forEach((name: string) => {
+        const trimmed = name.trim();
+        if (trimmed) {
+          allExamNames.add(trimmed);
+        }
+      });
+    }
+  });
 
+  // Count questions by exam_name in a single query
+  const countByExamName: Record<string, number> = {};
+  
+  if (allExamNames.size > 0) {
+    // Query all questions with matching exam_names
+    const { data: questions, error: questionsError } = await sb
+      .from('questions')
+      .select('exam_name')
+      .in('exam_name', Array.from(allExamNames));
+    
+    if (questionsError) {
+      console.error('Error counting questions by exam_name:', questionsError);
+    } else if (questions) {
+      // Count questions per exam_name
+      questions.forEach((q: any) => {
+        const examName = q.exam_name;
+        if (examName) {
+          countByExamName[examName] = (countByExamName[examName] || 0) + 1;
+        }
+      });
+    }
+  }
+
+  // Map counts to exam IDs (sum counts for all exam_names in comma-separated string)
   const countByExam: Record<string, number> = {};
-  (links || []).forEach((l: { exam_id: string }) => {
-    countByExam[l.exam_id] = (countByExam[l.exam_id] || 0) + 1;
+  (exams as UpcomingExam[]).forEach(exam => {
+    if (exam.exam_name) {
+      // Split comma-separated exam_names and sum their counts
+      const names = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+      const totalCount = names.reduce((sum, name) => sum + (countByExamName[name] || 0), 0);
+      countByExam[exam.id] = totalCount;
+    } else {
+      countByExam[exam.id] = 0;
+    }
   });
 
   return (exams as UpcomingExam[]).map((e) => ({
@@ -77,13 +129,38 @@ export const listUpcomingExamsForUser = async (userId: string): Promise<Upcoming
   }));
 };
 
-export const getLinkedQuestionIdsForExam = async (examId: string): Promise<Array<{ question_id: string; source: QuestionSource }>> => {
-  const { data, error } = await sb
-    .from('upcoming_exam_questions')
-    .select('question_id, source')
-    .eq('exam_id', examId);
+export const getLinkedQuestionIdsForExam = async (examId: string, userId?: string): Promise<Array<{ question_id: string; source: QuestionSource }>> => {
+  // Get the exam to find its exam_name(s)
+  const { data: exam, error: examError } = await sb
+    .from('upcoming_exams')
+    .select('exam_name')
+    .eq('id', examId)
+    .single();
+  
+  if (examError) throw examError;
+  if (!exam?.exam_name) return [];
+
+  // Split comma-separated exam_names
+  const examNames = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+  if (examNames.length === 0) return [];
+
+  // Query questions by exam_name (any of the selected exam_names)
+  const { data: questions, error } = await sb
+    .from('questions')
+    .select('id, visibility, user_id')
+    .in('exam_name', examNames);
+  
   if (error) throw error;
-  return (data || []).map((r: any) => ({ question_id: r.question_id as string, source: r.source as QuestionSource }));
+  if (!questions || questions.length === 0) return [];
+
+  // Derive source from question properties
+  return questions.map((q: any) => {
+    const isPersonal = q.visibility === 'private' || (userId && q.user_id === userId);
+    return {
+      question_id: q.id as string,
+      source: (isPersonal ? 'personal' : 'university') as QuestionSource
+    };
+  });
 };
 
 export const linkQuestionsToExam = async (
@@ -91,29 +168,35 @@ export const linkQuestionsToExam = async (
   questionIds: string[],
   questionIdToSource: (qid: string) => QuestionSource
 ): Promise<UpcomingExamQuestionLink[]> => {
-  const rows = questionIds.map((qid) => ({
+  // Questions are now automatically linked by exam_name matching
+  // This function is kept for backward compatibility but is a no-op
+  // Return derived links for compatibility
+  if (questionIds.length === 0) return [];
+
+  // Get the exam to find its exam_name
+  const { data: exam, error: examError } = await sb
+    .from('upcoming_exams')
+    .select('exam_name')
+    .eq('id', examId)
+    .single();
+  
+  if (examError) throw examError;
+  if (!exam?.exam_name) return [];
+
+  // Return derived links (questions are automatically linked by exam_name)
+  return questionIds.map((qid) => ({
     exam_id: examId,
     question_id: qid,
-    source: questionIdToSource(qid)
+    source: questionIdToSource(qid),
+    created_at: new Date().toISOString()
   }));
-
-  if (rows.length === 0) return [];
-
-  const { data, error } = await sb
-    .from('upcoming_exam_questions')
-    .insert(rows)
-    .select('*');
-  if (error) throw error;
-  return data as UpcomingExamQuestionLink[];
 };
 
 export const unlinkQuestionFromExam = async (examId: string, questionId: string): Promise<void> => {
-  const { error } = await sb
-    .from('upcoming_exam_questions')
-    .delete()
-    .eq('exam_id', examId)
-    .eq('question_id', questionId);
-  if (error) throw error;
+  // Questions are now automatically linked by exam_name matching
+  // Unlinking would require changing the question's exam_name, which is not desired
+  // This function is kept for backward compatibility but is a no-op
+  // To unlink, the question's exam_name would need to be changed, which should be done explicitly
 };
 
 export interface ExamUserStats {
@@ -124,14 +207,33 @@ export interface ExamUserStats {
 }
 
 export const getExamStatsForUser = async (examId: string, userId: string): Promise<ExamUserStats> => {
-  // Get linked questions for the exam
-  const { data: links, error: linksErr } = await sb
-    .from('upcoming_exam_questions')
-    .select('question_id')
-    .eq('exam_id', examId);
-  if (linksErr) throw linksErr;
+  // Get the exam to find its exam_name(s)
+  const { data: exam, error: examError } = await sb
+    .from('upcoming_exams')
+    .select('exam_name')
+    .eq('id', examId)
+    .single();
+  
+  if (examError) throw examError;
+  if (!exam?.exam_name) {
+    return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
+  }
 
-  const questionIds: string[] = (links || []).map((l: any) => l.question_id);
+  // Split comma-separated exam_names
+  const examNames = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+  if (examNames.length === 0) {
+    return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
+  }
+
+  // Get linked questions by exam_name (any of the selected exam_names)
+  const { data: questions, error: questionsErr } = await sb
+    .from('questions')
+    .select('id')
+    .in('exam_name', examNames);
+  
+  if (questionsErr) throw questionsErr;
+
+  const questionIds: string[] = (questions || []).map((q: any) => q.id);
   const totalLinked = questionIds.length;
   if (totalLinked === 0) {
     return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
