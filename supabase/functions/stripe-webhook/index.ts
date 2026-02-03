@@ -249,6 +249,7 @@ serve(async (req) => {
   const aiCreditsPriceId = Deno.env.get("STRIPE_PRICE_AI_PRIVATE_CREDITS_ID");
   const monthlyPriceId = Deno.env.get("STRIPE_PRICE_MONTHLY_ID");
   const semesterPriceId = Deno.env.get("STRIPE_PRICE_SEMESTER_ID");
+  const lifetimePriceId = Deno.env.get("STRIPE_PRICE_LIFETIME_ID");
 
   if (!stripeSecret || !webhookSecret || !supabaseUrl || !supabaseServiceKey) {
     log("Missing required environment variables", {
@@ -384,34 +385,161 @@ serve(async (req) => {
       return new Response("OK", { status: 200 });
     }
 
-    // Handle one-time payments (AI credits)
+    // Handle one-time payments (AI credits or lifetime subscription)
     if (session.mode === "payment") {
       log("Processing payment checkout", { sessionId: session.id });
-
-      // Ensure this session was for our AI credits price
-      if (!aiCreditsPriceId) {
-        log("AI credits price ID not configured, skipping");
-        return new Response("OK", { status: 200 });
-      }
 
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
         limit: 1,
       });
 
       const priceId = lineItems.data[0]?.price?.id;
-      if (priceId !== aiCreditsPriceId) {
-        log("Ignoring session with different price", { priceId, expected: aiCreditsPriceId });
-        return new Response("OK", { status: 200 });
-      }
-
       const userId =
         (session.metadata && session.metadata["user_id"]) ||
         session.client_reference_id;
 
       if (!userId) {
-        log("No user_id in session, cannot credit account", {
+        log("No user_id in session, cannot process payment", {
           sessionId: session.id,
         });
+        return new Response("OK", { status: 200 });
+      }
+
+      // Check if this is a lifetime subscription purchase
+      if (lifetimePriceId && priceId === lifetimePriceId) {
+        log("Processing lifetime subscription purchase", {
+          sessionId: session.id,
+          userId,
+        });
+
+        // Set subscription_end to 100 years in the future
+        const farFutureDate = new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000);
+        const subscriptionEnd = farFutureDate.toISOString();
+
+        // Get customer and email
+        const customerId = session.customer as string | null;
+        let email: string | null = null;
+
+        if (customerId) {
+          try {
+            const customer = await stripe.customers.retrieve(customerId);
+            if (!customer.deleted && "email" in customer && customer.email) {
+              email = customer.email;
+            }
+          } catch (err) {
+            log("Failed to retrieve customer", { error: err, customerId });
+          }
+        }
+
+        if (!email && session.customer_email) {
+          email = session.customer_email;
+        }
+
+        if (!email) {
+          log("No email found for lifetime subscription", {
+            sessionId: session.id,
+            userId,
+          });
+          return new Response("OK", { status: 200 });
+        }
+
+        // Try to find existing subscriber by stripe_customer_id first, then by email
+        let existingSubscriber = null;
+        let subscriberLookupError = null;
+        
+        if (customerId) {
+          const { data, error } = await supabase
+            .from("subscribers")
+            .select("id, user_id, email, stripe_customer_id")
+            .or(`stripe_customer_id.eq.${customerId},email.eq.${email}`)
+            .maybeSingle();
+          existingSubscriber = data;
+          subscriberLookupError = error;
+        } else {
+          const { data, error } = await supabase
+            .from("subscribers")
+            .select("id, user_id, email, stripe_customer_id")
+            .eq("email", email)
+            .maybeSingle();
+          existingSubscriber = data;
+          subscriberLookupError = error;
+        }
+
+        if (subscriberLookupError && subscriberLookupError.code !== "PGRST116") {
+          log("Error looking up existing subscriber for lifetime", {
+            error: subscriberLookupError.message,
+            customerId,
+            email,
+          });
+        }
+
+        // Upsert subscribers row with lifetime subscription
+        try {
+          const { error: upsertError } = await supabase.from("subscribers").upsert(
+            {
+              email,
+              user_id: userId,
+              stripe_customer_id: customerId,
+              subscribed: true,
+              subscription_tier: "Lifetime",
+              subscription_end: subscriptionEnd,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "email" },
+          );
+
+          if (upsertError) {
+            log("Failed to upsert subscribers row for lifetime", {
+              error: upsertError.message,
+              email,
+              customerId,
+            });
+          } else {
+            log("Subscribers table upserted for lifetime", {
+              email,
+              userId,
+              customerId,
+              subscriptionTier: "Lifetime",
+              subscriptionEnd,
+            });
+          }
+        } catch (dbError) {
+          log("Unexpected error while upserting subscribers row for lifetime", {
+            error: dbError,
+          });
+        }
+
+        // Update profiles.is_premium
+        try {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({ is_premium: true })
+            .eq("id", userId);
+
+          if (profileError) {
+            log("Profile update failed for lifetime", { error: profileError.message });
+          } else {
+            log("Profile updated successfully for lifetime", {
+              userId,
+              is_premium: true,
+            });
+          }
+        } catch (profileError) {
+          log("Profile update error for lifetime", { error: profileError });
+        }
+
+        log("Successfully processed lifetime subscription purchase", { userId });
+        return new Response("OK", { status: 200 });
+      }
+
+      // Handle AI credits (existing logic)
+      if (!aiCreditsPriceId) {
+        log("AI credits price ID not configured, skipping");
+        return new Response("OK", { status: 200 });
+      }
+
+      if (priceId !== aiCreditsPriceId) {
+        log("Ignoring session with different price", { priceId, expected: aiCreditsPriceId });
         return new Response("OK", { status: 200 });
       }
 

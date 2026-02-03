@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Crown, Check, Loader2, Brain, Tag, Mail, RefreshCw, AlertCircle } from 'lucide-react';
+import { Crown, Check, Loader2, Brain, Tag, Mail, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 import { showToast } from '@/utils/toast';
 
 interface SubscriptionCardProps {
@@ -80,9 +80,16 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
 
   return (
     <Card className="p-2 border-none">
-      <h4 className="text-lg font-semibold mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-lg font-semibold">
         {subscribed ? 'Premium aktiv - Vielen Dank!' : 'Jetzt durchstarten!'}
       </h4>
+        {subscribed && subscriptionTier === 'Lifetime' && (
+          <Badge className="bg-blue-600 dark:bg-blue-500 text-white flex items-center gap-1">
+            Lifetime
+          </Badge>
+        )}
+      </div>
       
       {/* Checkout prompt for users who recently purchased */}
       {showCheckoutPrompt && !subscribed && (
@@ -123,11 +130,26 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
       
       <div className="space-y-2">
         {subscribed ? (
+          <div className="space-y-3">
+            {subscriptionTier === 'Lifetime' && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                    Lifetime Premium
+                  </span>
+                </div>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  Du genießt dauerhaft alle Premium-Features ohne weitere Kosten.
+                </p>
+              </div>
+            )}
           <div className="flex items-center justify-center gap-2">
             <div className="flex gap-2">
+                {subscriptionTier !== 'Lifetime' && (
               <Button onClick={openCustomerPortal} variant="outline" className="flex-1">
                 Abonnement verwalten
               </Button>
+                )}
               <Button 
                 onClick={() => window.location.href = 'mailto:premium@altfragen.io?subject=Premium Support Anfrage'}
                 variant="outline"
@@ -136,6 +158,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
                 <Mail className="h-4 w-4" />
                 Premium Support
               </Button>
+              </div>
             </div>
           </div>
         ) : (

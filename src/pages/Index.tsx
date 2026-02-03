@@ -142,11 +142,11 @@ const Index = () => {
             <div className="flex flex-wrap items-center justify-center gap-6 text-slate-500 text-sm">
               <div className="flex items-center">
                 <Users className="w-4 h-4 mr-2" />
-                <span>30.000+ Fragen</span>
+                <span>50.000+ Fragen</span>
               </div>
               <div className="flex items-center">
                 <Award className="w-4 h-4 mr-2" />
-                <span>500+ Student:innen</span>
+                <span>700+ Student:innen</span>
               </div>
             </div>
           </div>

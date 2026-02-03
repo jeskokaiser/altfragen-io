@@ -418,6 +418,49 @@ const Terms = () => {
           aus wichtigem Grund außerordentlich kündigen, insbesondere bei wiederholten 
           oder schwerwiegenden Verstößen gegen diese Nutzungsbedingungen.
         </p>
+        <p>
+          <strong>13.3 Lifetime Premium Abonnement</strong>
+        </p>
+        <p>
+          Neben wiederkehrenden Premium-Abonnements (monatlich/semestral) kann der Betreiber 
+          optional ein "Lifetime Premium" Abonnement anbieten. Dieses wird durch eine einmalige 
+          Zahlung erworben und gewährt dauerhaften Zugang zu den Premium-Funktionen der Plattform 
+          für die Lebensdauer des Nutzerkontos.
+        </p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>
+            Die einmalige Zahlung ist nach Ablauf der gesetzlichen Widerrufsfrist endgültig 
+            und nicht erstattungsfähig. Eine Rückerstattung erfolgt nur im Rahmen des gesetzlichen 
+            Widerrufsrechts innerhalb der Widerrufsfrist.
+          </li>
+          <li>
+            Das Lifetime Premium Abonnement ist an das jeweilige Nutzerkonto gebunden und 
+            nicht auf andere Konten übertragbar. Bei Löschung des Nutzerkontos endet auch 
+            der Zugang zum Lifetime Premium Abonnement.
+          </li>
+          <li>
+            Der Betreiber verpflichtet sich, Lifetime Premium Nutzern dauerhaft Zugang zu 
+            den Premium-Funktionen zu gewähren, solange die Plattform betrieben wird und 
+            das Nutzerkonto besteht. Dies gilt auch bei späteren Preiserhöhungen für 
+            wiederkehrende Abonnements.
+          </li>
+          <li>
+            Der Betreiber behält sich vor, die Plattform, einzelne Funktionen oder die Art 
+            der Leistungserbringung weiterzuentwickeln oder technisch anzupassen, soweit 
+            dies erforderlich oder zumutbar ist. Lifetime Premium Nutzer behalten jedoch 
+            ihren Zugang zu den Premium-Funktionen.
+          </li>
+          <li>
+            Sollte der Betreiber die Plattform vollständig einstellen oder den Betrieb 
+            dauerhaft beenden, endet auch der Zugang zum Lifetime Premium Abonnement. 
+            In diesem Fall besteht kein Anspruch auf Rückerstattung der einmaligen Zahlung.
+          </li>
+          <li>
+            Der Betreiber kann das Lifetime Premium Abonnement zu bestimmten Zeiten als 
+            zeitlich begrenzte Promotion anbieten. Die Verfügbarkeit ist nicht garantiert 
+            und kann jederzeit eingestellt werden.
+          </li>
+        </ul>
         <br />
         <h2 id="section-14" className="text-xl font-semibold mt-8 mb-3">
           14. Rechtswahl, Gerichtsstand und Schlussbestimmungen

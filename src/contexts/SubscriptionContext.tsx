@@ -10,6 +10,7 @@ interface SubscriptionContextType {
   loading: boolean;
   checkSubscription: () => Promise<void>;
   createCheckoutSession: (priceType?: 'monthly' | 'semester', consentGiven?: boolean) => Promise<void>;
+  createLifetimeCheckoutSession: (consentGiven?: boolean) => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
 
@@ -20,6 +21,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   loading: true,
   checkSubscription: async () => {},
   createCheckoutSession: async () => {},
+  createLifetimeCheckoutSession: async () => {},
   openCustomerPortal: async () => {},
 });
 
@@ -160,6 +162,58 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
+  const createLifetimeCheckoutSession = async (consentGiven?: boolean) => {
+    if (!user) {
+      showToast.error('Bitte melde dich an, um ein Lifetime-Abonnement zu erstellen');
+      return;
+    }
+
+    // Check if consent is given
+    if (!consentGiven) {
+      showToast.error('Bitte stimme den Bedingungen zu, um fortzufahren');
+      return;
+    }
+
+    try {
+      console.log('Creating lifetime checkout session for user:', user.id);
+      
+      // Track when checkout was initiated for more aggressive cache invalidation
+      localStorage.setItem(`checkout_initiated_${user.id}`, new Date().toISOString());
+      
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      console.log('Invoking create-lifetime-checkout function');
+      const { data, error } = await supabase.functions.invoke('create-lifetime-checkout', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Lifetime checkout creation error details:', error);
+        throw new Error(error.message || 'Failed to create lifetime checkout session');
+      }
+
+      console.log('Lifetime checkout session created:', data);
+      if (data?.url) {
+        // Redirect in same tab for better UX
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Failed to create lifetime checkout session:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showToast.error(`Der Checkout-Prozess konnte nicht gestartet werden: ${errorMessage}`);
+      
+      // Clean up checkout tracking on error
+      localStorage.removeItem(`checkout_initiated_${user.id}`);
+    }
+  };
+
   const openCustomerPortal = async () => {
     if (!user) {
       showToast.error('Bitte melde dich an, um dein Abonnement zu verwalten');
@@ -283,6 +337,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       loading,
       checkSubscription,
       createCheckoutSession,
+      createLifetimeCheckoutSession,
       openCustomerPortal,
     }}>
       {children}

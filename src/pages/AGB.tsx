@@ -57,16 +57,22 @@ const AGB = () => {
               <p>
                 Die Zahlung erfolgt monatlich über unseren Zahlungsdienstleister Stripe.
               </p>
+              <p>
+                <strong>Lifetime Premium Abonnement:</strong> Neben den wiederkehrenden Abonnements (monatlich/semestral) bietet der Anbieter optional ein "Lifetime Premium" Abonnement an. Dieses wird durch eine einmalige Zahlung erworben und gewährt dauerhaften Zugang zu den Premium-Funktionen der Plattform. Die einmalige Zahlung ist nach Ablauf der gesetzlichen Widerrufsfrist endgültig und nicht erstattungsfähig. Das Lifetime Premium Abonnement ist an das jeweilige Nutzerkonto gebunden und nicht übertragbar. Der Anbieter behält sich vor, das Lifetime Premium Abonnement zu bestimmten Zeiten als zeitlich begrenzte Promotion anzubieten.
+              </p>
             </section>
 
             {/* 5. Laufzeit und Kündigung */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 5 Laufzeit und Kündigung</h2>
               <p>
-                Das Abonnement läuft auf unbestimmte Zeit und ist jederzeit zum Ablauf des Abrechnungszeitraums kündbar.
+                Wiederkehrende Abonnements (monatlich/semestral) laufen auf unbestimmte Zeit und sind jederzeit zum Ablauf des Abrechnungszeitraums kündbar.
               </p>
               <p>
                 Die Kündigung kann jederzeit über das Stripe Customer Portal in Ihrem Benutzerkonto oder per E-Mail an premium@altfragen.io erfolgen.
+              </p>
+              <p>
+                <strong>Lifetime Premium Abonnement:</strong> Das Lifetime Premium Abonnement besteht dauerhaft für die Lebensdauer des Nutzerkontos. Eine Kündigung des Lifetime Premium Abonnements ist nicht erforderlich, da keine wiederkehrenden Zahlungen anfallen. Bei Löschung des Nutzerkontos endet auch der Zugang zum Lifetime Premium Abonnement. Eine Rückerstattung der einmaligen Zahlung ist nach Ablauf der gesetzlichen Widerrufsfrist ausgeschlossen.
               </p>
               <p>
                 Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.
@@ -84,6 +90,9 @@ const AGB = () => {
               </p>
               <p>
                 Die Erstellung von KI-generierten Kommentaren für vom Nutzer hochgeladene Fragen unterliegt technischen Beschränkungen und einer Fair-Use-Policy, die durch Ratenbegrenzungen umgesetzt wird. Der Anbieter kann daher nicht garantieren, dass sämtliche Fragen, insbesondere private Fragen des Nutzers, mit KI-Kommentaren versehen werden. Dies gilt auch im Rahmen eines Premium-Abonnements. Nutzern mit einem Bedarf an garantierter und vollständiger Verarbeitung ihrer privaten Fragen bietet der Anbieter individuelle Vereinbarungen an. Anfragen hierzu sind an premium@altfragen.io zu richten.
+              </p>
+              <p>
+                <strong>Lifetime Premium Abonnement:</strong> Der Zugang zu den Premium-Funktionen im Rahmen des Lifetime Premium Abonnements besteht dauerhaft, solange die Plattform betrieben wird und das Nutzerkonto besteht. Der Anbieter behält sich vor, die Plattform, einzelne Funktionen oder die Art der Leistungserbringung weiterzuentwickeln oder anzupassen, soweit dies technisch erforderlich oder zumutbar ist. Der Anbieter verpflichtet sich jedoch, Lifetime Premium Nutzern dauerhaft Zugang zu den Premium-Funktionen zu gewähren, auch wenn sich die Preise für wiederkehrende Abonnements ändern sollten. Sollte der Anbieter die Plattform vollständig einstellen, endet auch der Zugang zum Lifetime Premium Abonnement ohne Anspruch auf Rückerstattung.
               </p>
             </section>
 

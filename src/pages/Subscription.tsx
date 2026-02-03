@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import PremiumBadge from '@/components/subscription/PremiumBadge';
@@ -8,18 +8,67 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Check, X, Brain, Shield, Upload, FileText, HatGlasses, ChartBar, Mail, Inbox, HeartHandshake, Leaf, Bot, ReceiptEuro } from 'lucide-react';
+import { Check, X, Brain, Shield, Upload, FileText, HatGlasses, ChartBar, Mail, Inbox, HeartHandshake, Leaf, Bot, ReceiptEuro, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
 const Subscription = () => {
   const {
     subscribed,
-    createCheckoutSession
+    createCheckoutSession,
+    createLifetimeCheckoutSession
   } = useSubscription();
   
   const { universityName } = useAuth();
   
   const [consentGiven, setConsentGiven] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'semester'>('monthly');
+  const [showLifetimeConsentModal, setShowLifetimeConsentModal] = useState(false);
+  const [lifetimeConsentGiven, setLifetimeConsentGiven] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'semester' | 'lifetime'>('monthly');
+  const [isPromotionActive, setIsPromotionActive] = useState(false);
+  const [promotionLoading, setPromotionLoading] = useState(true);
+
+  // Load promotion status from database
+  useEffect(() => {
+    const loadPromotionStatus = async () => {
+      try {
+        setPromotionLoading(true);
+        const { data, error } = await supabase
+          .from('ai_commentary_settings')
+          .select('lifetime_status, lifetime_promotion_end_date')
+          .limit(1)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading lifetime promotion status:', error);
+          setIsPromotionActive(false);
+          return;
+        }
+
+        if (data) {
+          const lifetimeStatus = (data as any).lifetime_status ?? false;
+          const endDate = (data as any).lifetime_promotion_end_date;
+          
+          if (lifetimeStatus && endDate) {
+            const now = new Date();
+            const promotionEndDate = new Date(endDate);
+            setIsPromotionActive(now < promotionEndDate);
+          } else {
+            setIsPromotionActive(false);
+          }
+        } else {
+          setIsPromotionActive(false);
+        }
+      } catch (error) {
+        console.error('Error loading lifetime promotion status:', error);
+        setIsPromotionActive(false);
+      } finally {
+        setPromotionLoading(false);
+      }
+    };
+
+    loadPromotionStatus();
+  }, []);
   
   const features = [{
     name: 'Werbefrei und ohne Tracking',
@@ -37,8 +86,13 @@ const Subscription = () => {
     premium: true,
     icon: Upload
   }, {
-    name: 'Unbegrenzte PDF-Verarbeitung',
+    name: 'Unbegrenzte Standard-PDF-Verarbeitung',
     free: true,
+    premium: true,
+    icon: FileText
+  }, {
+    name: 'OCR-PDF-Verarbeitung',
+    free: false,
     premium: true,
     icon: FileText
   }, {
@@ -74,7 +128,7 @@ const Subscription = () => {
     premium: true,
     icon: ChartBar
   }, {
-    name: 'Mehr als fünf Fragensessions gleichzeitig',
+    name: 'Unbegrenzte Fragensessions',
     free: false,
     premium: true,
     icon: Inbox
@@ -88,8 +142,12 @@ const Subscription = () => {
 ];
 
   const handleSubscriptionClick = () => {
-    setConsentGiven(false);
-    setShowConsentModal(true);
+    if (billingCycle === 'lifetime') {
+      handleLifetimeClick();
+    } else {
+      setConsentGiven(false);
+      setShowConsentModal(true);
+    }
   };
 
   const handleProceedWithSubscription = () => {
@@ -104,6 +162,24 @@ const Subscription = () => {
   const handleCloseModal = () => {
     setShowConsentModal(false);
     setConsentGiven(false);
+  };
+
+  const handleLifetimeClick = () => {
+    setLifetimeConsentGiven(false);
+    setShowLifetimeConsentModal(true);
+  };
+
+  const handleProceedWithLifetime = () => {
+    if (lifetimeConsentGiven) {
+      createLifetimeCheckoutSession(lifetimeConsentGiven);
+      setShowLifetimeConsentModal(false);
+      setLifetimeConsentGiven(false);
+    }
+  };
+
+  const handleCloseLifetimeModal = () => {
+    setShowLifetimeConsentModal(false);
+    setLifetimeConsentGiven(false);
   };
 
   return <div className="container mx-auto py-8 space-y-8">
@@ -206,7 +282,7 @@ const Subscription = () => {
         <h2 className="text-2xl font-bold text-center mb-8">Wähle deinen Plan</h2>
 
         <div className="flex items-center justify-center mb-8">
-                <div className="inline-flex rounded-full border border-gray-300 dark:border-gray-600 bg-muted p-1">
+                <div className="inline-flex rounded-full border border-gray-300 dark:border-gray-600 bg-muted p-1 gap-1">
                   <button
                     type="button"
                     onClick={() => setBillingCycle('monthly')}
@@ -234,6 +310,25 @@ const Subscription = () => {
                       -46%
                     </span>
                   </div>
+                  {!promotionLoading && isPromotionActive && (
+                    <div className="relative inline-block">
+                      <button
+                        type="button"
+                        onClick={() => setBillingCycle('lifetime')}
+                        className={`px-3 py-1 text-xs rounded-full transition-colors flex items-center gap-1 ${
+                          billingCycle === 'lifetime'
+                            ? 'bg-black text-white dark:bg-white dark:text-black'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
+
+                        Lifetime
+                      </button>
+                      <span className="absolute -top-3 -right-3 bg-green-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md dark:bg-green-500">
+                        LIMITIERT
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
         <div className="grid md:grid-cols-2 gap-6">
@@ -266,7 +361,7 @@ const Subscription = () => {
             </div>
           </Card>
 
-          {/* Premium Plan mit Monats-/Semesterwahl */}
+          {/* Premium Plan mit Monats-/Semester-/Lifetime-Wahl */}
           <Card className={`p-6 relative border-2 border-black dark:border-white`}>
             
             <div className="text-center space-y-4">
@@ -275,17 +370,15 @@ const Subscription = () => {
               </div>
               <div className="space-y-2">
                 <div className="text-3xl font-bold text-black dark:text-white">
-                  {billingCycle === 'monthly' ? '€9' : '€29'}
+                  {billingCycle === 'monthly' ? '€9' : billingCycle === 'semester' ? '€29' : '€79'}
                   <span className="text-sm font-normal">
-                    {billingCycle === 'monthly' ? '/Monat' : '/Semester'}
+                    {billingCycle === 'monthly' ? '/Monat' : billingCycle === 'semester' ? '/Semester' : ' einmalig'}
                   </span>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
-                Für Vielkreuzer:innen
+                {billingCycle === 'lifetime' ? 'Einmalig zahlen, kein Abo' : 'Für Vielkreuzer:innen'}
               </p>
-              
-
             </div>
             
             <div className="space-y-3 mt-6">
@@ -307,7 +400,21 @@ const Subscription = () => {
                 );
               })}
               <div className="max-w-md mx-auto">
-               <SubscriptionCard onSubscribeClick={handleSubscriptionClick} />
+                {billingCycle === 'lifetime' ? (
+                  <div className="space-y-2">
+                    <Button
+                      onClick={handleLifetimeClick}
+                      className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold"
+                    >
+                      Lifetime Premium kaufen
+                    </Button>
+                    <div className="text-center text-[11px] text-muted-foreground">
+                      Einmalige Zahlung von 79€ für dauerhaften Premium-Zugang. Es gelten die AGB.
+                    </div>
+                  </div>
+                ) : (
+                  <SubscriptionCard onSubscribeClick={handleSubscriptionClick} />
+                )}
               </div>
             </div>
           </Card>
@@ -465,6 +572,101 @@ const Subscription = () => {
               className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {billingCycle === 'monthly' ? 'Monatsabo starten' : 'Semesterabo starten'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lifetime Consent Modal */}
+      <Dialog open={showLifetimeConsentModal} onOpenChange={setShowLifetimeConsentModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              Lifetime Premium bestätigen
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="text-center space-y-2">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                €79
+                <span className="text-sm font-normal"> einmalig</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Lifetime Premium – einmalig zahlen, für immer Premium genießen
+              </div>
+            </div>
+            
+            <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="lifetime-consent-modal"
+                  checked={lifetimeConsentGiven}
+                  onCheckedChange={(checked) => setLifetimeConsentGiven(checked === true)}
+                  className="mt-1"
+                />
+                <label
+                  htmlFor="lifetime-consent-modal"
+                  className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed cursor-pointer"
+                >
+                  <span className="font-medium">Wichtiger Hinweis:</span><br/>
+                  Ich stimme ausdrücklich zu, dass mit der Ausführung des Vertrags vor Ablauf der Widerrufsfrist begonnen wird und mir bekannt ist, dass ich dadurch mein{' '}
+                  <Link 
+                    to="/widerruf" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    Widerrufsrecht
+                  </Link>
+                  {' '}verliere. Weiterhin erkläre ich, dass ich die{' '}
+                  <Link 
+                    to="/privacy" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    Datenschutzerklärung
+                  </Link>
+                  ,{' '}
+                  <Link 
+                    to="/terms" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    Nutzungsbedingungen
+                  </Link>
+                  {' '}und die{' '}
+                  <Link 
+                    to="/agb" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                  >
+                    AGBs
+                  </Link>
+                  {' '}gelesen und verstanden habe.
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleCloseLifetimeModal}
+              className="flex-1"
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={handleProceedWithLifetime}
+              disabled={!lifetimeConsentGiven}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Lifetime Premium kaufen
             </Button>
           </DialogFooter>
         </DialogContent>

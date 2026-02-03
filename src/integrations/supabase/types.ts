@@ -138,6 +138,8 @@ export type Database = {
           feature_enabled: boolean | null
           free_ai_daily_limit: number | null
           id: string
+          lifetime_promotion_end_date: string | null
+          lifetime_status: boolean | null
           models_enabled: Json | null
           processing_delay_minutes: number | null
           rate_limit_per_user_per_day: number | null
@@ -150,6 +152,8 @@ export type Database = {
           feature_enabled?: boolean | null
           free_ai_daily_limit?: number | null
           id?: string
+          lifetime_promotion_end_date?: string | null
+          lifetime_status?: boolean | null
           models_enabled?: Json | null
           processing_delay_minutes?: number | null
           rate_limit_per_user_per_day?: number | null
@@ -162,6 +166,8 @@ export type Database = {
           feature_enabled?: boolean | null
           free_ai_daily_limit?: number | null
           id?: string
+          lifetime_promotion_end_date?: string | null
+          lifetime_status?: boolean | null
           models_enabled?: Json | null
           processing_delay_minutes?: number | null
           rate_limit_per_user_per_day?: number | null

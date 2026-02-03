@@ -83,12 +83,13 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
       return;
     }
 
-    // Check file size (50MB limit)
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
-      setError("Datei ist zu groß");
+    // Check file size (100MB limit)
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      setError(`Datei zu groß: ${sizeMB}MB. Maximum erlaubte Größe ist 100MB.`);
       showToast.error("Datei zu groß", {
-        description: "Die Datei darf maximal 50MB groß sein"
+        description: `Die Datei ist ${sizeMB}MB groß. Maximum erlaubte Größe ist 100MB.`
       });
       return;
     }
@@ -157,8 +158,12 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
       setUploadProgress(70);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        // Handle 413 Payload Too Large specifically
+        if (response.status === 413) {
+          throw new Error(errorData.detail || "Datei zu groß. Maximum erlaubte Größe ist 100MB.");
+        }
+        throw new Error(errorData.detail || errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -451,7 +456,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
               >
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground mb-1">Klicke um eine Datei hochzuladen</p>
-                <p className="text-xs text-muted-foreground">PDF, PNG oder JPEG (max. 50MB)</p>
+                <p className="text-xs text-muted-foreground">PDF, PNG oder JPEG</p>
                 <input
                   ref={fileInputRef}
                   type="file"
