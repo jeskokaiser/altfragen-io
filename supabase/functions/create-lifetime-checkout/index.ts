@@ -99,7 +99,8 @@ serve(async (req) => {
 
     log("Creating one-time checkout session for lifetime subscription", { origin });
 
-    const session = await stripe.checkout.sessions.create({
+    // Build checkout session parameters
+    const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -113,12 +114,22 @@ serve(async (req) => {
       cancel_url: `${origin}/subscription?checkout=cancelled`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
+      invoice_creation: {
+        enabled: true,
+      },
       metadata: {
         purpose: "lifetime_subscription",
         user_id: user.id,
       },
       client_reference_id: user.id,
-    });
+    };
+
+    // Ensure Stripe always creates a Customer for lifetime purchases
+    if (!customerId) {
+      sessionParams.customer_creation = "always";
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     log("Checkout session created", { sessionId: session.id });
 

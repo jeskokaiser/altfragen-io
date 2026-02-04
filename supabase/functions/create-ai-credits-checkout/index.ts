@@ -168,7 +168,7 @@ serve(async (req) => {
     log("Creating one-time checkout session for AI credits", { origin });
 
     // 100 private questions per pack = 2€ per pack (configured in Stripe)
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -181,13 +181,23 @@ serve(async (req) => {
       success_url: `${origin}/dashboard?ai_credits=success`,
       cancel_url: `${origin}/dashboard?ai_credits=cancelled`,
       allow_promotion_codes: true,
+      invoice_creation: {
+        enabled: true,
+      },
       metadata: {
         purpose: "ai_private_question_credits",
         user_id: user.id,
         packs: String(packs),
       },
       client_reference_id: user.id,
-    });
+    };
+
+    // Ensure Stripe always creates a Customer for AI credits purchases
+    if (!customerId) {
+      sessionParams.customer_creation = "always";
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     log("Checkout session created", { sessionId: session.id });
 
