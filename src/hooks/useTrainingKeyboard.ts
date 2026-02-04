@@ -6,6 +6,8 @@ export interface TrainingKeyboardActions {
   onConfirmAnswer: () => void | Promise<void>;
   onNextQuestion: () => void;
   onShowSolution: () => void;
+  onToggleChatGPT: () => void;
+  onToggleGemini: () => void;
   canConfirm: boolean;
   canNavigate: boolean;
   canShowSolution: boolean;
@@ -38,7 +40,9 @@ export const useTrainingKeyboard = (
         key === bindings.answerE ||
         key === bindings.confirmAnswer ||
         key === bindings.nextQuestion ||
-        key === bindings.showSolution;
+        key === bindings.showSolution ||
+        key === bindings.toggleChatGPT ||
+        key === bindings.toggleGemini;
 
       if (shouldPreventDefault) {
         event.preventDefault();
@@ -71,6 +75,14 @@ export const useTrainingKeyboard = (
       // Handle show solution ('s' key by default)
       else if (key === bindings.showSolution && actions.canShowSolution) {
         actions.onShowSolution();
+      }
+      // Handle toggle ChatGPT ('c' key by default)
+      else if (key === bindings.toggleChatGPT) {
+        actions.onToggleChatGPT();
+      }
+      // Handle toggle Gemini ('g' key by default)
+      else if (key === bindings.toggleGemini) {
+        actions.onToggleGemini();
       }
     },
     [keyboardBindings, actions, isEnabled]

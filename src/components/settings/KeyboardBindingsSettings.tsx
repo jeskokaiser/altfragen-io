@@ -21,6 +21,8 @@ const KeyboardBindingsSettings: React.FC = () => {
     confirmAnswer: ' ',
     nextQuestion: ' ',
     showSolution: 's',
+    toggleChatGPT: 'c',
+    toggleGemini: 'g',
   };
 
   const bindingLabels = {
@@ -32,6 +34,8 @@ const KeyboardBindingsSettings: React.FC = () => {
     confirmAnswer: 'Antwort bestätigen',
     nextQuestion: 'Nächste Frage',
     showSolution: 'Lösung anzeigen',
+    toggleChatGPT: 'ChatGPT Version umschalten',
+    toggleGemini: 'Gemini Version umschalten',
   };
 
   const handleKeyCapture = (bindingKey: keyof KeyboardBindings) => {
@@ -160,6 +164,8 @@ const KeyboardBindingsSettings: React.FC = () => {
             <div>1-5: Antworten A-E auswählen</div>
             <div>Leertaste: Antwort bestätigen / Nächste Frage</div>
             <div>S: Lösung anzeigen (nach falscher Antwort)</div>
+            <div>C: ChatGPT Version umschalten</div>
+            <div>G: Gemini Version umschalten</div>
           </div>
         </div>
       </CardContent>

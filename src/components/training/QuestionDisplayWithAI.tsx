@@ -96,7 +96,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const { preferences } = useUserPreferences();
+  const { preferences, updatePreferences } = useUserPreferences();
   const { 
     subscribed, 
     remainingFreeViews, 
@@ -456,6 +456,22 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
 
   const { isUnclear, isLoading: unclearLoading, toggleUnclear } = useUnclearQuestions(currentQuestion.id);
 
+  // Toggle ChatGPT enhanced version: if currently chatgpt, switch to none; otherwise switch to chatgpt
+  const handleToggleChatGPT = () => {
+    const currentVersion = preferences?.enhancedAIVersion ?? 'none';
+    const nextVersion: 'none' | 'chatgpt' | 'gemini' = currentVersion === 'chatgpt' ? 'none' : 'chatgpt';
+    
+    updatePreferences({ enhancedAIVersion: nextVersion });
+  };
+
+  // Toggle Gemini enhanced version: if currently gemini, switch to none; otherwise switch to gemini
+  const handleToggleGemini = () => {
+    const currentVersion = preferences?.enhancedAIVersion ?? 'none';
+    const nextVersion: 'none' | 'chatgpt' | 'gemini' = currentVersion === 'gemini' ? 'none' : 'gemini';
+    
+    updatePreferences({ enhancedAIVersion: nextVersion });
+  };
+
   // Keyboard shortcuts setup
   const keyboardActions: TrainingKeyboardActions = {
     onAnswerSelect: (answer: string) => {
@@ -476,6 +492,12 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     onShowSolution: () => {
       // Call handleShowSolution when keyboard shortcut is pressed
       handleShowSolution();
+    },
+    onToggleChatGPT: () => {
+      handleToggleChatGPT();
+    },
+    onToggleGemini: () => {
+      handleToggleGemini();
     },
     canConfirm: !showFeedback, // Can "confirm" (i.e., answer) if feedback is not shown yet
     canNavigate: showFeedback, // Can navigate to next/prev when feedback is shown

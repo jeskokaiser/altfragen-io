@@ -13,6 +13,8 @@ export interface KeyboardBindings {
   confirmAnswer: string;
   nextQuestion: string;
   showSolution: string;
+  toggleChatGPT: string;
+  toggleGemini: string;
 }
 
 export interface StatisticsDateRange {
@@ -54,6 +56,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     confirmAnswer: ' ', // Space bar
     nextQuestion: ' ', // Space bar (same as confirm)
     showSolution: 's', // 's' key for show solution
+    toggleChatGPT: 'c', // 'c' key for toggle ChatGPT enhanced version
+    toggleGemini: 'g', // 'g' key for toggle Gemini enhanced version
   };
 
   const defaultAIModels = ['chatgpt', 'new-gemini', 'mistral', 'perplexity', 'deepseek'];
@@ -113,11 +117,18 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           enhancedAIVersion = 'chatgpt';
         }
         
+        // Merge existing keyboard bindings with defaults to ensure new fields are included
+        const existingBindings = (existingPrefs as any).keyboard_bindings || {};
+        const mergedKeyboardBindings: KeyboardBindings = {
+          ...defaultKeyboardBindings,
+          ...existingBindings,
+        };
+        
         setPreferences({ 
           immediateFeedback: existingPrefs.immediate_feedback,
           archivedDatasets: existingPrefs.archived_datasets || [],
           selectedUniversityDatasets: existingPrefs.selected_university_datasets || [],
-          keyboardBindings: (existingPrefs as any).keyboard_bindings || defaultKeyboardBindings,
+          keyboardBindings: mergedKeyboardBindings,
           statisticsDateRange: (existingPrefs as any).statistics_date_range || { preset: 'all' },
           selectedAIModels: Array.isArray(selectedAIModels) ? selectedAIModels : defaultAIModels,
           enhancedAIVersion
