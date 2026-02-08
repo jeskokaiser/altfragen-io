@@ -15,6 +15,11 @@ export interface KeyboardBindings {
   showSolution: string;
   toggleChatGPT: string;
   toggleGemini: string;
+  difficulty1: string;
+  difficulty2: string;
+  difficulty3: string;
+  difficulty4: string;
+  difficulty5: string;
 }
 
 export interface StatisticsDateRange {
@@ -58,6 +63,11 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     showSolution: 's', // 's' key for show solution
     toggleChatGPT: 'c', // 'c' key for toggle ChatGPT enhanced version
     toggleGemini: 'g', // 'g' key for toggle Gemini enhanced version
+    difficulty1: 'Shift+1', // Shift+1 for difficulty 1
+    difficulty2: 'Shift+2', // Shift+2 for difficulty 2
+    difficulty3: 'Shift+3', // Shift+3 for difficulty 3
+    difficulty4: 'Shift+4', // Shift+4 for difficulty 4
+    difficulty5: 'Shift+5', // Shift+5 for difficulty 5
   };
 
   const defaultAIModels = ['chatgpt', 'new-gemini', 'mistral', 'perplexity', 'deepseek'];

@@ -76,6 +76,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
+  const [difficultyUpdateKey, setDifficultyUpdateKey] = useState(0);
   const sidebarRef = useRef<HTMLDivElement>(null);
   // Refs to store toggle functions for each answer option
   // Create individual refs that persist across renders
@@ -169,6 +170,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       setSelectedAnswer(null);
       setInitialAnswer(null);
       setCanShowAIContent(false);
+      setDifficultyUpdateKey(0);
     }
     
     // Initialize/restore state from userAnswerState if it exists
@@ -185,10 +187,11 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       const wrongAttempts = userAnswerState.attempts.filter(isRealWrongAttempt);
       const firstWrong = userAnswerState.attempts.find(isRealWrongAttempt);
       
+      const computedIsCorrect = userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase();
+      
       setWrongAnswers(wrongAttempts);
       setFirstWrongAnswer(firstWrong || null);
-      setShowFeedback(true);
-      setIsCorrect(userAnswerState.value.charAt(0).toLowerCase() === questionData.correctAnswer.charAt(0).toLowerCase());
+      setIsCorrect(computedIsCorrect);
       setSelectedAnswer(userAnswerState.value);
       
       // Set initial answer from user answer state if available
@@ -198,9 +201,18 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         setInitialAnswer(userAnswerState.attempts[0]);
       }
       
+      // Only show feedback if:
+      // 1. User viewed the solution, OR
+      // 2. Answer was correct (user should see they got it right)
+      // If user answered incorrectly without viewing solution, don't show feedback yet
+      const shouldShowFeedback = userAnswerState.viewedSolution || computedIsCorrect;
+      setShowFeedback(shouldShowFeedback);
+      
       // Check if solution was viewed
       if (userAnswerState.viewedSolution) {
         setShowSolution(true);
+      } else {
+        setShowSolution(false);
       }
     }
     
@@ -329,7 +341,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     setShowFeedback(true);
     setIsCorrect(correct);
     
-    if (viewedSolution) {
+    // Show solution if:
+    // 1. User explicitly viewed solution (viewedSolution === true), OR
+    // 2. Answer is correct (user should see the solution)
+    if (viewedSolution || correct) {
       setShowSolution(true);
     }
   };
@@ -413,8 +428,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
     
     // Update UI immediately for instant feedback
+    // Note: viewedSolution should only be true when user explicitly clicks "Lösung anzeigen"
+    // For correct answers or immediate feedback, we show the solution in UI but don't mark as viewedSolution
     if (preferences?.immediateFeedback || isAnswerCorrect) {
-      handleAnswerSubmitted(answer, isAnswerCorrect, true);
+      handleAnswerSubmitted(answer, isAnswerCorrect, false);
     } else {
       // In normal mode with wrong answer: record the attempt but don't reveal yet
       // This allows the user to try again
@@ -440,6 +457,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const handleNext = () => {
     setShowFeedback(false);
     setIsCorrect(false);
+    setShowSolution(false);
     setWrongAnswers([]);
     setFirstWrongAnswer(null);
     setSelectedAnswer(null);
@@ -472,6 +490,59 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     updatePreferences({ enhancedAIVersion: nextVersion });
   };
 
+  // Handle difficulty change via keyboard shortcut
+  const handleDifficultyChange = async (newDifficulty: number) => {
+    if (!user) {
+      toast.error("Du musst angemeldet sein, um die Schwierigkeit zu ändern");
+      return;
+    }
+
+    if (newDifficulty < 1 || newDifficulty > 5) return;
+
+    try {
+      // Check if user progress entry already exists
+      const { data: existingProgress } = await supabase
+        .from('user_progress')
+        .select('id')
+        .eq('question_id', currentQuestion.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingProgress) {
+        // Update existing progress entry
+        const { error } = await supabase
+          .from('user_progress')
+          .update({ user_difficulty: newDifficulty })
+          .eq('id', existingProgress.id);
+
+        if (error) throw error;
+      } else {
+        // Create new progress entry
+        const { error } = await supabase
+          .from('user_progress')
+          .insert({
+            user_id: user.id,
+            question_id: currentQuestion.id,
+            user_difficulty: newDifficulty,
+            attempts_count: 0
+          });
+
+        if (error) throw error;
+      }
+
+      toast.info(`Schwierigkeitsgrad auf ${newDifficulty} gesetzt`);
+      
+      // Invalidate queries to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['user-progress', user.id] });
+      
+      // Trigger re-render of DifficultyControls
+      setDifficultyUpdateKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error updating difficulty:', error);
+      toast.error("Fehler beim Aktualisieren des Schwierigkeitsgrads");
+    }
+  };
+
   // Keyboard shortcuts setup
   const keyboardActions: TrainingKeyboardActions = {
     onAnswerSelect: (answer: string) => {
@@ -498,6 +569,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     },
     onToggleGemini: () => {
       handleToggleGemini();
+    },
+    onDifficultyChange: (difficulty: number) => {
+      handleDifficultyChange(difficulty);
     },
     canConfirm: !showFeedback, // Can "confirm" (i.e., answer) if feedback is not shown yet
     canNavigate: showFeedback, // Can navigate to next/prev when feedback is shown
@@ -633,6 +707,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
           <div className="flex flex-row flex-wrap items-start gap-3 mb-4">
             <div className="flex-grow">
               <DifficultyControls
+                key={`${currentQuestion.id}-${difficultyUpdateKey}`}
                 questionId={currentQuestion.id}
                 difficulty={currentQuestion.difficulty || 3}
                 onEditClick={() => setIsEditModalOpen(true)}

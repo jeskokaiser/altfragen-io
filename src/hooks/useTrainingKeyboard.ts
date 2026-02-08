@@ -8,6 +8,7 @@ export interface TrainingKeyboardActions {
   onShowSolution: () => void;
   onToggleChatGPT: () => void;
   onToggleGemini: () => void;
+  onDifficultyChange: (difficulty: number) => void;
   canConfirm: boolean;
   canNavigate: boolean;
   canShowSolution: boolean;
@@ -31,6 +32,10 @@ export const useTrainingKeyboard = (
       const key = event.key;
       const { keyboardBindings: bindings } = { keyboardBindings };
 
+      // Check for modifier key combinations (Shift+1, Ctrl+1, etc.)
+      const modifierKey = event.shiftKey ? 'Shift+' : event.ctrlKey ? 'Ctrl+' : event.metaKey ? 'Meta+' : '';
+      const keyWithModifier = modifierKey ? `${modifierKey}${key}` : key;
+
       // Prevent default for our handled keys
       const shouldPreventDefault = 
         key === bindings.answerA ||
@@ -42,22 +47,40 @@ export const useTrainingKeyboard = (
         key === bindings.nextQuestion ||
         key === bindings.showSolution ||
         key === bindings.toggleChatGPT ||
-        key === bindings.toggleGemini;
+        key === bindings.toggleGemini ||
+        keyWithModifier === bindings.difficulty1 ||
+        keyWithModifier === bindings.difficulty2 ||
+        keyWithModifier === bindings.difficulty3 ||
+        keyWithModifier === bindings.difficulty4 ||
+        keyWithModifier === bindings.difficulty5;
 
       if (shouldPreventDefault) {
         event.preventDefault();
       }
 
-      // Handle answer selection (1-5 by default)
-      if (key === bindings.answerA) {
+      // Handle difficulty changes FIRST (Shift+1-5 by default)
+      // This must be checked before answer selection to avoid conflicts
+      if (keyWithModifier === bindings.difficulty1) {
+        actions.onDifficultyChange(1);
+      } else if (keyWithModifier === bindings.difficulty2) {
+        actions.onDifficultyChange(2);
+      } else if (keyWithModifier === bindings.difficulty3) {
+        actions.onDifficultyChange(3);
+      } else if (keyWithModifier === bindings.difficulty4) {
+        actions.onDifficultyChange(4);
+      } else if (keyWithModifier === bindings.difficulty5) {
+        actions.onDifficultyChange(5);
+      }
+      // Handle answer selection (1-5 by default) - only if no modifier is pressed
+      else if (!modifierKey && key === bindings.answerA) {
         actions.onAnswerSelect('A');
-      } else if (key === bindings.answerB) {
+      } else if (!modifierKey && key === bindings.answerB) {
         actions.onAnswerSelect('B');
-      } else if (key === bindings.answerC) {
+      } else if (!modifierKey && key === bindings.answerC) {
         actions.onAnswerSelect('C');
-      } else if (key === bindings.answerD) {
+      } else if (!modifierKey && key === bindings.answerD) {
         actions.onAnswerSelect('D');
-      } else if (key === bindings.answerE) {
+      } else if (!modifierKey && key === bindings.answerE) {
         actions.onAnswerSelect('E');
       }
       // Handle confirm/continue (spacebar by default)

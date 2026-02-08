@@ -23,6 +23,11 @@ const KeyboardBindingsSettings: React.FC = () => {
     showSolution: 's',
     toggleChatGPT: 'c',
     toggleGemini: 'g',
+    difficulty1: 'Shift+1',
+    difficulty2: 'Shift+2',
+    difficulty3: 'Shift+3',
+    difficulty4: 'Shift+4',
+    difficulty5: 'Shift+5',
   };
 
   const bindingLabels = {
@@ -36,6 +41,11 @@ const KeyboardBindingsSettings: React.FC = () => {
     showSolution: 'Lösung anzeigen',
     toggleChatGPT: 'ChatGPT Version umschalten',
     toggleGemini: 'Gemini Version umschalten',
+    difficulty1: 'Schwierigkeitsgrad 1',
+    difficulty2: 'Schwierigkeitsgrad 2',
+    difficulty3: 'Schwierigkeitsgrad 3',
+    difficulty4: 'Schwierigkeitsgrad 4',
+    difficulty5: 'Schwierigkeitsgrad 5',
   };
 
   const handleKeyCapture = (bindingKey: keyof KeyboardBindings) => {
@@ -48,16 +58,33 @@ const KeyboardBindingsSettings: React.FC = () => {
       
       let capturedKey = event.key;
       
-      // Handle special keys
-      if (capturedKey === ' ') {
-        capturedKey = ' '; // Space
-      } else if (capturedKey === 'Enter') {
-        capturedKey = 'Enter';
-      } else if (capturedKey === 'Escape') {
-        capturedKey = 'Escape';
-      } else if (capturedKey.length > 1) {
-        // Ignore function keys, arrows, etc.
-        return;
+      // Handle modifier keys for difficulty bindings
+      if (bindingKey.startsWith('difficulty')) {
+        if (event.shiftKey && ['1', '2', '3', '4', '5'].includes(capturedKey)) {
+          capturedKey = `Shift+${capturedKey}`;
+        } else if (event.ctrlKey || event.metaKey) {
+          const modifier = event.ctrlKey ? 'Ctrl' : 'Meta';
+          if (capturedKey.length === 1) {
+            capturedKey = `${modifier}+${capturedKey}`;
+          } else {
+            return; // Ignore other modifier combinations
+          }
+        } else if (capturedKey.length > 1 && !['1', '2', '3', '4', '5'].includes(capturedKey)) {
+          // Ignore function keys, arrows, etc. unless it's a number
+          return;
+        }
+      } else {
+        // Handle special keys for other bindings
+        if (capturedKey === ' ') {
+          capturedKey = ' '; // Space
+        } else if (capturedKey === 'Enter') {
+          capturedKey = 'Enter';
+        } else if (capturedKey === 'Escape') {
+          capturedKey = 'Escape';
+        } else if (capturedKey.length > 1) {
+          // Ignore function keys, arrows, etc.
+          return;
+        }
       }
 
       setLocalBindings(prev => ({
@@ -86,6 +113,9 @@ const KeyboardBindingsSettings: React.FC = () => {
     if (key === ' ') return 'Leertaste';
     if (key === 'Enter') return 'Enter';
     if (key === 'Escape') return 'Escape';
+    if (key.startsWith('Shift+')) return key.replace('Shift+', 'Shift + ');
+    if (key.startsWith('Ctrl+')) return key.replace('Ctrl+', 'Ctrl + ');
+    if (key.startsWith('Meta+')) return key.replace('Meta+', 'Cmd + ');
     return key.toUpperCase();
   };
 
@@ -166,6 +196,7 @@ const KeyboardBindingsSettings: React.FC = () => {
             <div>S: Lösung anzeigen (nach falscher Antwort)</div>
             <div>C: ChatGPT Version umschalten</div>
             <div>G: Gemini Version umschalten</div>
+            <div>Shift + 1-5: Schwierigkeitsgrad 1-5 setzen</div>
           </div>
         </div>
       </CardContent>
