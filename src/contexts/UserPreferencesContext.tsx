@@ -61,8 +61,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     confirmAnswer: ' ', // Space bar
     nextQuestion: ' ', // Space bar (same as confirm)
     showSolution: 's', // 's' key for show solution
-    toggleChatGPT: 'c', // 'c' key for toggle ChatGPT enhanced version
-    toggleGemini: 'g', // 'g' key for toggle Gemini enhanced version
+    toggleChatGPT: 'q', // 'q' key for toggle ChatGPT enhanced version
+    toggleGemini: 'w', // 'w' key for toggle Gemini enhanced version
     difficulty1: 'Shift+1', // Shift+1 for difficulty 1
     difficulty2: 'Shift+2', // Shift+2 for difficulty 2
     difficulty3: 'Shift+3', // Shift+3 for difficulty 3

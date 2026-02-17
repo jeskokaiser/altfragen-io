@@ -21,8 +21,8 @@ const KeyboardBindingsSettings: React.FC = () => {
     confirmAnswer: ' ',
     nextQuestion: ' ',
     showSolution: 's',
-    toggleChatGPT: 'c',
-    toggleGemini: 'g',
+    toggleChatGPT: 'q',
+    toggleGemini: 'w',
     difficulty1: 'Shift+1',
     difficulty2: 'Shift+2',
     difficulty3: 'Shift+3',
@@ -194,8 +194,8 @@ const KeyboardBindingsSettings: React.FC = () => {
             <div>1-5: Antworten A-E auswählen</div>
             <div>Leertaste: Antwort bestätigen / Nächste Frage</div>
             <div>S: Lösung anzeigen (nach falscher Antwort)</div>
-            <div>C: ChatGPT Version umschalten</div>
-            <div>G: Gemini Version umschalten</div>
+            <div>Q: ChatGPT Version umschalten</div>
+            <div>W: Gemini Version umschalten</div>
             <div>Shift + 1-5: Schwierigkeitsgrad 1-5 setzen</div>
           </div>
         </div>
