@@ -1,0 +1,10 @@
+{
+  "name": "Altfragen.io",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "dev-server",
+      "command": "npm run dev"
+    }
+  ]
+}
