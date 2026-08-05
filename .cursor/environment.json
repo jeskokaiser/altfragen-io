@@ -1,10 +1,10 @@
 {
   "name": "Altfragen.io",
-  "install": "npm ci",
+  "install": "cd /agent/repos/altfragen-io && npm ci",
   "terminals": [
     {
       "name": "dev-server",
-      "command": "npm run dev"
+      "command": "cd /agent/repos/altfragen-io && npm run dev"
     }
   ]
 }
