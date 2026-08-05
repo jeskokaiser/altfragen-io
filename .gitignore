@@ -23,6 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.cursor
+.cursor/*
+!.cursor/environment.json
 supabase/functions/check-pdf-status/main.py
 .temp
