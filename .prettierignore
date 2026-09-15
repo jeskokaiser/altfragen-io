@@ -6,3 +6,6 @@ supabase/.temp
 
 # Generated from the database schema by `supabase gen types`.
 src/integrations/supabase/types.ts
+
+# Cursor rule files use a format Prettier has no parser for.
+*.mdc
