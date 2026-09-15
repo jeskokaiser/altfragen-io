@@ -17,15 +17,17 @@ export interface TrainingKeyboardActions {
 export const useTrainingKeyboard = (
   keyboardBindings: KeyboardBindings,
   actions: TrainingKeyboardActions,
-  isEnabled: boolean = true
+  isEnabled: boolean = true,
 ) => {
   const handleKeyPress = useCallback(
     (event: KeyboardEvent) => {
       // Don't handle keyboard shortcuts if disabled or if user is typing in an input
-      if (!isEnabled || 
-          event.target instanceof HTMLInputElement || 
-          event.target instanceof HTMLTextAreaElement ||
-          event.target instanceof HTMLSelectElement) {
+      if (
+        !isEnabled ||
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement
+      ) {
         return;
       }
 
@@ -33,11 +35,17 @@ export const useTrainingKeyboard = (
       const { keyboardBindings: bindings } = { keyboardBindings };
 
       // Check for modifier key combinations (Shift+1, Ctrl+1, etc.)
-      const modifierKey = event.shiftKey ? 'Shift+' : event.ctrlKey ? 'Ctrl+' : event.metaKey ? 'Meta+' : '';
+      const modifierKey = event.shiftKey
+        ? 'Shift+'
+        : event.ctrlKey
+          ? 'Ctrl+'
+          : event.metaKey
+            ? 'Meta+'
+            : '';
       const keyWithModifier = modifierKey ? `${modifierKey}${key}` : key;
 
       // Prevent default for our handled keys
-      const shouldPreventDefault = 
+      const shouldPreventDefault =
         key === bindings.answerA ||
         key === bindings.answerB ||
         key === bindings.answerC ||
@@ -108,7 +116,7 @@ export const useTrainingKeyboard = (
         actions.onToggleGemini();
       }
     },
-    [keyboardBindings, actions, isEnabled]
+    [keyboardBindings, actions, isEnabled],
   );
 
   useEffect(() => {
@@ -141,4 +149,4 @@ export const getKeyDisplayName = (key: string): string => {
     default:
       return key.toUpperCase();
   }
-}; 
+};

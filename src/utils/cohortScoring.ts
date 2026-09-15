@@ -39,17 +39,10 @@ export const computeActivityFactor = (params: { n: number; nRef?: number }) => {
 /**
  * Computes final cohort score S in [0,100] combining quality and quantity.
  */
-export const computeCohortScore = (params: {
-  n: number;
-  r: number;
-  p0: number;
-}) => {
+export const computeCohortScore = (params: { n: number; r: number; p0: number }) => {
   const { n, r, p0 } = params;
   const pBayes = computeBayesianAccuracy({ n, r, p0 });
   const a = computeActivityFactor({ n });
-  const score =
-    100 *
-    (COHORT_QUALITY_WEIGHT * pBayes + COHORT_ACTIVITY_WEIGHT * a);
+  const score = 100 * (COHORT_QUALITY_WEIGHT * pBayes + COHORT_ACTIVITY_WEIGHT * a);
   return Math.max(0, Math.min(100, score));
 };
-

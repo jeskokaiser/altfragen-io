@@ -44,7 +44,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     if (diffMins < 60) return `vor ${diffMins} Min.`;
     if (diffHours < 24) return `vor ${diffHours} Std.`;
     if (diffDays < 7) return `vor ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`;
-    
+
     return date.toLocaleDateString('de-DE', {
       day: '2-digit',
       month: '2-digit',
@@ -113,7 +113,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className={`rounded-lg border p-3 ${comment.is_private ? 'bg-muted/50' : 'bg-background'}`}>
+      <div
+        className={`rounded-lg border p-3 ${comment.is_private ? 'bg-muted/50' : 'bg-background'}`}
+      >
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -166,12 +168,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               disabled={isUpdating}
             />
             <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCancelEdit}
-                disabled={isUpdating}
-              >
+              <Button variant="outline" size="sm" onClick={handleCancelEdit} disabled={isUpdating}>
                 <X className="h-4 w-4 mr-1" />
                 Abbrechen
               </Button>
@@ -195,9 +192,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           </div>
         ) : (
-          <div className="text-sm whitespace-pre-wrap break-words">
-            {comment.content}
-          </div>
+          <div className="text-sm whitespace-pre-wrap break-words">{comment.content}</div>
         )}
 
         {canReply && !isEditing && (
@@ -219,4 +214,3 @@ const CommentItem: React.FC<CommentItemProps> = ({
 };
 
 export default CommentItem;
-

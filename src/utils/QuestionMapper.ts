@@ -1,13 +1,19 @@
-
 import { Question } from '@/types/Question';
 
-export const mapRowsToQuestions = (rows: any[], headers: string[], filename: string): Question[] => {
+export const mapRowsToQuestions = (
+  rows: any[],
+  headers: string[],
+  filename: string,
+): Question[] => {
   const questions = rows.map((row, index) => {
-    const rowData = Array.isArray(row) 
-      ? headers.reduce((acc, header, index) => {
-          acc[header] = row[index] || ''; // Use empty string for missing values
-          return acc;
-        }, {} as Record<string, string>)
+    const rowData = Array.isArray(row)
+      ? headers.reduce(
+          (acc, header, index) => {
+            acc[header] = row[index] || ''; // Use empty string for missing values
+            return acc;
+          },
+          {} as Record<string, string>,
+        )
       : row;
 
     // Log any rows that might be filtered out
@@ -31,13 +37,13 @@ export const mapRowsToQuestions = (rows: any[], headers: string[], filename: str
       comment: rowData['Kommentar'] || '',
       filename: filename,
       difficulty: parseInt(rowData['Schwierigkeit']) || 3, // Default to 3 if not provided
-      visibility: 'private' as const,  // Explicitly type as 'private'
+      visibility: 'private' as const, // Explicitly type as 'private'
       semester: rowData['Semester'] || null,
-      year: year
+      year: year,
     };
   });
 
-  return questions.filter(q => {
+  return questions.filter((q) => {
     const isValid = q.question.trim() !== '' && q.correctAnswer.trim() !== '';
     if (!isValid) {
       console.log('Filtered out invalid question:', q);

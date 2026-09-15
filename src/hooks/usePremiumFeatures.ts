@@ -1,4 +1,3 @@
-
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAICommentUsage } from './useAICommentUsage';
@@ -6,18 +5,18 @@ import { useAICommentUsage } from './useAICommentUsage';
 export const usePremiumFeatures = () => {
   const { subscribed, loading } = useSubscription();
   const { user } = useAuth();
-  const { 
-    canViewAIComments: canViewFree, 
-    incrementUsage, 
-    remainingFreeViews, 
-    dailyUsage, 
+  const {
+    canViewAIComments: canViewFree,
+    incrementUsage,
+    remainingFreeViews,
+    dailyUsage,
     DAILY_LIMIT,
-    isIncrementing 
+    isIncrementing,
   } = useAICommentUsage();
 
   // User must be logged in AND (have an active subscription OR have free views remaining)
   const canAccessAIComments = user && (subscribed || canViewFree);
-  
+
   const requirePremiumForAI = async (callback: () => void) => {
     if (subscribed) {
       // Premium user - unlimited access
@@ -46,6 +45,6 @@ export const usePremiumFeatures = () => {
     dailyUsage,
     DAILY_LIMIT,
     incrementUsage,
-    isIncrementing
+    isIncrementing,
   };
 };

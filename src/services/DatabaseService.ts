@@ -1,9 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 
-export const saveQuestions = async (questions: Question[], userId: string, universityId?: string | null) => {
+export const saveQuestions = async (
+  questions: Question[],
+  userId: string,
+  universityId?: string | null,
+) => {
   const { error } = await supabase.from('questions').insert(
-    questions.map(q => ({
+    questions.map((q) => ({
       user_id: userId,
       question: q.question,
       option_a: q.optionA,
@@ -24,8 +28,8 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
       show_image_after_answer: q.show_image_after_answer || false,
       exam_name: q.exam_name || null,
       question_case: q.question_case || null,
-      case_text: q.case_text || null
-    }))
+      case_text: q.case_text || null,
+    })),
   );
 
   if (error) throw error;
@@ -39,7 +43,7 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
 
   if (fetchError) throw fetchError;
 
-  return insertedQuestions.map(q => ({
+  return insertedQuestions.map((q) => ({
     id: q.id,
     question: q.question,
     optionA: q.option_a,
@@ -60,13 +64,13 @@ export const saveQuestions = async (questions: Question[], userId: string, unive
     year: q.exam_year || null,
     image_key: q.image_key || null,
     show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null
+    exam_name: q.exam_name || null,
   }));
 };
 
 export const fetchUniversityQuestions = async (universityId: string) => {
   if (!universityId) return [];
-  
+
   // Select only essential columns for listing
   const questionColumns = `
     id,
@@ -87,7 +91,7 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     question_case,
     case_text
   `;
-  
+
   const { data, error } = await supabase
     .from('questions')
     .select(questionColumns)
@@ -97,7 +101,7 @@ export const fetchUniversityQuestions = async (universityId: string) => {
 
   if (error) throw error;
 
-  return data.map(q => ({
+  return data.map((q) => ({
     id: q.id,
     question: q.question,
     optionA: '', // Load on demand
@@ -121,26 +125,33 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     show_image_after_answer: q.show_image_after_answer || false,
     exam_name: q.exam_name || null,
     question_case: q.question_case || null,
-    case_text: q.case_text || null
+    case_text: q.case_text || null,
   }));
 };
 
-export const updateQuestionVisibility = async (questionId: string, visibility: 'private' | 'university' | 'public', universityId?: string | null) => {
+export const updateQuestionVisibility = async (
+  questionId: string,
+  visibility: 'private' | 'university' | 'public',
+  universityId?: string | null,
+) => {
   const { data: existingQuestion } = await supabase
     .from('questions')
     .select('visibility')
     .eq('id', questionId)
     .single();
-  
-  if ((existingQuestion?.visibility === 'university' || existingQuestion?.visibility === 'public') && visibility === 'private') {
+
+  if (
+    (existingQuestion?.visibility === 'university' || existingQuestion?.visibility === 'public') &&
+    visibility === 'private'
+  ) {
     throw new Error('Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.');
   }
 
   const { error } = await supabase
     .from('questions')
-    .update({ 
+    .update({
       visibility,
-      university_id: visibility === 'university' ? universityId : null 
+      university_id: visibility === 'university' ? universityId : null,
     })
     .eq('id', questionId);
 
@@ -148,23 +159,28 @@ export const updateQuestionVisibility = async (questionId: string, visibility: '
   return true;
 };
 
-export const updateDatasetVisibility = async (filename: string, userId: string, visibility: 'private' | 'university' | 'public', universityId?: string | null) => {
+export const updateDatasetVisibility = async (
+  filename: string,
+  userId: string,
+  visibility: 'private' | 'university' | 'public',
+  universityId?: string | null,
+) => {
   const { data: existingQuestions } = await supabase
     .from('questions')
     .select('visibility')
     .eq('filename', filename)
     .eq('user_id', userId)
     .in('visibility', ['university', 'public']);
-  
+
   if (existingQuestions && existingQuestions.length > 0 && visibility === 'private') {
     throw new Error('Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.');
   }
 
   const { error } = await supabase
     .from('questions')
-    .update({ 
+    .update({
       visibility,
-      university_id: visibility === 'university' ? universityId : null 
+      university_id: visibility === 'university' ? universityId : null,
     })
     .eq('filename', filename)
     .eq('user_id', userId);
@@ -215,7 +231,7 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     if (uniError) {
       throw uniError;
     }
-    
+
     universityQuestions = uniQuestions || [];
   }
 
@@ -233,46 +249,48 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     if (pubError) {
       throw pubError;
     }
-    
+
     publicQuestions = pubQuestions || [];
   }
 
   // For now, skip fetching user difficulties in the dashboard to improve performance
   // User difficulties will be fetched on-demand when questions are actually displayed
-  const allQuestions = [...personalQuestions, ...universityQuestions, ...publicQuestions].map(q => ({
-    id: q.id,
-    question: q.question,
-    optionA: '', // These will be loaded on-demand when needed
-    optionB: '',
-    optionC: '',
-    optionD: '',
-    optionE: '',
-    subject: q.subject,
-    correctAnswer: '', // Will be loaded on-demand
-    comment: '', // Will be loaded on-demand
-    filename: q.filename,
-    created_at: q.created_at,
-    difficulty: q.difficulty, // Use default difficulty, user-specific will be fetched on-demand
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: q.user_id,
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null
-  }));
+  const allQuestions = [...personalQuestions, ...universityQuestions, ...publicQuestions].map(
+    (q) => ({
+      id: q.id,
+      question: q.question,
+      optionA: '', // These will be loaded on-demand when needed
+      optionB: '',
+      optionC: '',
+      optionD: '',
+      optionE: '',
+      subject: q.subject,
+      correctAnswer: '', // Will be loaded on-demand
+      comment: '', // Will be loaded on-demand
+      filename: q.filename,
+      created_at: q.created_at,
+      difficulty: q.difficulty, // Use default difficulty, user-specific will be fetched on-demand
+      is_unclear: q.is_unclear,
+      marked_unclear_at: q.marked_unclear_at,
+      university_id: q.university_id,
+      visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+      user_id: q.user_id,
+      semester: q.exam_semester || null,
+      year: q.exam_year || null,
+      image_key: q.image_key || null,
+      show_image_after_answer: q.show_image_after_answer || false,
+      exam_name: q.exam_name || null,
+    }),
+  );
 
   return allQuestions;
 };
 
 export const fetchAllQuestionsPaginated = async (
-  userId: string, 
+  userId: string,
   universityId: string | null,
   page: number = 0,
-  pageSize: number = 100
+  pageSize: number = 100,
 ) => {
   const questionColumns = `
     id,
@@ -297,7 +315,11 @@ export const fetchAllQuestionsPaginated = async (
   const to = from + pageSize - 1;
 
   // Fetch personal questions with pagination
-  const { data: personalQuestions, error: personalError, count: personalCount } = await supabase
+  const {
+    data: personalQuestions,
+    error: personalError,
+    count: personalCount,
+  } = await supabase
     .from('questions')
     .select(questionColumns, { count: 'exact' })
     .eq('user_id', userId)
@@ -310,17 +332,21 @@ export const fetchAllQuestionsPaginated = async (
   let universityCount = 0;
   let publicQuestions: any[] = [];
   let publicCount = 0;
-  
+
   if (universityId) {
     // Calculate remaining slots after personal questions
     const remainingSlots = pageSize - (personalQuestions?.length || 0);
-    
+
     if (remainingSlots > 0) {
       // Calculate how many university questions we need
       const universityFrom = Math.max(0, from - (personalCount || 0));
       const universityTo = universityFrom + remainingSlots - 1;
 
-      const { data: uniQuestions, error: uniError, count: uniCount } = await supabase
+      const {
+        data: uniQuestions,
+        error: uniError,
+        count: uniCount,
+      } = await supabase
         .from('questions')
         .select(questionColumns, { count: 'exact' })
         .eq('university_id', universityId)
@@ -330,19 +356,24 @@ export const fetchAllQuestionsPaginated = async (
         .range(universityFrom, universityTo);
 
       if (uniError) throw uniError;
-      
+
       universityQuestions = uniQuestions || [];
       universityCount = uniCount || 0;
-      
+
       // Calculate remaining slots after university questions
-      const remainingAfterUni = pageSize - (personalQuestions?.length || 0) - (universityQuestions?.length || 0);
-      
+      const remainingAfterUni =
+        pageSize - (personalQuestions?.length || 0) - (universityQuestions?.length || 0);
+
       if (remainingAfterUni > 0) {
         // Fetch public questions
         const publicFrom = Math.max(0, from - (personalCount || 0) - (universityCount || 0));
         const publicTo = publicFrom + remainingAfterUni - 1;
 
-        const { data: pubQuestions, error: pubError, count: pubCount } = await supabase
+        const {
+          data: pubQuestions,
+          error: pubError,
+          count: pubCount,
+        } = await supabase
           .from('questions')
           .select(questionColumns, { count: 'exact' })
           .eq('visibility', 'public')
@@ -352,14 +383,18 @@ export const fetchAllQuestionsPaginated = async (
           .range(publicFrom, publicTo);
 
         if (pubError) throw pubError;
-        
+
         publicQuestions = pubQuestions || [];
         publicCount = pubCount || 0;
       }
     }
   }
 
-  const allQuestions = [...personalQuestions || [], ...universityQuestions, ...publicQuestions].map(q => ({
+  const allQuestions = [
+    ...(personalQuestions || []),
+    ...universityQuestions,
+    ...publicQuestions,
+  ].map((q) => ({
     id: q.id,
     question: q.question,
     optionA: '',
@@ -382,7 +417,7 @@ export const fetchAllQuestionsPaginated = async (
     year: q.exam_year || null,
     image_key: q.image_key || null,
     show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null
+    exam_name: q.exam_name || null,
   }));
 
   return {
@@ -390,54 +425,60 @@ export const fetchAllQuestionsPaginated = async (
     totalCount: (personalCount || 0) + universityCount + publicCount,
     page,
     pageSize,
-    hasMore: allQuestions.length === pageSize
+    hasMore: allQuestions.length === pageSize,
   };
 };
 
-export const fetchUserDifficulty = async (userId: string, questionId: string): Promise<number | null> => {
+export const fetchUserDifficulty = async (
+  userId: string,
+  questionId: string,
+): Promise<number | null> => {
   if (!userId || !questionId) return null;
-  
+
   const { data, error } = await supabase
     .from('user_progress')
     .select('user_difficulty')
     .eq('user_id', userId)
     .eq('question_id', questionId)
     .maybeSingle();
-  
+
   if (error || !data) return null;
-  
+
   return data.user_difficulty;
 };
 
-export const fetchUserDifficultiesForQuestions = async (userId: string, questionIds: string[]): Promise<Record<string, number>> => {
+export const fetchUserDifficultiesForQuestions = async (
+  userId: string,
+  questionIds: string[],
+): Promise<Record<string, number>> => {
   if (!userId || questionIds.length === 0) return {};
-  
+
   const userDifficulties: Record<string, number> = {};
-  
+
   // Batch the question IDs to avoid URL length limits
   const BATCH_SIZE = 500;
   const batches = [];
-  
+
   for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
     batches.push(questionIds.slice(i, i + BATCH_SIZE));
   }
-  
+
   // Fetch all batches in parallel
-  const batchPromises = batches.map(batch => 
+  const batchPromises = batches.map((batch) =>
     supabase
       .from('user_progress')
       .select('question_id, user_difficulty')
       .eq('user_id', userId)
       .in('question_id', batch)
-      .not('user_difficulty', 'is', null)
+      .not('user_difficulty', 'is', null),
   );
-  
+
   try {
     const results = await Promise.all(batchPromises);
-    const allProgressData = results.flatMap(result => result.data || []);
-    
+    const allProgressData = results.flatMap((result) => result.data || []);
+
     // Combine all batch results
-    allProgressData.forEach(item => {
+    allProgressData.forEach((item) => {
       if (item.user_difficulty !== null) {
         userDifficulties[item.question_id] = item.user_difficulty;
       }
@@ -445,7 +486,7 @@ export const fetchUserDifficultiesForQuestions = async (userId: string, question
   } catch (error) {
     console.error('Error fetching user difficulties:', error);
   }
-  
+
   return userDifficulties;
 };
 
@@ -455,62 +496,61 @@ export const fetchQuestionDetails = async (questionIds: string[]) => {
   // Batch the question IDs to avoid URL length limits
   const BATCH_SIZE = 300;
   const batches: string[][] = [];
-  
+
   for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
     batches.push(questionIds.slice(i, i + BATCH_SIZE));
   }
 
   // Fetch all batches in parallel
-  const batchPromises = batches.map(batch =>
-    supabase
-      .from('questions')
-      .select('*')
-      .in('id', batch)
+  const batchPromises = batches.map((batch) =>
+    supabase.from('questions').select('*').in('id', batch),
   );
 
   const results = await Promise.allSettled(batchPromises);
-  
+
   // Check for any failed batches
-  const failedBatches = results.filter(r => r.status === 'rejected');
-  const succeededBatches = results.filter(r => r.status === 'fulfilled');
-  
+  const failedBatches = results.filter((r) => r.status === 'rejected');
+  const succeededBatches = results.filter((r) => r.status === 'fulfilled');
+
   if (failedBatches.length > 0) {
-    console.error(`Failed to fetch ${failedBatches.length} of ${batches.length} question batches:`, 
-      failedBatches.map((r: any) => r.reason)
+    console.error(
+      `Failed to fetch ${failedBatches.length} of ${batches.length} question batches:`,
+      failedBatches.map((r: any) => r.reason),
     );
-    
+
     // If all batches failed, throw an error
     if (failedBatches.length === batches.length) {
       throw new Error('Failed to fetch any question details. Please try again.');
     }
-    
+
     // If more than 30% of batches failed, throw an error
     if (failedBatches.length / batches.length > 0.3) {
       throw new Error(
         `Failed to fetch ${failedBatches.length} of ${batches.length} question batches. ` +
-        'Please check your connection and try again.'
+          'Please check your connection and try again.',
       );
     }
   }
-  
+
   // Check for Supabase errors in successful responses
   const batchesWithErrors = succeededBatches.filter((r: any) => r.value.error);
   if (batchesWithErrors.length > 0) {
-    console.error(`Database errors in ${batchesWithErrors.length} batches:`, 
-      batchesWithErrors.map((r: any) => r.value.error)
+    console.error(
+      `Database errors in ${batchesWithErrors.length} batches:`,
+      batchesWithErrors.map((r: any) => r.value.error),
     );
-    
+
     // If all successful requests have errors, throw
     if (batchesWithErrors.length === succeededBatches.length) {
       throw new Error('Database error while fetching questions. Please try again.');
     }
   }
-  
+
   const allData = succeededBatches
     .filter((r: any) => !r.value.error)
     .flatMap((r: any) => r.value.data || []);
 
-  return allData.map(q => ({
+  return allData.map((q) => ({
     id: q.id,
     question: q.question,
     optionA: q.option_a,
@@ -534,15 +574,18 @@ export const fetchQuestionDetails = async (questionIds: string[]) => {
     image_key: q.image_key || null,
     show_image_after_answer: q.show_image_after_answer || false,
     exam_name: q.exam_name || null,
-    
+
     // Answer distribution statistics
     first_answer_stats: q.first_answer_stats || null,
     first_answer_stats_updated_at: q.first_answer_stats_updated_at || null,
-    first_answer_sample_size: q.first_answer_sample_size || 0
+    first_answer_sample_size: q.first_answer_sample_size || 0,
   }));
 };
 
-export const fetchQuestionsByFilename = async (filename: string, userId: string): Promise<Question[]> => {
+export const fetchQuestionsByFilename = async (
+  filename: string,
+  userId: string,
+): Promise<Question[]> => {
   const { data, error } = await supabase
     .from('questions')
     .select('*')
@@ -552,7 +595,7 @@ export const fetchQuestionsByFilename = async (filename: string, userId: string)
 
   if (error) throw error;
 
-  return data.map(q => ({
+  return data.map((q) => ({
     id: q.id,
     question: q.question,
     optionA: q.option_a,
@@ -576,14 +619,14 @@ export const fetchQuestionsByFilename = async (filename: string, userId: string)
     show_image_after_answer: q.show_image_after_answer || false,
     exam_name: q.exam_name || null,
     question_case: q.question_case || null,
-    case_text: q.case_text || null
+    case_text: q.case_text || null,
   }));
 };
 
 export const fetchQuestionsByExamName = async (
   examName: string,
   page: number = 0,
-  pageSize: number = 20
+  pageSize: number = 20,
 ): Promise<{ questions: Question[]; totalCount: number }> => {
   const from = page * pageSize;
   const to = from + pageSize - 1;
@@ -608,7 +651,7 @@ export const fetchQuestionsByExamName = async (
 
   if (error) throw error;
 
-  const questions = data.map(q => ({
+  const questions = data.map((q) => ({
     id: q.id,
     question: q.question,
     optionA: q.option_a,
@@ -633,16 +676,19 @@ export const fetchQuestionsByExamName = async (
     exam_name: q.exam_name || null,
     created_at: q.created_at,
     question_case: q.question_case || null,
-    case_text: q.case_text || null
+    case_text: q.case_text || null,
   }));
 
   return {
     questions,
-    totalCount: count || 0
+    totalCount: count || 0,
   };
 };
 
-export const updateQuestion = async (questionId: string, updates: Partial<Question>): Promise<Question> => {
+export const updateQuestion = async (
+  questionId: string,
+  updates: Partial<Question>,
+): Promise<Question> => {
   const updateData: any = {};
 
   if (updates.question !== undefined) updateData.question = updates.question;
@@ -693,6 +739,6 @@ export const updateQuestion = async (questionId: string, updates: Partial<Questi
     exam_name: updatedQuestion.exam_name || null,
     created_at: updatedQuestion.created_at,
     question_case: updatedQuestion.question_case || null,
-    case_text: updatedQuestion.case_text || null
+    case_text: updatedQuestion.case_text || null,
   };
 };

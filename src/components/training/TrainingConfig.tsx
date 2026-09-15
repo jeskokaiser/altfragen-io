@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,29 +31,29 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   const loadUserProgress = async () => {
     try {
       if (!user?.id) return;
-      
+
       // Get question IDs in batches to avoid URL length limits
-      const questionIds = questions.map(q => q.id);
+      const questionIds = questions.map((q) => q.id);
       const BATCH_SIZE = 500;
       const resultsMap = new Map<string, boolean>();
       const attemptsMap = new Map<string, number>();
-      
+
       // Process in batches
       for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
         const batch = questionIds.slice(i, i + BATCH_SIZE);
-        
+
         const { data: progressData, error } = await supabase
           .from('user_progress')
           .select('question_id, is_correct, attempts_count')
           .eq('user_id', user.id)
           .in('question_id', batch);
-        
+
         if (error) {
           console.error('Error loading user progress batch:', error);
           continue;
         }
-        
-        progressData?.forEach(progress => {
+
+        progressData?.forEach((progress) => {
           if (progress.is_correct !== null) {
             resultsMap.set(progress.question_id, progress.is_correct);
           }
@@ -63,7 +62,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           }
         });
       }
-      
+
       setQuestionResults(resultsMap);
       setAttemptsCount(attemptsMap);
     } catch (error) {
@@ -73,10 +72,10 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
 
   const onSubmit = async (values: FormValues) => {
     setIsProcessing(true);
-    
+
     try {
       const filteredQuestions = await filterQuestions(questions, values, questionResults, user?.id);
-      
+
       if (filteredQuestions.length === 0) {
         toast.error('Keine Fragen gefunden, die den Filterkriterien entsprechen.');
         setIsProcessing(false);
@@ -90,7 +89,7 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
         values.isRandomSelection,
         values.sortByAttempts,
         attemptsCount,
-        values.sortDirection
+        values.sortDirection,
       );
 
       if (prioritizedQuestions.length === 0) {
@@ -116,8 +115,8 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
   };
 
   // Extract unique subjects and years from questions
-  const subjects = Array.from(new Set(questions.map(q => q.subject).filter(Boolean)));
-  const years = Array.from(new Set(questions.map(q => q.year).filter(Boolean)));
+  const subjects = Array.from(new Set(questions.map((q) => q.subject).filter(Boolean)));
+  const years = Array.from(new Set(questions.map((q) => q.year).filter(Boolean)));
 
   return (
     <div className="space-y-6">
@@ -126,16 +125,11 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           <CardTitle>Training konfigurieren</CardTitle>
         </CardHeader>
         <CardContent>
-          <FilterForm 
-            ref={formRef}
-            subjects={subjects}
-            years={years}
-            onSubmit={onSubmit}
-          />
-          
-          <Button 
-            type="button" 
-            className="w-full mt-6" 
+          <FilterForm ref={formRef} subjects={subjects} years={years} onSubmit={onSubmit} />
+
+          <Button
+            type="button"
+            className="w-full mt-6"
             disabled={isProcessing}
             onClick={handleStartTraining}
           >
@@ -143,31 +137,29 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
           </Button>
         </CardContent>
       </Card>
-      
+
       <div className="mb-6 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground max-w-2xl mx-auto">
-        <p className="mb-2">
-          Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:
-        </p>
+        <p className="mb-2">Standardmäßig werden Fragen in dieser Reihenfolge ausgewählt:</p>
         <ol className="list-decimal ml-4 mb-3 space-y-1">
           <li>Noch nie beantwortete Fragen</li>
           <li>Falsch beantwortete Fragen</li>
           <li>Richtig beantwortete Fragen</li>
         </ol>
-        <p>
-          Du kannst die Auswahl anpassen durch:
-        </p>
+        <p>Du kannst die Auswahl anpassen durch:</p>
         <ul className="list-disc ml-4 space-y-1">
-         <li>Filtern nach Fach, Schwierigkeitsgrad und Jahr</li>
+          <li>Filtern nach Fach, Schwierigkeitsgrad und Jahr</li>
           <li>Nur falsch beantwortete Fragen</li>
-         <li>Nach Anzahl der Versuche sortieren
+          <li>
+            Nach Anzahl der Versuche sortieren
             <ul>
-            <li>Jede Antwort zählt als ein Versuch (auch mehrere Versuche pro Frage)</li>
+              <li>Jede Antwort zählt als ein Versuch (auch mehrere Versuche pro Frage)</li>
             </ul>
-         </li>
-          <li>Zufällige Auswahl aktivieren 
-         <ul>
-         <li>Ideal für Probeklausuren in Kombination mit benutzerdefinierter Anzahl</li>
-          </ul>
+          </li>
+          <li>
+            Zufällige Auswahl aktivieren
+            <ul>
+              <li>Ideal für Probeklausuren in Kombination mit benutzerdefinierter Anzahl</li>
+            </ul>
           </li>
         </ul>
       </div>

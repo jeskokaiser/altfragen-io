@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from "@/components/ui/label";
+import { Label } from '@/components/ui/label';
 import { FileUp } from 'lucide-react';
 
 interface FileSelectorProps {
@@ -15,12 +14,7 @@ const FileSelector: React.FC<FileSelectorProps> = ({ onFileSelect, isUploading }
       <Label>PDF/DOCX-Dateien auswählen</Label>
       <div className="flex justify-center">
         <label htmlFor="batch-pdf-upload" className="cursor-pointer">
-          <Button 
-            variant="outline" 
-            className="cursor-pointer"
-            disabled={isUploading}
-            asChild
-          >
+          <Button variant="outline" className="cursor-pointer" disabled={isUploading} asChild>
             <span>
               <FileUp className="h-4 w-4 mr-2" />
               PDF/DOCX auswählen

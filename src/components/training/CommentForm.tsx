@@ -30,7 +30,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!content.trim()) {
       toast.error('Bitte gib einen Kommentar ein');
       return;
@@ -76,7 +76,13 @@ const CommentForm: React.FC<CommentFormProps> = ({
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder={parentId ? 'Antwort schreiben...' : isPrivate ? 'Private Notiz hinzufügen...' : 'Kommentar schreiben...'}
+          placeholder={
+            parentId
+              ? 'Antwort schreiben...'
+              : isPrivate
+                ? 'Private Notiz hinzufügen...'
+                : 'Kommentar schreiben...'
+          }
           rows={4}
           className="resize-none"
           disabled={isSubmitting}
@@ -84,19 +90,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
       </div>
 
       {parentId && (
-        <div className="text-xs text-muted-foreground">
-          Du antwortest auf einen Kommentar
-        </div>
+        <div className="text-xs text-muted-foreground">Du antwortest auf einen Kommentar</div>
       )}
 
       <div className="flex gap-2 justify-end">
         {onCancel && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Abbrechen
           </Button>
         )}
@@ -106,8 +105,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Speichern...
             </>
+          ) : parentId ? (
+            'Antworten'
+          ) : isPrivate ? (
+            'Notiz speichern'
           ) : (
-            parentId ? 'Antworten' : isPrivate ? 'Notiz speichern' : 'Kommentar veröffentlichen'
+            'Kommentar veröffentlichen'
           )}
         </Button>
       </div>
@@ -116,4 +119,3 @@ const CommentForm: React.FC<CommentFormProps> = ({
 };
 
 export default CommentForm;
-

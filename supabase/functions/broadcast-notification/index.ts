@@ -2,7 +2,7 @@
 // Broadcasts push notifications to all subscribers
 // Accessible via webhook from Make.com or other automation tools
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_SECRET');
@@ -29,14 +29,12 @@ interface PushSubscription {
 
 // Convert base64 URL-safe to Uint8Array
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-  
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+
   const rawData = atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-  
+
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
@@ -46,25 +44,25 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 // Send push notification using Web Push Protocol
 async function sendPushNotification(
   subscription: PushSubscription,
-  payload: string
+  payload: string,
 ): Promise<boolean> {
   try {
     const endpoint = subscription.endpoint;
-    
+
     // Extract endpoint components
     const urlParts = new URL(endpoint);
-    
+
     // Encrypt the payload
     const encoder = new TextEncoder();
     const payloadBuffer = encoder.encode(payload);
-    
+
     // For simplicity, we'll use a library approach
     // In production, implement full Web Push encryption
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/octet-stream',
-        'TTL': '86400', // 24 hours
+        TTL: '86400', // 24 hours
         'Content-Encoding': 'aes128gcm',
       },
       body: payloadBuffer,
@@ -79,16 +77,12 @@ async function sendPushNotification(
 
 // Main broadcast function
 async function broadcastNotification(payload: BroadcastPayload) {
-  const supabase = createClient(
-    SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  );
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 
   // Fetch all broadcast subscriptions
   const { data: subscriptions, error: fetchError } = await supabase
@@ -131,10 +125,7 @@ async function broadcastNotification(payload: BroadcastPayload) {
 
   // Remove invalid subscriptions
   if (invalidSubscriptions.length > 0) {
-    await supabase
-      .from('push_subscriptions')
-      .delete()
-      .in('id', invalidSubscriptions);
+    await supabase.from('push_subscriptions').delete().in('id', invalidSubscriptions);
   }
 
   // Log broadcast
@@ -172,10 +163,10 @@ serve(async (req) => {
   try {
     // Validate request method
     if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Parse request body
@@ -183,18 +174,18 @@ serve(async (req) => {
 
     // Validate webhook secret
     if (!WEBHOOK_SECRET || payload.secret !== WEBHOOK_SECRET) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Invalid webhook secret' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid webhook secret' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Validate required fields
     if (!payload.title || !payload.body) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: title and body' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Missing required fields: title and body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Broadcast notification
@@ -206,20 +197,19 @@ serve(async (req) => {
         message: 'Broadcast sent',
         stats,
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     );
-
   } catch (error) {
     console.error('Broadcast error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });

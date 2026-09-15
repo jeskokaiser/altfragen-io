@@ -8,18 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Loader2, X, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const IgnoredQuestionsSection = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data: questions, isLoading, error } = useQuery({
+  const {
+    data: questions,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['ignored-questions', user?.id],
     queryFn: async () => {
       if (!user) {
@@ -29,7 +29,8 @@ const IgnoredQuestionsSection = () => {
       // Get all ignored questions for this user
       const { data: unclearData, error: unclearError } = await supabase
         .from('user_ignored_questions')
-        .select(`
+        .select(
+          `
           id,
           question_id,
           marked_unclear_at,
@@ -57,7 +58,8 @@ const IgnoredQuestionsSection = () => {
             show_image_after_answer,
             exam_name
           )
-        `)
+        `,
+        )
         .eq('user_id', user.id)
         .order('marked_unclear_at', { ascending: false });
 
@@ -69,38 +71,39 @@ const IgnoredQuestionsSection = () => {
       if (!unclearData || unclearData.length === 0) {
         return [];
       }
-      
-      const filteredQuestions = unclearData
-        ?.filter(item => !!item.questions)
-        .map(item => ({
-          id: item.questions.id,
-          question: item.questions.question,
-          optionA: item.questions.option_a,
-          optionB: item.questions.option_b,
-          optionC: item.questions.option_c,
-          optionD: item.questions.option_d,
-          optionE: item.questions.option_e,
-          subject: item.questions.subject,
-          correctAnswer: item.questions.correct_answer,
-          comment: item.questions.comment,
-          filename: item.questions.filename,
-          difficulty: item.questions.difficulty || 3,
-          created_at: item.questions.created_at,
-          user_id: item.questions.user_id,
-          visibility: item.questions.visibility,
-          university_id: item.questions.university_id,
-          semester: item.questions.exam_semester,
-          year: item.questions.exam_year,
-          image_key: item.questions.image_key,
-          show_image_after_answer: item.questions.show_image_after_answer,
-          exam_name: item.questions.exam_name,
-          is_unclear: true,
-          marked_unclear_at: item.marked_unclear_at
-        })) || [];
+
+      const filteredQuestions =
+        unclearData
+          ?.filter((item) => !!item.questions)
+          .map((item) => ({
+            id: item.questions.id,
+            question: item.questions.question,
+            optionA: item.questions.option_a,
+            optionB: item.questions.option_b,
+            optionC: item.questions.option_c,
+            optionD: item.questions.option_d,
+            optionE: item.questions.option_e,
+            subject: item.questions.subject,
+            correctAnswer: item.questions.correct_answer,
+            comment: item.questions.comment,
+            filename: item.questions.filename,
+            difficulty: item.questions.difficulty || 3,
+            created_at: item.questions.created_at,
+            user_id: item.questions.user_id,
+            visibility: item.questions.visibility,
+            university_id: item.questions.university_id,
+            semester: item.questions.exam_semester,
+            year: item.questions.exam_year,
+            image_key: item.questions.image_key,
+            show_image_after_answer: item.questions.show_image_after_answer,
+            exam_name: item.questions.exam_name,
+            is_unclear: true,
+            marked_unclear_at: item.marked_unclear_at,
+          })) || [];
 
       return filteredQuestions as Question[];
     },
-    enabled: !!user && isOpen
+    enabled: !!user && isOpen,
   });
 
   const handleUnignore = async (questionId: string) => {
@@ -126,7 +129,8 @@ const IgnoredQuestionsSection = () => {
             <div>
               <h2 className="text-xl font-semibold">Ignorierte Fragen</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Verwalte deine ignorierten Fragen. Ignorierte Fragen werden in Trainings übersprungen.
+                Verwalte deine ignorierten Fragen. Ignorierte Fragen werden in Trainings
+                übersprungen.
               </p>
             </div>
             <ChevronDown
@@ -151,9 +155,7 @@ const IgnoredQuestionsSection = () => {
             </div>
           ) : !questions || questions.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                Keine ignorierten Fragen gefunden
-              </p>
+              <p className="text-muted-foreground">Keine ignorierten Fragen gefunden</p>
               <p className="text-sm text-muted-foreground mt-2">
                 Markiere Fragen während des Trainings als ignoriert, um sie hier zu sehen.
               </p>
@@ -184,24 +186,41 @@ const IgnoredQuestionsSection = () => {
                         {question.question}
                       </p>
                       <div className="grid gap-1 text-xs text-muted-foreground">
-                        <p><strong>A:</strong> {question.optionA}</p>
-                        <p><strong>B:</strong> {question.optionB}</p>
-                        <p><strong>C:</strong> {question.optionC}</p>
-                        <p><strong>D:</strong> {question.optionD}</p>
-                        {question.optionE && <p><strong>E:</strong> {question.optionE}</p>}
+                        <p>
+                          <strong>A:</strong> {question.optionA}
+                        </p>
+                        <p>
+                          <strong>B:</strong> {question.optionB}
+                        </p>
+                        <p>
+                          <strong>C:</strong> {question.optionC}
+                        </p>
+                        <p>
+                          <strong>D:</strong> {question.optionD}
+                        </p>
+                        {question.optionE && (
+                          <p>
+                            <strong>E:</strong> {question.optionE}
+                          </p>
+                        )}
                       </div>
                       <div className="pt-2 border-t text-xs text-muted-foreground">
-                        <p><strong>Richtige Antwort:</strong> {question.correctAnswer}</p>
+                        <p>
+                          <strong>Richtige Antwort:</strong> {question.correctAnswer}
+                        </p>
                         {question.comment && (
-                          <p className="mt-1"><strong>Kommentar:</strong> {question.comment}</p>
+                          <p className="mt-1">
+                            <strong>Kommentar:</strong> {question.comment}
+                          </p>
                         )}
                         <p className="mt-1">
-                          Ignoriert am: {new Date(question.marked_unclear_at!).toLocaleDateString('de-DE', {
+                          Ignoriert am:{' '}
+                          {new Date(question.marked_unclear_at!).toLocaleDateString('de-DE', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
                           })}
                         </p>
                       </div>
@@ -226,4 +245,3 @@ const IgnoredQuestionsSection = () => {
 };
 
 export default IgnoredQuestionsSection;
-

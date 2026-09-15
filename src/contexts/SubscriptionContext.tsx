@@ -9,7 +9,10 @@ interface SubscriptionContextType {
   subscriptionEnd: string | null;
   loading: boolean;
   checkSubscription: () => Promise<void>;
-  createCheckoutSession: (priceType?: 'monthly' | 'semester', consentGiven?: boolean) => Promise<void>;
+  createCheckoutSession: (
+    priceType?: 'monthly' | 'semester',
+    consentGiven?: boolean,
+  ) => Promise<void>;
   createLifetimeCheckoutSession: (consentGiven?: boolean) => Promise<void>;
   openCustomerPortal: () => Promise<void>;
 }
@@ -32,7 +35,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-
   const checkSubscription = async () => {
     if (!user) {
       console.log('No user found, setting unsubscribed state');
@@ -46,7 +48,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     try {
       console.log('Querying subscribers table for user:', user.id);
       setLoading(true);
-      
+
       // Query subscribers table directly - webhook updates this in real-time
       const { data: subscriberData, error } = await supabase
         .from('subscribers')
@@ -60,28 +62,30 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       }
 
       console.log('Subscription check result:', subscriberData);
-      
+
       if (subscriberData) {
         const subscriptionData = {
           subscribed: subscriberData.subscribed || false,
           subscription_tier: subscriberData.subscription_tier || null,
-          subscription_end: subscriberData.subscription_end || null
+          subscription_end: subscriberData.subscription_end || null,
         };
-        
+
         // Check if subscription status changed from unsubscribed to subscribed
         // Only show toast if there was a recent checkout (to avoid showing on every page refresh)
         const wasUnsubscribed = !subscribed;
         const isNowSubscribed = subscriptionData.subscribed;
         const hasRecentCheckout = localStorage.getItem(`checkout_initiated_${user.id}`);
-        
+
         if (wasUnsubscribed && isNowSubscribed && hasRecentCheckout) {
           console.log('🎉 Subscription status changed from unsubscribed to subscribed!');
-          showToast.success('🎉 Premium erfolgreich aktiviert! Du hast jetzt Zugang zu allen Premium-Features.');
-          
+          showToast.success(
+            '🎉 Premium erfolgreich aktiviert! Du hast jetzt Zugang zu allen Premium-Features.',
+          );
+
           // Clean up checkout tracking
           localStorage.removeItem(`checkout_initiated_${user.id}`);
         }
-        
+
         // Update state
         setSubscribed(subscriptionData.subscribed);
         setSubscriptionTier(subscriptionData.subscription_tier);
@@ -104,7 +108,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
-  const createCheckoutSession = async (priceType?: 'monthly' | 'semester', consentGiven?: boolean) => {
+  const createCheckoutSession = async (
+    priceType?: 'monthly' | 'semester',
+    consentGiven?: boolean,
+  ) => {
     if (!user) {
       showToast.error('Bitte melde dich an, um ein Abonnement zu erstellen');
       return;
@@ -118,10 +125,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
     try {
       console.log('Creating checkout session for user:', user.id, 'priceType:', priceType);
-      
+
       // Track when checkout was initiated for more aggressive cache invalidation
       localStorage.setItem(`checkout_initiated_${user.id}`, new Date().toISOString());
-      
+
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.access_token) {
         throw new Error('No valid session found');
@@ -136,8 +143,8 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           Authorization: `Bearer ${session.session.access_token}`,
         },
         body: {
-          priceType: priceType || 'monthly'
-        }
+          priceType: priceType || 'monthly',
+        },
       });
 
       if (error) {
@@ -156,7 +163,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       console.error('Failed to create checkout session:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       showToast.error(`Der Checkout-Prozess konnte nicht gestartet werden: ${errorMessage}`);
-      
+
       // Clean up checkout tracking on error
       localStorage.removeItem(`checkout_initiated_${user.id}`);
     }
@@ -176,10 +183,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
     try {
       console.log('Creating lifetime checkout session for user:', user.id);
-      
+
       // Track when checkout was initiated for more aggressive cache invalidation
       localStorage.setItem(`checkout_initiated_${user.id}`, new Date().toISOString());
-      
+
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.access_token) {
         throw new Error('No valid session found');
@@ -208,7 +215,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       console.error('Failed to create lifetime checkout session:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       showToast.error(`Der Checkout-Prozess konnte nicht gestartet werden: ${errorMessage}`);
-      
+
       // Clean up checkout tracking on error
       localStorage.removeItem(`checkout_initiated_${user.id}`);
     }
@@ -222,7 +229,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
 
     try {
       console.log('Creating authenticated customer portal session for user:', user.id);
-      
+
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.access_token) {
         throw new Error('No valid session found');
@@ -274,7 +281,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
             keysToRemove.push(key);
           }
         }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
       } catch (error) {
         console.error('Error cleaning up old checkout tracking:', error);
       }
@@ -286,16 +293,15 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     const urlParams = new URLSearchParams(window.location.search);
     const hasCheckoutSuccess = urlParams.get('checkout') === 'success';
     const hasCheckoutCancelled = urlParams.get('checkout') === 'cancelled';
-    
+
     if (hasCheckoutSuccess) {
       showToast.success('Abonnement erfolgreich aktiviert!');
       // Remove the checkout parameter from URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
-      
+
       // Refresh subscription status
       checkSubscription();
-      
     } else if (hasCheckoutCancelled) {
       showToast.info('Der Checkout wurde abgebrochen');
       // Remove the checkout parameter from URL
@@ -306,7 +312,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         localStorage.removeItem(`checkout_initiated_${user.id}`);
       }
     }
-    
+
     // Additional check: if user returns to the app and we have checkout tracking, do a one-time refresh
     if (user?.id && !hasCheckoutSuccess && !hasCheckoutCancelled) {
       const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
@@ -314,7 +320,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         const checkoutTime = new Date(checkoutInitiated);
         const now = new Date();
         const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
-        
+
         // If checkout was initiated within the last 5 minutes, do a one-time refresh
         if (timeSinceCheckout < 5 * 60 * 1000) {
           console.log('One-time subscription refresh due to recent checkout activity');
@@ -330,16 +336,18 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   }, [user?.id]);
 
   return (
-    <SubscriptionContext.Provider value={{
-      subscribed,
-      subscriptionTier,
-      subscriptionEnd,
-      loading,
-      checkSubscription,
-      createCheckoutSession,
-      createLifetimeCheckoutSession,
-      openCustomerPortal,
-    }}>
+    <SubscriptionContext.Provider
+      value={{
+        subscribed,
+        subscriptionTier,
+        subscriptionEnd,
+        loading,
+        checkSubscription,
+        createCheckoutSession,
+        createLifetimeCheckoutSession,
+        openCustomerPortal,
+      }}
+    >
       {children}
     </SubscriptionContext.Provider>
   );

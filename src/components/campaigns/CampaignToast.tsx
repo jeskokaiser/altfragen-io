@@ -5,12 +5,12 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tag, AlertTriangle, Info, MessageSquare, ExternalLink, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  EnhancedCampaign, 
+import {
+  EnhancedCampaign,
   CAMPAIGN_STYLING,
   StylingVariant,
   ActionType,
-  CampaignType 
+  CampaignType,
 } from '@/types/Campaign';
 
 const CampaignToast: React.FC = () => {
@@ -28,21 +28,24 @@ const CampaignToast: React.FC = () => {
     try {
       // Use the new method that handles audience targeting
       const campaigns = await CampaignService.getCampaignsForUser(subscribed ?? false);
-      const toastCampaigns = campaigns.filter(c => c.display_type === 'toast');
-      
+      const toastCampaigns = campaigns.filter((c) => c.display_type === 'toast');
+
       // Get shown campaigns from sessionStorage (reset per session)
       const shownInSession = sessionStorage.getItem('shownCampaignToasts');
       const shownIds = shownInSession ? JSON.parse(shownInSession) : [];
-      
+
       // Show campaigns that haven't been shown in this session
       toastCampaigns.forEach((campaign, index) => {
         if (!shownIds.includes(campaign.id)) {
-          setTimeout(() => {
-            showCampaignToast(campaign);
-            // Mark as shown
-            const newShownIds = [...shownIds, campaign.id];
-            sessionStorage.setItem('shownCampaignToasts', JSON.stringify(newShownIds));
-          }, 3000 + (index * 1500)); // Stagger toasts by 1.5 seconds
+          setTimeout(
+            () => {
+              showCampaignToast(campaign);
+              // Mark as shown
+              const newShownIds = [...shownIds, campaign.id];
+              sessionStorage.setItem('shownCampaignToasts', JSON.stringify(newShownIds));
+            },
+            3000 + index * 1500,
+          ); // Stagger toasts by 1.5 seconds
         }
       });
     } catch (error) {
@@ -52,7 +55,7 @@ const CampaignToast: React.FC = () => {
 
   const handleActionClick = (campaign: EnhancedCampaign) => {
     const actionType = campaign.action_type as ActionType;
-    
+
     switch (actionType) {
       case 'subscription':
         navigate('/subscription');
@@ -99,10 +102,10 @@ const CampaignToast: React.FC = () => {
     if (campaign.action_text) {
       return campaign.action_text;
     }
-    
+
     const actionType = campaign.action_type as ActionType;
     const campaignType = campaign.campaign_type as CampaignType;
-    
+
     switch (actionType) {
       case 'subscription':
         return campaignType === 'discount' ? 'Sparen' : 'Premium';
@@ -121,7 +124,7 @@ const CampaignToast: React.FC = () => {
 
   const getActionButtonIcon = (campaign: EnhancedCampaign) => {
     const actionType = campaign.action_type as ActionType;
-    
+
     switch (actionType) {
       case 'external_link':
         return ExternalLink;
@@ -149,7 +152,9 @@ const CampaignToast: React.FC = () => {
           <div className="text-sm opacity-90 mt-1">{campaign.description}</div>
           {campaign.discount_percentage && (
             <div className="mt-2">
-              <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${styling.badgeClass}`}>
+              <span
+                className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${styling.badgeClass}`}
+              >
                 -{campaign.discount_percentage}% Rabatt
               </span>
             </div>
@@ -167,24 +172,24 @@ const CampaignToast: React.FC = () => {
     // Show toast with appropriate styling and actions
     toast.custom(
       (id) => (
-      <div className={`p-4 rounded-lg shadow-lg ${styling.containerClass} border max-w-md`}>
-        <ToastContent />
-        {campaign.action_type !== 'dismiss_only' && (
-          <div className="mt-3 flex justify-end">
-            <Button
-              size="sm"
-              onClick={() => {
-                handleActionClick(campaign);
-                toast.dismiss(id);
-              }}
-              className={`${styling.buttonClass} text-xs px-3 py-1 h-8`}
-            >
-              {getActionButtonText(campaign)}
-              <ActionIcon className="h-3 w-3 ml-1" />
-            </Button>
-          </div>
-        )}
-      </div>
+        <div className={`p-4 rounded-lg shadow-lg ${styling.containerClass} border max-w-md`}>
+          <ToastContent />
+          {campaign.action_type !== 'dismiss_only' && (
+            <div className="mt-3 flex justify-end">
+              <Button
+                size="sm"
+                onClick={() => {
+                  handleActionClick(campaign);
+                  toast.dismiss(id);
+                }}
+                className={`${styling.buttonClass} text-xs px-3 py-1 h-8`}
+              >
+                {getActionButtonText(campaign)}
+                <ActionIcon className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
+          )}
+        </div>
       ),
       {
         duration: campaign.action_type === 'dismiss_only' ? 5000 : 10000, // Auto-dismiss faster for info-only toasts
@@ -194,12 +199,14 @@ const CampaignToast: React.FC = () => {
           border: 'none',
           boxShadow: 'none',
         },
-      }
+      },
     );
 
     // Copy code to clipboard if user clicks on it
     if (campaign.code) {
-      const codeSpan = document.querySelector<HTMLElement>(`[data-campaign-id="${campaign.id}"] .font-mono`);
+      const codeSpan = document.querySelector<HTMLElement>(
+        `[data-campaign-id="${campaign.id}"] .font-mono`,
+      );
       if (codeSpan) {
         codeSpan.style.cursor = 'pointer';
         codeSpan.onclick = () => {
@@ -213,4 +220,4 @@ const CampaignToast: React.FC = () => {
   return null; // This component only manages toast display logic
 };
 
-export default CampaignToast; 
+export default CampaignToast;

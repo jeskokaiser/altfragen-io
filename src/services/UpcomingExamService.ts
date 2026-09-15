@@ -1,5 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
-import { UpcomingExam, UpcomingExamQuestionLink, UpcomingExamWithStats, QuestionSource } from '@/types/UpcomingExam';
+import {
+  UpcomingExam,
+  UpcomingExamQuestionLink,
+  UpcomingExamWithStats,
+  QuestionSource,
+} from '@/types/UpcomingExam';
 
 const sb: any = supabase as any; // Temporary: widen typing until Supabase types include upcoming_exams
 
@@ -21,7 +26,7 @@ export const createUpcomingExam = async (input: CreateUpcomingExamInput): Promis
       description: input.description ?? null,
       subject: input.subject ?? null,
       created_by: input.created_by,
-      university_id: input.university_id ?? null
+      university_id: input.university_id ?? null,
     })
     .select('*')
     .single();
@@ -30,7 +35,10 @@ export const createUpcomingExam = async (input: CreateUpcomingExamInput): Promis
   return data as UpcomingExam;
 };
 
-export const updateUpcomingExam = async (examId: string, updates: Partial<Omit<UpcomingExam, 'id' | 'created_by' | 'created_at' | 'updated_at'>>): Promise<UpcomingExam> => {
+export const updateUpcomingExam = async (
+  examId: string,
+  updates: Partial<Omit<UpcomingExam, 'id' | 'created_by' | 'created_at' | 'updated_at'>>,
+): Promise<UpcomingExam> => {
   const { data, error } = await sb
     .from('upcoming_exams')
     .update(updates)
@@ -42,14 +50,14 @@ export const updateUpcomingExam = async (examId: string, updates: Partial<Omit<U
 };
 
 export const deleteUpcomingExam = async (examId: string): Promise<void> => {
-  const { error } = await sb
-    .from('upcoming_exams')
-    .delete()
-    .eq('id', examId);
+  const { error } = await sb.from('upcoming_exams').delete().eq('id', examId);
   if (error) throw error;
 };
 
-export const findUpcomingExamByTitle = async (userId: string, title: string): Promise<UpcomingExam | null> => {
+export const findUpcomingExamByTitle = async (
+  userId: string,
+  title: string,
+): Promise<UpcomingExam | null> => {
   const { data, error } = await sb
     .from('upcoming_exams')
     .select('*')
@@ -58,12 +66,14 @@ export const findUpcomingExamByTitle = async (userId: string, title: string): Pr
     .order('due_date', { ascending: true })
     .limit(1)
     .maybeSingle();
-  
+
   if (error) throw error;
   return data as UpcomingExam | null;
 };
 
-export const listUpcomingExamsForUser = async (userId: string): Promise<UpcomingExamWithStats[]> => {
+export const listUpcomingExamsForUser = async (
+  userId: string,
+): Promise<UpcomingExamWithStats[]> => {
   const { data: exams, error } = await sb
     .from('upcoming_exams')
     .select('*')
@@ -75,7 +85,7 @@ export const listUpcomingExamsForUser = async (userId: string): Promise<Upcoming
 
   // Get all unique exam_names from exams (handle comma-separated values)
   const allExamNames = new Set<string>();
-  (exams as UpcomingExam[]).forEach(exam => {
+  (exams as UpcomingExam[]).forEach((exam) => {
     if (exam.exam_name) {
       // Split comma-separated exam_names
       exam.exam_name.split(',').forEach((name: string) => {
@@ -89,14 +99,14 @@ export const listUpcomingExamsForUser = async (userId: string): Promise<Upcoming
 
   // Count questions by exam_name in a single query
   const countByExamName: Record<string, number> = {};
-  
+
   if (allExamNames.size > 0) {
     // Query all questions with matching exam_names
     const { data: questions, error: questionsError } = await sb
       .from('questions')
       .select('exam_name')
       .in('exam_name', Array.from(allExamNames));
-    
+
     if (questionsError) {
       console.error('Error counting questions by exam_name:', questionsError);
     } else if (questions) {
@@ -112,10 +122,13 @@ export const listUpcomingExamsForUser = async (userId: string): Promise<Upcoming
 
   // Map counts to exam IDs (sum counts for all exam_names in comma-separated string)
   const countByExam: Record<string, number> = {};
-  (exams as UpcomingExam[]).forEach(exam => {
+  (exams as UpcomingExam[]).forEach((exam) => {
     if (exam.exam_name) {
       // Split comma-separated exam_names and sum their counts
-      const names = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+      const names = exam.exam_name
+        .split(',')
+        .map((n: string) => n.trim())
+        .filter(Boolean);
       const totalCount = names.reduce((sum, name) => sum + (countByExamName[name] || 0), 0);
       countByExam[exam.id] = totalCount;
     } else {
@@ -125,23 +138,29 @@ export const listUpcomingExamsForUser = async (userId: string): Promise<Upcoming
 
   return (exams as UpcomingExam[]).map((e) => ({
     ...e,
-    linked_question_count: countByExam[e.id] || 0
+    linked_question_count: countByExam[e.id] || 0,
   }));
 };
 
-export const getLinkedQuestionIdsForExam = async (examId: string, userId?: string): Promise<Array<{ question_id: string; source: QuestionSource }>> => {
+export const getLinkedQuestionIdsForExam = async (
+  examId: string,
+  userId?: string,
+): Promise<Array<{ question_id: string; source: QuestionSource }>> => {
   // Get the exam to find its exam_name(s)
   const { data: exam, error: examError } = await sb
     .from('upcoming_exams')
     .select('exam_name')
     .eq('id', examId)
     .single();
-  
+
   if (examError) throw examError;
   if (!exam?.exam_name) return [];
 
   // Split comma-separated exam_names
-  const examNames = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+  const examNames = exam.exam_name
+    .split(',')
+    .map((n: string) => n.trim())
+    .filter(Boolean);
   if (examNames.length === 0) return [];
 
   // Query questions by exam_name (any of the selected exam_names)
@@ -149,7 +168,7 @@ export const getLinkedQuestionIdsForExam = async (examId: string, userId?: strin
     .from('questions')
     .select('id, visibility, user_id')
     .in('exam_name', examNames);
-  
+
   if (error) throw error;
   if (!questions || questions.length === 0) return [];
 
@@ -158,7 +177,7 @@ export const getLinkedQuestionIdsForExam = async (examId: string, userId?: strin
     const isPersonal = q.visibility === 'private' || (userId && q.user_id === userId);
     return {
       question_id: q.id as string,
-      source: (isPersonal ? 'personal' : 'university') as QuestionSource
+      source: (isPersonal ? 'personal' : 'university') as QuestionSource,
     };
   });
 };
@@ -166,7 +185,7 @@ export const getLinkedQuestionIdsForExam = async (examId: string, userId?: strin
 export const linkQuestionsToExam = async (
   examId: string,
   questionIds: string[],
-  questionIdToSource: (qid: string) => QuestionSource
+  questionIdToSource: (qid: string) => QuestionSource,
 ): Promise<UpcomingExamQuestionLink[]> => {
   // Questions are now automatically linked by exam_name matching
   // This function is kept for backward compatibility but is a no-op
@@ -179,7 +198,7 @@ export const linkQuestionsToExam = async (
     .select('exam_name')
     .eq('id', examId)
     .single();
-  
+
   if (examError) throw examError;
   if (!exam?.exam_name) return [];
 
@@ -188,7 +207,7 @@ export const linkQuestionsToExam = async (
     exam_id: examId,
     question_id: qid,
     source: questionIdToSource(qid),
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
   }));
 };
 
@@ -206,21 +225,27 @@ export interface ExamUserStats {
   percent_correct: number;
 }
 
-export const getExamStatsForUser = async (examId: string, userId: string): Promise<ExamUserStats> => {
+export const getExamStatsForUser = async (
+  examId: string,
+  userId: string,
+): Promise<ExamUserStats> => {
   // Get the exam to find its exam_name(s)
   const { data: exam, error: examError } = await sb
     .from('upcoming_exams')
     .select('exam_name')
     .eq('id', examId)
     .single();
-  
+
   if (examError) throw examError;
   if (!exam?.exam_name) {
     return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
   }
 
   // Split comma-separated exam_names
-  const examNames = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+  const examNames = exam.exam_name
+    .split(',')
+    .map((n: string) => n.trim())
+    .filter(Boolean);
   if (examNames.length === 0) {
     return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
   }
@@ -230,7 +255,7 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
     .from('questions')
     .select('id')
     .in('exam_name', examNames);
-  
+
   if (questionsErr) throw questionsErr;
 
   const questionIds: string[] = (questions || []).map((q: any) => q.id);
@@ -244,9 +269,9 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
     .from('training_sessions')
     .select('id, filter_settings')
     .eq('user_id', userId);
-  
+
   if (sessionsErr) throw sessionsErr;
-  
+
   // Get session IDs linked to this exam
   const linkedSessionIds = (allSessions || [])
     .filter((s: any) => {
@@ -263,7 +288,7 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
   }
 
   // Query session progress only (no user_progress fallback)
-  const batchPromises = batches.map(batch => {
+  const batchPromises = batches.map((batch) => {
     // Filter session progress to only include sessions linked to this exam
     if (linkedSessionIds.length > 0) {
       return sb
@@ -279,14 +304,15 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
   });
 
   const batchResults = await Promise.allSettled(batchPromises);
-  
+
   // Process session_question_progress only
-  const sessionProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> = [];
-  
-  batchResults.forEach(result => {
+  const sessionProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> =
+    [];
+
+  batchResults.forEach((result) => {
     if (result.status === 'fulfilled') {
       const sessionProgressResult = result.value;
-      
+
       // Process session_question_progress entries (take latest per question per batch)
       if (sessionProgressResult.data) {
         const sessionBatchMap = new Map<string, { is_correct: boolean | null; ts: number }>();
@@ -308,9 +334,9 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
 
   // Final deduplication across all batches to get the absolute latest per question
   const latestByQuestion: Record<string, { is_correct: boolean | null; ts: number }> = {};
-  
+
   // Add all session progress and take the absolute latest per question
-  sessionProgress.forEach(p => {
+  sessionProgress.forEach((p) => {
     const qid = p.question_id;
     const existing = latestByQuestion[qid];
     if (!existing || p.ts > existing.ts) {
@@ -319,10 +345,8 @@ export const getExamStatsForUser = async (examId: string, userId: string): Promi
   });
 
   const answered = Object.keys(latestByQuestion).length;
-  const correct = Object.values(latestByQuestion).filter(v => v.is_correct === true).length;
+  const correct = Object.values(latestByQuestion).filter((v) => v.is_correct === true).length;
   const percent_correct = answered > 0 ? Math.round((correct / answered) * 100) : 0;
 
   return { total_linked: totalLinked, answered, correct, percent_correct };
 };
-
-

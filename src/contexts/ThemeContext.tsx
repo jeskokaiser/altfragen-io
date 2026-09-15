@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -21,7 +20,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const savedTheme = localStorage.getItem('theme');
     return (savedTheme as 'light' | 'dark') || 'light';
   });
-  
+
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
 

@@ -20,11 +20,11 @@ interface ExamNameWithCount {
   count: number;
 }
 
-const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({ 
-  open, 
-  onOpenChange, 
+const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
+  open,
+  onOpenChange,
   examId,
-  onConfirm 
+  onConfirm,
 }) => {
   const { user, universityId } = useAuth();
   const [tab, setTab] = useState<'personal' | 'university' | 'public'>('personal');
@@ -46,14 +46,17 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
       if (error) throw error;
       return data;
     },
-    enabled: !!examId && open
+    enabled: !!examId && open,
   });
 
   // Initialize selected exam names from current exam
   useEffect(() => {
     if (currentExam?.exam_name && open) {
       // Split comma-separated exam_names if multiple
-      const names = currentExam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+      const names = currentExam.exam_name
+        .split(',')
+        .map((n: string) => n.trim())
+        .filter(Boolean);
       setSelectedExamNames(new Set(names));
     } else if (open && !currentExam?.exam_name) {
       setSelectedExamNames(new Set());
@@ -66,7 +69,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
     queryFn: async () => {
       if (!user?.id) return [];
       const sb: any = supabase;
-      
+
       // Get all unique exam_names first
       const { data: examNamesData, error: examNamesError } = await sb
         .from('questions')
@@ -74,9 +77,9 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
         .eq('user_id', user.id)
         .eq('visibility', 'private')
         .not('exam_name', 'is', null);
-      
+
       if (examNamesError) throw examNamesError;
-      
+
       // Get unique exam_names
       const uniqueExamNames = new Set<string>();
       (examNamesData || []).forEach((q: any) => {
@@ -84,7 +87,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
           uniqueExamNames.add(q.exam_name);
         }
       });
-      
+
       // Count questions for each exam_name
       const counts: Record<string, number> = {};
       await Promise.all(
@@ -95,21 +98,21 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
             .eq('user_id', user.id)
             .eq('visibility', 'private')
             .eq('exam_name', examName);
-          
+
           if (countError) {
             console.error(`Error counting questions for ${examName}:`, countError);
             counts[examName] = 0;
           } else {
             counts[examName] = count || 0;
           }
-        })
+        }),
       );
-      
+
       return Object.entries(counts)
         .map(([exam_name, count]) => ({ exam_name, count }))
         .sort((a, b) => a.exam_name.localeCompare(b.exam_name)) as ExamNameWithCount[];
     },
-    enabled: !!user?.id && open && tab === 'personal'
+    enabled: !!user?.id && open && tab === 'personal',
   });
 
   // Fetch exam names from university questions
@@ -118,7 +121,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
     queryFn: async () => {
       if (!universityId) return [];
       const sb: any = supabase;
-      
+
       // Get all unique exam_names first
       const { data: examNamesData, error: examNamesError } = await sb
         .from('questions')
@@ -126,9 +129,9 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
         .eq('university_id', universityId)
         .eq('visibility', 'university')
         .not('exam_name', 'is', null);
-      
+
       if (examNamesError) throw examNamesError;
-      
+
       // Get unique exam_names
       const uniqueExamNames = new Set<string>();
       (examNamesData || []).forEach((q: any) => {
@@ -136,7 +139,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
           uniqueExamNames.add(q.exam_name);
         }
       });
-      
+
       // Count questions for each exam_name
       const counts: Record<string, number> = {};
       await Promise.all(
@@ -147,21 +150,21 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
             .eq('university_id', universityId)
             .eq('visibility', 'university')
             .eq('exam_name', examName);
-          
+
           if (countError) {
             console.error(`Error counting questions for ${examName}:`, countError);
             counts[examName] = 0;
           } else {
             counts[examName] = count || 0;
           }
-        })
+        }),
       );
-      
+
       return Object.entries(counts)
         .map(([exam_name, count]) => ({ exam_name, count }))
         .sort((a, b) => a.exam_name.localeCompare(b.exam_name)) as ExamNameWithCount[];
     },
-    enabled: !!universityId && open && tab === 'university'
+    enabled: !!universityId && open && tab === 'university',
   });
 
   // Fetch exam names from public questions
@@ -169,7 +172,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
     queryKey: ['exam-names', 'public'],
     queryFn: async () => {
       const sb: any = supabase;
-      
+
       // Get all unique exam_names first
       const { data: examNamesData, error: examNamesError } = await sb
         .from('questions')
@@ -177,9 +180,9 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
         .eq('visibility', 'public')
         .is('university_id', null)
         .not('exam_name', 'is', null);
-      
+
       if (examNamesError) throw examNamesError;
-      
+
       // Get unique exam_names
       const uniqueExamNames = new Set<string>();
       (examNamesData || []).forEach((q: any) => {
@@ -187,7 +190,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
           uniqueExamNames.add(q.exam_name);
         }
       });
-      
+
       // Count questions for each exam_name
       const counts: Record<string, number> = {};
       await Promise.all(
@@ -198,44 +201,44 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
             .eq('visibility', 'public')
             .is('university_id', null)
             .eq('exam_name', examName);
-          
+
           if (countError) {
             console.error(`Error counting questions for ${examName}:`, countError);
             counts[examName] = 0;
           } else {
             counts[examName] = count || 0;
           }
-        })
+        }),
       );
-      
+
       return Object.entries(counts)
         .map(([exam_name, count]) => ({ exam_name, count }))
         .sort((a, b) => a.exam_name.localeCompare(b.exam_name)) as ExamNameWithCount[];
     },
-    enabled: open && tab === 'public'
+    enabled: open && tab === 'public',
   });
 
-  const currentExamNames = tab === 'personal' 
-    ? personalExamNames || []
-    : tab === 'university'
-    ? universityExamNames || []
-    : publicExamNames || [];
+  const currentExamNames =
+    tab === 'personal'
+      ? personalExamNames || []
+      : tab === 'university'
+        ? universityExamNames || []
+        : publicExamNames || [];
 
-  const isLoading = tab === 'personal' 
-    ? isLoadingPersonal
-    : tab === 'university'
-    ? isLoadingUniversity
-    : isLoadingPublic;
+  const isLoading =
+    tab === 'personal'
+      ? isLoadingPersonal
+      : tab === 'university'
+        ? isLoadingUniversity
+        : isLoadingPublic;
 
   const filteredExamNames = useMemo(() => {
     const lower = search.toLowerCase();
-    return currentExamNames.filter((item) => 
-      item.exam_name.toLowerCase().includes(lower)
-    );
+    return currentExamNames.filter((item) => item.exam_name.toLowerCase().includes(lower));
   }, [currentExamNames, search]);
 
   const toggleExamName = (examName: string) => {
-    setSelectedExamNames(prev => {
+    setSelectedExamNames((prev) => {
       const next = new Set(prev);
       if (next.has(examName)) {
         next.delete(examName);
@@ -275,10 +278,10 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
             <TabsTrigger value="public">Öffentlich</TabsTrigger>
           </TabsList>
           <div className="py-3">
-            <Input 
-              placeholder="Suchen..." 
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)} 
+            <Input
+              placeholder="Suchen..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <TabsContent value="personal">
@@ -286,13 +289,18 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
               {isLoading ? (
                 <div className="text-sm text-muted-foreground py-4">Lade Prüfungen...</div>
               ) : filteredExamNames.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4">Keine passenden Prüfungen gefunden.</div>
+                <div className="text-sm text-muted-foreground py-4">
+                  Keine passenden Prüfungen gefunden.
+                </div>
               ) : (
                 filteredExamNames.map((item) => (
-                  <label key={item.exam_name} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-2 rounded">
-                    <Checkbox 
-                      checked={selectedExamNames.has(item.exam_name)} 
-                      onCheckedChange={() => toggleExamName(item.exam_name)} 
+                  <label
+                    key={item.exam_name}
+                    className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-2 rounded"
+                  >
+                    <Checkbox
+                      checked={selectedExamNames.has(item.exam_name)}
+                      onCheckedChange={() => toggleExamName(item.exam_name)}
                     />
                     <div className="flex-1">
                       <div className="font-medium">{item.exam_name}</div>
@@ -308,13 +316,18 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
               {isLoading ? (
                 <div className="text-sm text-muted-foreground py-4">Lade Prüfungen...</div>
               ) : filteredExamNames.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4">Keine passenden Prüfungen gefunden.</div>
+                <div className="text-sm text-muted-foreground py-4">
+                  Keine passenden Prüfungen gefunden.
+                </div>
               ) : (
                 filteredExamNames.map((item) => (
-                  <label key={item.exam_name} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-2 rounded">
-                    <Checkbox 
-                      checked={selectedExamNames.has(item.exam_name)} 
-                      onCheckedChange={() => toggleExamName(item.exam_name)} 
+                  <label
+                    key={item.exam_name}
+                    className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-2 rounded"
+                  >
+                    <Checkbox
+                      checked={selectedExamNames.has(item.exam_name)}
+                      onCheckedChange={() => toggleExamName(item.exam_name)}
                     />
                     <div className="flex-1">
                       <div className="font-medium">{item.exam_name}</div>
@@ -330,13 +343,18 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
               {isLoading ? (
                 <div className="text-sm text-muted-foreground py-4">Lade Prüfungen...</div>
               ) : filteredExamNames.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4">Keine passenden Prüfungen gefunden.</div>
+                <div className="text-sm text-muted-foreground py-4">
+                  Keine passenden Prüfungen gefunden.
+                </div>
               ) : (
                 filteredExamNames.map((item) => (
-                  <label key={item.exam_name} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-2 rounded">
-                    <Checkbox 
-                      checked={selectedExamNames.has(item.exam_name)} 
-                      onCheckedChange={() => toggleExamName(item.exam_name)} 
+                  <label
+                    key={item.exam_name}
+                    className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-2 rounded"
+                  >
+                    <Checkbox
+                      checked={selectedExamNames.has(item.exam_name)}
+                      onCheckedChange={() => toggleExamName(item.exam_name)}
                     />
                     <div className="flex-1">
                       <div className="font-medium">{item.exam_name}</div>

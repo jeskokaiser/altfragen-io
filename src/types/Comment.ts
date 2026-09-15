@@ -30,4 +30,3 @@ export interface CreateCommentInput {
 export interface UpdateCommentInput {
   content: string;
 }
-

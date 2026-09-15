@@ -1,27 +1,47 @@
 import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, PdfProcessingTask } from '@/types/Question';
 import { AlertCircle, Upload, FileText, Check, X, ArrowRight, Search } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { showToast } from '@/utils/toast';
-import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import PDFQuestionReview from './PDFQuestionReview';
 
 const examMetadataSchema = z.object({
-  examName: z.string().min(1, "Exam name is required"),
-  examYear: z.string().min(1, "Jahr ist erforderlich"),
-  examSemester: z.enum(["WS", "SS"], { required_error: "Semester ist erforderlich" })
+  examName: z.string().min(1, 'Exam name is required'),
+  examYear: z.string().min(1, 'Jahr ist erforderlich'),
+  examSemester: z.enum(['WS', 'SS'], { required_error: 'Semester ist erforderlich' }),
 });
 
 type ExamMetadataFormValues = z.infer<typeof examMetadataSchema>;
@@ -31,7 +51,10 @@ interface PDFUploadProps {
   visibility: 'private' | 'university' | 'public';
 }
 
-const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
+const PDFUpload: React.FC<PDFUploadProps> = ({
+  onQuestionsLoaded,
+  visibility: initialVisibility,
+}) => {
   const { user, universityId, universityName } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -39,13 +62,15 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showMetadataForm, setShowMetadataForm] = useState(true);
   const [activeTask, setActiveTask] = useState<PdfProcessingTask | null>(null);
-  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(initialVisibility);
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(
+    initialVisibility,
+  );
   const [examNameSuggestions, setExamNameSuggestions] = useState<string[]>([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [extractedQuestions, setExtractedQuestions] = useState<Question[] | null>(null);
   const [processingStats, setProcessingStats] = useState<any>(null);
-  
+
   const taskIdRef = useRef<string | null>(null);
   const intervalIdRef = useRef<number | null>(null);
 
@@ -56,10 +81,10 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   const form = useForm<ExamMetadataFormValues>({
     resolver: zodResolver(examMetadataSchema),
     defaultValues: {
-      examName: "",
+      examName: '',
       examYear: new Date().getFullYear().toString(),
-      examSemester: undefined
-    }
+      examSemester: undefined,
+    },
   });
 
   const examNameValue = form.watch('examName');
@@ -76,7 +101,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
 
   const fetchExamNameSuggestions = async (searchTerm: string) => {
     if (!user?.id) return;
-    
+
     setIsFetchingSuggestions(true);
     try {
       const { data, error } = await supabase
@@ -87,11 +112,11 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
         .limit(5);
 
       if (error) throw error;
-      
-      const uniqueExamNames = [...new Set(data
-        .filter(item => item.exam_name)
-        .map(item => item.exam_name as string))];
-        
+
+      const uniqueExamNames = [
+        ...new Set(data.filter((item) => item.exam_name).map((item) => item.exam_name as string)),
+      ];
+
       setExamNameSuggestions(uniqueExamNames);
     } catch (error) {
       console.error('Error fetching exam name suggestions:', error);
@@ -117,11 +142,11 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   useEffect(() => {
     if (activeTask && activeTask.status === 'processing') {
       taskIdRef.current = activeTask.task_id;
-      
+
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
       }
-      
+
       const intervalId = window.setInterval(async () => {
         if (taskIdRef.current) {
           await checkTaskStatus(taskIdRef.current);
@@ -130,9 +155,9 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
           clearInterval(intervalId);
         }
       }, 3000);
-      
+
       intervalIdRef.current = intervalId;
-      
+
       return () => {
         clearInterval(intervalId);
         intervalIdRef.current = null;
@@ -150,12 +175,12 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
     setExtractedQuestions(null);
     setProcessingStats(null);
     taskIdRef.current = null;
-    
+
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
       intervalIdRef.current = null;
     }
-    
+
     form.reset();
   };
 
@@ -164,24 +189,24 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
     setError(null);
 
     if (!file) {
-      setError("Bitte wähle eine Datei aus");
-      showToast.error("Keine Datei ausgewählt", {
-        description: "Bitte wähle eine PDF-Datei aus"
+      setError('Bitte wähle eine Datei aus');
+      showToast.error('Keine Datei ausgewählt', {
+        description: 'Bitte wähle eine PDF-Datei aus',
       });
       return;
     }
 
     if (!file.name.endsWith('.pdf')) {
-      setError("Bitte wähle eine PDF-Datei aus");
-      showToast.error("Ungültiges Dateiformat", {
-        description: "Es werden nur PDF-Dateien unterstützt"
+      setError('Bitte wähle eine PDF-Datei aus');
+      showToast.error('Ungültiges Dateiformat', {
+        description: 'Es werden nur PDF-Dateien unterstützt',
       });
       return;
     }
 
     setSelectedFile(file);
-    showToast.info("Datei ausgewählt", {
-      description: `${file.name} wurde ausgewählt`
+    showToast.info('Datei ausgewählt', {
+      description: `${file.name} wurde ausgewählt`,
     });
     console.log('File selected:', file.name);
   };
@@ -189,14 +214,14 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   const handleMetadataSubmit = (data: ExamMetadataFormValues) => {
     console.log('Metadata submitted:', data);
     setShowMetadataForm(false);
-    
+
     if (!selectedFile) {
-      showToast.info("Bitte wähle nun eine PDF-Datei aus", {
-        description: "Die Metadaten wurden erfasst"
+      showToast.info('Bitte wähle nun eine PDF-Datei aus', {
+        description: 'Die Metadaten wurden erfasst',
       });
     } else {
-      showToast.info("Metadaten erfasst", {
-        description: "Du kannst jetzt die PDF-Datei hochladen"
+      showToast.info('Metadaten erfasst', {
+        description: 'Du kannst jetzt die PDF-Datei hochladen',
       });
     }
   };
@@ -212,7 +237,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
 
       if (error) throw error;
 
-      return data.map(q => ({
+      return data.map((q) => ({
         id: q.id,
         question: q.question,
         optionA: q.option_a,
@@ -234,7 +259,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
         year: q.exam_year || null,
         image_key: q.image_key || null,
         show_image_after_answer: q.show_image_after_answer || false,
-        exam_name: q.exam_name || null
+        exam_name: q.exam_name || null,
       }));
     } catch (error) {
       console.error('Error fetching saved questions:', error);
@@ -245,10 +270,13 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
   const checkTaskStatus = async (taskId: string) => {
     try {
       console.log(`Checking status for task: ${taskId}`);
-      
-      const { data, error } = await supabase.functions.invoke(`check-pdf-status?task_id=${taskId}`, {
-        method: 'GET'
-      });
+
+      const { data, error } = await supabase.functions.invoke(
+        `check-pdf-status?task_id=${taskId}`,
+        {
+          method: 'GET',
+        },
+      );
 
       if (error) {
         console.error('Error from edge function:', error);
@@ -262,83 +290,87 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
           clearInterval(intervalIdRef.current);
           intervalIdRef.current = null;
         }
-        
+
         taskIdRef.current = null;
-        
+
         setUploadProgress(100);
         setIsUploading(false);
-        
+
         if (data.success && selectedFile) {
           // Fetch the questions that were saved to the database by the API
           const savedQuestions = await fetchSavedQuestions(selectedFile.name);
-          
+
           if (savedQuestions.length > 0) {
             setExtractedQuestions(savedQuestions);
             setProcessingStats(data.data);
-            showToast.success("PDF verarbeitet", {
-              description: "Bitte überprüfe die extrahierten Fragen"
+            showToast.success('PDF verarbeitet', {
+              description: 'Bitte überprüfe die extrahierten Fragen',
             });
           } else {
-            showToast.info("Verarbeitung abgeschlossen", { 
-              description: "Keine Fragen wurden aus der PDF-Datei extrahiert"
+            showToast.info('Verarbeitung abgeschlossen', {
+              description: 'Keine Fragen wurden aus der PDF-Datei extrahiert',
             });
             resetState();
           }
         } else {
-          const errorMessage = data.message || data.error || "Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.";
-          showToast.info("Verarbeitung abgeschlossen", { 
-            description: errorMessage
+          const errorMessage =
+            data.message ||
+            data.error ||
+            'Keine Fragen konnten aus der PDF-Datei extrahiert werden oder ein Problem ist aufgetreten.';
+          showToast.info('Verarbeitung abgeschlossen', {
+            description: errorMessage,
           });
-          resetState(); 
+          resetState();
         }
       } else if (data.status === 'failed') {
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);
           intervalIdRef.current = null;
         }
-        
+
         taskIdRef.current = null;
-        
+
         setIsUploading(false);
-        const failMessage = data.error || data.details || "Die Verarbeitung der PDF-Datei ist fehlgeschlagen";
+        const failMessage =
+          data.error || data.details || 'Die Verarbeitung der PDF-Datei ist fehlgeschlagen';
         setError(failMessage);
-        showToast.error("Verarbeitung fehlgeschlagen", {
-          description: failMessage
+        showToast.error('Verarbeitung fehlgeschlagen', {
+          description: failMessage,
         });
-        resetState(); 
+        resetState();
       } else {
         const currentProgress = uploadProgress;
         const newProgress = Math.min(currentProgress + 5, 95);
         setUploadProgress(newProgress);
-        
+
         if (Math.floor(newProgress / 20) > Math.floor(currentProgress / 20)) {
-          showToast.info("Verarbeitung läuft", {
-            description: data.message || `Fortschritt: ${newProgress}%`
+          showToast.info('Verarbeitung läuft', {
+            description: data.message || `Fortschritt: ${newProgress}%`,
           });
         }
-        
-        setActiveTask(prevState => ({
+
+        setActiveTask((prevState) => ({
           ...(prevState || { task_id: taskId, status: 'processing', message: '' }),
           status: data.status,
-          message: data.message
+          message: data.message,
         }));
       }
     } catch (error: any) {
       console.error('Error checking task status:', error);
-      
-      showToast.error("Statusabfrage fehlgeschlagen", {
-        description: "Versuche es erneut in Kürze..."
+
+      showToast.error('Statusabfrage fehlgeschlagen', {
+        description: 'Versuche es erneut in Kürze...',
       });
-      
-      setError(error.message || "Ein Fehler ist beim Überprüfen des Task-Status aufgetreten");
+
+      setError(error.message || 'Ein Fehler ist beim Überprüfen des Task-Status aufgetreten');
     }
   };
 
   const handleUpload = async () => {
     if (!selectedFile || !user?.id) {
-      setError("Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist");
-      showToast.error("Upload nicht möglich", {
-        description: "Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist"
+      setError('Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist');
+      showToast.error('Upload nicht möglich', {
+        description: 'Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist',
       });
       return;
     }
@@ -348,18 +380,18 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
     setError(null);
     setIsUploading(true);
     setUploadProgress(10);
-    showToast.info("Upload gestartet", {
-      description: "Deine PDF-Datei wird hochgeladen und verarbeitet..."
+    showToast.info('Upload gestartet', {
+      description: 'Deine PDF-Datei wird hochgeladen und verarbeitet...',
     });
 
     try {
       const formData = new FormData();
       formData.append('pdf', selectedFile);
-      
+
       formData.append('examName', formValues.examName);
       if (formValues.examYear) formData.append('examYear', formValues.examYear);
       if (formValues.examSemester) formData.append('examSemester', formValues.examSemester);
-      
+
       if (user?.id) {
         formData.append('userId', user.id);
         console.log('Appending userId to form data:', user.id);
@@ -380,36 +412,36 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
       console.log('Upload API response:', data);
 
       if (!data.success) {
-        throw new Error(data.error || "Fehler beim Hochladen der PDF-Datei");
+        throw new Error(data.error || 'Fehler beim Hochladen der PDF-Datei');
       }
 
       if (data.task_id) {
         taskIdRef.current = data.task_id;
-        
+
         setActiveTask({
           task_id: data.task_id,
           status: 'processing',
-          message: data.message || 'Verarbeitung läuft...'
+          message: data.message || 'Verarbeitung läuft...',
         });
-        
+
         setUploadProgress(20);
-        
-        showToast.info("PDF-Verarbeitung gestartet", {
-          description: "Die Verarbeitung kann einige Minuten dauern"
+
+        showToast.info('PDF-Verarbeitung gestartet', {
+          description: 'Die Verarbeitung kann einige Minuten dauern',
         });
-        
+
         await checkTaskStatus(data.task_id);
       } else {
-        throw new Error("Keine Task-ID vom Server erhalten");
+        throw new Error('Keine Task-ID vom Server erhalten');
       }
     } catch (error: any) {
       console.error('Error uploading PDF:', error);
-      setError(error.message || "Ein unerwarteter Fehler ist aufgetreten");
+      setError(error.message || 'Ein unerwarteter Fehler ist aufgetreten');
       setIsUploading(false);
       setUploadProgress(0);
-      
-      showToast.error("Fehler beim Verarbeiten der PDF-Datei", {
-        description: error.message || "Bitte versuche es später erneut"
+
+      showToast.error('Fehler beim Verarbeiten der PDF-Datei', {
+        description: error.message || 'Bitte versuche es später erneut',
       });
     }
   };
@@ -435,7 +467,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
             university_id: question.visibility === 'university' ? universityId : null,
             exam_semester: question.semester,
             exam_year: question.year,
-            exam_name: question.exam_name
+            exam_name: question.exam_name,
           })
           .eq('id', question.id);
 
@@ -444,18 +476,18 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
           throw error;
         }
       }
-      
+
       onQuestionsLoaded(reviewedQuestions);
-      
+
       showToast.success(`${reviewedQuestions.length} Fragen aktualisiert`, {
-        description: "Die Fragen wurden erfolgreich in der Datenbank aktualisiert"
+        description: 'Die Fragen wurden erfolgreich in der Datenbank aktualisiert',
       });
-      
+
       resetState();
     } catch (error: any) {
       console.error('Error updating questions:', error);
-      showToast.error("Fehler beim Aktualisieren", {
-        description: error.message || "Die Fragen konnten nicht aktualisiert werden"
+      showToast.error('Fehler beim Aktualisieren', {
+        description: error.message || 'Die Fragen konnten nicht aktualisiert werden',
       });
     }
   };
@@ -500,9 +532,10 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
           Lade deine PDF-Datei hoch
         </h2>
         <p className="text-slate-600 dark:text-zinc-300 text-center">
-          Lade eine PDF-Datei mit Fragen hoch. Unsere API extrahiert automatisch die Fragen, die du anschließend überprüfen kannst.
+          Lade eine PDF-Datei mit Fragen hoch. Unsere API extrahiert automatisch die Fragen, die du
+          anschließend überprüfen kannst.
         </p>
-        
+
         {error && (
           <Alert variant="destructive" className="mb-4 w-full max-w-md">
             <AlertCircle className="h-4 w-4" />
@@ -514,16 +547,19 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
           <CardHeader>
             <CardTitle className="text-xl">PDF-Upload</CardTitle>
             <CardDescription>
-              {universityId 
+              {universityId
                 ? `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.  Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt.`
-                : "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.  Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt."}
+                : 'Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.  Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {showMetadataForm ? (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleMetadataSubmit)} className="space-y-4">
-                  <Popover open={showSuggestions && examNameSuggestions.length > 0} onOpenChange={setShowSuggestions}>
+                  <Popover
+                    open={showSuggestions && examNameSuggestions.length > 0}
+                    onOpenChange={setShowSuggestions}
+                  >
                     <FormField
                       control={form.control}
                       name="examName"
@@ -533,9 +569,9 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                           <FormControl>
                             <div className="relative">
                               <PopoverAnchor>
-                                <Input 
-                                  placeholder="z.B. Anatomie Klausur" 
-                                  {...field} 
+                                <Input
+                                  placeholder="z.B. Anatomie Klausur"
+                                  {...field}
                                   autoComplete="off"
                                 />
                               </PopoverAnchor>
@@ -548,8 +584,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                         </FormItem>
                       )}
                     />
-                    <PopoverContent 
-                      className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px] overflow-y-auto" 
+                    <PopoverContent
+                      className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px] overflow-y-auto"
                       align="start"
                       side="bottom"
                     >
@@ -557,8 +593,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                         <CommandList>
                           <CommandGroup>
                             {examNameSuggestions.map((name) => (
-                              <CommandItem 
-                                key={name} 
+                              <CommandItem
+                                key={name}
                                 onSelect={() => handleSelectExamName(name)}
                                 className="cursor-pointer"
                               >
@@ -571,7 +607,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -579,10 +615,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Semester *</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Wähle Semester" />
@@ -604,10 +637,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Jahr *</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Jahr wählen" />
@@ -626,9 +656,9 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                       )}
                     />
                   </div>
-                  
-                  <Button 
-                    type="submit" 
+
+                  <Button
+                    type="submit"
                     className="w-full mt-4 flex items-center justify-center gap-2"
                   >
                     Weiter zur Dateiauswahl
@@ -644,21 +674,22 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                     <strong>Name:</strong> {form.getValues().examName}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    <strong>Semester:</strong> {form.getValues().examSemester === 'WS' ? 'Wintersemester' : 'Sommersemester'}
+                    <strong>Semester:</strong>{' '}
+                    {form.getValues().examSemester === 'WS' ? 'Wintersemester' : 'Sommersemester'}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     <strong>Jahr:</strong> {form.getValues().examYear}
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="mt-2" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2"
                     onClick={() => setShowMetadataForm(true)}
                   >
                     Bearbeiten
                   </Button>
                 </div>
-                
+
                 {selectedFile ? (
                   <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
                     <div className="flex items-center space-x-3">
@@ -681,12 +712,14 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                     </Button>
                   </div>
                 ) : (
-                  <div 
+                  <div
                     className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer"
                     onClick={triggerFileInput}
                   >
                     <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground mb-1">Klicke um eine PDF-Datei hochzuladen</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Klicke um eine PDF-Datei hochzuladen
+                    </p>
                     <p className="text-xs text-muted-foreground">Oder ziehe eine Datei hierher</p>
                     <input
                       id="pdf-upload"
@@ -703,7 +736,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
                 {isUploading && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>{activeTask?.message || "Verarbeite PDF..."}</span>
+                      <span>{activeTask?.message || 'Verarbeite PDF...'}</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <Progress value={uploadProgress} className="h-2" />
@@ -712,9 +745,11 @@ const PDFUpload: React.FC<PDFUploadProps> = ({ onQuestionsLoaded, visibility: in
 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-1 block">Sichtbarkeit der Fragen</label>
-                    <Select 
-                      value={visibility} 
+                    <label className="text-sm font-medium mb-1 block">
+                      Sichtbarkeit der Fragen
+                    </label>
+                    <Select
+                      value={visibility}
                       onValueChange={(value: 'private' | 'university') => setVisibility(value)}
                       disabled={isUploading || !universityId}
                     >

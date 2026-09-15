@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,11 +22,7 @@ import KeyboardBindingsSettings from '@/components/settings/KeyboardBindingsSett
 import IgnoredQuestionsSection from '@/components/settings/IgnoredQuestionsSection';
 
 const Settings = () => {
-  const {
-    preferences,
-    updatePreferences,
-    isLoading
-  } = useUserPreferences();
+  const { preferences, updatePreferences, isLoading } = useUserPreferences();
   const { user, username } = useAuth();
   const [usernameValue, setUsernameValue] = useState(username || '');
   const [isSavingUsername, setIsSavingUsername] = useState(false);
@@ -53,7 +48,9 @@ const Settings = () => {
 
     // Check for invalid characters
     if (trimmedUsername && !/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
-      toast.error('Benutzername darf nur Buchstaben, Zahlen, Unterstriche und Bindestriche enthalten');
+      toast.error(
+        'Benutzername darf nur Buchstaben, Zahlen, Unterstriche und Bindestriche enthalten',
+      );
       return;
     }
 
@@ -64,7 +61,8 @@ const Settings = () => {
       // The AuthContext will update automatically on next profile fetch
     } catch (error) {
       console.error('Error updating username:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Fehler beim Aktualisieren des Benutzernamens';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Fehler beim Aktualisieren des Benutzernamens';
       toast.error(errorMessage);
     } finally {
       setIsSavingUsername(false);
@@ -73,7 +71,7 @@ const Settings = () => {
 
   const handleImmediateFeedbackToggle = (checked: boolean) => {
     updatePreferences({
-      immediateFeedback: checked
+      immediateFeedback: checked,
     });
   };
 
@@ -81,10 +79,10 @@ const Settings = () => {
     const currentModels = preferences.selectedAIModels || [];
     const newModels = checked
       ? [...currentModels, modelName]
-      : currentModels.filter(m => m !== modelName);
-    
+      : currentModels.filter((m) => m !== modelName);
+
     updatePreferences({
-      selectedAIModels: newModels
+      selectedAIModels: newModels,
     });
   };
 
@@ -103,15 +101,16 @@ const Settings = () => {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <h1 className="text-3xl font-bold">Einstellungen</h1>
-      
+
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Profil</h2>
-        
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="username">Benutzername</Label>
             <p className="text-sm text-muted-foreground">
-              Dieser Name wird in öffentlichen Kommentaren angezeigt. Wenn leer, wird deine E-Mail-Adresse verwendet.
+              Dieser Name wird in öffentlichen Kommentaren angezeigt. Wenn leer, wird deine
+              E-Mail-Adresse verwendet.
             </p>
             <div className="flex gap-2">
               <Input
@@ -142,23 +141,28 @@ const Settings = () => {
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Training</h2>
-        
+
         <div className="flex items-center justify-between mb-6">
           <div className="space-y-1">
             <Label htmlFor="immediate-feedback">Immediate Feedback Mode</Label>
-            <p className="text-sm text-muted-foreground">Wenn aktiviert, wird die richtige Antwort sofort nach einem falschen Versuch angezeigt, ohne erneute Versuche.</p>
+            <p className="text-sm text-muted-foreground">
+              Wenn aktiviert, wird die richtige Antwort sofort nach einem falschen Versuch
+              angezeigt, ohne erneute Versuche.
+            </p>
           </div>
-          <Switch 
-            id="immediate-feedback" 
-            checked={preferences.immediateFeedback} 
-            onCheckedChange={handleImmediateFeedbackToggle} 
+          <Switch
+            id="immediate-feedback"
+            checked={preferences.immediateFeedback}
+            onCheckedChange={handleImmediateFeedbackToggle}
           />
         </div>
 
         <div className="space-y-4 pt-4 border-t">
           <div className="space-y-2">
             <Label>KI-Modell Auswahl</Label>
-            <p className="text-sm text-muted-foreground">Wähle aus, welche KI-Modelle in den Kommentaren angezeigt werden sollen.</p>
+            <p className="text-sm text-muted-foreground">
+              Wähle aus, welche KI-Modelle in den Kommentaren angezeigt werden sollen.
+            </p>
           </div>
           <div className="space-y-3">
             {aiModels.map((model) => {
@@ -185,11 +189,14 @@ const Settings = () => {
         <div className="space-y-4 pt-4 border-t mt-6">
           <div className="space-y-2">
             <Label htmlFor="enhanced-ai-version">Erweiterte KI-Versionen</Label>
-            <p className="text-sm text-muted-foreground">Wähle, welche verbesserte Version von Fragen und Antworten angezeigt werden soll (falls verfügbar).</p>
+            <p className="text-sm text-muted-foreground">
+              Wähle, welche verbesserte Version von Fragen und Antworten angezeigt werden soll
+              (falls verfügbar).
+            </p>
           </div>
           <Select
             value={preferences.enhancedAIVersion ?? 'none'}
-            onValueChange={(value: 'none' | 'chatgpt' | 'gemini') => 
+            onValueChange={(value: 'none' | 'chatgpt' | 'gemini') =>
               updatePreferences({ enhancedAIVersion: value })
             }
           >

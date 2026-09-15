@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { Question } from '@/types/Question';
 
@@ -19,21 +18,19 @@ export const useQuestionFiltering = ({
   selectedSemester,
   selectedYear,
   isDatasetArchived,
-  filterType
+  filterType,
 }: UseQuestionFilteringProps) => {
   return useMemo(() => {
     if (!questions) return [];
-    
+
     let filtered = questions;
-    
+
     if (filterType === 'personal') {
-      filtered = questions.filter(q => 
-        !isDatasetArchived(q.filename) && 
-        q.user_id === userId &&
-        q.visibility === 'private'
+      filtered = questions.filter(
+        (q) => !isDatasetArchived(q.filename) && q.user_id === userId && q.visibility === 'private',
       );
     } else {
-      filtered = questions.filter(q => {
+      filtered = questions.filter((q) => {
         // Include university questions from user's university
         if (q.visibility === 'university' && q.university_id === universityId) {
           return true;
@@ -45,15 +42,23 @@ export const useQuestionFiltering = ({
         return false;
       });
     }
-    
+
     if (selectedSemester) {
-      filtered = filtered.filter(q => q.semester === selectedSemester);
+      filtered = filtered.filter((q) => q.semester === selectedSemester);
     }
-    
+
     if (selectedYear) {
-      filtered = filtered.filter(q => q.year === selectedYear);
+      filtered = filtered.filter((q) => q.year === selectedYear);
     }
-    
+
     return filtered;
-  }, [questions, userId, universityId, selectedSemester, selectedYear, isDatasetArchived, filterType]);
+  }, [
+    questions,
+    userId,
+    universityId,
+    selectedSemester,
+    selectedYear,
+    isDatasetArchived,
+    filterType,
+  ]);
 };

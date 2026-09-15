@@ -4,15 +4,24 @@ import { CampaignService } from '@/services/CampaignService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { X, Tag, Clock, ChevronRight, AlertTriangle, Info, MessageSquare, ExternalLink } from 'lucide-react';
+import {
+  X,
+  Tag,
+  Clock,
+  ChevronRight,
+  AlertTriangle,
+  Info,
+  MessageSquare,
+  ExternalLink,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { 
-  EnhancedCampaign, 
+import {
+  EnhancedCampaign,
   CAMPAIGN_STYLING,
   StylingVariant,
   ActionType,
-  CampaignType 
+  CampaignType,
 } from '@/types/Campaign';
 
 const CampaignBanner: React.FC = () => {
@@ -33,12 +42,12 @@ const CampaignBanner: React.FC = () => {
     try {
       setLoading(true);
       console.log('CampaignBanner: Loading campaigns, user subscribed:', subscribed);
-      
+
       // Use the new method that handles audience targeting
       const activeCampaigns = await CampaignService.getCampaignsForUser(subscribed ?? false);
       console.log('CampaignBanner: Active campaigns loaded:', activeCampaigns);
       setCampaigns(activeCampaigns);
-      
+
       // Restore dismissed campaigns from localStorage
       const dismissedFromStorage = localStorage.getItem('dismissedCampaigns');
       if (dismissedFromStorage) {
@@ -55,7 +64,7 @@ const CampaignBanner: React.FC = () => {
     const newDismissed = [...dismissed, campaignId];
     setDismissed(newDismissed);
     localStorage.setItem('dismissedCampaigns', JSON.stringify(newDismissed));
-    
+
     // Move to next campaign if available
     if (currentCampaignIndex < visibleCampaigns.length - 1) {
       setCurrentCampaignIndex(currentCampaignIndex + 1);
@@ -69,7 +78,7 @@ const CampaignBanner: React.FC = () => {
 
   const handleActionClick = (campaign: EnhancedCampaign) => {
     const actionType = campaign.action_type as ActionType;
-    
+
     switch (actionType) {
       case 'subscription':
         navigate('/subscription');
@@ -116,10 +125,10 @@ const CampaignBanner: React.FC = () => {
     if (campaign.action_text) {
       return campaign.action_text;
     }
-    
+
     const actionType = campaign.action_type as ActionType;
     const campaignType = campaign.campaign_type as CampaignType;
-    
+
     switch (actionType) {
       case 'subscription':
         return campaignType === 'discount' ? 'Jetzt sparen' : 'Zum Premium-Abo';
@@ -138,7 +147,7 @@ const CampaignBanner: React.FC = () => {
 
   const getActionButtonIcon = (campaign: EnhancedCampaign) => {
     const actionType = campaign.action_type as ActionType;
-    
+
     switch (actionType) {
       case 'external_link':
         return ExternalLink;
@@ -152,23 +161,23 @@ const CampaignBanner: React.FC = () => {
   };
 
   // Filter out dismissed campaigns
-  const visibleCampaigns = campaigns.filter(c => !dismissed.includes(c.id));
-  
-  console.log('CampaignBanner: Component state', { 
-    subscribed, 
+  const visibleCampaigns = campaigns.filter((c) => !dismissed.includes(c.id));
+
+  console.log('CampaignBanner: Component state', {
+    subscribed,
     subscriptionLoading,
-    loading, 
+    loading,
     campaignsCount: campaigns.length,
-    visibleCampaignsCount: visibleCampaigns.length 
+    visibleCampaignsCount: visibleCampaigns.length,
   });
-  
+
   // Don't render while subscription is loading or if no campaigns
   if (subscriptionLoading || loading || visibleCampaigns.length === 0) {
     return null;
   }
 
   const currentCampaign = visibleCampaigns[currentCampaignIndex];
-  
+
   if (!currentCampaign) {
     return null;
   }
@@ -182,16 +191,16 @@ const CampaignBanner: React.FC = () => {
   // Calculate time remaining if end date exists
   const getTimeRemaining = () => {
     if (!currentCampaign.end_date) return null;
-    
+
     const now = new Date();
     const end = new Date(currentCampaign.end_date);
     const diff = end.getTime() - now.getTime();
-    
+
     if (diff <= 0) return null;
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) {
       return `Noch ${days} Tag${days > 1 ? 'e' : ''}`;
     } else {
@@ -210,44 +219,74 @@ const CampaignBanner: React.FC = () => {
               <div className="flex-shrink-0">
                 <IconComponent className={`h-5 w-5 ${styling.iconColor}`} />
               </div>
-              
+
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`font-semibold ${stylingVariant === 'default' ? 'text-blue-800 dark:text-blue-100' : 
-                    stylingVariant === 'warning' ? 'text-yellow-800 dark:text-yellow-100' :
-                    stylingVariant === 'info' ? 'text-cyan-800 dark:text-cyan-100' :
-                    stylingVariant === 'success' ? 'text-green-800 dark:text-green-100' :
-                    stylingVariant === 'error' ? 'text-red-800 dark:text-red-100' : 'text-gray-800 dark:text-gray-100'}`}>
+                  <span
+                    className={`font-semibold ${
+                      stylingVariant === 'default'
+                        ? 'text-blue-800 dark:text-blue-100'
+                        : stylingVariant === 'warning'
+                          ? 'text-yellow-800 dark:text-yellow-100'
+                          : stylingVariant === 'info'
+                            ? 'text-cyan-800 dark:text-cyan-100'
+                            : stylingVariant === 'success'
+                              ? 'text-green-800 dark:text-green-100'
+                              : stylingVariant === 'error'
+                                ? 'text-red-800 dark:text-red-100'
+                                : 'text-gray-800 dark:text-gray-100'
+                    }`}
+                  >
                     {currentCampaign.title}
                   </span>
-                  <span className={`${stylingVariant === 'default' ? 'text-blue-700 dark:text-blue-200' : 
-                    stylingVariant === 'warning' ? 'text-yellow-700 dark:text-yellow-200' :
-                    stylingVariant === 'info' ? 'text-cyan-700 dark:text-cyan-200' :
-                    stylingVariant === 'success' ? 'text-green-700 dark:text-green-200' :
-                    stylingVariant === 'error' ? 'text-red-700 dark:text-red-200' : 'text-gray-700 dark:text-gray-200'}`}>
+                  <span
+                    className={`${
+                      stylingVariant === 'default'
+                        ? 'text-blue-700 dark:text-blue-200'
+                        : stylingVariant === 'warning'
+                          ? 'text-yellow-700 dark:text-yellow-200'
+                          : stylingVariant === 'info'
+                            ? 'text-cyan-700 dark:text-cyan-200'
+                            : stylingVariant === 'success'
+                              ? 'text-green-700 dark:text-green-200'
+                              : stylingVariant === 'error'
+                                ? 'text-red-700 dark:text-red-200'
+                                : 'text-gray-700 dark:text-gray-200'
+                    }`}
+                  >
                     {currentCampaign.description}
                   </span>
                   {currentCampaign.discount_percentage && (
-                    <Badge className={`ml-2 ${styling.badgeClass} font-semibold px-2 py-1 shadow-sm`}>
+                    <Badge
+                      className={`ml-2 ${styling.badgeClass} font-semibold px-2 py-1 shadow-sm`}
+                    >
                       -{currentCampaign.discount_percentage}%
                     </Badge>
                   )}
                   {timeRemaining && (
-                    <Badge variant="outline" className={`ml-2 flex items-center gap-1 ${
-                      stylingVariant === 'default' ? 'bg-blue-100/80 text-blue-800 border-blue-400 dark:bg-blue-900/60 dark:text-blue-100 dark:border-blue-600' :
-                      stylingVariant === 'warning' ? 'bg-yellow-100/80 text-yellow-800 border-yellow-400 dark:bg-yellow-900/60 dark:text-yellow-100 dark:border-yellow-600' :
-                      stylingVariant === 'info' ? 'bg-cyan-100/80 text-cyan-800 border-cyan-400 dark:bg-cyan-900/60 dark:text-cyan-100 dark:border-cyan-600' :
-                      stylingVariant === 'success' ? 'bg-green-100/80 text-green-800 border-green-400 dark:bg-green-900/60 dark:text-green-100 dark:border-green-600' :
-                      stylingVariant === 'error' ? 'bg-red-100/80 text-red-800 border-red-400 dark:bg-red-900/60 dark:text-red-100 dark:border-red-600' :
-                      'bg-gray-100/80 text-gray-800 border-gray-400 dark:bg-gray-900/60 dark:text-gray-100 dark:border-gray-600'
-                    }`}>
+                    <Badge
+                      variant="outline"
+                      className={`ml-2 flex items-center gap-1 ${
+                        stylingVariant === 'default'
+                          ? 'bg-blue-100/80 text-blue-800 border-blue-400 dark:bg-blue-900/60 dark:text-blue-100 dark:border-blue-600'
+                          : stylingVariant === 'warning'
+                            ? 'bg-yellow-100/80 text-yellow-800 border-yellow-400 dark:bg-yellow-900/60 dark:text-yellow-100 dark:border-yellow-600'
+                            : stylingVariant === 'info'
+                              ? 'bg-cyan-100/80 text-cyan-800 border-cyan-400 dark:bg-cyan-900/60 dark:text-cyan-100 dark:border-cyan-600'
+                              : stylingVariant === 'success'
+                                ? 'bg-green-100/80 text-green-800 border-green-400 dark:bg-green-900/60 dark:text-green-100 dark:border-green-600'
+                                : stylingVariant === 'error'
+                                  ? 'bg-red-100/80 text-red-800 border-red-400 dark:bg-red-900/60 dark:text-red-100 dark:border-red-600'
+                                  : 'bg-gray-100/80 text-gray-800 border-gray-400 dark:bg-gray-900/60 dark:text-gray-100 dark:border-gray-600'
+                      }`}
+                    >
                       <Clock className={`h-3 w-3 ${styling.iconColor}`} />
                       {timeRemaining}
                     </Badge>
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {currentCampaign.code && (
                   <Button
@@ -255,19 +294,24 @@ const CampaignBanner: React.FC = () => {
                     variant="outline"
                     onClick={() => handleCopyCode(currentCampaign.code!)}
                     className={`flex items-center gap-1 ${
-                      stylingVariant === 'default' ? 'bg-blue-200/60 hover:bg-blue-200/90 text-blue-800 border-blue-300 dark:bg-blue-800/60 dark:hover:bg-blue-800/80 dark:text-blue-100 dark:border-blue-600' :
-                      stylingVariant === 'warning' ? 'bg-yellow-200/60 hover:bg-yellow-200/90 text-yellow-800 border-yellow-300 dark:bg-yellow-800/60 dark:hover:bg-yellow-800/80 dark:text-yellow-100 dark:border-yellow-600' :
-                      stylingVariant === 'info' ? 'bg-cyan-200/60 hover:bg-cyan-200/90 text-cyan-800 border-cyan-300 dark:bg-cyan-800/60 dark:hover:bg-cyan-800/80 dark:text-cyan-100 dark:border-cyan-600' :
-                      stylingVariant === 'success' ? 'bg-green-200/60 hover:bg-green-200/90 text-green-800 border-green-300 dark:bg-green-800/60 dark:hover:bg-green-800/80 dark:text-green-100 dark:border-green-600' :
-                      stylingVariant === 'error' ? 'bg-red-200/60 hover:bg-red-200/90 text-red-800 border-red-300 dark:bg-red-800/60 dark:hover:bg-red-800/80 dark:text-red-100 dark:border-red-600' :
-                      'bg-gray-200/60 hover:bg-gray-200/90 text-gray-800 border-gray-300 dark:bg-gray-800/60 dark:hover:bg-gray-800/80 dark:text-gray-100 dark:border-gray-600'
+                      stylingVariant === 'default'
+                        ? 'bg-blue-200/60 hover:bg-blue-200/90 text-blue-800 border-blue-300 dark:bg-blue-800/60 dark:hover:bg-blue-800/80 dark:text-blue-100 dark:border-blue-600'
+                        : stylingVariant === 'warning'
+                          ? 'bg-yellow-200/60 hover:bg-yellow-200/90 text-yellow-800 border-yellow-300 dark:bg-yellow-800/60 dark:hover:bg-yellow-800/80 dark:text-yellow-100 dark:border-yellow-600'
+                          : stylingVariant === 'info'
+                            ? 'bg-cyan-200/60 hover:bg-cyan-200/90 text-cyan-800 border-cyan-300 dark:bg-cyan-800/60 dark:hover:bg-cyan-800/80 dark:text-cyan-100 dark:border-cyan-600'
+                            : stylingVariant === 'success'
+                              ? 'bg-green-200/60 hover:bg-green-200/90 text-green-800 border-green-300 dark:bg-green-800/60 dark:hover:bg-green-800/80 dark:text-green-100 dark:border-green-600'
+                              : stylingVariant === 'error'
+                                ? 'bg-red-200/60 hover:bg-red-200/90 text-red-800 border-red-300 dark:bg-red-800/60 dark:hover:bg-red-800/80 dark:text-red-100 dark:border-red-600'
+                                : 'bg-gray-200/60 hover:bg-gray-200/90 text-gray-800 border-gray-300 dark:bg-gray-800/60 dark:hover:bg-gray-800/80 dark:text-gray-100 dark:border-gray-600'
                     }`}
                   >
                     <Tag className={`h-3 w-3 ${styling.iconColor}`} />
                     {currentCampaign.code}
                   </Button>
                 )}
-                
+
                 {currentCampaign.action_type !== 'dismiss_only' && (
                   <Button
                     size="sm"
@@ -280,18 +324,23 @@ const CampaignBanner: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             <Button
               size="sm"
               variant="ghost"
               onClick={() => handleDismiss(currentCampaign.id)}
               className={`h-8 w-8 p-0 hover:bg-black/10 dark:hover:bg-white/10 ${
-                stylingVariant === 'default' ? 'text-blue-300 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-200' :
-                stylingVariant === 'warning' ? 'text-yellow-300 hover:text-yellow-600 dark:text-yellow-500 dark:hover:text-yellow-200' :
-                stylingVariant === 'info' ? 'text-cyan-300 hover:text-cyan-600 dark:text-cyan-500 dark:hover:text-cyan-200' :
-                stylingVariant === 'success' ? 'text-green-300 hover:text-green-600 dark:text-green-500 dark:hover:text-green-200' :
-                stylingVariant === 'error' ? 'text-red-300 hover:text-red-600 dark:text-red-500 dark:hover:text-red-200' :
-                'text-gray-300 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-200'
+                stylingVariant === 'default'
+                  ? 'text-blue-300 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-200'
+                  : stylingVariant === 'warning'
+                    ? 'text-yellow-300 hover:text-yellow-600 dark:text-yellow-500 dark:hover:text-yellow-200'
+                    : stylingVariant === 'info'
+                      ? 'text-cyan-300 hover:text-cyan-600 dark:text-cyan-500 dark:hover:text-cyan-200'
+                      : stylingVariant === 'success'
+                        ? 'text-green-300 hover:text-green-600 dark:text-green-500 dark:hover:text-green-200'
+                        : stylingVariant === 'error'
+                          ? 'text-red-300 hover:text-red-600 dark:text-red-500 dark:hover:text-red-200'
+                          : 'text-gray-300 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-200'
               }`}
             >
               <X className="h-4 w-4" />
@@ -315,7 +364,7 @@ const CampaignBanner: React.FC = () => {
           >
             <X className="h-4 w-4" />
           </Button>
-          
+
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <IconComponent className={`h-6 w-6 mt-0.5 flex-shrink-0 ${styling.iconColor}`} />
@@ -324,7 +373,7 @@ const CampaignBanner: React.FC = () => {
                 <p className="text-muted-foreground mt-1">{currentCampaign.description}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {currentCampaign.discount_percentage && (
                 <Badge className={`text-lg py-1 ${styling.badgeClass}`}>
@@ -338,7 +387,7 @@ const CampaignBanner: React.FC = () => {
                 </Badge>
               )}
             </div>
-            
+
             {currentCampaign.code && (
               <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -354,7 +403,7 @@ const CampaignBanner: React.FC = () => {
                 </Button>
               </div>
             )}
-            
+
             {currentCampaign.action_type !== 'dismiss_only' && (
               <Button
                 className={`w-full ${styling.buttonClass}`}
@@ -374,4 +423,4 @@ const CampaignBanner: React.FC = () => {
   return null;
 };
 
-export default CampaignBanner; 
+export default CampaignBanner;

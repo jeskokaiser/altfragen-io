@@ -8,12 +8,7 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Plus, Lock } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TrainingSessionsPage: React.FC = () => {
   const { user, universityId } = useAuth();
@@ -31,7 +26,7 @@ const TrainingSessionsPage: React.FC = () => {
   }, [location.pathname, user?.id, refetch]);
 
   const availableQuestions = useMemo(() => questions || [], [questions]);
-  
+
   // Check if user has reached the session limit (5 for free users)
   const totalSessions = sessions?.length || 0;
   const hasReachedSessionLimit = !subscribed && totalSessions >= 5;
@@ -56,21 +51,18 @@ const TrainingSessionsPage: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold mb-2">Meine Trainings-Sessions</h1>
             <p className="text-muted-foreground">
-              Verwalte deine Trainingssessions und verfolge deinen Lernfortschritt. 
-              Sessions können für spezifische Prüfungen oder zum allgemeinen Training erstellt werden.
+              Verwalte deine Trainingssessions und verfolge deinen Lernfortschritt. Sessions können
+              für spezifische Prüfungen oder zum allgemeinen Training erstellt werden.
             </p>
           </div>
-          
-
-
         </div>
       </div>
 
       <TrainingSessionsList />
 
-      <TrainingSessionCreateDialog 
-        open={open} 
-        onOpenChange={setOpen} 
+      <TrainingSessionCreateDialog
+        open={open}
+        onOpenChange={setOpen}
         questions={availableQuestions}
         defaultTitle={defaultTitle}
       />

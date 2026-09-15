@@ -1,54 +1,56 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import Stripe from 'https://esm.sh/stripe@14.21.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
-serve(async (req)=>{
-  if (req.method === "OPTIONS") {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, {
-      headers: corsHeaders
+      headers: corsHeaders,
     });
   }
   try {
-    logStep("Function started");
-    
+    logStep('Function started');
+
     // Parse request body to get priceType ("monthly" or "semester")
     const { priceType = 'monthly' } = await req.json().catch(() => ({ priceType: 'monthly' }));
-    logStep("Price type requested", { priceType });
-    
+    logStep('Price type requested', { priceType });
+
     // Check environment variables first
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const monthlyPriceId = Deno.env.get("STRIPE_PRICE_MONTHLY_ID");
-    const semesterPriceId = Deno.env.get("STRIPE_PRICE_SEMESTER_ID");
-    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const monthlyPriceId = Deno.env.get('STRIPE_PRICE_MONTHLY_ID');
+    const semesterPriceId = Deno.env.get('STRIPE_PRICE_SEMESTER_ID');
+
     if (!supabaseUrl || !supabaseAnonKey || !stripeKey || !monthlyPriceId) {
-      logStep("Missing environment variables", {
+      logStep('Missing environment variables', {
         hasUrl: !!supabaseUrl,
         hasAnonKey: !!supabaseAnonKey,
         hasStripeKey: !!stripeKey,
         hasMonthlyPriceId: !!monthlyPriceId,
-        hasSemesterPriceId: !!semesterPriceId
+        hasSemesterPriceId: !!semesterPriceId,
       });
-      throw new Error("Missing required environment variables");
+      throw new Error('Missing required environment variables');
     }
-    
+
     // Validate semester price ID if semester subscription is requested
     if (priceType === 'semester' && !semesterPriceId) {
-      logStep("Semester subscription requested but STRIPE_PRICE_SEMESTER_ID is not set", {
+      logStep('Semester subscription requested but STRIPE_PRICE_SEMESTER_ID is not set', {
         priceType,
-        hasSemesterPriceId: !!semesterPriceId
+        hasSemesterPriceId: !!semesterPriceId,
       });
-      throw new Error("Semester subscription is not available. STRIPE_PRICE_SEMESTER_ID environment variable is missing.");
+      throw new Error(
+        'Semester subscription is not available. STRIPE_PRICE_SEMESTER_ID environment variable is missing.',
+      );
     }
-    
+
     // Select the appropriate price ID
     let selectedPriceId;
 
@@ -57,54 +59,57 @@ serve(async (req)=>{
     } else {
       selectedPriceId = monthlyPriceId;
     }
-    
-    logStep("Selected price ID", { priceType, selectedPriceId });
-    
+
+    logStep('Selected price ID', { priceType, selectedPriceId });
+
     const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-    const authHeader = req.headers.get("Authorization");
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      logStep("No authorization header");
-      throw new Error("No authorization header provided");
+      logStep('No authorization header');
+      throw new Error('No authorization header provided');
     }
-    const token = authHeader.replace("Bearer ", "");
-    logStep("Attempting to authenticate user");
+    const token = authHeader.replace('Bearer ', '');
+    logStep('Attempting to authenticate user');
     const { data, error: authError } = await supabaseClient.auth.getUser(token);
     if (authError) {
-      logStep("Authentication failed", {
-        error: authError.message
+      logStep('Authentication failed', {
+        error: authError.message,
       });
       throw new Error(`Authentication error: ${authError.message}`);
     }
     const user = data.user;
     if (!user?.email) {
-      logStep("No user or email found");
-      throw new Error("User not authenticated or email not available");
+      logStep('No user or email found');
+      throw new Error('User not authenticated or email not available');
     }
-    logStep("User authenticated successfully", {
+    logStep('User authenticated successfully', {
       userId: user.id,
-      email: user.email
+      email: user.email,
     });
     const stripe = new Stripe(stripeKey, {
-      apiVersion: "2023-10-16"
+      apiVersion: '2023-10-16',
     });
     // Check if customer already exists
-    logStep("Checking for existing customer");
+    logStep('Checking for existing customer');
     const customers = await stripe.customers.list({
       email: user.email,
-      limit: 1
+      limit: 1,
     });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep("Existing customer found", {
-        customerId
+      logStep('Existing customer found', {
+        customerId,
       });
     } else {
-      logStep("No existing customer found, will create new one in checkout");
+      logStep('No existing customer found, will create new one in checkout');
     }
-    const origin = req.headers.get("origin") || req.headers.get("referer") || "https://ynzxzhpivcmkpipanltd.supabase.co";
-    logStep("Creating checkout session", {
-      origin
+    const origin =
+      req.headers.get('origin') ||
+      req.headers.get('referer') ||
+      'https://ynzxzhpivcmkpipanltd.supabase.co';
+    logStep('Creating checkout session', {
+      origin,
     });
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -112,50 +117,56 @@ serve(async (req)=>{
       line_items: [
         {
           price: selectedPriceId,
-          quantity: 1
-        }
+          quantity: 1,
+        },
       ],
-      mode: "subscription",
+      mode: 'subscription',
       success_url: `${origin}/subscription?checkout=success`,
       cancel_url: `${origin}/subscription?checkout=cancelled`,
       allow_promotion_codes: true,
-      billing_address_collection: "auto",
+      billing_address_collection: 'auto',
       subscription_data: {
         metadata: {
           price_type: priceType,
-          created_via: 'checkout'
-        }
-      }
-    });
-    logStep("Checkout session created successfully", {
-      sessionId: session.id,
-      url: session.url
-    });
-    return new Response(JSON.stringify({
-      url: session.url,
-      sessionId: session.id
-    }), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
+          created_via: 'checkout',
+        },
       },
-      status: 200
     });
+    logStep('Checkout session created successfully', {
+      sessionId: session.id,
+      url: session.url,
+    });
+    return new Response(
+      JSON.stringify({
+        url: session.url,
+        sessionId: session.id,
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+        status: 200,
+      },
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-checkout", {
+    logStep('ERROR in create-checkout', {
       message: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
-    return new Response(JSON.stringify({
-      error: errorMessage,
-      details: "Check edge function logs for more information"
-    }), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
+    return new Response(
+      JSON.stringify({
+        error: errorMessage,
+        details: 'Check edge function logs for more information',
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+        status: 500,
       },
-      status: 500
-    });
+    );
   }
 });

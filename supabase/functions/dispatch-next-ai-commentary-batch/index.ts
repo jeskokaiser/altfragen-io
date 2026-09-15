@@ -1,17 +1,17 @@
 // @ts-nocheck
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-cron-secret",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 type ClaimedJob = {
   id: string;
   question_id: string;
-  target_level: "full" | "partial";
+  target_level: 'full' | 'partial';
   status: string;
   claimed_by: string | null;
   claimed_at: string | null;
@@ -22,7 +22,7 @@ type ClaimedJob = {
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
 
@@ -30,23 +30,23 @@ serve(async (req) => {
   const startedAt = Date.now();
   try {
     const url = new URL(req.url);
-    console.log("[DISPATCH] request", {
+    console.log('[DISPATCH] request', {
       method: req.method,
       path: url.pathname,
-      hasBody: req.headers.get("content-length") != null,
-      contentLength: req.headers.get("content-length"),
-      userAgent: req.headers.get("user-agent"),
+      hasBody: req.headers.get('content-length') != null,
+      contentLength: req.headers.get('content-length'),
+      userAgent: req.headers.get('user-agent'),
     });
 
-    if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-    if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+    if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+    if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const backendUrl = Deno.env.get("AI_COMMENTARY_BACKEND_URL");
-    const backendToken = Deno.env.get("AI_COMMENTARY_BACKEND_TOKEN");
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const backendUrl = Deno.env.get('AI_COMMENTARY_BACKEND_URL');
+    const backendToken = Deno.env.get('AI_COMMENTARY_BACKEND_TOKEN');
 
-    console.log("[DISPATCH] env presence", {
+    console.log('[DISPATCH] env presence', {
       hasSupabaseUrl: !!supabaseUrl,
       hasServiceKey: !!serviceKey,
       hasBackendUrl: !!backendUrl,
@@ -54,18 +54,18 @@ serve(async (req) => {
     });
 
     if (!supabaseUrl || !serviceKey) {
-      console.error("[DISPATCH] Missing Supabase configuration", {
+      console.error('[DISPATCH] Missing Supabase configuration', {
         hasUrl: !!supabaseUrl,
         hasServiceKey: !!serviceKey,
       });
-      return json({ error: "Missing Supabase configuration" }, 500);
+      return json({ error: 'Missing Supabase configuration' }, 500);
     }
     if (!backendUrl || !backendToken) {
-      console.error("[DISPATCH] Missing backend configuration", {
+      console.error('[DISPATCH] Missing backend configuration', {
         hasBackendUrl: !!backendUrl,
         hasBackendToken: !!backendToken,
       });
-      return json({ error: "Missing backend configuration" }, 500);
+      return json({ error: 'Missing backend configuration' }, 500);
     }
 
     let body: any = {};
@@ -76,8 +76,8 @@ serve(async (req) => {
     }
 
     const workerId = String(body.worker_id ?? crypto.randomUUID());
-    const batchSizeEnv = Number(Deno.env.get("AI_COMMENTARY_BATCH_SIZE") ?? "10");
-    const leaseSecondsEnv = Number(Deno.env.get("AI_COMMENTARY_LEASE_SECONDS") ?? "900");
+    const batchSizeEnv = Number(Deno.env.get('AI_COMMENTARY_BATCH_SIZE') ?? '10');
+    const leaseSecondsEnv = Number(Deno.env.get('AI_COMMENTARY_LEASE_SECONDS') ?? '900');
     const batchSize = Math.max(1, Math.min(100, Number(body.batch_size ?? batchSizeEnv)));
     // Batch APIs can legitimately take many hours; allow leases up to 24h.
     const leaseSeconds = Math.max(
@@ -94,28 +94,28 @@ serve(async (req) => {
     let settingsBatchSize: number | null = null;
     try {
       const { data: settingsRow, error: settingsError } = await supabase
-        .from("ai_commentary_settings")
-        .select("batch_size")
+        .from('ai_commentary_settings')
+        .select('batch_size')
         .limit(1)
         .maybeSingle();
-      if (!settingsError && settingsRow && typeof settingsRow.batch_size === "number") {
+      if (!settingsError && settingsRow && typeof settingsRow.batch_size === 'number') {
         settingsBatchSize = settingsRow.batch_size;
       }
-      console.log("[DISPATCH] settings batch_size", {
+      console.log('[DISPATCH] settings batch_size', {
         settingsBatchSize,
         settingsError: settingsError?.message,
       });
     } catch (_e) {
       // Best-effort only; fall back to env defaults.
       settingsBatchSize = null;
-      console.log("[DISPATCH] settings fetch threw, falling back");
+      console.log('[DISPATCH] settings fetch threw, falling back');
     }
 
     const effectiveBatchSize = Math.max(
       1,
       Math.min(100, Number(body.batch_size ?? settingsBatchSize ?? batchSize)),
     );
-    console.log("[DISPATCH] claim params", {
+    console.log('[DISPATCH] claim params', {
       workerId,
       effectiveBatchSize,
       leaseSeconds,
@@ -128,7 +128,7 @@ serve(async (req) => {
 
     // 1) Claim jobs atomically in the DB.
     const { data: claimed, error: claimError } = await supabase.rpc(
-      "ai_commentary_claim_next_batch",
+      'ai_commentary_claim_next_batch',
       {
         batch_size: effectiveBatchSize,
         worker_id: workerId,
@@ -137,34 +137,34 @@ serve(async (req) => {
     );
 
     if (claimError) {
-      console.error("[DISPATCH] rpc claim failed", { message: claimError.message });
+      console.error('[DISPATCH] rpc claim failed', { message: claimError.message });
       return json(
-        { error: "Failed to claim jobs", details: claimError.message, ms: Date.now() - startedAt },
+        { error: 'Failed to claim jobs', details: claimError.message, ms: Date.now() - startedAt },
         500,
       );
     }
 
     const claimedJobs = (claimed ?? []) as ClaimedJob[];
-    console.log("[DISPATCH] claim result", {
+    console.log('[DISPATCH] claim result', {
       claimed: claimedJobs.length,
       sample: claimedJobs.slice(0, 3).map((j) => ({ id: j.id, target_level: j.target_level })),
       ms: Date.now() - startedAt,
     });
     if (!claimedJobs.length) {
-      return json({ status: "ok", worker_id: workerId, claimed: 0, ms: Date.now() - startedAt });
+      return json({ status: 'ok', worker_id: workerId, claimed: 0, ms: Date.now() - startedAt });
     }
 
     // 2) Forward claimed job IDs to external backend.
-    const processUrl = `${backendUrl.replace(/\/$/, "")}/process-batch`;
-    console.log("[DISPATCH] calling backend", {
+    const processUrl = `${backendUrl.replace(/\/$/, '')}/process-batch`;
+    console.log('[DISPATCH] calling backend', {
       processUrl,
       jobs: claimedJobs.length,
     });
     const backendResp = await fetch(processUrl, {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${backendToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         worker_id: workerId,
@@ -175,21 +175,21 @@ serve(async (req) => {
         })),
       }),
     });
-    console.log("[DISPATCH] backend response", {
+    console.log('[DISPATCH] backend response', {
       status: backendResp.status,
       ok: backendResp.ok,
       ms: Date.now() - startedAt,
     });
 
     if (!backendResp.ok) {
-      const text = await backendResp.text().catch(() => "");
-      console.error("[DISPATCH] backend not ok", { status: backendResp.status, body: text });
+      const text = await backendResp.text().catch(() => '');
+      console.error('[DISPATCH] backend not ok', { status: backendResp.status, body: text });
 
       // Best-effort rollback: release jobs back to pending so they can be retried.
       await supabase
-        .from("ai_commentary_job_queue")
+        .from('ai_commentary_job_queue')
         .update({
-          status: "pending",
+          status: 'pending',
           claimed_by: null,
           claimed_at: null,
           lease_expires_at: null,
@@ -197,13 +197,13 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .in(
-          "id",
+          'id',
           claimedJobs.map((j) => j.id),
         );
 
       return json(
         {
-          error: "Backend processing call failed",
+          error: 'Backend processing call failed',
           backend_status: backendResp.status,
           backend_body: text,
           released: claimedJobs.length,
@@ -215,16 +215,14 @@ serve(async (req) => {
 
     const backendJson = await backendResp.json().catch(() => ({}));
     return json({
-      status: "ok",
+      status: 'ok',
       worker_id: workerId,
       claimed: claimedJobs.length,
       backend: backendJson,
       ms: Date.now() - startedAt,
     });
   } catch (err: any) {
-    console.error("[DISPATCH] uncaught error", { error: String(err), stack: err?.stack });
-    return json({ error: "Internal error", details: String(err) }, 500);
+    console.error('[DISPATCH] uncaught error', { error: String(err), stack: err?.stack });
+    return json({ error: 'Internal error', details: String(err) }, 500);
   }
 });
-
-

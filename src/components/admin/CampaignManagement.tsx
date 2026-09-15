@@ -6,23 +6,54 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Plus, Edit, Trash2, Calendar, Tag, AlertCircle, Eye, EyeOff, 
-  AlertTriangle, Info, MessageSquare, ExternalLink, Users, Crown
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Calendar,
+  Tag,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  Info,
+  MessageSquare,
+  ExternalLink,
+  Users,
+  Crown,
 } from 'lucide-react';
 import { CampaignService } from '@/services/CampaignService';
-import { 
-  EnhancedCampaign, 
-  CampaignFormData, 
-  CampaignType, 
-  ActionType, 
+import {
+  EnhancedCampaign,
+  CampaignFormData,
+  CampaignType,
+  ActionType,
   StylingVariant,
-  CAMPAIGN_STYLING 
+  CAMPAIGN_STYLING,
 } from '@/types/Campaign';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -48,7 +79,7 @@ const CampaignManagement: React.FC = () => {
     start_date: null,
     end_date: null,
     priority: 0,
-    display_type: 'banner'
+    display_type: 'banner',
   });
 
   // Local state for datetime-local inputs so users can type freely without the value
@@ -65,26 +96,26 @@ const CampaignManagement: React.FC = () => {
   // construct the date as local time to ensure correct conversion.
   const convertDateTimeLocalToISO = (datetimeLocal: string): string => {
     if (!datetimeLocal) return '';
-    
+
     // Parse the datetime-local string manually to ensure it's treated as local time
     const [datePart, timePart] = datetimeLocal.split('T');
     if (!datePart || !timePart) {
       console.error('Invalid datetime-local format:', datetimeLocal);
       return datetimeLocal;
     }
-    
+
     const [year, month, day] = datePart.split('-').map(Number);
     const [hours, minutes] = timePart.split(':').map(Number);
-    
+
     // Create a Date object using local timezone constructor (this treats the values as local)
     const localDate = new Date(year, month - 1, day, hours, minutes || 0, 0, 0);
-    
+
     // Validate the date
     if (isNaN(localDate.getTime())) {
       console.error('Invalid date created from:', datetimeLocal);
       return datetimeLocal;
     }
-    
+
     // Convert to ISO string (this will correctly convert local time to UTC)
     return localDate.toISOString();
   };
@@ -93,20 +124,20 @@ const CampaignManagement: React.FC = () => {
   // When reading from database, ISO dates are in UTC, so we need to convert to local time
   const convertISOToDateTimeLocal = (isoString: string): string => {
     if (!isoString) return '';
-    
+
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
       console.error('Invalid ISO date:', isoString);
       return '';
     }
-    
+
     // Get local date components
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
+
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
@@ -140,12 +171,8 @@ const CampaignManagement: React.FC = () => {
       // even if the user submits while the field is still focused (no blur).
       const normalizedFormData: CampaignFormData = {
         ...formData,
-        start_date: startDateInput
-          ? convertDateTimeLocalToISO(startDateInput)
-          : null,
-        end_date: endDateInput
-          ? convertDateTimeLocalToISO(endDateInput)
-          : null,
+        start_date: startDateInput ? convertDateTimeLocalToISO(startDateInput) : null,
+        end_date: endDateInput ? convertDateTimeLocalToISO(endDateInput) : null,
       };
 
       if (!normalizedFormData.title || !normalizedFormData.description) {
@@ -164,10 +191,7 @@ const CampaignManagement: React.FC = () => {
       }
 
       if (editingCampaign) {
-        await CampaignService.updateEnhancedCampaign(
-          editingCampaign.id,
-          normalizedFormData
-        );
+        await CampaignService.updateEnhancedCampaign(editingCampaign.id, normalizedFormData);
         toast.success('Kampagne erfolgreich aktualisiert');
       } else {
         await CampaignService.createEnhancedCampaign(normalizedFormData);
@@ -226,7 +250,7 @@ const CampaignManagement: React.FC = () => {
       start_date: campaign.start_date,
       end_date: campaign.end_date,
       priority: campaign.priority ?? 0,
-      display_type: (campaign.display_type as 'banner' | 'modal' | 'toast') || 'banner'
+      display_type: (campaign.display_type as 'banner' | 'modal' | 'toast') || 'banner',
     });
     setShowDialog(true);
   };
@@ -248,7 +272,7 @@ const CampaignManagement: React.FC = () => {
       start_date: null,
       end_date: null,
       priority: 0,
-      display_type: 'banner'
+      display_type: 'banner',
     });
   };
 
@@ -257,30 +281,38 @@ const CampaignManagement: React.FC = () => {
     const now = new Date();
     const start = campaign.start_date ? new Date(campaign.start_date) : null;
     const end = campaign.end_date ? new Date(campaign.end_date) : null;
-    
+
     if (start && now < start) return false;
     if (end && now > end) return false;
-    
+
     return true;
   };
 
   const getCampaignTypeIcon = (type: string) => {
     switch (type) {
-      case 'maintenance': return AlertTriangle;
-      case 'feedback': return MessageSquare;
-      case 'announcement': return Info;
+      case 'maintenance':
+        return AlertTriangle;
+      case 'feedback':
+        return MessageSquare;
+      case 'announcement':
+        return Info;
       case 'discount':
-      default: return Tag;
+      default:
+        return Tag;
     }
   };
 
   const getCampaignTypeBadgeVariant = (type: string) => {
     switch (type) {
-      case 'maintenance': return 'destructive';
-      case 'feedback': return 'secondary';
-      case 'announcement': return 'outline';
+      case 'maintenance':
+        return 'destructive';
+      case 'feedback':
+        return 'secondary';
+      case 'announcement':
+        return 'outline';
       case 'discount':
-      default: return 'default';
+      default:
+        return 'default';
     }
   };
 
@@ -292,7 +324,7 @@ const CampaignManagement: React.FC = () => {
         styling_variant: 'default',
         title: 'Spezialangebot',
         description: 'Sichere dir jetzt einen Rabatt auf das Premium-Abo!',
-        action_text: 'Jetzt sparen'
+        action_text: 'Jetzt sparen',
       },
       maintenance: {
         campaign_type: 'maintenance',
@@ -301,7 +333,7 @@ const CampaignManagement: React.FC = () => {
         show_to_premium: true,
         title: 'Wartungsarbeiten',
         description: 'Am [Datum] führen wir planmäßige Wartungsarbeiten durch.',
-        action_text: 'Verstanden'
+        action_text: 'Verstanden',
       },
       feedback: {
         campaign_type: 'feedback',
@@ -310,7 +342,7 @@ const CampaignManagement: React.FC = () => {
         show_to_premium: true,
         title: 'Dein Feedback ist wichtig',
         description: 'Hilf uns dabei, die Plattform zu verbessern!',
-        action_text: 'Feedback geben'
+        action_text: 'Feedback geben',
       },
       announcement: {
         campaign_type: 'announcement',
@@ -320,8 +352,8 @@ const CampaignManagement: React.FC = () => {
         title: 'Neue Funktionen verfügbar',
         description: 'Entdecke die neuesten Features unserer Plattform.',
         action_text: 'Mehr erfahren',
-        action_url: ''
-      }
+        action_url: '',
+      },
     };
 
     setFormData({ ...formData, ...templates[type] });
@@ -332,7 +364,12 @@ const CampaignManagement: React.FC = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Erweiterte Kampagnen-Verwaltung</CardTitle>
-          <Button onClick={() => { resetForm(); setShowDialog(true); }}>
+          <Button
+            onClick={() => {
+              resetForm();
+              setShowDialog(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Neue Kampagne
           </Button>
@@ -342,8 +379,9 @@ const CampaignManagement: React.FC = () => {
         <Alert className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Kampagnen können jetzt für alle Nutzertypen konfiguriert werden. Verschiedene Kampagnentypen 
-            unterstützen Rabatte, Wartungsankündigungen, Feedback-Sammlung und allgemeine Benachrichtigungen.
+            Kampagnen können jetzt für alle Nutzertypen konfiguriert werden. Verschiedene
+            Kampagnentypen unterstützen Rabatte, Wartungsankündigungen, Feedback-Sammlung und
+            allgemeine Benachrichtigungen.
           </AlertDescription>
         </Alert>
 
@@ -397,9 +435,13 @@ const CampaignManagement: React.FC = () => {
                             <TypeIcon className="h-4 w-4" />
                             <span className="font-medium">{campaign.title}</span>
                           </div>
-                          <div className="text-sm text-muted-foreground">{campaign.description}</div>
-                          <Badge 
-                            variant={getCampaignTypeBadgeVariant(campaign.campaign_type || 'discount')}
+                          <div className="text-sm text-muted-foreground">
+                            {campaign.description}
+                          </div>
+                          <Badge
+                            variant={getCampaignTypeBadgeVariant(
+                              campaign.campaign_type || 'discount',
+                            )}
                             className="text-xs"
                           >
                             {campaign.campaign_type || 'discount'}
@@ -430,16 +472,32 @@ const CampaignManagement: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant="secondary" 
+                        <Badge
+                          variant="secondary"
                           className="text-xs"
                           style={{
-                            backgroundColor: CAMPAIGN_STYLING[campaign.styling_variant as StylingVariant || 'default'].badgeClass.includes('bg-blue') ? '#3b82f6' :
-                              CAMPAIGN_STYLING[campaign.styling_variant as StylingVariant || 'default'].badgeClass.includes('bg-yellow') ? '#eab308' :
-                              CAMPAIGN_STYLING[campaign.styling_variant as StylingVariant || 'default'].badgeClass.includes('bg-cyan') ? '#06b6d4' :
-                              CAMPAIGN_STYLING[campaign.styling_variant as StylingVariant || 'default'].badgeClass.includes('bg-green') ? '#10b981' :
-                              CAMPAIGN_STYLING[campaign.styling_variant as StylingVariant || 'default'].badgeClass.includes('bg-red') ? '#ef4444' : '#6b7280',
-                            color: 'white'
+                            backgroundColor: CAMPAIGN_STYLING[
+                              (campaign.styling_variant as StylingVariant) || 'default'
+                            ].badgeClass.includes('bg-blue')
+                              ? '#3b82f6'
+                              : CAMPAIGN_STYLING[
+                                    (campaign.styling_variant as StylingVariant) || 'default'
+                                  ].badgeClass.includes('bg-yellow')
+                                ? '#eab308'
+                                : CAMPAIGN_STYLING[
+                                      (campaign.styling_variant as StylingVariant) || 'default'
+                                    ].badgeClass.includes('bg-cyan')
+                                  ? '#06b6d4'
+                                  : CAMPAIGN_STYLING[
+                                        (campaign.styling_variant as StylingVariant) || 'default'
+                                      ].badgeClass.includes('bg-green')
+                                    ? '#10b981'
+                                    : CAMPAIGN_STYLING[
+                                          (campaign.styling_variant as StylingVariant) || 'default'
+                                        ].badgeClass.includes('bg-red')
+                                      ? '#ef4444'
+                                      : '#6b7280',
+                            color: 'white',
                           }}
                         >
                           {campaign.styling_variant || 'default'}
@@ -452,9 +510,12 @@ const CampaignManagement: React.FC = () => {
                         <div className="flex items-center gap-1 text-sm">
                           <Calendar className="h-3 w-3" />
                           <div className="text-xs">
-                            {campaign.start_date && format(new Date(campaign.start_date), 'dd.MM.yy', { locale: de })}
+                            {campaign.start_date &&
+                              format(new Date(campaign.start_date), 'dd.MM.yy', { locale: de })}
                             {' - '}
-                            {campaign.end_date ? format(new Date(campaign.end_date), 'dd.MM.yy', { locale: de }) : '∞'}
+                            {campaign.end_date
+                              ? format(new Date(campaign.end_date), 'dd.MM.yy', { locale: de })
+                              : '∞'}
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
@@ -466,7 +527,11 @@ const CampaignManagement: React.FC = () => {
                           <Button size="sm" variant="outline" onClick={() => handleEdit(campaign)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleDelete(campaign.id)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(campaign.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -486,7 +551,7 @@ const CampaignManagement: React.FC = () => {
                 {editingCampaign ? 'Kampagne bearbeiten' : 'Neue Kampagne erstellen'}
               </DialogTitle>
             </DialogHeader>
-            
+
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Grundlagen</TabsTrigger>
@@ -494,20 +559,23 @@ const CampaignManagement: React.FC = () => {
                 <TabsTrigger value="action">Aktion</TabsTrigger>
                 <TabsTrigger value="styling">Design</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="basic" className="space-y-4">
                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertDescription>
-                    Wähle zunächst eine Vorlage für deinen Kampagnentyp oder erstelle eine benutzerdefinierte Kampagne.
+                    Wähle zunächst eine Vorlage für deinen Kampagnentyp oder erstelle eine
+                    benutzerdefinierte Kampagne.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Kampagnen-Vorlagen</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      {(['discount', 'maintenance', 'feedback', 'announcement'] as CampaignType[]).map((type) => {
+                      {(
+                        ['discount', 'maintenance', 'feedback', 'announcement'] as CampaignType[]
+                      ).map((type) => {
                         const Icon = getCampaignTypeIcon(type);
                         return (
                           <Button
@@ -525,7 +593,7 @@ const CampaignManagement: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Titel</Label>
@@ -537,9 +605,11 @@ const CampaignManagement: React.FC = () => {
                   </div>
                   <div>
                     <Label>Kampagnentyp</Label>
-                    <Select 
-                      value={formData.campaign_type} 
-                      onValueChange={(value: CampaignType) => setFormData({ ...formData, campaign_type: value })}
+                    <Select
+                      value={formData.campaign_type}
+                      onValueChange={(value: CampaignType) =>
+                        setFormData({ ...formData, campaign_type: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -553,7 +623,7 @@ const CampaignManagement: React.FC = () => {
                     </Select>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>Beschreibung</Label>
                   <Textarea
@@ -563,7 +633,7 @@ const CampaignManagement: React.FC = () => {
                     rows={3}
                   />
                 </div>
-                
+
                 {formData.campaign_type === 'discount' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -579,14 +649,19 @@ const CampaignManagement: React.FC = () => {
                       <Input
                         type="number"
                         value={formData.discount_percentage || ''}
-                        onChange={(e) => setFormData({ ...formData, discount_percentage: e.target.value ? parseInt(e.target.value) : null })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            discount_percentage: e.target.value ? parseInt(e.target.value) : null,
+                          })
+                        }
                         placeholder="z.B. 20"
                       />
                     </div>
                   </div>
                 )}
               </TabsContent>
-              
+
               <TabsContent value="targeting" className="space-y-4">
                 <Alert>
                   <Users className="h-4 w-4" />
@@ -594,36 +669,39 @@ const CampaignManagement: React.FC = () => {
                     Bestimme, welche Nutzergruppen diese Kampagne sehen sollen.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={formData.show_to_premium}
-                      onCheckedChange={(checked) => setFormData({ ...formData, show_to_premium: checked })}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, show_to_premium: checked })
+                      }
                     />
                     <Label className="flex items-center gap-2">
                       <Crown className="h-4 w-4 text-yellow-500" />
                       Auch Premium-Nutzern anzeigen
                     </Label>
                   </div>
-                  
+
                   <Alert>
                     <AlertDescription>
-                      {formData.show_to_premium 
-                        ? "Diese Kampagne wird allen Nutzern angezeigt (Free + Premium)."
-                        : "Diese Kampagne wird nur kostenlosen Nutzern angezeigt."
-                      }
+                      {formData.show_to_premium
+                        ? 'Diese Kampagne wird allen Nutzern angezeigt (Free + Premium).'
+                        : 'Diese Kampagne wird nur kostenlosen Nutzern angezeigt.'}
                     </AlertDescription>
                   </Alert>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Priorität</Label>
                     <Input
                       type="number"
                       value={formData.priority}
-                      onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })
+                      }
                       placeholder="0"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
@@ -632,9 +710,11 @@ const CampaignManagement: React.FC = () => {
                   </div>
                   <div>
                     <Label>Anzeigeart</Label>
-                    <Select 
-                      value={formData.display_type} 
-                      onValueChange={(value: 'banner' | 'modal' | 'toast') => setFormData({ ...formData, display_type: value })}
+                    <Select
+                      value={formData.display_type}
+                      onValueChange={(value: 'banner' | 'modal' | 'toast') =>
+                        setFormData({ ...formData, display_type: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -648,7 +728,7 @@ const CampaignManagement: React.FC = () => {
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="action" className="space-y-4">
                 <Alert>
                   <ExternalLink className="h-4 w-4" />
@@ -656,12 +736,14 @@ const CampaignManagement: React.FC = () => {
                     Konfiguriere, was passiert, wenn Nutzer auf die Kampagne klicken.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div>
                   <Label>Aktionstyp</Label>
-                  <Select 
-                    value={formData.action_type} 
-                    onValueChange={(value: ActionType) => setFormData({ ...formData, action_type: value })}
+                  <Select
+                    value={formData.action_type}
+                    onValueChange={(value: ActionType) =>
+                      setFormData({ ...formData, action_type: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -675,8 +757,9 @@ const CampaignManagement: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
-                {(formData.action_type === 'navigate' || formData.action_type === 'external_link') && (
+
+                {(formData.action_type === 'navigate' ||
+                  formData.action_type === 'external_link') && (
                   <div>
                     <Label>
                       {formData.action_type === 'navigate' ? 'Interner Pfad' : 'Externe URL'}
@@ -684,11 +767,13 @@ const CampaignManagement: React.FC = () => {
                     <Input
                       value={formData.action_url || ''}
                       onChange={(e) => setFormData({ ...formData, action_url: e.target.value })}
-                      placeholder={formData.action_type === 'navigate' ? '/dashboard' : 'https://example.com'}
+                      placeholder={
+                        formData.action_type === 'navigate' ? '/dashboard' : 'https://example.com'
+                      }
                     />
                   </div>
                 )}
-                
+
                 <div>
                   <Label>Button-Text (optional)</Label>
                   <Input
@@ -698,20 +783,20 @@ const CampaignManagement: React.FC = () => {
                   />
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="styling" className="space-y-4">
                 <Alert>
                   <Tag className="h-4 w-4" />
-                  <AlertDescription>
-                    Wähle das visuelle Design für deine Kampagne.
-                  </AlertDescription>
+                  <AlertDescription>Wähle das visuelle Design für deine Kampagne.</AlertDescription>
                 </Alert>
-                
+
                 <div>
                   <Label>Design-Variante</Label>
-                  <Select 
-                    value={formData.styling_variant} 
-                    onValueChange={(value: StylingVariant) => setFormData({ ...formData, styling_variant: value })}
+                  <Select
+                    value={formData.styling_variant}
+                    onValueChange={(value: StylingVariant) =>
+                      setFormData({ ...formData, styling_variant: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -720,12 +805,14 @@ const CampaignManagement: React.FC = () => {
                       <SelectItem value="default">Standard (Blau) - für Rabatte</SelectItem>
                       <SelectItem value="warning">Warnung (Gelb) - für Wartungen</SelectItem>
                       <SelectItem value="info">Info (Cyan) - für Ankündigungen</SelectItem>
-                      <SelectItem value="success">Erfolg (Grün) - für positive Nachrichten</SelectItem>
+                      <SelectItem value="success">
+                        Erfolg (Grün) - für positive Nachrichten
+                      </SelectItem>
                       <SelectItem value="error">Fehler (Rot) - für kritische Hinweise</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Startdatum (optional)</Label>
@@ -734,9 +821,11 @@ const CampaignManagement: React.FC = () => {
                       value={startDateInput}
                       onChange={(e) => setStartDateInput(e.target.value)}
                       onBlur={() => {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          start_date: startDateInput ? convertDateTimeLocalToISO(startDateInput) : null
+                          start_date: startDateInput
+                            ? convertDateTimeLocalToISO(startDateInput)
+                            : null,
                         }));
                       }}
                     />
@@ -748,15 +837,15 @@ const CampaignManagement: React.FC = () => {
                       value={endDateInput}
                       onChange={(e) => setEndDateInput(e.target.value)}
                       onBlur={() => {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          end_date: endDateInput ? convertDateTimeLocalToISO(endDateInput) : null
+                          end_date: endDateInput ? convertDateTimeLocalToISO(endDateInput) : null,
                         }));
                       }}
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={formData.active}
@@ -764,11 +853,13 @@ const CampaignManagement: React.FC = () => {
                   />
                   <Label>Kampagne aktivieren</Label>
                 </div>
-                
+
                 {/* Preview Section */}
                 <div className="mt-6 p-4 border rounded-lg">
                   <Label className="text-sm font-medium">Vorschau:</Label>
-                  <div className={`mt-2 p-3 rounded-md ${CAMPAIGN_STYLING[formData.styling_variant].containerClass} border`}>
+                  <div
+                    className={`mt-2 p-3 rounded-md ${CAMPAIGN_STYLING[formData.styling_variant].containerClass} border`}
+                  >
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">{formData.title || 'Titel'}</span>
                       <span>{formData.description || 'Beschreibung'}</span>
@@ -777,14 +868,12 @@ const CampaignManagement: React.FC = () => {
                 </div>
               </TabsContent>
             </Tabs>
-            
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 Abbrechen
               </Button>
-              <Button onClick={handleSubmit}>
-                {editingCampaign ? 'Speichern' : 'Erstellen'}
-              </Button>
+              <Button onClick={handleSubmit}>{editingCampaign ? 'Speichern' : 'Erstellen'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -793,4 +882,4 @@ const CampaignManagement: React.FC = () => {
   );
 };
 
-export default CampaignManagement; 
+export default CampaignManagement;

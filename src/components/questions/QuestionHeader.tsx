@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import ProgressBar from '@/components/training/ProgressBar';
@@ -15,22 +14,19 @@ interface QuestionHeaderProps {
 const QuestionHeader: React.FC<QuestionHeaderProps> = ({
   currentIndex,
   totalQuestions,
-  onQuit
+  onQuit,
 }) => {
   const isMobile = useIsMobile();
-  const {
-    theme,
-    toggleTheme
-  } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="flex flex-col gap-3 mb-4">
       <div className="flex justify-end gap-2">
-        <Button 
-          variant="outline" 
-          onClick={onQuit} 
-          className={`text-red-500 hover:text-red-600 hover:bg-red-50 ${isMobile ? 'text-sm' : ''}`} 
-          size={isMobile ? "sm" : "default"}
+        <Button
+          variant="outline"
+          onClick={onQuit}
+          className={`text-red-500 hover:text-red-600 hover:bg-red-50 ${isMobile ? 'text-sm' : ''}`}
+          size={isMobile ? 'sm' : 'default'}
         >
           Training beenden
         </Button>

@@ -1,7 +1,17 @@
 import React from 'react';
-import { CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Play, AlertCircle, Archive, RotateCcw, Lock, GraduationCap, Globe, Share2, EyeOff } from 'lucide-react';
+import { CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Play,
+  AlertCircle,
+  Archive,
+  RotateCcw,
+  Lock,
+  GraduationCap,
+  Globe,
+  Share2,
+  EyeOff,
+} from 'lucide-react';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -17,14 +27,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateDatasetVisibility } from '@/services/DatabaseService';
@@ -55,50 +65,54 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user, universityId } = useAuth();
-  
+
   // Query ignored questions count for this dataset
   const { data: ignoredQuestionsCount = 0 } = useQuery({
     queryKey: ['ignored-questions-count', filename, user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      
+
       const { data, error } = await supabase
         .from('user_ignored_questions')
-        .select(`
+        .select(
+          `
           id,
           questions:question_id (
             filename,
             exam_name
           )
-        `)
+        `,
+        )
         .eq('user_id', user.id);
-      
+
       if (error) {
         console.error('Error fetching ignored questions count:', error);
         return 0;
       }
-      
+
       // Count questions that match this dataset's filename OR exam_name
-      const count = data?.filter(item => 
-        item.questions && (
-          item.questions.filename === filename || 
-          item.questions.exam_name === filename
-        )
-      ).length || 0;
-      
+      const count =
+        data?.filter(
+          (item) =>
+            item.questions &&
+            (item.questions.filename === filename || item.questions.exam_name === filename),
+        ).length || 0;
+
       return count;
     },
-    enabled: !!user
+    enabled: !!user,
   });
 
   // Determine visibility of the dataset (using the first question as reference)
   const datasetVisibility = questions[0]?.visibility || 'private';
-  
+
   // Determine if this is a private dataset (owned by current user)
   const isPrivateDataset = datasetVisibility === 'private' && user?.id === questions[0]?.user_id;
 
   // Check if dataset can be changed to private (only if all questions are private)
-  const canChangeToPrivate = !questions.some(q => q.visibility === 'university' || q.visibility === 'public');
+  const canChangeToPrivate = !questions.some(
+    (q) => q.visibility === 'university' || q.visibility === 'public',
+  );
 
   const handleUnclearClick = () => {
     onUnclearQuestions();
@@ -111,9 +125,12 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   const handleChangeVisibility = async (newVisibility: 'private' | 'university' | 'public') => {
     try {
       // If trying to change from university/public to private, we need to check if this is allowed
-      if ((datasetVisibility === 'university' || datasetVisibility === 'public') && newVisibility === 'private') {
+      if (
+        (datasetVisibility === 'university' || datasetVisibility === 'public') &&
+        newVisibility === 'private'
+      ) {
         toast.error('Änderung nicht möglich', {
-          description: 'Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.'
+          description: 'Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.',
         });
         return;
       }
@@ -121,14 +138,15 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
       await updateDatasetVisibility(filename, user?.id || '', newVisibility, universityId);
 
       // Show success message
-      const visibilityText = newVisibility === 'private' 
-        ? 'privat' 
-        : newVisibility === 'university'
-        ? 'mit deiner Universität geteilt'
-        : 'öffentlich (für alle registrierten Universitäten)';
-          
+      const visibilityText =
+        newVisibility === 'private'
+          ? 'privat'
+          : newVisibility === 'university'
+            ? 'mit deiner Universität geteilt'
+            : 'öffentlich (für alle registrierten Universitäten)';
+
       toast.success(`Sichtbarkeit geändert`, {
-        description: `Die Fragen sind jetzt ${visibilityText}`
+        description: `Die Fragen sind jetzt ${visibilityText}`,
       });
 
       // Refresh the page to reflect the changes
@@ -136,7 +154,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
     } catch (error: any) {
       console.error('Error changing visibility:', error);
       toast.error('Fehler beim Ändern der Sichtbarkeit', {
-        description: error.message
+        description: error.message,
       });
     }
   };
@@ -155,11 +173,11 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   const getVisibilityText = () => {
     switch (datasetVisibility) {
       case 'university':
-        return "Universitätsweit (für alle an deiner Uni)";
+        return 'Universitätsweit (für alle an deiner Uni)';
       case 'public':
-        return "Öffentlich (für alle registrierten Universitäten)";
+        return 'Öffentlich (für alle registrierten Universitäten)';
       default:
-        return "Privat (nur für dich)";
+        return 'Privat (nur für dich)';
     }
   };
 
@@ -173,7 +191,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
           <CardTitle className="text-lg font-medium text-slate-800 dark:text-white">
             {displayName || filename}
           </CardTitle>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -184,7 +202,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           {/* Only show archive/restore button for private datasets */}
           {isPrivateDataset && (
             <AlertDialog>
@@ -193,31 +211,26 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
-                  title={isArchived ? "Wiederherstellen" : "Archivieren"}
+                  title={isArchived ? 'Wiederherstellen' : 'Archivieren'}
                 >
-                  {isArchived ? (
-                    <RotateCcw className="h-4 w-4" />
-                  ) : (
-                    <Archive className="h-4 w-4" />
-                  )}
+                  {isArchived ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    {isArchived ? "Datensatz wiederherstellen" : "Datensatz archivieren"}
+                    {isArchived ? 'Datensatz wiederherstellen' : 'Datensatz archivieren'}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    {isArchived 
+                    {isArchived
                       ? `Möchtest du den Datensatz "${filename}" wiederherstellen? Der Datensatz wird wieder in der Hauptansicht angezeigt.`
-                      : `Möchtest du den Datensatz "${filename}" wirklich archivieren? Der Datensatz wird aus der Hauptansicht entfernt, kann aber später wieder hergestellt werden.`
-                    }
+                      : `Möchtest du den Datensatz "${filename}" wirklich archivieren? Der Datensatz wird aus der Hauptansicht entfernt, kann aber später wieder hergestellt werden.`}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Abbrechen</AlertDialogCancel>
                   <AlertDialogAction onClick={isArchived ? onRestore : onArchive}>
-                    {isArchived ? "Wiederherstellen" : "Archivieren"}
+                    {isArchived ? 'Wiederherstellen' : 'Archivieren'}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -234,10 +247,10 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
         {canChangeVisibility && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full sm:w-auto"
-                size={isMobile ? "sm" : "default"}
+                size={isMobile ? 'sm' : 'default'}
               >
                 <Share2 className="mr-2 h-4 w-4" />
                 Teilen
@@ -252,10 +265,15 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
                   {datasetVisibility === 'private' ? (
                     <>
                       <p className="mb-2">Wie möchtest du diesen Datensatz teilen?</p>
-                      <p className="font-bold text-yellow-600 dark:text-yellow-500">Achtung: Diese Aktion kann nicht rückgängig gemacht werden.</p>
+                      <p className="font-bold text-yellow-600 dark:text-yellow-500">
+                        Achtung: Diese Aktion kann nicht rückgängig gemacht werden.
+                      </p>
                     </>
                   ) : (
-                    <p>Die Sichtbarkeit dieses Datensatzes ist bereits geteilt und kann nicht mehr geändert werden.</p>
+                    <p>
+                      Die Sichtbarkeit dieses Datensatzes ist bereits geteilt und kann nicht mehr
+                      geändert werden.
+                    </p>
                   )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -279,13 +297,13 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
             </AlertDialogContent>
           </AlertDialog>
         )}
-        
+
         {/* Always show ignored questions button */}
-        <Button 
+        <Button
           variant="outline"
           onClick={handleUnclearClick}
           className="w-full sm:w-auto"
-          size={isMobile ? "sm" : "default"}
+          size={isMobile ? 'sm' : 'default'}
         >
           <EyeOff className="mr-2 h-4 w-4" />
           Ignorierte Fragen
@@ -295,11 +313,11 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
             </span>
           )}
         </Button>
-        
-        <Button 
+
+        <Button
           onClick={handleStartTraining}
           className="w-full sm:w-auto"
-          size={isMobile ? "sm" : "default"}
+          size={isMobile ? 'sm' : 'default'}
         >
           <Play className="mr-2 h-4 w-4" />
           Training starten

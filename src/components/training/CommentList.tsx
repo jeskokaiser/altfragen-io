@@ -47,4 +47,3 @@ const CommentList: React.FC<CommentListProps> = ({
 };
 
 export default CommentList;
-

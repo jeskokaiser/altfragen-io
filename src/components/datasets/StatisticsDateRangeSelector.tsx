@@ -7,11 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,16 +19,19 @@ interface StatisticsDateRangeSelectorProps {
   onChange: (range: StatisticsDateRange) => void;
 }
 
-export default function StatisticsDateRangeSelector({ value, onChange }: StatisticsDateRangeSelectorProps) {
+export default function StatisticsDateRangeSelector({
+  value,
+  onChange,
+}: StatisticsDateRangeSelectorProps) {
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverTriggerRef = useRef<HTMLButtonElement>(null);
   const [customStart, setCustomStart] = useState<Date | undefined>(
-    value.start ? new Date(value.start) : undefined
+    value.start ? new Date(value.start) : undefined,
   );
   const [customEnd, setCustomEnd] = useState<Date | undefined>(
-    value.end ? new Date(value.end) : undefined
+    value.end ? new Date(value.end) : undefined,
   );
 
   // Position the popover trigger to match the button position
@@ -48,11 +47,11 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
           popoverTriggerRef.current.style.height = `${rect.height}px`;
         }
       };
-      
+
       updatePosition();
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
-      
+
       return () => {
         window.removeEventListener('scroll', updatePosition, true);
         window.removeEventListener('resize', updatePosition);
@@ -78,7 +77,7 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
       current.getHours(),
       current.getMinutes(),
       current.getSeconds(),
-      current.getMilliseconds()
+      current.getMilliseconds(),
     );
     return merged;
   };
@@ -162,7 +161,7 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
           <DropdownMenuItem onClick={() => handlePresetChange('90days')}>
             {presetLabels['90days']}
           </DropdownMenuItem>
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
               handlePresetChange('custom', e);
@@ -176,20 +175,20 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
       {/* Custom Date Range Picker Dialog */}
       <Popover open={isCustomOpen} onOpenChange={setIsCustomOpen} modal={true}>
         <PopoverTrigger asChild>
-          <button 
+          <button
             ref={popoverTriggerRef}
-            className="opacity-0 pointer-events-none" 
+            className="opacity-0 pointer-events-none"
             aria-hidden="true"
-            style={{ 
+            style={{
               position: 'fixed',
               zIndex: -1,
-              visibility: isCustomOpen ? 'visible' : 'hidden'
+              visibility: isCustomOpen ? 'visible' : 'hidden',
             }}
           />
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-auto p-4" 
-          align="end" 
+        <PopoverContent
+          className="w-auto p-4"
+          align="end"
           onOpenAutoFocus={(e) => e.preventDefault()}
           sideOffset={5}
         >
@@ -229,5 +228,3 @@ export default function StatisticsDateRangeSelector({ value, onChange }: Statist
     </div>
   );
 }
-
-

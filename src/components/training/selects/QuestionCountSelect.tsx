@@ -1,19 +1,13 @@
-
 import React, { useState } from 'react';
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '../types/FormValues';
 
@@ -48,7 +42,7 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
   };
 
   const currentValue = form.watch('questionCount');
-  
+
   // Determine the select value based on current questionCount
   const getSelectValue = () => {
     if (showCustomInput) return 'custom';

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,8 +27,8 @@ const ArchivedDatasets = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      return (data || []).map(q => ({
+
+      return (data || []).map((q) => ({
         id: q.id,
         question: q.question,
         optionA: q.option_a,
@@ -45,26 +44,29 @@ const ArchivedDatasets = () => {
         difficulty: q.difficulty,
         is_unclear: q.is_unclear,
         marked_unclear_at: q.marked_unclear_at,
-        exam_name: q.exam_name
+        exam_name: q.exam_name,
       })) as Question[];
     },
   });
 
   const archivedQuestions = useMemo(() => {
     if (!questions) return [];
-    return questions.filter(q => preferences.archivedDatasets.includes(q.filename));
+    return questions.filter((q) => preferences.archivedDatasets.includes(q.filename));
   }, [questions, preferences.archivedDatasets]);
 
   const groupedQuestions = useMemo(() => {
-    return archivedQuestions.reduce((acc, question) => {
-      // Use exam_name as the grouping key instead of filename
-      const key = question.exam_name || question.filename;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(question);
-      return acc;
-    }, {} as Record<string, Question[]>);
+    return archivedQuestions.reduce(
+      (acc, question) => {
+        // Use exam_name as the grouping key instead of filename
+        const key = question.exam_name || question.filename;
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key].push(question);
+        return acc;
+      },
+      {} as Record<string, Question[]>,
+    );
   }, [archivedQuestions]);
 
   const handleDatasetClick = (key: string) => {
@@ -79,11 +81,7 @@ const ArchivedDatasets = () => {
   return (
     <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/dashboard')}
-          className="mr-2"
-        >
+        <Button variant="ghost" onClick={() => navigate('/dashboard')} className="mr-2">
           <ChevronLeft className="h-4 w-4 mr-2" />
           Zurück
         </Button>
@@ -99,7 +97,7 @@ const ArchivedDatasets = () => {
             {archivedQuestions?.length || 0} Fragen insgesamt
           </span>
         </div>
-        
+
         {archivedQuestions && archivedQuestions.length > 0 ? (
           <DatasetList
             groupedQuestions={groupedQuestions}

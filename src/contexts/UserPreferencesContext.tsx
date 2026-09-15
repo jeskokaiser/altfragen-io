@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
@@ -71,15 +70,15 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
   };
 
   const defaultAIModels = ['chatgpt', 'new-gemini', 'mistral', 'perplexity', 'deepseek'];
-  
-  const [preferences, setPreferences] = useState<UserPreferences>({ 
+
+  const [preferences, setPreferences] = useState<UserPreferences>({
     immediateFeedback: false,
     archivedDatasets: [],
     selectedUniversityDatasets: [],
     keyboardBindings: defaultKeyboardBindings,
     statisticsDateRange: { preset: 'all' },
     selectedAIModels: defaultAIModels,
-    enhancedAIVersion: 'none'
+    enhancedAIVersion: 'none',
   });
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -88,14 +87,14 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (user) {
       loadUserPreferences();
     } else {
-      setPreferences({ 
-        immediateFeedback: false, 
+      setPreferences({
+        immediateFeedback: false,
         archivedDatasets: [],
         selectedUniversityDatasets: [],
         keyboardBindings: defaultKeyboardBindings,
         statisticsDateRange: { preset: 'all' },
         selectedAIModels: defaultAIModels,
-        enhancedAIVersion: 'none'
+        enhancedAIVersion: 'none',
       });
       setIsLoading(false);
     }
@@ -126,46 +125,44 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
           // Migrate old boolean: default to chatgpt if it was enabled
           enhancedAIVersion = 'chatgpt';
         }
-        
+
         // Merge existing keyboard bindings with defaults to ensure new fields are included
         const existingBindings = (existingPrefs as any).keyboard_bindings || {};
         const mergedKeyboardBindings: KeyboardBindings = {
           ...defaultKeyboardBindings,
           ...existingBindings,
         };
-        
-        setPreferences({ 
+
+        setPreferences({
           immediateFeedback: existingPrefs.immediate_feedback,
           archivedDatasets: existingPrefs.archived_datasets || [],
           selectedUniversityDatasets: existingPrefs.selected_university_datasets || [],
           keyboardBindings: mergedKeyboardBindings,
           statisticsDateRange: (existingPrefs as any).statistics_date_range || { preset: 'all' },
           selectedAIModels: Array.isArray(selectedAIModels) ? selectedAIModels : defaultAIModels,
-          enhancedAIVersion
+          enhancedAIVersion,
         });
       } else {
-        const { error: insertError } = await supabase
-          .from('user_preferences')
-          .insert({
-            user_id: user.id,
-            immediate_feedback: false,
-            archived_datasets: [],
-            selected_university_datasets: [],
-            keyboard_bindings: defaultKeyboardBindings as any,
-            statistics_date_range: { preset: 'all' } as any,
-            selected_ai_models: defaultAIModels as any,
-            enhanced_ai_version: 'none'
-          });
+        const { error: insertError } = await supabase.from('user_preferences').insert({
+          user_id: user.id,
+          immediate_feedback: false,
+          archived_datasets: [],
+          selected_university_datasets: [],
+          keyboard_bindings: defaultKeyboardBindings as any,
+          statistics_date_range: { preset: 'all' } as any,
+          selected_ai_models: defaultAIModels as any,
+          enhanced_ai_version: 'none',
+        });
 
         if (insertError) throw insertError;
-        setPreferences({ 
-          immediateFeedback: false, 
+        setPreferences({
+          immediateFeedback: false,
           archivedDatasets: [],
           selectedUniversityDatasets: [],
           keyboardBindings: defaultKeyboardBindings,
           statisticsDateRange: { preset: 'all' },
           selectedAIModels: defaultAIModels,
-          enhancedAIVersion: 'none'
+          enhancedAIVersion: 'none',
         });
       }
     } catch (error) {
@@ -185,18 +182,23 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         .update({
           immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
           archived_datasets: newPreferences.archivedDatasets ?? preferences.archivedDatasets,
-          selected_university_datasets: newPreferences.selectedUniversityDatasets ?? preferences.selectedUniversityDatasets,
-          keyboard_bindings: (newPreferences.keyboardBindings ?? preferences.keyboardBindings) as any,
-          statistics_date_range: (newPreferences.statisticsDateRange ?? preferences.statisticsDateRange) as any,
-          selected_ai_models: (newPreferences.selectedAIModels ?? preferences.selectedAIModels) as any,
-          enhanced_ai_version: (newPreferences.enhancedAIVersion ?? preferences.enhancedAIVersion) as any,
-          updated_at: new Date().toISOString()
+          selected_university_datasets:
+            newPreferences.selectedUniversityDatasets ?? preferences.selectedUniversityDatasets,
+          keyboard_bindings: (newPreferences.keyboardBindings ??
+            preferences.keyboardBindings) as any,
+          statistics_date_range: (newPreferences.statisticsDateRange ??
+            preferences.statisticsDateRange) as any,
+          selected_ai_models: (newPreferences.selectedAIModels ??
+            preferences.selectedAIModels) as any,
+          enhanced_ai_version: (newPreferences.enhancedAIVersion ??
+            preferences.enhancedAIVersion) as any,
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      setPreferences(prev => ({ ...prev, ...newPreferences }));
+      setPreferences((prev) => ({ ...prev, ...newPreferences }));
       toast.success('Einstellungen erfolgreich aktualisiert');
     } catch (error) {
       console.error('Error updating preferences:', error);
@@ -206,7 +208,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
 
   const archiveDataset = async (filename: string) => {
     if (!user || preferences.archivedDatasets.includes(filename)) return;
-    
+
     const newArchivedDatasets = [...preferences.archivedDatasets, filename];
     await updatePreferences({ archivedDatasets: newArchivedDatasets });
     toast.success('Dataset erfolgreich archiviert');
@@ -214,8 +216,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
 
   const restoreDataset = async (filename: string) => {
     if (!user) return;
-    
-    const newArchivedDatasets = preferences.archivedDatasets.filter(f => f !== filename);
+
+    const newArchivedDatasets = preferences.archivedDatasets.filter((f) => f !== filename);
     await updatePreferences({ archivedDatasets: newArchivedDatasets });
     toast.success('Dataset erfolgreich wiederhergestellt');
   };
@@ -233,16 +235,18 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
   };
 
   return (
-    <UserPreferencesContext.Provider value={{ 
-      preferences, 
-      isLoading, 
-      updatePreferences,
-      archiveDataset,
-      restoreDataset,
-      isDatasetArchived,
-      updateSelectedUniversityDatasets,
-      isModelEnabled
-    }}>
+    <UserPreferencesContext.Provider
+      value={{
+        preferences,
+        isLoading,
+        updatePreferences,
+        archiveDataset,
+        restoreDataset,
+        isDatasetArchived,
+        updateSelectedUniversityDatasets,
+        isModelEnabled,
+      }}
+    >
       {children}
     </UserPreferencesContext.Provider>
   );

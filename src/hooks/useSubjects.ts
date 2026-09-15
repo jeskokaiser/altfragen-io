@@ -6,14 +6,12 @@ export const useSubjects = () => {
 
   useEffect(() => {
     const fetchSubjects = async () => {
-      const { data } = await supabase
-        .from('questions')
-        .select('subject')
-        .order('subject');
-      
+      const { data } = await supabase.from('questions').select('subject').order('subject');
+
       if (data) {
-        const uniqueSubjects = Array.from(new Set(data.map(q => q.subject)))
-          .sort((a, b) => a.localeCompare(b, 'de'));
+        const uniqueSubjects = Array.from(new Set(data.map((q) => q.subject))).sort((a, b) =>
+          a.localeCompare(b, 'de'),
+        );
         setSubjects(uniqueSubjects);
       }
     };

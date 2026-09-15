@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Impressum = () => {
   return (
@@ -30,10 +30,14 @@ const Impressum = () => {
                 Finanzamt Hamburg-Nord
               </p>
             </section>
-             <section className="space-y-2">
+            <section className="space-y-2">
               <h2 className="text-xl font-semibold">Datenschutz</h2>
               <p>
-                Ausführliche Informationen zum Datenschutz finden Sie in unserer <a href="/privacy" className="text-blue-600 hover:underline">Datenschutzerklärung</a>.
+                Ausführliche Informationen zum Datenschutz finden Sie in unserer{' '}
+                <a href="/privacy" className="text-blue-600 hover:underline">
+                  Datenschutzerklärung
+                </a>
+                .
               </p>
             </section>
           </CardContent>

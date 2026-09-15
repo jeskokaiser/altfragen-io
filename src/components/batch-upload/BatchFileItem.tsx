@@ -1,8 +1,7 @@
-
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -10,9 +9,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileUp, X, Loader2 } from 'lucide-react';
 import { BatchPDFFile } from './types';
 
@@ -31,31 +30,25 @@ const BatchFileItem: React.FC<BatchFileItemProps> = ({
   onUpdate,
   onRemove,
   isUploading,
-  years
+  years,
 }) => {
   return (
-    <Card className={`p-4 ${fileData.isCompleted ? 'bg-green-50' : fileData.error ? 'bg-red-50' : ''}`}>
+    <Card
+      className={`p-4 ${fileData.isCompleted ? 'bg-green-50' : fileData.error ? 'bg-red-50' : ''}`}
+    >
       <div className="space-y-3">
         {/* File Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileUp className="h-4 w-4" />
-            <span className="font-medium text-sm truncate max-w-48">
-              {fileData.file.name}
-            </span>
-            {fileData.isProcessing && (
-              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-            )}
+            <span className="font-medium text-sm truncate max-w-48">{fileData.file.name}</span>
+            {fileData.isProcessing && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
             {fileData.isCompleted && (
               <span className="text-green-600 text-xs">✓ Abgeschlossen</span>
             )}
           </div>
           {!fileData.isProcessing && !isUploading && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onRemove(index)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onRemove(index)}>
               <X className="h-4 w-4" />
             </Button>
           )}
@@ -64,9 +57,7 @@ const BatchFileItem: React.FC<BatchFileItemProps> = ({
         {/* Error Display */}
         {fileData.error && (
           <Alert variant="destructive">
-            <AlertDescription className="text-xs">
-              {fileData.error}
-            </AlertDescription>
+            <AlertDescription className="text-xs">{fileData.error}</AlertDescription>
           </Alert>
         )}
 
@@ -84,7 +75,7 @@ const BatchFileItem: React.FC<BatchFileItemProps> = ({
                 disabled={fileData.isProcessing || isUploading}
               />
             </div>
-            
+
             {/* Semester and Year */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">

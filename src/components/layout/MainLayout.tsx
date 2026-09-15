@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -63,7 +62,10 @@ const MainLayout: React.FC = () => {
           <Route path="/training" element={<TrainingPage />} />
           <Route path="/training/sessions" element={<TrainingSessionsPage />} />
           <Route path="/training/session/:sessionId" element={<TrainingSessionRunnerPage />} />
-          <Route path="/training/session/:sessionId/analytics" element={<TrainingSessionAnalyticsPage />} />
+          <Route
+            path="/training/session/:sessionId/analytics"
+            element={<TrainingSessionAnalyticsPage />}
+          />
           <Route path="/training/one-off" element={<TrainingSessionOneOffPage />} />
           <Route path="/exam/:examId/analytics" element={<ExamAnalyticsPage />} />
           <Route path="/settings" element={<SettingsPage />} />

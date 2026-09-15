@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserUnclearQuestion {
@@ -12,21 +11,24 @@ export interface UserUnclearQuestion {
 export class UnclearQuestionsService {
   static async markQuestionUnclear(questionId: string): Promise<{ error?: any }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         return { error: 'User not authenticated' };
       }
 
       // Use any type to bypass TypeScript errors until types are regenerated
-      const { error } = await (supabase as any)
-        .from('user_ignored_questions')
-        .upsert({
+      const { error } = await (supabase as any).from('user_ignored_questions').upsert(
+        {
           user_id: user.id,
           question_id: questionId,
-          marked_unclear_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,question_id'
-        });
+          marked_unclear_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'user_id,question_id',
+        },
+      );
 
       return { error };
     } catch (error) {
@@ -36,7 +38,9 @@ export class UnclearQuestionsService {
 
   static async unmarkQuestionUnclear(questionId: string): Promise<{ error?: any }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         return { error: 'User not authenticated' };
       }
@@ -53,11 +57,15 @@ export class UnclearQuestionsService {
     }
   }
 
-  static async getUserUnclearQuestions(userId?: string): Promise<{ data?: UserUnclearQuestion[], error?: any }> {
+  static async getUserUnclearQuestions(
+    userId?: string,
+  ): Promise<{ data?: UserUnclearQuestion[]; error?: any }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const targetUserId = userId || user?.id;
-      
+
       if (!targetUserId) {
         return { error: 'User not authenticated' };
       }
@@ -75,7 +83,9 @@ export class UnclearQuestionsService {
 
   static async isQuestionUnclearForUser(questionId: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return false;
 
       const { data, error } = await (supabase as any)

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Privacy = () => {
   return (
@@ -13,7 +13,9 @@ const Privacy = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">1. Datenschutz auf einen Blick</h2>
               <p>
-                Diese Datenschutzerklärung informiert Sie darüber, welche personenbezogenen Daten wir im Rahmen der Registrierung und Nutzung dieser Plattform erheben, verarbeiten und speichern.
+                Diese Datenschutzerklärung informiert Sie darüber, welche personenbezogenen Daten
+                wir im Rahmen der Registrierung und Nutzung dieser Plattform erheben, verarbeiten
+                und speichern.
               </p>
             </section>
 
@@ -22,9 +24,12 @@ const Privacy = () => {
               <h2 className="text-xl font-semibold">2. Verantwortlicher</h2>
               <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
               <p>
-                Jesko Kaiser<br />
-                Kegelhofstr. 17<br />
-                20251 Hamburg<br />
+                Jesko Kaiser
+                <br />
+                Kegelhofstr. 17
+                <br />
+                20251 Hamburg
+                <br />
                 E-Mail: hallo@altfragen.io
               </p>
             </section>
@@ -32,7 +37,10 @@ const Privacy = () => {
             {/* 3. Erhobene Daten */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">3. Erhobene Daten</h2>
-              <p>Bei der Erstellung eines Benutzerkontos speichern wir folgende personenbezogene Daten:</p>
+              <p>
+                Bei der Erstellung eines Benutzerkontos speichern wir folgende personenbezogene
+                Daten:
+              </p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>E-Mail-Adresse</li>
                 <li>Passwort (verschlüsselt gespeichert, nicht im Klartext einsehbar)</li>
@@ -46,21 +54,26 @@ const Privacy = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">4. Zahlungsabwicklung durch Stripe</h2>
               <p>
-                Für die Abwicklung von Zahlungen nutzen wir den Zahlungsdienstleister Stripe. 
+                Für die Abwicklung von Zahlungen nutzen wir den Zahlungsdienstleister Stripe.
                 Stripe, Inc., 510 Townsend Street, San Francisco, CA 94103, USA.
               </p>
               <p>
-                Bei Zahlungsvorgängen werden Ihre Zahlungsdaten direkt an Stripe übermittelt. 
-                Wir erhalten keine Kreditkartendaten oder andere sensible Zahlungsinformationen.
+                Bei Zahlungsvorgängen werden Ihre Zahlungsdaten direkt an Stripe übermittelt. Wir
+                erhalten keine Kreditkartendaten oder andere sensible Zahlungsinformationen.
+              </p>
+              <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</p>
+              <p>
+                Da Stripe ein US-amerikanisches Unternehmen ist, werden Daten in die USA
+                übermittelt. Die EU-Kommission hat die USA als Land mit einem angemessenen
+                Datenschutzniveau eingestuft (Angemessenheitsbeschluss). Die Datenübermittlung
+                erfolgt auf Grundlage von Standardvertragsklauseln (SCC), um die Einhaltung
+                europäischer Datenschutzstandards zu gewährleisten.
               </p>
               <p>
-                Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)
-              </p>
-              <p>
-                Da Stripe ein US-amerikanisches Unternehmen ist, werden Daten in die USA übermittelt. Die EU-Kommission hat die USA als Land mit einem angemessenen Datenschutzniveau eingestuft (Angemessenheitsbeschluss). Die Datenübermittlung erfolgt auf Grundlage von Standardvertragsklauseln (SCC), um die Einhaltung europäischer Datenschutzstandards zu gewährleisten.
-              </p>
-              <p>
-                Datenschutzerklärung von Stripe: <a href="https://stripe.com/de/privacy" className="text-blue-600 hover:underline">https://stripe.com/de/privacy</a>
+                Datenschutzerklärung von Stripe:{' '}
+                <a href="https://stripe.com/de/privacy" className="text-blue-600 hover:underline">
+                  https://stripe.com/de/privacy
+                </a>
               </p>
             </section>
 
@@ -68,26 +81,36 @@ const Privacy = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">5. Hosting und Datenspeicherung</h2>
               <p>
-                Unsere Website wird über Supabase gehostet. Supabase Inc., 970 Toa Payoh North #07-04, Singapore 318992.
+                Unsere Website wird über Supabase gehostet. Supabase Inc., 970 Toa Payoh North
+                #07-04, Singapore 318992.
               </p>
+              <p>Ihre Daten werden in sicheren Rechenzentren innerhalb der EU gespeichert.</p>
               <p>
-                Ihre Daten werden in sicheren Rechenzentren innerhalb der EU gespeichert.
-              </p>
-              <p>
-                Datenschutzerklärung von Supabase: <a href="https://supabase.com/privacy" className="text-blue-600 hover:underline">https://supabase.com/privacy</a>
+                Datenschutzerklärung von Supabase:{' '}
+                <a href="https://supabase.com/privacy" className="text-blue-600 hover:underline">
+                  https://supabase.com/privacy
+                </a>
               </p>
             </section>
 
             {/* 6. Zweck und Rechtsgrundlage */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">6. Zweck und Rechtsgrundlage der Verarbeitung</h2>
-              <p>
-                Die Verarbeitung Ihrer Daten erfolgt zu folgenden Zwecken:
-              </p>
+              <h2 className="text-xl font-semibold">
+                6. Zweck und Rechtsgrundlage der Verarbeitung
+              </h2>
+              <p>Die Verarbeitung Ihrer Daten erfolgt zu folgenden Zwecken:</p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>Bereitstellung und Verwaltung Ihres Benutzerkontos (Art. 6 Abs. 1 lit. b DSGVO)</li>
-                <li>Abwicklung von Zahlungen für Premium-Abonnements (Art. 6 Abs. 1 lit. b DSGVO)</li>
-                <li>Verbesserung unserer Dienstleistungen auf Basis von Nutzungsanalysen (Art. 6 Abs. 1 lit. f DSGVO). Sie haben das Recht, dieser Verarbeitung jederzeit zu widersprechen.</li>
+                <li>
+                  Bereitstellung und Verwaltung Ihres Benutzerkontos (Art. 6 Abs. 1 lit. b DSGVO)
+                </li>
+                <li>
+                  Abwicklung von Zahlungen für Premium-Abonnements (Art. 6 Abs. 1 lit. b DSGVO)
+                </li>
+                <li>
+                  Verbesserung unserer Dienstleistungen auf Basis von Nutzungsanalysen (Art. 6 Abs.
+                  1 lit. f DSGVO). Sie haben das Recht, dieser Verarbeitung jederzeit zu
+                  widersprechen.
+                </li>
                 <li>Erfüllung rechtlicher Verpflichtungen (Art. 6 Abs. 1 lit. c DSGVO)</li>
               </ul>
             </section>
@@ -96,13 +119,18 @@ const Privacy = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">7. Newsletter und Marketingkommunikation</h2>
               <p>
-                Sofern Sie uns Ihre ausdrückliche Einwilligung erteilt haben (Art. 6 Abs. 1 lit. a DSGVO), verwenden wir Ihre E-Mail-Adresse, um Sie regelmäßig über Neuigkeiten, Angebote und Produktupdates zu informieren.
+                Sofern Sie uns Ihre ausdrückliche Einwilligung erteilt haben (Art. 6 Abs. 1 lit. a
+                DSGVO), verwenden wir Ihre E-Mail-Adresse, um Sie regelmäßig über Neuigkeiten,
+                Angebote und Produktupdates zu informieren.
               </p>
               <p>
-                Ihre Einwilligung können Sie jederzeit widerrufen. In jeder Marketing-E-Mail finden Sie einen Abmeldelink. Alternativ können Sie uns auch per E-Mail unter hallo@altfragen.io kontaktieren.
+                Ihre Einwilligung können Sie jederzeit widerrufen. In jeder Marketing-E-Mail finden
+                Sie einen Abmeldelink. Alternativ können Sie uns auch per E-Mail unter
+                hallo@altfragen.io kontaktieren.
               </p>
               <p>
-                Der Widerruf der Einwilligung berührt nicht die Rechtmäßigkeit der bis zum Widerruf erfolgten Verarbeitung.
+                Der Widerruf der Einwilligung berührt nicht die Rechtmäßigkeit der bis zum Widerruf
+                erfolgten Verarbeitung.
               </p>
             </section>
 
@@ -110,20 +138,20 @@ const Privacy = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">8. Cookies</h2>
               <p>
-                Unsere Website verwendet ausschließlich technisch notwendige Cookies, die für die Grundfunktionen der Plattform (z.B. Login-Status) unerlässlich sind.
-                Diese Cookies speichern keine personenbezogenen Daten, die eine Identifizierung ermöglichen.
+                Unsere Website verwendet ausschließlich technisch notwendige Cookies, die für die
+                Grundfunktionen der Plattform (z.B. Login-Status) unerlässlich sind. Diese Cookies
+                speichern keine personenbezogenen Daten, die eine Identifizierung ermöglichen.
               </p>
               <p>
-                Wir verwenden keine optionalen Analyse- oder Marketing-Cookies von Drittanbietern. Daher ist kein Cookie-Einwilligungsbanner erforderlich.
+                Wir verwenden keine optionalen Analyse- oder Marketing-Cookies von Drittanbietern.
+                Daher ist kein Cookie-Einwilligungsbanner erforderlich.
               </p>
             </section>
 
             {/* 9. Weitergabe von Daten */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">9. Weitergabe von Daten</h2>
-              <p>
-                Ihre Daten werden nur in folgenden Fällen an Dritte weitergegeben:
-              </p>
+              <p>Ihre Daten werden nur in folgenden Fällen an Dritte weitergegeben:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>An Stripe zur Zahlungsabwicklung</li>
                 <li>Wenn dies gesetzlich vorgeschrieben ist</li>
@@ -134,9 +162,7 @@ const Privacy = () => {
             {/* 10. Datensicherheit */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">10. Datensicherheit</h2>
-              <p>
-                Wir verwenden branchenübliche Sicherheitsmaßnahmen zum Schutz Ihrer Daten:
-              </p>
+              <p>Wir verwenden branchenübliche Sicherheitsmaßnahmen zum Schutz Ihrer Daten:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>SSL-Verschlüsselung für alle Datenübertragungen</li>
                 <li>Verschlüsselte Speicherung von Passwörtern</li>
@@ -148,16 +174,15 @@ const Privacy = () => {
             {/* 11. Speicherdauer */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">11. Speicherdauer</h2>
-              <p>
-                Ihre Daten werden so lange gespeichert, wie:
-              </p>
+              <p>Ihre Daten werden so lange gespeichert, wie:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Ihr Benutzerkonto aktiv ist</li>
                 <li>Gesetzliche Aufbewahrungspflichten bestehen</li>
                 <li>Zur Erfüllung vertraglicher Verpflichtungen erforderlich</li>
               </ul>
               <p>
-                Nach Löschung Ihres Kontos werden Ihre Daten innerhalb von 30 Tagen vollständig entfernt.
+                Nach Löschung Ihres Kontos werden Ihre Daten innerhalb von 30 Tagen vollständig
+                entfernt.
               </p>
             </section>
 
@@ -174,21 +199,17 @@ const Privacy = () => {
                 <li>Recht auf Widerspruch (Art. 21 DSGVO)</li>
                 <li>Recht auf Beschwerde bei einer Aufsichtsbehörde (Art. 77 DSGVO)</li>
               </ul>
-              <p>
-                Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: hallo@altfragen.io
-              </p>
+              <p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: hallo@altfragen.io</p>
             </section>
 
             {/* 13. Änderungen */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">13. Änderungen dieser Datenschutzerklärung</h2>
               <p>
-                Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren. 
-                Die aktuelle Version ist stets auf unserer Website verfügbar.
+                Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren. Die
+                aktuelle Version ist stets auf unserer Website verfügbar.
               </p>
-              <p>
-                Stand: Juni 2025
-              </p>
+              <p>Stand: Juni 2025</p>
             </section>
           </CardContent>
         </Card>

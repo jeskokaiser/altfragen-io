@@ -1,6 +1,12 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -22,28 +28,31 @@ interface SearchFiltersProps {
 export const SearchFilters: React.FC<SearchFiltersProps> = ({
   filters,
   onFiltersChange,
-  filterOptions
+  filterOptions,
 }) => {
   const handleFilterChange = (key: keyof QuestionSearchFilters, value: any) => {
     onFiltersChange({
       ...filters,
-      [key]: value === 'all' || value === '' ? null : value
+      [key]: value === 'all' || value === '' ? null : value,
     });
   };
 
-  const handleVisibilityChange = (visibility: 'private' | 'university' | 'public', checked: boolean) => {
+  const handleVisibilityChange = (
+    visibility: 'private' | 'university' | 'public',
+    checked: boolean,
+  ) => {
     const currentVisibility = filters.visibility || [];
     let newVisibility: ('private' | 'university' | 'public')[];
-    
+
     if (checked) {
       newVisibility = [...currentVisibility, visibility];
     } else {
-      newVisibility = currentVisibility.filter(v => v !== visibility);
+      newVisibility = currentVisibility.filter((v) => v !== visibility);
     }
-    
+
     onFiltersChange({
       ...filters,
-      visibility: newVisibility.length > 0 ? newVisibility : null
+      visibility: newVisibility.length > 0 ? newVisibility : null,
     });
   };
 
@@ -55,11 +64,11 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
       year: null,
       difficulty: null,
       visibility: null,
-      filename: null
+      filename: null,
     });
   };
 
-  const hasActiveFilters = 
+  const hasActiveFilters =
     filters.subject ||
     filters.examName ||
     filters.semester ||
@@ -73,12 +82,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Filter</h3>
         {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearFilters}
-            className="h-8 px-2"
-          >
+          <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-8 px-2">
             <X className="h-4 w-4 mr-1" />
             Zurücksetzen
           </Button>
@@ -181,7 +185,10 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
         {/* Difficulty Filter */}
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="difficulty-filter">
-            Schwierigkeit: {filters.difficulty !== null && filters.difficulty !== undefined ? filters.difficulty : 'Alle'}
+            Schwierigkeit:{' '}
+            {filters.difficulty !== null && filters.difficulty !== undefined
+              ? filters.difficulty
+              : 'Alle'}
           </Label>
           <div className="flex items-center gap-4">
             <Slider
@@ -189,7 +196,11 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
               min={1}
               max={5}
               step={1}
-              value={filters.difficulty !== null && filters.difficulty !== undefined ? [filters.difficulty] : [3]}
+              value={
+                filters.difficulty !== null && filters.difficulty !== undefined
+                  ? [filters.difficulty]
+                  : [3]
+              }
               onValueChange={(value) => handleFilterChange('difficulty', value[0])}
               className="flex-1"
             />
@@ -223,7 +234,9 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
               <Checkbox
                 id="visibility-university"
                 checked={filters.visibility?.includes('university') || false}
-                onCheckedChange={(checked) => handleVisibilityChange('university', checked as boolean)}
+                onCheckedChange={(checked) =>
+                  handleVisibilityChange('university', checked as boolean)
+                }
               />
               <Label htmlFor="visibility-university" className="font-normal cursor-pointer">
                 Universität
@@ -256,4 +269,3 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
     </div>
   );
 };
-

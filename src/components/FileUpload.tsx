@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -8,17 +7,26 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
-import { AlertCircle, Lock, GraduationCap, Globe, FileText, FileUp, Files, Scan } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
+import {
+  AlertCircle,
+  Lock,
+  GraduationCap,
+  Globe,
+  FileText,
+  FileUp,
+  Files,
+  Scan,
+} from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import PDFUpload from './PDFUpload';
 import BatchPDFUpload from './BatchPDFUpload';
 import OCRUpload from './OCRUpload';
@@ -34,68 +42,76 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>('private');
   const [uploadType, setUploadType] = useState<'csv' | 'pdf' | 'batch-pdf' | 'ocr'>('csv');
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setError(null);
+  const handleFileUpload = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      setError(null);
 
-    if (!file) {
-      setError("Bitte wähle eine Datei aus");
-      toast.error("Keine Datei ausgewählt", {
-        description: "Bitte wähle eine CSV-Datei aus"
-      });
-      return;
-    }
-
-    if (!file.name.endsWith('.csv')) {
-      setError("Bitte wähle eine CSV-Datei aus");
-      toast.error("Ungültiges Dateiformat", {
-        description: "Es werden nur CSV-Dateien unterstützt"
-      });
-      return;
-    }
-
-    console.log('File selected:', file.name);
-
-    try {
-      const { headers, rows } = await parseCSV(file);
-      const questions = mapRowsToQuestions(rows, headers, file.name);
-
-      console.log('Total valid questions:', questions.length);
-
-      if (questions.length === 0) {
-        setError("Die CSV-Datei enthält keine gültigen Fragen");
-        toast.error("Keine gültigen Fragen gefunden", {
-          description: "Überprüfe das Format deiner CSV-Datei"
+      if (!file) {
+        setError('Bitte wähle eine Datei aus');
+        toast.error('Keine Datei ausgewählt', {
+          description: 'Bitte wähle eine CSV-Datei aus',
         });
         return;
       }
 
-      const questionsWithVisibility = questions.map(q => ({
-        ...q,
-        visibility
-      }));
+      if (!file.name.endsWith('.csv')) {
+        setError('Bitte wähle eine CSV-Datei aus');
+        toast.error('Ungültiges Dateiformat', {
+          description: 'Es werden nur CSV-Dateien unterstützt',
+        });
+        return;
+      }
 
-      const savedQuestions = await saveQuestions(questionsWithVisibility, user?.id || '', universityId);
-      onQuestionsLoaded(savedQuestions);
-      
-      const visibilityText = visibility === 'private' 
-        ? 'privat' 
-        : visibility === 'university'
-        ? 'mit deiner Universität geteilt'
-        : 'öffentlich (für alle registrierten Universitäten)';
-          
-      toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
-        description: `Die Fragen wurden erfolgreich gespeichert und sind ${visibilityText}`
-      });
-    } catch (error: any) {
-      console.error('Error processing file:', error);
-      const errorMessage = error.message || "Ein unerwarteter Fehler ist aufgetreten";
-      setError(errorMessage);
-      toast.error("Fehler beim Verarbeiten der Datei", {
-        description: errorMessage
-      });
-    }
-  }, [user, universityId, onQuestionsLoaded, visibility]);
+      console.log('File selected:', file.name);
+
+      try {
+        const { headers, rows } = await parseCSV(file);
+        const questions = mapRowsToQuestions(rows, headers, file.name);
+
+        console.log('Total valid questions:', questions.length);
+
+        if (questions.length === 0) {
+          setError('Die CSV-Datei enthält keine gültigen Fragen');
+          toast.error('Keine gültigen Fragen gefunden', {
+            description: 'Überprüfe das Format deiner CSV-Datei',
+          });
+          return;
+        }
+
+        const questionsWithVisibility = questions.map((q) => ({
+          ...q,
+          visibility,
+        }));
+
+        const savedQuestions = await saveQuestions(
+          questionsWithVisibility,
+          user?.id || '',
+          universityId,
+        );
+        onQuestionsLoaded(savedQuestions);
+
+        const visibilityText =
+          visibility === 'private'
+            ? 'privat'
+            : visibility === 'university'
+              ? 'mit deiner Universität geteilt'
+              : 'öffentlich (für alle registrierten Universitäten)';
+
+        toast.success(`${questions.length} Fragen aus "${file.name}" geladen`, {
+          description: `Die Fragen wurden erfolgreich gespeichert und sind ${visibilityText}`,
+        });
+      } catch (error: any) {
+        console.error('Error processing file:', error);
+        const errorMessage = error.message || 'Ein unerwarteter Fehler ist aufgetreten';
+        setError(errorMessage);
+        toast.error('Fehler beim Verarbeiten der Datei', {
+          description: errorMessage,
+        });
+      }
+    },
+    [user, universityId, onQuestionsLoaded, visibility],
+  );
 
   const renderVisibilityIcon = () => {
     switch (visibility) {
@@ -110,7 +126,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
   const getUniversityContextMessage = () => {
     if (!universityId) {
-      return "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.";
+      return 'Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.';
     }
     return `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.  Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt.`;
   };
@@ -128,7 +144,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
       <p className="text-slate-600 dark:text-zinc-300 mb-4">
         Bitte wähle ein Format und lade deine Fragen hoch
       </p>
-      
+
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
@@ -138,24 +154,24 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
       <Tabs defaultValue="csv" className="w-full">
         <TabsList className="grid grid-cols-3">
-          <TabsTrigger 
-            value="csv" 
+          <TabsTrigger
+            value="csv"
             onClick={() => setUploadType('csv')}
             className="flex items-center gap-2"
           >
             <FileText className="h-4 w-4" />
             CSV-Datei
           </TabsTrigger>
-          <TabsTrigger 
-            value="batch-pdf" 
+          <TabsTrigger
+            value="batch-pdf"
             onClick={() => setUploadType('batch-pdf')}
             className="flex items-center gap-2"
           >
             <Files className="h-4 w-4" />
             Batch Dokumente
           </TabsTrigger>
-          <TabsTrigger 
-            value="ocr" 
+          <TabsTrigger
+            value="ocr"
             onClick={() => setUploadType('ocr')}
             className="flex items-center gap-2"
           >
@@ -163,22 +179,22 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
             OCR Upload
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="csv">
           <Card className="w-full">
             <CardHeader>
               <CardTitle className="text-xl">CSV Upload</CardTitle>
-              <CardDescription>
-                {getUniversityContextMessage()}
-              </CardDescription>
+              <CardDescription>{getUniversityContextMessage()}</CardDescription>
             </CardHeader>
             <CardContent className="pt-2">
               <div className="flex flex-col gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Sichtbarkeit der Fragen</label>
-                  <Select 
-                    value={visibility} 
-                    onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
+                  <Select
+                    value={visibility}
+                    onValueChange={(value: 'private' | 'university' | 'public') =>
+                      setVisibility(value)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Sichtbarkeit wählen" />
@@ -208,8 +224,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
                 <div className="flex justify-center mt-2">
                   <label htmlFor="csv-upload">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
                       onClick={() => document.getElementById('csv-upload')?.click()}
                     >
@@ -224,7 +240,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                     className="hidden"
                   />
                 </div>
-                
+
                 <div className="mt-2 p-4 bg-muted/50 rounded-lg text-xs text-muted-foreground">
                   <p>Die CSV-Datei sollte folgende Spalten enthalten:</p>
                   <p className="font-mono mt-1">Frage, A, B, C, D, E, Fach, Antwort, Kommentar</p>
@@ -233,26 +249,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="pdf">
-          <PDFUpload 
-            onQuestionsLoaded={handlePDFQuestionsLoaded} 
-            visibility={visibility}
-          />
+          <PDFUpload onQuestionsLoaded={handlePDFQuestionsLoaded} visibility={visibility} />
         </TabsContent>
 
         <TabsContent value="batch-pdf">
-          <BatchPDFUpload 
-            onQuestionsLoaded={handlePDFQuestionsLoaded} 
-            visibility={visibility}
-          />
+          <BatchPDFUpload onQuestionsLoaded={handlePDFQuestionsLoaded} visibility={visibility} />
         </TabsContent>
 
         <TabsContent value="ocr">
-          <OCRUpload 
-            onQuestionsLoaded={handlePDFQuestionsLoaded} 
-            visibility={visibility}
-          />
+          <OCRUpload onQuestionsLoaded={handlePDFQuestionsLoaded} visibility={visibility} />
         </TabsContent>
       </Tabs>
     </div>

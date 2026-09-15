@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +19,12 @@ interface UpcomingExamCreateDialogProps {
   universityId?: string | null;
 }
 
-const UpcomingExamCreateDialog: React.FC<UpcomingExamCreateDialogProps> = ({ open, onOpenChange, userId, universityId }) => {
+const UpcomingExamCreateDialog: React.FC<UpcomingExamCreateDialogProps> = ({
+  open,
+  onOpenChange,
+  userId,
+  universityId,
+}) => {
   const { createExam } = useUpcomingExams(userId);
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -32,7 +43,7 @@ const UpcomingExamCreateDialog: React.FC<UpcomingExamCreateDialogProps> = ({ ope
         description: description || null,
         subject: subject || null,
         created_by: userId,
-        university_id: universityId ?? null
+        university_id: universityId ?? null,
       });
       onOpenChange(false);
       setTitle('');
@@ -49,7 +60,9 @@ const UpcomingExamCreateDialog: React.FC<UpcomingExamCreateDialogProps> = ({ ope
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Neue Prüfung</DialogTitle>
-          <DialogDescription>Lege eine bevorstehende Prüfung mit Fälligkeitsdatum an.</DialogDescription>
+          <DialogDescription>
+            Lege eine bevorstehende Prüfung mit Fälligkeitsdatum an.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -58,7 +71,13 @@ const UpcomingExamCreateDialog: React.FC<UpcomingExamCreateDialogProps> = ({ ope
           </div>
           <div className="space-y-2">
             <Label htmlFor="due">Fällig am</Label>
-            <Input id="due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required />
+            <Input
+              id="due"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="subject">Fach (optional)</Label>
@@ -66,11 +85,24 @@ const UpcomingExamCreateDialog: React.FC<UpcomingExamCreateDialogProps> = ({ ope
           </div>
           <div className="space-y-2">
             <Label htmlFor="desc">Beschreibung (optional)</Label>
-            <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea
+              id="desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Abbrechen</Button>
-            <Button type="submit" disabled={isSubmitting}>Anlegen</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              Anlegen
+            </Button>
           </div>
         </form>
       </DialogContent>
@@ -79,5 +111,3 @@ const UpcomingExamCreateDialog: React.FC<UpcomingExamCreateDialogProps> = ({ ope
 };
 
 export default UpcomingExamCreateDialog;
-
-

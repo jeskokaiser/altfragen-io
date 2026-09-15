@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Label } from "@/components/ui/label";
+import { Label } from '@/components/ui/label';
 import { BatchPDFFile } from './types';
 import BatchFileItem from './BatchFileItem';
 
@@ -17,7 +16,7 @@ const BatchFileList: React.FC<BatchFileListProps> = ({
   onUpdateFile,
   onRemoveFile,
   isUploading,
-  years
+  years,
 }) => {
   if (files.length === 0) {
     return (

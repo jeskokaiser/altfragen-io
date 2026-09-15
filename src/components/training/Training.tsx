@@ -62,27 +62,27 @@ const Training: React.FC = () => {
     setFilterSettings(settings);
     localStorage.setItem('trainingFilterSettings', JSON.stringify(settings));
 
-    const questionIds = questions.map(q => q.id);
+    const questionIds = questions.map((q) => q.id);
     try {
       const fullQuestions = await fetchQuestionDetails(questionIds);
 
-      const fullQuestionsMap = new Map(fullQuestions.map(q => [q.id, q]));
+      const fullQuestionsMap = new Map(fullQuestions.map((q) => [q.id, q]));
 
-      const questionsWithDetails = questions.map(q => 
-        fullQuestionsMap.get(q.id) || q
-      );
+      const questionsWithDetails = questions.map((q) => fullQuestionsMap.get(q.id) || q);
 
       setSelectedQuestions(questionsWithDetails);
-      setUserAnswers(new Array(questionsWithDetails.length).fill({
-        // initial placeholder; will be replaced on first answer
-        // using the AnswerState shape in handleAnswer
-        // @ts-ignore
-        selectedAnswer: null,
-        // @ts-ignore
-        isCorrect: null,
-        // @ts-ignore
-        hasAnswered: false
-      } as any));
+      setUserAnswers(
+        new Array(questionsWithDetails.length).fill({
+          // initial placeholder; will be replaced on first answer
+          // using the AnswerState shape in handleAnswer
+          // @ts-ignore
+          selectedAnswer: null,
+          // @ts-ignore
+          isCorrect: null,
+          // @ts-ignore
+          hasAnswered: false,
+        } as any),
+      );
       setConfigurationComplete(true);
       setScrollPositions(new Map());
 
@@ -92,14 +92,16 @@ const Training: React.FC = () => {
     } catch (error) {
       console.error('Error fetching question details:', error);
       setSelectedQuestions(questions);
-      setUserAnswers(new Array(questions.length).fill({
-        // @ts-ignore
-        selectedAnswer: null,
-        // @ts-ignore
-        isCorrect: null,
-        // @ts-ignore
-        hasAnswered: false
-      } as any));
+      setUserAnswers(
+        new Array(questions.length).fill({
+          // @ts-ignore
+          selectedAnswer: null,
+          // @ts-ignore
+          isCorrect: null,
+          // @ts-ignore
+          hasAnswered: false,
+        } as any),
+      );
       setConfigurationComplete(true);
       setScrollPositions(new Map());
 
@@ -123,7 +125,7 @@ const Training: React.FC = () => {
         isFirstAttempt: isFirstAttemptValue,
         viewedSolution: true,
         attempts: currentAnswer?.attempts ?? [],
-        originalAnswer: currentAnswer?.originalAnswer || currentAnswer?.value || answer
+        originalAnswer: currentAnswer?.originalAnswer || currentAnswer?.value || answer,
       } as any;
     } else {
       const attempts = currentAnswer?.attempts ?? [];
@@ -134,7 +136,7 @@ const Training: React.FC = () => {
         isFirstAttempt: isActualFirstAttempt,
         viewedSolution: currentAnswer?.viewedSolution ?? false,
         attempts: [...attempts, answer],
-        originalAnswer: currentAnswer?.originalAnswer
+        originalAnswer: currentAnswer?.originalAnswer,
       } as any;
     }
 
@@ -142,14 +144,17 @@ const Training: React.FC = () => {
   };
 
   const saveScrollPosition = () => {
-    setScrollPositions(prev => new Map(prev.set(currentQuestionIndex, window.scrollY)));
+    setScrollPositions((prev) => new Map(prev.set(currentQuestionIndex, window.scrollY)));
   };
 
   const handleNext = () => {
     saveScrollPosition();
 
     let nextIndex = currentQuestionIndex + 1;
-    while (nextIndex < selectedQuestions.length && ignoredQuestions.has(selectedQuestions[nextIndex].id)) {
+    while (
+      nextIndex < selectedQuestions.length &&
+      ignoredQuestions.has(selectedQuestions[nextIndex].id)
+    ) {
       nextIndex++;
     }
 
@@ -174,7 +179,7 @@ const Training: React.FC = () => {
   };
 
   const handleQuestionIgnored = (questionId: string) => {
-    setIgnoredQuestions(prev => new Set([...prev, questionId]));
+    setIgnoredQuestions((prev) => new Set([...prev, questionId]));
   };
 
   const handleRestart = () => {
@@ -207,8 +212,8 @@ const Training: React.FC = () => {
   };
 
   const handleQuestionUpdate = (updatedQuestion: Question) => {
-    const updatedQuestions = selectedQuestions.map(q => 
-      q.id === updatedQuestion.id ? updatedQuestion : q
+    const updatedQuestions = selectedQuestions.map((q) =>
+      q.id === updatedQuestion.id ? updatedQuestion : q,
     );
     setSelectedQuestions(updatedQuestions);
   };
@@ -230,17 +235,16 @@ const Training: React.FC = () => {
   if (!configurationComplete) {
     return (
       <div className="container mx-auto py-8">
-        <TrainingConfig 
-          questions={allQuestions}
-          onStart={handleStartTraining}
-        />
+        <TrainingConfig questions={allQuestions} onStart={handleStartTraining} />
       </div>
     );
   }
 
   if (showResults) {
-    const resultsQuestions = selectedQuestions.filter(q => !ignoredQuestions.has(q.id));
-    const resultsAnswers = userAnswers.filter((_, index) => !ignoredQuestions.has(selectedQuestions[index]?.id));
+    const resultsQuestions = selectedQuestions.filter((q) => !ignoredQuestions.has(q.id));
+    const resultsAnswers = userAnswers.filter(
+      (_, index) => !ignoredQuestions.has(selectedQuestions[index]?.id),
+    );
 
     return (
       <div className="container mx-auto py-8">
@@ -259,8 +263,9 @@ const Training: React.FC = () => {
   }
 
   const effectiveTotalQuestions = selectedQuestions.length - ignoredQuestions.size;
-  const effectiveCurrentIndex = selectedQuestions.slice(0, currentQuestionIndex)
-    .filter(q => !ignoredQuestions.has(q.id)).length;
+  const effectiveCurrentIndex = selectedQuestions
+    .slice(0, currentQuestionIndex)
+    .filter((q) => !ignoredQuestions.has(q.id)).length;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-background">
@@ -283,4 +288,4 @@ const Training: React.FC = () => {
   );
 };
 
-export default Training; 
+export default Training;

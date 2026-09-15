@@ -1,34 +1,33 @@
-
 export interface AIAnswerComments {
   id: string;
   question_id: string;
-  
+
   // Legacy General Comments (3 columns)
   openai_general_comment?: string;
   claude_general_comment?: string;
   gemini_general_comment?: string;
-  
+
   // Legacy OpenAI Answer Comments (5 columns)
   openai_comment_a?: string;
   openai_comment_b?: string;
   openai_comment_c?: string;
   openai_comment_d?: string;
   openai_comment_e?: string;
-  
+
   // Legacy Claude Answer Comments (5 columns)
   claude_comment_a?: string;
   claude_comment_b?: string;
   claude_comment_c?: string;
   claude_comment_d?: string;
   claude_comment_e?: string;
-  
+
   // Legacy Gemini Answer Comments (5 columns)
   gemini_comment_a?: string;
   gemini_comment_b?: string;
   gemini_comment_c?: string;
   gemini_comment_d?: string;
   gemini_comment_e?: string;
-  
+
   // New ChatGPT Comments
   chatgpt_chosen_answer?: string;
   chatgpt_general_comment?: string;
@@ -43,7 +42,7 @@ export interface AIAnswerComments {
   chatgpt_regenerated_option_c?: string;
   chatgpt_regenerated_option_d?: string;
   chatgpt_regenerated_option_e?: string;
-  
+
   // New Gemini Comments (new-gemini)
   gemini_chosen_answer?: string;
   gemini_new_general_comment?: string;
@@ -58,7 +57,7 @@ export interface AIAnswerComments {
   gemini_regenerated_option_c?: string;
   gemini_regenerated_option_d?: string;
   gemini_regenerated_option_e?: string;
-  
+
   // New Mistral Comments
   mistral_chosen_answer?: string;
   mistral_general_comment?: string;
@@ -67,7 +66,7 @@ export interface AIAnswerComments {
   mistral_comment_c?: string;
   mistral_comment_d?: string;
   mistral_comment_e?: string;
-  
+
   // New Perplexity Comments
   perplexity_chosen_answer?: string;
   perplexity_general_comment?: string;
@@ -76,7 +75,7 @@ export interface AIAnswerComments {
   perplexity_comment_c?: string;
   perplexity_comment_d?: string;
   perplexity_comment_e?: string;
-  
+
   // New DeepSeek Comments
   deepseek_chosen_answer?: string;
   deepseek_general_comment?: string;
@@ -85,7 +84,7 @@ export interface AIAnswerComments {
   deepseek_comment_c?: string;
   deepseek_comment_d?: string;
   deepseek_comment_e?: string;
-  
+
   processing_status: string;
   created_at: string;
   updated_at: string;
@@ -94,7 +93,7 @@ export interface AIAnswerComments {
 export interface AICommentarySummaryExtended {
   id: string;
   question_id: string;
-  
+
   // Summary Comments (6 columns)
   summary_general_comment?: string;
   summary_comment_a?: string;
@@ -102,15 +101,16 @@ export interface AICommentarySummaryExtended {
   summary_comment_c?: string;
   summary_comment_d?: string;
   summary_comment_e?: string;
-  
+
   // Agreement Analysis (1 column)
   model_agreement_analysis?: string;
-  
+
   created_at: string;
   updated_at: string;
 }
 
-export type ModelName = 'openai' | 'claude' | 'gemini' | 'chatgpt' | 'new-gemini' | 'mistral' | 'perplexity' | 'deepseek';
+export type ModelName =
+  'openai' | 'claude' | 'gemini' | 'chatgpt' | 'new-gemini' | 'mistral' | 'perplexity' | 'deepseek';
 export type AnswerOption = 'a' | 'b' | 'c' | 'd' | 'e';
 
 export interface ModelComments {

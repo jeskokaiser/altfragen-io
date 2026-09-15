@@ -59,7 +59,7 @@ const CheckoutStatusNotification: React.FC = () => {
               <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
@@ -74,11 +74,11 @@ const CheckoutStatusNotification: React.FC = () => {
                 <X className="h-3 w-3" />
               </Button>
             </div>
-            
+
             <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
               Deine Zahlung wird verarbeitet. Der Status wird automatisch aktualisiert.
             </p>
-            
+
             <div className="flex gap-2">
               <Button
                 onClick={handleRefreshStatus}
@@ -98,4 +98,4 @@ const CheckoutStatusNotification: React.FC = () => {
   );
 };
 
-export default CheckoutStatusNotification; 
+export default CheckoutStatusNotification;

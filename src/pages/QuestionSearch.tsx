@@ -10,7 +10,13 @@ import { QuestionSearchFilters, SortField, SortDirection } from '@/types/Questio
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import { Search, Loader2, ArrowUpDown } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import {
   Pagination,
@@ -48,7 +54,7 @@ const QuestionSearch: React.FC = () => {
     year: null,
     difficulty: null,
     visibility: null,
-    filename: null
+    filename: null,
   });
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(50);
@@ -61,24 +67,39 @@ const QuestionSearch: React.FC = () => {
   const { data: filterOptions, isLoading: isLoadingOptions } = useQuery({
     queryKey: ['search-filter-options', user?.id, universityId],
     queryFn: () => getFilterOptions(user!.id, universityId || null),
-    enabled: !!user
+    enabled: !!user,
   });
 
   // Search questions
-  const { data: searchResults, isLoading: isLoadingResults, refetch } = useQuery({
-    queryKey: ['question-search', debouncedSearchText, filters, page, pageSize, sortBy, sortDirection, user?.id, universityId],
-    queryFn: () => searchQuestions({
-      searchText: debouncedSearchText,
+  const {
+    data: searchResults,
+    isLoading: isLoadingResults,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'question-search',
+      debouncedSearchText,
       filters,
       page,
       pageSize,
       sortBy,
       sortDirection,
-      userId: user!.id,
-      universityId: universityId || null
-    }),
+      user?.id,
+      universityId,
+    ],
+    queryFn: () =>
+      searchQuestions({
+        searchText: debouncedSearchText,
+        filters,
+        page,
+        pageSize,
+        sortBy,
+        sortDirection,
+        userId: user!.id,
+        universityId: universityId || null,
+      }),
     enabled: !!user,
-    staleTime: 30000 // Cache for 30 seconds
+    staleTime: 30000, // Cache for 30 seconds
   });
 
   const handleFiltersChange = (newFilters: QuestionSearchFilters) => {
@@ -113,9 +134,7 @@ const QuestionSearch: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const totalPages = searchResults
-    ? Math.ceil(searchResults.totalCount / pageSize)
-    : 0;
+  const totalPages = searchResults ? Math.ceil(searchResults.totalCount / pageSize) : 0;
 
   const isLoading = isLoadingResults || isLoadingOptions;
 
@@ -170,7 +189,9 @@ const QuestionSearch: React.FC = () => {
                 )}
                 {/* Sort Options */}
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="sort-by" className="text-sm whitespace-nowrap">Sortieren nach:</Label>
+                  <Label htmlFor="sort-by" className="text-sm whitespace-nowrap">
+                    Sortieren nach:
+                  </Label>
                   <Select
                     value={sortBy}
                     onValueChange={(value) => handleSortChange(value as SortField)}
@@ -192,16 +213,17 @@ const QuestionSearch: React.FC = () => {
                     onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
                     title={sortDirection === 'asc' ? 'Aufsteigend' : 'Absteigend'}
                   >
-                    <ArrowUpDown className={`h-4 w-4 ${sortDirection === 'asc' ? 'rotate-180' : ''}`} />
+                    <ArrowUpDown
+                      className={`h-4 w-4 ${sortDirection === 'asc' ? 'rotate-180' : ''}`}
+                    />
                   </Button>
                 </div>
                 {/* Page Size Selector */}
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="page-size" className="text-sm whitespace-nowrap">Pro Seite:</Label>
-                  <Select
-                    value={pageSize.toString()}
-                    onValueChange={handlePageSizeChange}
-                  >
+                  <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
+                    Pro Seite:
+                  </Label>
+                  <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
                     <SelectTrigger id="page-size" className="w-[100px]">
                       <SelectValue />
                     </SelectTrigger>
@@ -234,7 +256,9 @@ const QuestionSearch: React.FC = () => {
                       <PaginationItem>
                         <PaginationPrevious
                           onClick={() => page > 0 && handlePageChange(page - 1)}
-                          className={page === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          className={
+                            page === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                          }
                         />
                       </PaginationItem>
                       {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => {
@@ -265,7 +289,11 @@ const QuestionSearch: React.FC = () => {
                       <PaginationItem>
                         <PaginationNext
                           onClick={() => page < totalPages - 1 && handlePageChange(page + 1)}
-                          className={page >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          className={
+                            page >= totalPages - 1
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>
@@ -291,4 +319,3 @@ const QuestionSearch: React.FC = () => {
 };
 
 export default QuestionSearch;
-

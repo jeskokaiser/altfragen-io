@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -19,7 +18,7 @@ export const useAuthGuard = (): AuthGuardState => {
       const timer = setTimeout(() => {
         setIsReady(true);
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [loading]);
@@ -27,7 +26,6 @@ export const useAuthGuard = (): AuthGuardState => {
   return {
     isReady,
     isAuthenticated: !!user && isReady,
-    userId: user?.id || null
+    userId: user?.id || null,
   };
 };
-

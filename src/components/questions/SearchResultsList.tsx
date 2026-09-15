@@ -11,16 +11,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import EditQuestionModal from '@/components/training/EditQuestionModal';
-import { Pencil, Lock, GraduationCap, Globe, Calendar, BookOpen, MessageSquare } from 'lucide-react';
+import {
+  Pencil,
+  Lock,
+  GraduationCap,
+  Globe,
+  Calendar,
+  BookOpen,
+  MessageSquare,
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import CommentsSection from '@/components/training/CommentsSection';
 
 interface SearchResultsListProps {
@@ -32,7 +35,7 @@ interface SearchResultsListProps {
 export const SearchResultsList: React.FC<SearchResultsListProps> = ({
   questions,
   onQuestionUpdated,
-  isLoading = false
+  isLoading = false,
 }) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -185,9 +188,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                     {(question.semester || question.year) && (
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        <span>
-                          {[question.semester, question.year].filter(Boolean).join(' ')}
-                        </span>
+                        <span>{[question.semester, question.year].filter(Boolean).join(' ')}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1">
@@ -202,11 +203,23 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                   {isExpanded && (
                     <div className="pt-2 border-t space-y-2">
                       <div className="text-xs space-y-1">
-                        <p><strong>A:</strong> {question.optionA}</p>
-                        <p><strong>B:</strong> {question.optionB}</p>
-                        <p><strong>C:</strong> {question.optionC}</p>
-                        <p><strong>D:</strong> {question.optionD}</p>
-                        {question.optionE && <p><strong>E:</strong> {question.optionE}</p>}
+                        <p>
+                          <strong>A:</strong> {question.optionA}
+                        </p>
+                        <p>
+                          <strong>B:</strong> {question.optionB}
+                        </p>
+                        <p>
+                          <strong>C:</strong> {question.optionC}
+                        </p>
+                        <p>
+                          <strong>D:</strong> {question.optionD}
+                        </p>
+                        {question.optionE && (
+                          <p>
+                            <strong>E:</strong> {question.optionE}
+                          </p>
+                        )}
                       </div>
                       <p className="text-xs">
                         <strong>Richtige Antwort:</strong> {question.correctAnswer}
@@ -244,7 +257,10 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
 
         {/* Comments & Notes Sheet */}
         {commentsQuestionId && (
-          <Sheet open={!!commentsQuestionId} onOpenChange={(open) => !open && setCommentsQuestionId(null)}>
+          <Sheet
+            open={!!commentsQuestionId}
+            onOpenChange={(open) => !open && setCommentsQuestionId(null)}
+          >
             <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Kommentare & Notizen</SheetTitle>
@@ -252,7 +268,9 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
               <div className="mt-6">
                 <CommentsSection
                   questionId={commentsQuestionId}
-                  questionVisibility={questions.find(q => q.id === commentsQuestionId)?.visibility || 'private'}
+                  questionVisibility={
+                    questions.find((q) => q.id === commentsQuestionId)?.visibility || 'private'
+                  }
                 />
               </div>
             </SheetContent>
@@ -287,9 +305,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                 <TableRow key={question.id}>
                   <TableCell>
                     <div className="space-y-1">
-                      <p className={isExpanded ? '' : 'line-clamp-2'}>
-                        {question.question}
-                      </p>
+                      <p className={isExpanded ? '' : 'line-clamp-2'}>{question.question}</p>
                       <Button
                         variant="link"
                         size="sm"
@@ -300,11 +316,23 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                       </Button>
                       {isExpanded && (
                         <div className="mt-2 pt-2 border-t text-xs space-y-1 text-muted-foreground">
-                          <p><strong>A:</strong> {question.optionA}</p>
-                          <p><strong>B:</strong> {question.optionB}</p>
-                          <p><strong>C:</strong> {question.optionC}</p>
-                          <p><strong>D:</strong> {question.optionD}</p>
-                          {question.optionE && <p><strong>E:</strong> {question.optionE}</p>}
+                          <p>
+                            <strong>A:</strong> {question.optionA}
+                          </p>
+                          <p>
+                            <strong>B:</strong> {question.optionB}
+                          </p>
+                          <p>
+                            <strong>C:</strong> {question.optionC}
+                          </p>
+                          <p>
+                            <strong>D:</strong> {question.optionD}
+                          </p>
+                          {question.optionE && (
+                            <p>
+                              <strong>E:</strong> {question.optionE}
+                            </p>
+                          )}
                           <p className="mt-1">
                             <strong>Richtige Antwort:</strong> {question.correctAnswer}
                           </p>
@@ -332,9 +360,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                     {question.semester || question.year ? (
                       <div className="flex items-center gap-1 text-sm">
                         <Calendar className="h-3 w-3 text-muted-foreground" />
-                        <span>
-                          {[question.semester, question.year].filter(Boolean).join(' ')}
-                        </span>
+                        <span>{[question.semester, question.year].filter(Boolean).join(' ')}</span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">-</span>
@@ -392,7 +418,10 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
 
       {/* Comments & Notes Sheet */}
       {commentsQuestionId && (
-        <Sheet open={!!commentsQuestionId} onOpenChange={(open) => !open && setCommentsQuestionId(null)}>
+        <Sheet
+          open={!!commentsQuestionId}
+          onOpenChange={(open) => !open && setCommentsQuestionId(null)}
+        >
           <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Kommentare & Notizen</SheetTitle>
@@ -400,7 +429,9 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
             <div className="mt-6">
               <CommentsSection
                 questionId={commentsQuestionId}
-                questionVisibility={questions.find(q => q.id === commentsQuestionId)?.visibility || 'private'}
+                questionVisibility={
+                  questions.find((q) => q.id === commentsQuestionId)?.visibility || 'private'
+                }
               />
             </div>
           </SheetContent>
@@ -409,4 +440,3 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
     </>
   );
 };
-

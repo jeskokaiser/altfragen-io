@@ -7,24 +7,20 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 const DashboardHeader: React.FC = () => {
   const navigate = useNavigate();
-  const {
-    theme,
-    toggleTheme
-  } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const isMobile = useIsMobile();
   const handleSignOutAndNavigate = async () => {
-    const {
-      error
-    } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Fehler beim Abmelden:', error);
       return;
     }
     navigate('/');
   };
-  return <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-2">
+  return (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-2">
       <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-zinc-50">Dashboard</h1>
-     
-    </div>;
+    </div>
+  );
 };
 export default DashboardHeader;

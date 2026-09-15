@@ -11,7 +11,8 @@ export const updateUsername = async (userId: string, username: string | null): P
       .neq('id', userId)
       .single();
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+    if (checkError && checkError.code !== 'PGRST116') {
+      // PGRST116 = no rows returned
       console.error('Error checking username uniqueness:', checkError);
       throw checkError;
     }
@@ -84,10 +85,7 @@ export const deleteUserAccount = async (userId: string) => {
     }
 
     // Delete profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
+    const { error: profileError } = await supabase.from('profiles').delete().eq('id', userId);
 
     if (profileError) {
       console.error('Error deleting profile:', profileError);

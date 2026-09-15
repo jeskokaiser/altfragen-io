@@ -14,7 +14,10 @@ const TrainingSessionRunnerPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { session, isLoading, setIndex, setStatus, refresh } = useTrainingSession(sessionId, user?.id);
+  const { session, isLoading, setIndex, setStatus, refresh } = useTrainingSession(
+    sessionId,
+    user?.id,
+  );
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [localCurrentIndex, setLocalCurrentIndex] = useState<number | null>(null);
@@ -31,8 +34,8 @@ const TrainingSessionRunnerPage: React.FC = () => {
       if (!questionIds.length) return;
       const full = await fetchQuestionDetails(questionIds);
       // Keep session order
-      const map = new Map(full.map(q => [q.id, q]));
-      setQuestions(questionIds.map(id => map.get(id)).filter(Boolean) as Question[]);
+      const map = new Map(full.map((q) => [q.id, q]));
+      setQuestions(questionIds.map((id) => map.get(id)).filter(Boolean) as Question[]);
       // Initialize local index from session
       setLocalCurrentIndex(session.current_index ?? 0);
     };
@@ -45,17 +48,17 @@ const TrainingSessionRunnerPage: React.FC = () => {
   useEffect(() => {
     const loadProgress = async () => {
       if (!session || !user || !currentQuestion) return;
-      
+
       // Skip if we already have progress for this question
       if (questionProgress.has(currentQuestion.id)) return;
-      
+
       try {
         const progress = await TrainingSessionService.getQuestionProgress({
           sessionId: session.id,
           userId: user.id,
           questionId: currentQuestion.id,
         });
-        
+
         if (progress) {
           // Construct attempts array from initial and last answer
           const attempts: string[] = [];
@@ -66,10 +69,10 @@ const TrainingSessionRunnerPage: React.FC = () => {
           if (progress.last_answer && progress.last_answer !== progress.initial_answer) {
             attempts.push(progress.last_answer);
           }
-          
+
           // Use last_answer if available, otherwise initial_answer
           const finalAnswer = progress.last_answer || progress.initial_answer;
-          
+
           if (finalAnswer) {
             const answerState: AnswerState = {
               value: finalAnswer,
@@ -78,15 +81,15 @@ const TrainingSessionRunnerPage: React.FC = () => {
               attempts: attempts,
               originalAnswer: progress.initial_answer || undefined,
             };
-            
-            setQuestionProgress(prev => new Map(prev).set(currentQuestion.id, answerState));
+
+            setQuestionProgress((prev) => new Map(prev).set(currentQuestion.id, answerState));
           }
         }
       } catch (error) {
         console.error('Error loading question progress:', error);
       }
     };
-    
+
     loadProgress();
   }, [session?.id, user?.id, currentQuestion?.id]);
 
@@ -116,7 +119,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
     // Update UI immediately
     setLocalCurrentIndex(nextIndex);
     // Sync to database in background
-    setIndex(nextIndex).catch(error => {
+    setIndex(nextIndex).catch((error) => {
       console.error('Error updating session index:', error);
     });
   };
@@ -127,7 +130,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
     // Update UI immediately
     setLocalCurrentIndex(prevIndex);
     // Sync to database in background
-    setIndex(prevIndex).catch(error => {
+    setIndex(prevIndex).catch((error) => {
       console.error('Error updating session index:', error);
     });
   };
@@ -155,7 +158,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
   const handleAnswer = async (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
     // Clear cached progress for this question so it's refetched next time
     if (currentQuestion) {
-      setQuestionProgress(prev => {
+      setQuestionProgress((prev) => {
         const newMap = new Map(prev);
         newMap.delete(currentQuestion.id);
         return newMap;
@@ -168,7 +171,9 @@ const TrainingSessionRunnerPage: React.FC = () => {
   }
 
   if (!currentQuestion) {
-    return <div className="flex items-center justify-center min-h-[50vh]">Keine Frage gefunden.</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">Keine Frage gefunden.</div>
+    );
   }
 
   const currentAnswerState = currentQuestion ? questionProgress.get(currentQuestion.id) : undefined;
@@ -188,15 +193,15 @@ const TrainingSessionRunnerPage: React.FC = () => {
           onQuit={handleQuit}
           onSessionRecordAttempt={async (answer, isCorrect, viewedSolution, isFirstAttempt) => {
             if (!session || !user || !currentQuestion) return;
-            
+
             // Safety check: if isCorrect is not explicitly provided, calculate it
             // This prevents TypeError if correctAnswer is null/undefined
-            const finalIsCorrect = isCorrect ?? (
-              currentQuestion.correctAnswer
+            const finalIsCorrect =
+              isCorrect ??
+              (currentQuestion.correctAnswer
                 ? currentQuestion.correctAnswer.toUpperCase().startsWith(answer.toUpperCase())
-                : false
-            );
-            
+                : false);
+
             await TrainingSessionService.recordAttempt({
               sessionId: session.id,
               userId: user.id,

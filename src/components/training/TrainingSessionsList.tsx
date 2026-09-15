@@ -5,15 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 import { useNavigate } from 'react-router-dom';
-import { 
-  GraduationCap, 
-  BookOpen, 
-  Play, 
-  BarChart3, 
-  Trash2, 
+import {
+  GraduationCap,
+  BookOpen,
+  Play,
+  BarChart3,
+  Trash2,
   CalendarClock,
   AlertCircle,
-  Crown
+  Crown,
 } from 'lucide-react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -42,7 +42,9 @@ const TrainingSessionsList: React.FC = () => {
   const { subscribed } = useSubscription();
   const { sessions, isLoading, deleteSession } = useTrainingSessions(user?.id);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(
+    null,
+  );
   const [sessionsWithExams, setSessionsWithExams] = useState<SessionWithExam[]>([]);
   const [maxFreeSessions, setMaxFreeSessions] = useState<number>(10); // Default to 10 if not set in DB
 
@@ -87,9 +89,9 @@ const TrainingSessionsList: React.FC = () => {
       });
 
       const examIds = examSessions.map((s: any) => (s.filter_settings as any).examId);
-      
+
       if (examIds.length === 0) {
-        setSessionsWithExams(sessions.map(s => ({ session: s })));
+        setSessionsWithExams(sessions.map((s) => ({ session: s })));
         return;
       }
 
@@ -99,14 +101,18 @@ const TrainingSessionsList: React.FC = () => {
         .select('*')
         .in('id', examIds);
 
-      const examMap = new Map<string, UpcomingExam>((exams || []).map((e: UpcomingExam) => [e.id, e]));
+      const examMap = new Map<string, UpcomingExam>(
+        (exams || []).map((e: UpcomingExam) => [e.id, e]),
+      );
 
       const enhanced: SessionWithExam[] = sessions.map((session) => {
         const fs = session.filter_settings as any;
         if (fs && fs.source === 'exam' && fs.examId) {
           const exam = examMap.get(fs.examId) as UpcomingExam | undefined;
           if (exam) {
-            const examDaysLeft = Math.ceil((new Date(exam.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            const examDaysLeft = Math.ceil(
+              (new Date(exam.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+            );
             return { session, exam, examDaysLeft };
           }
         }
@@ -121,7 +127,7 @@ const TrainingSessionsList: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!sessionToDelete) return;
-    
+
     setDeletingId(sessionToDelete.id);
     try {
       await deleteSession(sessionToDelete.id);
@@ -139,31 +145,36 @@ const TrainingSessionsList: React.FC = () => {
   const hasReachedLimit = !subscribed && totalSessions >= maxFreeSessions;
 
   // Group sessions by type
-  const examSessions = sessionsWithExams.filter(s => s.exam);
-  const generalSessions = sessionsWithExams.filter(s => !s.exam);
+  const examSessions = sessionsWithExams.filter((s) => s.exam);
+  const generalSessions = sessionsWithExams.filter((s) => !s.exam);
 
   return (
     <div className="space-y-6">
       {/* Session limit warning for free users */}
       {!subscribed && totalSessions >= 1 && (
-        <Alert variant={hasReachedLimit ? "destructive" : "default"} className="border-2">
+        <Alert variant={hasReachedLimit ? 'destructive' : 'default'} className="border-2">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle className="flex items-center gap-2">
             {hasReachedLimit ? (
-              <>Session-Limit erreicht ({totalSessions}/{maxFreeSessions})</>
+              <>
+                Session-Limit erreicht ({totalSessions}/{maxFreeSessions})
+              </>
             ) : (
-              <>Noch {maxFreeSessions - totalSessions} Session{maxFreeSessions - totalSessions !== 1 ? 's' : ''} verfügbar ({totalSessions}/{maxFreeSessions})</>
+              <>
+                Noch {maxFreeSessions - totalSessions} Session
+                {maxFreeSessions - totalSessions !== 1 ? 's' : ''} verfügbar ({totalSessions}/
+                {maxFreeSessions})
+              </>
             )}
           </AlertTitle>
           <AlertDescription className="mt-2">
             {hasReachedLimit ? (
               <div>
-                <p className="mb-2">Du hast das kostenlose Limit von {maxFreeSessions} Trainingssessions erreicht. Lösche eine Session oder upgrade zu Premium für unbegrenzte Sessions.</p>
-                <Button 
-                  size="sm" 
-                  variant="default"
-                  onClick={() => navigate('/subscription')}
-                >
+                <p className="mb-2">
+                  Du hast das kostenlose Limit von {maxFreeSessions} Trainingssessions erreicht.
+                  Lösche eine Session oder upgrade zu Premium für unbegrenzte Sessions.
+                </p>
+                <Button size="sm" variant="default" onClick={() => navigate('/subscription')}>
                   <Crown className="h-4 w-4 mr-2" />
                   Jetzt Upgraden
                 </Button>
@@ -171,11 +182,7 @@ const TrainingSessionsList: React.FC = () => {
             ) : (
               <div>
                 <p className="mb-2">Mit Premium erhältst du unbegrenzte Trainingssessions.</p>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => navigate('/subscription')}
-                >
+                <Button size="sm" variant="outline" onClick={() => navigate('/subscription')}>
                   <Crown className="h-4 w-4 mr-2" />
                   Mehr erfahren
                 </Button>
@@ -216,8 +223,16 @@ const TrainingSessionsList: React.FC = () => {
                           {examDaysLeft !== undefined && (
                             <div className="flex items-center gap-1 text-xs">
                               <CalendarClock className="h-3 w-3" />
-                              <span className={examDaysLeft <= 3 ? "text-destructive font-semibold" : "text-muted-foreground"}>
-                                {examDaysLeft > 0 ? `${examDaysLeft} Tage bis zur Prüfung` : 'Prüfung überfällig'}
+                              <span
+                                className={
+                                  examDaysLeft <= 3
+                                    ? 'text-destructive font-semibold'
+                                    : 'text-muted-foreground'
+                                }
+                              >
+                                {examDaysLeft > 0
+                                  ? `${examDaysLeft} Tage bis zur Prüfung`
+                                  : 'Prüfung überfällig'}
                               </span>
                             </div>
                           )}
@@ -225,8 +240,20 @@ const TrainingSessionsList: React.FC = () => {
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Badge variant={session.status === 'completed' ? 'secondary' : session.status === 'active' ? 'default' : 'outline'}>
-                        {session.status === 'completed' ? 'Abgeschlossen' : session.status === 'active' ? 'Aktiv' : 'Pausiert'}
+                      <Badge
+                        variant={
+                          session.status === 'completed'
+                            ? 'secondary'
+                            : session.status === 'active'
+                              ? 'default'
+                              : 'outline'
+                        }
+                      >
+                        {session.status === 'completed'
+                          ? 'Abgeschlossen'
+                          : session.status === 'active'
+                            ? 'Aktiv'
+                            : 'Pausiert'}
                       </Badge>
                       {examDaysLeft !== undefined && examDaysLeft <= 3 && (
                         <Badge variant="destructive" className="text-xs">
@@ -246,19 +273,27 @@ const TrainingSessionsList: React.FC = () => {
                     </div>
                     <div className="flex gap-2">
                       {session.status !== 'completed' && (
-                        <Button size="sm" variant="default" onClick={() => navigate(`/training/session/${session.id}`)}>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => navigate(`/training/session/${session.id}`)}
+                        >
                           <Play className="h-3.5 w-3.5 mr-1" />
                           Fortsetzen
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/training/session/${session.id}/analytics`)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/training/session/${session.id}/analytics`)}
+                      >
                         <BarChart3 className="h-3.5 w-3.5 mr-1" />
                         Auswertung
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        disabled={deletingId === session.id} 
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={deletingId === session.id}
                         onClick={() => setSessionToDelete({ id: session.id, title: session.title })}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -294,32 +329,59 @@ const TrainingSessionsList: React.FC = () => {
                         <div className="text-sm text-muted-foreground space-y-1">
                           {(() => {
                             // Support both new subjects array and legacy subject string
-                            const subjects = fs?.subjects && Array.isArray(fs.subjects) && fs.subjects.length > 0
-                              ? fs.subjects
-                              : (fs?.subject && fs.subject !== 'all' ? [fs.subject] : []);
-                            
+                            const subjects =
+                              fs?.subjects && Array.isArray(fs.subjects) && fs.subjects.length > 0
+                                ? fs.subjects
+                                : fs?.subject && fs.subject !== 'all'
+                                  ? [fs.subject]
+                                  : [];
+
                             if (subjects.length > 0) {
                               return (
-                                <div>Fach: <span className="font-medium">
-                                  {subjects.length === 1 ? subjects[0] : `${subjects.length} Fächer`}
-                                </span></div>
+                                <div>
+                                  Fach:{' '}
+                                  <span className="font-medium">
+                                    {subjects.length === 1
+                                      ? subjects[0]
+                                      : `${subjects.length} Fächer`}
+                                  </span>
+                                </div>
                               );
                             }
                             return null;
                           })()}
                           {fs?.difficulty && fs.difficulty !== 'all' && (
-                            <div>Schwierigkeit: <span className="font-medium capitalize">{fs.difficulty}</span></div>
+                            <div>
+                              Schwierigkeit:{' '}
+                              <span className="font-medium capitalize">{fs.difficulty}</span>
+                            </div>
                           )}
                           {fs?.wrongQuestionsOnly && (
-                            <Badge variant="outline" className="text-xs">Nur falsch beantwortete Fragen</Badge>
+                            <Badge variant="outline" className="text-xs">
+                              Nur falsch beantwortete Fragen
+                            </Badge>
                           )}
                           {fs?.newQuestionsOnly && (
-                            <Badge variant="outline" className="text-xs">Nur neue Fragen</Badge>
+                            <Badge variant="outline" className="text-xs">
+                              Nur neue Fragen
+                            </Badge>
                           )}
                         </div>
                       </div>
-                      <Badge variant={session.status === 'completed' ? 'secondary' : session.status === 'active' ? 'default' : 'outline'}>
-                        {session.status === 'completed' ? 'Abgeschlossen' : session.status === 'active' ? 'Aktiv' : 'Pausiert'}
+                      <Badge
+                        variant={
+                          session.status === 'completed'
+                            ? 'secondary'
+                            : session.status === 'active'
+                              ? 'default'
+                              : 'outline'
+                        }
+                      >
+                        {session.status === 'completed'
+                          ? 'Abgeschlossen'
+                          : session.status === 'active'
+                            ? 'Aktiv'
+                            : 'Pausiert'}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -333,20 +395,30 @@ const TrainingSessionsList: React.FC = () => {
                       </div>
                       <div className="flex gap-2">
                         {session.status !== 'completed' && (
-                          <Button size="sm" variant="default" onClick={() => navigate(`/training/session/${session.id}`)}>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => navigate(`/training/session/${session.id}`)}
+                          >
                             <Play className="h-3.5 w-3.5 mr-1" />
                             Fortsetzen
                           </Button>
                         )}
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/training/session/${session.id}/analytics`)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/training/session/${session.id}/analytics`)}
+                        >
                           <BarChart3 className="h-3.5 w-3.5 mr-1" />
                           Auswertung
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          disabled={deletingId === session.id} 
-                          onClick={() => setSessionToDelete({ id: session.id, title: session.title })}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={deletingId === session.id}
+                          onClick={() =>
+                            setSessionToDelete({ id: session.id, title: session.title })
+                          }
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -365,24 +437,31 @@ const TrainingSessionsList: React.FC = () => {
           <CardContent className="py-8 text-center">
             <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
             <p className="text-sm text-muted-foreground">Keine Sessions vorhanden.</p>
-            <p className="text-xs text-muted-foreground mt-1">Erstelle eine neue Session, um zu starten.</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Erstelle eine neue Session, um zu starten.
+            </p>
           </CardContent>
         </Card>
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!sessionToDelete} onOpenChange={(open) => !open && setSessionToDelete(null)}>
+      <AlertDialog
+        open={!!sessionToDelete}
+        onOpenChange={(open) => !open && setSessionToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Session wirklich löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Möchtest du die Session "<span className="font-semibold">{sessionToDelete?.title}</span>" wirklich löschen? Dadurch wird auch der dazugehörige Lernfortschitt gelöscht.
-              Diese Aktion kann nicht rückgängig gemacht werden.
+              Möchtest du die Session "
+              <span className="font-semibold">{sessionToDelete?.title}</span>" wirklich löschen?
+              Dadurch wird auch der dazugehörige Lernfortschitt gelöscht. Diese Aktion kann nicht
+              rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

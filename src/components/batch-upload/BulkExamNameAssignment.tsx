@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ interface BulkExamNameAssignmentProps {
 
 const BulkExamNameAssignment: React.FC<BulkExamNameAssignmentProps> = ({
   onApplyToAll,
-  isDisabled
+  isDisabled,
 }) => {
   const [bulkExamName, setBulkExamName] = useState('');
 

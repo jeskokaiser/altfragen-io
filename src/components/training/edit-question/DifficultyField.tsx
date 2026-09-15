@@ -1,19 +1,22 @@
 import React from 'react';
-import { Label } from "@/components/ui/label";
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 interface DifficultyFieldProps {
   defaultValue: string;
   onValueChange: (value: string) => void;
 }
 
-export const DifficultyField: React.FC<DifficultyFieldProps> = ({ defaultValue, onValueChange }) => {
+export const DifficultyField: React.FC<DifficultyFieldProps> = ({
+  defaultValue,
+  onValueChange,
+}) => {
   return (
     <div>
       <Label htmlFor="difficulty">Schwierigkeitsgrad</Label>

@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
@@ -25,7 +24,10 @@ import UpcomingExamEditDialog from './exams/UpcomingExamEditDialog';
 import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
 import { deleteUpcomingExam } from '@/services/UpcomingExamService';
-import { fetchQuestionDetails, fetchUserDifficultiesForQuestions } from '@/services/DatabaseService';
+import {
+  fetchQuestionDetails,
+  fetchUserDifficultiesForQuestions,
+} from '@/services/DatabaseService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { toast } from 'sonner';
@@ -38,9 +40,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const { preferences, isDatasetArchived, updateSelectedUniversityDatasets, updatePreferences } = useUserPreferences();
+  const { preferences, isDatasetArchived, updateSelectedUniversityDatasets, updatePreferences } =
+    useUserPreferences();
   const { exams, isLoading: isExamsLoading } = useUpcomingExams(user?.id);
-  
+
   // State variables
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
@@ -57,7 +60,7 @@ const Dashboard = () => {
   const [isCreateTrainingSessionOpen, setIsCreateTrainingSessionOpen] = useState(false);
   const [createSessionQuestions, setCreateSessionQuestions] = useState<Question[]>([]);
   const [createSessionDefaultTitle, setCreateSessionDefaultTitle] = useState<string>(
-    `${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} – Training Session`
+    `${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} – Training Session`,
   );
   const [createSessionExamId, setCreateSessionExamId] = useState<string | null>(null);
 
@@ -124,7 +127,7 @@ const Dashboard = () => {
         // Get usage from quota ledger (rolling 30 days) via RPC
         const { data: fullUsed30d, error: usedError } = await supabase.rpc(
           'ai_private_full_used_30d',
-          { p_user_id: user.id }
+          { p_user_id: user.id },
         );
 
         if (usedError) {
@@ -139,7 +142,7 @@ const Dashboard = () => {
         // Get remaining credits from credits ledger via RPC
         const { data: creditsRemainingRaw, error: creditsError } = await supabase.rpc(
           'ai_private_credits_remaining',
-          { p_user_id: user.id }
+          { p_user_id: user.id },
         );
 
         if (creditsError) {
@@ -163,7 +166,11 @@ const Dashboard = () => {
         });
       } catch (err) {
         console.error('Unerwarteter Fehler beim Laden der AI-Credit-Übersicht:', err);
-        setAiCreditsError(err instanceof Error ? err.message : 'Unerwarteter Fehler beim Laden der AI-Credit-Übersicht');
+        setAiCreditsError(
+          err instanceof Error
+            ? err.message
+            : 'Unerwarteter Fehler beim Laden der AI-Credit-Übersicht',
+        );
       } finally {
         setAiCreditsLoading(false);
       }
@@ -229,7 +236,7 @@ const Dashboard = () => {
     selectedSemester,
     selectedYear,
     isDatasetArchived,
-    filterType: 'personal'
+    filterType: 'personal',
   });
 
   // Filter questions for university datasets
@@ -240,7 +247,7 @@ const Dashboard = () => {
     selectedSemester: uniSelectedSemester,
     selectedYear: uniSelectedYear,
     isDatasetArchived,
-    filterType: 'university'
+    filterType: 'university',
   });
 
   // Group questions
@@ -252,27 +259,36 @@ const Dashboard = () => {
     if (selectedUniversityDatasets.length === 0) {
       return {};
     }
-    
+
     return Object.entries(groupedUniversityQuestions)
       .filter(([key]) => selectedUniversityDatasets.includes(key))
-      .reduce((acc, [key, questions]) => {
-        acc[key] = questions;
-        return acc;
-      }, {} as Record<string, Question[]>);
+      .reduce(
+        (acc, [key, questions]) => {
+          acc[key] = questions;
+          return acc;
+        },
+        {} as Record<string, Question[]>,
+      );
   }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
   // Memoized event handlers
-  const handleDatasetClick = useCallback((filename: string) => {
-    setSelectedFilename(selectedFilename === filename ? null : filename);
-  }, [selectedFilename]);
+  const handleDatasetClick = useCallback(
+    (filename: string) => {
+      setSelectedFilename(selectedFilename === filename ? null : filename);
+    },
+    [selectedFilename],
+  );
 
-  const handleStartTraining = useCallback((questions: Question[], filterSettings?: any) => {
-    localStorage.setItem('trainingQuestions', JSON.stringify(questions));
-    if (filterSettings) {
-      localStorage.setItem('trainingFilterSettings', JSON.stringify(filterSettings));
-    }
-    navigate('/training/sessions');
-  }, [navigate]);
+  const handleStartTraining = useCallback(
+    (questions: Question[], filterSettings?: any) => {
+      localStorage.setItem('trainingQuestions', JSON.stringify(questions));
+      if (filterSettings) {
+        localStorage.setItem('trainingFilterSettings', JSON.stringify(filterSettings));
+      }
+      navigate('/training/sessions');
+    },
+    [navigate],
+  );
 
   const handleQuestionsLoaded = useCallback(() => {
     window.location.reload();
@@ -306,200 +322,227 @@ const Dashboard = () => {
     setIsQuestionSelectorOpen(true);
   }, []);
 
-  const handleLinkQuestionsToExam = useCallback(async (selectedExamNames: string[]) => {
-    if (!examIdForLinking || !user?.id) return;
-    
-    // Get the exam
-    const exam = (exams || []).find(e => e.id === examIdForLinking);
-    if (!exam) {
-      toast.error('Prüfung nicht gefunden.');
+  const handleLinkQuestionsToExam = useCallback(
+    async (selectedExamNames: string[]) => {
+      if (!examIdForLinking || !user?.id) return;
+
+      // Get the exam
+      const exam = (exams || []).find((e) => e.id === examIdForLinking);
+      if (!exam) {
+        toast.error('Prüfung nicht gefunden.');
+        setIsQuestionSelectorOpen(false);
+        setExamIdForLinking(null);
+        return;
+      }
+
+      try {
+        // Store selected exam_names in the exam's exam_name field (comma-separated if multiple)
+        const examNameValue = selectedExamNames.length > 0 ? selectedExamNames.join(', ') : null;
+
+        const { error: updateError } = await supabase
+          .from('upcoming_exams')
+          .update({ exam_name: examNameValue })
+          .eq('id', examIdForLinking);
+
+        if (updateError) throw updateError;
+
+        if (selectedExamNames.length > 0) {
+          toast.success(
+            `${selectedExamNames.length} Prüfung(en) wurden ausgewählt: ${selectedExamNames.join(', ')}`,
+          );
+        } else {
+          toast.success('Prüfungsauswahl wurde entfernt.');
+        }
+
+        // Invalidate queries to refresh exam data
+        queryClient.invalidateQueries({ queryKey: ['upcoming-exams', user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['exam', examIdForLinking] });
+      } catch (error) {
+        console.error('Error updating exam exam_name:', error);
+        toast.error('Fehler beim Speichern der Prüfungsauswahl');
+      }
+
       setIsQuestionSelectorOpen(false);
       setExamIdForLinking(null);
-      return;
-    }
+    },
+    [examIdForLinking, exams, user?.id, queryClient],
+  );
 
-    try {
-      // Store selected exam_names in the exam's exam_name field (comma-separated if multiple)
-      const examNameValue = selectedExamNames.length > 0 
-        ? selectedExamNames.join(', ')
-        : null;
+  const handleStartTrainingFromExam = useCallback(
+    async (examId: string) => {
+      try {
+        // Get the exam to find its exam_name(s)
+        const exam = (exams || []).find((e) => e.id === examId);
+        if (!exam?.exam_name) {
+          toast.error('Prüfung hat keinen exam_name.');
+          return;
+        }
 
-      const { error: updateError } = await supabase
-        .from('upcoming_exams')
-        .update({ exam_name: examNameValue })
-        .eq('id', examIdForLinking);
+        // Split comma-separated exam_names
+        const examNames = exam.exam_name
+          .split(',')
+          .map((n: string) => n.trim())
+          .filter(Boolean);
+        if (examNames.length === 0) {
+          toast.error('Prüfung hat keine gültigen exam_names.');
+          return;
+        }
 
-      if (updateError) throw updateError;
+        // Query questions directly by exam_name (any of the selected exam_names)
+        const { data: questionData, error: questionsError } = await supabase
+          .from('questions')
+          .select('*')
+          .in('exam_name', examNames);
 
-      if (selectedExamNames.length > 0) {
-        toast.success(`${selectedExamNames.length} Prüfung(en) wurden ausgewählt: ${selectedExamNames.join(', ')}`);
-      } else {
-        toast.success('Prüfungsauswahl wurde entfernt.');
-      }
+        if (questionsError) throw questionsError;
+        if (!questionData || questionData.length === 0) {
+          toast.info('Keine Fragen für diese Prüfung gefunden.');
+          return;
+        }
 
-      // Invalidate queries to refresh exam data
-      queryClient.invalidateQueries({ queryKey: ['upcoming-exams', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['exam', examIdForLinking] });
-    } catch (error) {
-      console.error('Error updating exam exam_name:', error);
-      toast.error('Fehler beim Speichern der Prüfungsauswahl');
-    }
-    
-    setIsQuestionSelectorOpen(false);
-    setExamIdForLinking(null);
-  }, [examIdForLinking, exams, user?.id, queryClient]);
-
-  const handleStartTrainingFromExam = useCallback(async (examId: string) => {
-    try {
-      // Get the exam to find its exam_name(s)
-      const exam = (exams || []).find(e => e.id === examId);
-      if (!exam?.exam_name) {
-        toast.error('Prüfung hat keinen exam_name.');
-        return;
-      }
-
-      // Split comma-separated exam_names
-      const examNames = exam.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
-      if (examNames.length === 0) {
-        toast.error('Prüfung hat keine gültigen exam_names.');
-        return;
-      }
-
-      // Query questions directly by exam_name (any of the selected exam_names)
-      const { data: questionData, error: questionsError } = await supabase
-        .from('questions')
-        .select('*')
-        .in('exam_name', examNames);
-      
-      if (questionsError) throw questionsError;
-      if (!questionData || questionData.length === 0) {
-        toast.info('Keine Fragen für diese Prüfung gefunden.');
-        return;
-      }
-
-      // Map to Question type
-      const sourceQuestions: Question[] = questionData.map((q: any) => ({
-        id: q.id,
-        question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
-        optionD: q.option_d,
-        optionE: q.option_e,
-        subject: q.subject,
-        correctAnswer: q.correct_answer,
-        comment: q.comment,
-        filename: q.filename,
-        difficulty: q.difficulty,
-        is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at,
-        university_id: q.university_id,
-        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-        user_id: q.user_id,
-        semester: q.exam_semester || null,
-        year: q.exam_year || null,
-        image_key: q.image_key || null,
-        show_image_after_answer: q.show_image_after_answer || false,
-        exam_name: q.exam_name || null,
-        created_at: q.created_at,
-        question_case: q.question_case || null,
-        case_text: q.case_text || null
-      }));
-
-      const ids = sourceQuestions.map(q => q.id);
-      
-      // Load user-specific difficulties for these questions
-      if (user?.id) {
-        const userDifficulties = await fetchUserDifficultiesForQuestions(user.id, ids);
-        // Merge user difficulties into questions
-        const questionsWithUserDifficulty = sourceQuestions.map(q => ({
-          ...q,
-          difficulty: userDifficulties[q.id] ?? q.difficulty
+        // Map to Question type
+        const sourceQuestions: Question[] = questionData.map((q: any) => ({
+          id: q.id,
+          question: q.question,
+          optionA: q.option_a,
+          optionB: q.option_b,
+          optionC: q.option_c,
+          optionD: q.option_d,
+          optionE: q.option_e,
+          subject: q.subject,
+          correctAnswer: q.correct_answer,
+          comment: q.comment,
+          filename: q.filename,
+          difficulty: q.difficulty,
+          is_unclear: q.is_unclear,
+          marked_unclear_at: q.marked_unclear_at,
+          university_id: q.university_id,
+          visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
+          user_id: q.user_id,
+          semester: q.exam_semester || null,
+          year: q.exam_year || null,
+          image_key: q.image_key || null,
+          show_image_after_answer: q.show_image_after_answer || false,
+          exam_name: q.exam_name || null,
+          created_at: q.created_at,
+          question_case: q.question_case || null,
+          case_text: q.case_text || null,
         }));
-        setCreateSessionQuestions(questionsWithUserDifficulty);
-      } else {
-        setCreateSessionQuestions(sourceQuestions);
+
+        const ids = sourceQuestions.map((q) => q.id);
+
+        // Load user-specific difficulties for these questions
+        if (user?.id) {
+          const userDifficulties = await fetchUserDifficultiesForQuestions(user.id, ids);
+          // Merge user difficulties into questions
+          const questionsWithUserDifficulty = sourceQuestions.map((q) => ({
+            ...q,
+            difficulty: userDifficulties[q.id] ?? q.difficulty,
+          }));
+          setCreateSessionQuestions(questionsWithUserDifficulty);
+        } else {
+          setCreateSessionQuestions(sourceQuestions);
+        }
+
+        const today = new Date().toLocaleDateString('de-DE', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
+        setCreateSessionDefaultTitle(
+          exam?.title ? `${today} – ${exam.title}` : `${today} – Training Session`,
+        );
+        setCreateSessionExamId(examId);
+        setIsCreateTrainingSessionOpen(true);
+      } catch (e) {
+        console.error('Failed to prepare training session from exam', e);
+        toast.error('Fehler beim Laden der Fragen für die Prüfung');
       }
-      
-      const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      setCreateSessionDefaultTitle(exam?.title ? `${today} – ${exam.title}` : `${today} – Training Session`);
-      setCreateSessionExamId(examId);
-      setIsCreateTrainingSessionOpen(true);
-    } catch (e) {
-      console.error('Failed to prepare training session from exam', e);
-      toast.error('Fehler beim Laden der Fragen für die Prüfung');
-    }
-  }, [exams, user?.id]);
+    },
+    [exams, user?.id],
+  );
 
-  const handleDeleteExam = useCallback(async (examId: string) => {
-    if (!user?.id) return;
-    const exam = (exams || []).find(e => e.id === examId);
-    const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions und den dazugehörigen Lernfortschitt, aber NICHT die Fragen selbst.`;
-    if (!window.confirm(confirmMsg)) return;
-    
-    try {
-      // Delete associated training sessions first
-      const allSessions = await TrainingSessionService.list(user.id);
-      const sessionsToDelete = (allSessions || []).filter((s: any) => {
-        const fs = s.filter_settings as any;
-        return fs && fs.source === 'exam' && fs.examId === examId;
-      });
-      
-      await Promise.all(sessionsToDelete.map(s => TrainingSessionService.remove(s.id)));
-      
-      // Delete the exam (cascades to linked questions in DB via ON DELETE CASCADE)
-      await deleteUpcomingExam(examId);
-      
-      toast.success('Prüfung und zugehörige Sessions gelöscht');
-      window.location.reload(); // Refresh to update exam list
-    } catch (e) {
-      console.error('Failed to delete exam', e);
-      toast.error('Fehler beim Löschen der Prüfung');
-    }
-  }, [exams, user?.id]);
+  const handleDeleteExam = useCallback(
+    async (examId: string) => {
+      if (!user?.id) return;
+      const exam = (exams || []).find((e) => e.id === examId);
+      const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions und den dazugehörigen Lernfortschitt, aber NICHT die Fragen selbst.`;
+      if (!window.confirm(confirmMsg)) return;
 
-  const handleSelectedDatasetsChange = useCallback((datasets: string[]) => {
-    setSelectedUniversityDatasets(datasets);
-    updateSelectedUniversityDatasets(datasets);
-  }, [updateSelectedUniversityDatasets]);
+      try {
+        // Delete associated training sessions first
+        const allSessions = await TrainingSessionService.list(user.id);
+        const sessionsToDelete = (allSessions || []).filter((s: any) => {
+          const fs = s.filter_settings as any;
+          return fs && fs.source === 'exam' && fs.examId === examId;
+        });
 
-  const handleRemoveDataset = useCallback((filename: string) => {
-    const newDatasets = selectedUniversityDatasets.filter(f => f !== filename);
-    setSelectedUniversityDatasets(newDatasets);
-    updateSelectedUniversityDatasets(newDatasets);
-  }, [selectedUniversityDatasets, updateSelectedUniversityDatasets]);
+        await Promise.all(sessionsToDelete.map((s) => TrainingSessionService.remove(s.id)));
+
+        // Delete the exam (cascades to linked questions in DB via ON DELETE CASCADE)
+        await deleteUpcomingExam(examId);
+
+        toast.success('Prüfung und zugehörige Sessions gelöscht');
+        window.location.reload(); // Refresh to update exam list
+      } catch (e) {
+        console.error('Failed to delete exam', e);
+        toast.error('Fehler beim Löschen der Prüfung');
+      }
+    },
+    [exams, user?.id],
+  );
+
+  const handleSelectedDatasetsChange = useCallback(
+    (datasets: string[]) => {
+      setSelectedUniversityDatasets(datasets);
+      updateSelectedUniversityDatasets(datasets);
+    },
+    [updateSelectedUniversityDatasets],
+  );
+
+  const handleRemoveDataset = useCallback(
+    (filename: string) => {
+      const newDatasets = selectedUniversityDatasets.filter((f) => f !== filename);
+      setSelectedUniversityDatasets(newDatasets);
+      updateSelectedUniversityDatasets(newDatasets);
+    },
+    [selectedUniversityDatasets, updateSelectedUniversityDatasets],
+  );
 
   const handleClearAllSelectedDatasets = useCallback(() => {
     setSelectedUniversityDatasets([]);
     updateSelectedUniversityDatasets([]);
   }, [updateSelectedUniversityDatasets]);
 
-  const handleDateRangeChange = useCallback((dateRange: StatisticsDateRange) => {
-    if (preferences) {
-      updatePreferences({ statisticsDateRange: dateRange });
-    }
-  }, [preferences, updatePreferences]);
+  const handleDateRangeChange = useCallback(
+    (dateRange: StatisticsDateRange) => {
+      if (preferences) {
+        updatePreferences({ statisticsDateRange: dateRange });
+      }
+    },
+    [preferences, updatePreferences],
+  );
 
   // Memoized computed values
-  const hasSemesterOrYearData = useMemo(() => 
-    filteredQuestions.some(q => q.semester || q.year), 
-    [filteredQuestions]
+  const hasSemesterOrYearData = useMemo(
+    () => filteredQuestions.some((q) => q.semester || q.year),
+    [filteredQuestions],
   );
-  
-  const hasUniSemesterOrYearData = useMemo(() => 
-    universityQuestions.some(q => q.semester || q.year), 
-    [universityQuestions]
+
+  const hasUniSemesterOrYearData = useMemo(
+    () => universityQuestions.some((q) => q.semester || q.year),
+    [universityQuestions],
   );
-  
-  const hasUniversityQuestions = useMemo(() => 
-    Object.keys(groupedUniversityQuestions).length > 0, 
-    [groupedUniversityQuestions]
+
+  const hasUniversityQuestions = useMemo(
+    () => Object.keys(groupedUniversityQuestions).length > 0,
+    [groupedUniversityQuestions],
   );
 
   if (!user) {
     return <div>Loading...</div>;
   }
-  
+
   // Show loading while preferences are being fetched
   if (!preferences) {
     return (
@@ -516,7 +559,7 @@ const Dashboard = () => {
       </div>
     );
   }
-  
+
   if (isQuestionsLoading || isExamsLoading) {
     return (
       <div className="container mx-auto px-4 py-6 space-y-6">
@@ -604,11 +647,9 @@ const Dashboard = () => {
             <Calendar className="h-5 w-5" />
             Bevorstehende Prüfungen
           </h2>
-          <Button onClick={handleOpenCreateExam}>
-            Neue Prüfung
-          </Button>
+          <Button onClick={handleOpenCreateExam}>Neue Prüfung</Button>
         </div>
-        <UpcomingExamsList 
+        <UpcomingExamsList
           exams={exams}
           onAddQuestions={handleOpenQuestionSelector}
           onStartTraining={handleStartTrainingFromExam}
@@ -649,7 +690,9 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {aiCreditsLoading && (
-              <p className="text-sm text-muted-foreground">Lade Status der privaten KI-Kommentare …</p>
+              <p className="text-sm text-muted-foreground">
+                Lade Status der privaten KI-Kommentare …
+              </p>
             )}
 
             {aiCreditsError && !aiCreditsLoading && (
@@ -710,25 +753,25 @@ const Dashboard = () => {
                           <p className={`text-2xl font-bold ${availabilityColorClass}`}>
                             {availabilityLabel}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {availabilityDescription}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{availabilityDescription}</p>
                         </div>
                       </div>
 
                       {!isPremium && (
                         <p className="text-sm text-muted-foreground">
-                          Upgrade auf eine Premium-Mitgliedschaft, um private Fragen mit KI-Kommentaren verarbeiten zu lassen.
+                          Upgrade auf eine Premium-Mitgliedschaft, um private Fragen mit
+                          KI-Kommentaren verarbeiten zu lassen.
                         </p>
                       )}
 
                       {isPremium && (
                         <>
                           <p className="text-xs text-muted-foreground mt-2">
-                            Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit allen aktivierten
-                            KI-Modellen kommentiert. Alle weiteren privaten Fragen werden im Hintergrund von Mistral
-                            und DeepSeek bearbeitet; sobald ein neuer 30-Tage-Zeitraum beginnt, werden zunächst die
-                            ältesten teilweise kommentierten Fragen mit den fehlenden Modellen ergänzt, bis das neue
+                            Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit
+                            allen aktivierten KI-Modellen kommentiert. Alle weiteren privaten Fragen
+                            werden im Hintergrund von Mistral und DeepSeek bearbeitet; sobald ein
+                            neuer 30-Tage-Zeitraum beginnt, werden zunächst die ältesten teilweise
+                            kommentierten Fragen mit den fehlenden Modellen ergänzt, bis das neue
                             Kontingent ausgeschöpft ist.
                           </p>
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
@@ -750,9 +793,9 @@ const Dashboard = () => {
                                           20,
                                           Number.isNaN(Number(e.target.value))
                                             ? 1
-                                            : Number(e.target.value)
-                                        )
-                                      )
+                                            : Number(e.target.value),
+                                        ),
+                                      ),
                                     )
                                   }
                                   className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
@@ -760,8 +803,9 @@ const Dashboard = () => {
                               </div>
                               <div className="flex items-center gap-3">
                                 <p className="text-sm text-muted-foreground">
-                                  entspricht {aiCreditsPacks * 100} zusätzlichen privaten KI-Kommentaren mit voller Modellabdeckung für{' '}
-                                  {aiCreditsPacks * 2}€.
+                                  entspricht {aiCreditsPacks * 100} zusätzlichen privaten
+                                  KI-Kommentaren mit voller Modellabdeckung für {aiCreditsPacks * 2}
+                                  €.
                                 </p>
                                 <Button
                                   onClick={handleBuyAiCredits}
@@ -788,7 +832,7 @@ const Dashboard = () => {
       </section>
 
       {/* Dialogs */}
-      <UpcomingExamCreateDialog 
+      <UpcomingExamCreateDialog
         open={isCreateExamOpen}
         onOpenChange={setIsCreateExamOpen}
         userId={user.id}
@@ -797,10 +841,10 @@ const Dashboard = () => {
       <UpcomingExamEditDialog
         open={isEditExamOpen}
         onOpenChange={setIsEditExamOpen}
-        exam={exams?.find(e => e.id === examToEdit) || null}
+        exam={exams?.find((e) => e.id === examToEdit) || null}
         userId={user.id}
       />
-      <ExamQuestionSelectorDialog 
+      <ExamQuestionSelectorDialog
         open={isQuestionSelectorOpen}
         onOpenChange={setIsQuestionSelectorOpen}
         examId={examIdForLinking}

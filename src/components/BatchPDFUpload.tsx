@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { showToast } from '@/utils/toast';
@@ -20,11 +20,16 @@ import UploadButton from './batch-upload/UploadButton';
 import BulkExamNameAssignment from './batch-upload/BulkExamNameAssignment';
 import PDFQuestionReview from './PDFQuestionReview';
 
-const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
+const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({
+  onQuestionsLoaded,
+  visibility: initialVisibility,
+}) => {
   const { user, universityId, universityName } = useAuth();
   const [files, setFiles] = useState<BatchPDFFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(initialVisibility);
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(
+    initialVisibility,
+  );
   const [extractedQuestions, setExtractedQuestions] = useState<Question[] | null>(null);
   const [processingStats, setProcessingStats] = useState<any>(null);
   const [currentFilename, setCurrentFilename] = useState<string>('');
@@ -37,14 +42,14 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
   const extractSemesterAndYear = (filename: string) => {
     // Remove file extension
     const nameWithoutExt = filename.replace(/\.(pdf|docx)$/i, '');
-    
+
     // Look for patterns like SS14, WS21, SS2014, WS2021
     const semesterYearMatch = nameWithoutExt.match(/(SS|WS)(\d{2,4})/i);
-    
+
     if (semesterYearMatch) {
       const semester = semesterYearMatch[1].toUpperCase();
       let year = semesterYearMatch[2];
-      
+
       // Convert 2-digit year to 4-digit year
       if (year.length === 2) {
         const twoDigitYear = parseInt(year);
@@ -55,10 +60,10 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           year = `19${year}`;
         }
       }
-      
+
       return { semester, year };
     }
-    
+
     return { semester: '', year: '' };
   };
 
@@ -67,57 +72,69 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
     if (!selectedFiles) return;
 
     const newFiles: BatchPDFFile[] = Array.from(selectedFiles)
-      .filter(file => {
+      .filter((file) => {
         const isPDF = file.type === 'application/pdf';
-        const isDOCX = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        const isDOCX =
+          file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         const isDocxByExtension = file.name.toLowerCase().endsWith('.docx');
-        
-        console.log('File:', file.name, 'Type:', file.type, 'isPDF:', isPDF, 'isDOCX:', isDOCX, 'isDocxByExtension:', isDocxByExtension);
-        
+
+        console.log(
+          'File:',
+          file.name,
+          'Type:',
+          file.type,
+          'isPDF:',
+          isPDF,
+          'isDOCX:',
+          isDOCX,
+          'isDocxByExtension:',
+          isDocxByExtension,
+        );
+
         return isPDF || isDOCX || isDocxByExtension;
       })
-      .map(file => {
+      .map((file) => {
         const { semester, year } = extractSemesterAndYear(file.name);
-        
+
         return {
           file,
           examName: '',
           semester,
           year,
           isProcessing: false,
-          isCompleted: false
+          isCompleted: false,
         };
       });
 
     console.log('Filtered files:', newFiles.length, 'out of', selectedFiles.length);
-    
+
     if (newFiles.length === 0) {
       showToast.error('Fehler', {
-        description: 'Bitte wähle nur PDF- oder DOCX-Dateien aus'
+        description: 'Bitte wähle nur PDF- oder DOCX-Dateien aus',
       });
       return;
     }
 
-    setFiles(prev => [...prev, ...newFiles]);
-    
+    setFiles((prev) => [...prev, ...newFiles]);
+
     // Reset the input
     event.target.value = '';
   }, []);
 
   const updateFileProperty = (index: number, property: keyof BatchPDFFile, value: any) => {
-    setFiles(prev => prev.map((file, i) => 
-      i === index ? { ...file, [property]: value } : file
-    ));
+    setFiles((prev) =>
+      prev.map((file, i) => (i === index ? { ...file, [property]: value } : file)),
+    );
   };
 
   const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleApplyExamNameToAll = (examName: string) => {
-    setFiles(prev => prev.map(file => ({ ...file, examName })));
+    setFiles((prev) => prev.map((file) => ({ ...file, examName })));
     showToast.success('Prüfungsname angewendet', {
-      description: `"${examName}" wurde für alle ${files.length} Dateien festgelegt`
+      description: `"${examName}" wurde für alle ${files.length} Dateien festgelegt`,
     });
   };
 
@@ -132,7 +149,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
 
       if (error) throw error;
 
-      return data.map(q => ({
+      return data.map((q) => ({
         id: q.id,
         question: q.question,
         optionA: q.option_a,
@@ -154,7 +171,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
         year: q.exam_year || null,
         image_key: q.image_key || null,
         show_image_after_answer: q.show_image_after_answer || false,
-        exam_name: q.exam_name || null
+        exam_name: q.exam_name || null,
       }));
     } catch (error) {
       console.error('Error fetching saved questions:', error);
@@ -165,10 +182,13 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
   const checkTaskStatus = async (taskId: string) => {
     try {
       console.log(`Checking status for task: ${taskId}`);
-      
-      const { data, error } = await supabase.functions.invoke(`check-pdf-status?task_id=${taskId}`, {
-        method: 'GET'
-      });
+
+      const { data, error } = await supabase.functions.invoke(
+        `check-pdf-status?task_id=${taskId}`,
+        {
+          method: 'GET',
+        },
+      );
 
       if (error) {
         console.error('Error from edge function:', error);
@@ -195,23 +215,27 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           if (data.success) {
             // Fetch the questions that were saved to the database by the API
             const savedQuestions = await fetchSavedQuestions(filename);
-            
+
             if (savedQuestions.length > 0) {
               return savedQuestions;
             } else {
               throw new Error('Keine Fragen wurden aus der Datei extrahiert');
             }
           } else {
-            const errorMessage = data.message || data.error || "Keine Fragen konnten aus der Datei extrahiert werden oder ein Problem ist aufgetreten.";
+            const errorMessage =
+              data.message ||
+              data.error ||
+              'Keine Fragen konnten aus der Datei extrahiert werden oder ein Problem ist aufgetreten.';
             throw new Error(errorMessage);
           }
         } else if (data.status === 'failed') {
-          const failMessage = data.error || data.details || "Die Verarbeitung der Datei ist fehlgeschlagen";
+          const failMessage =
+            data.error || data.details || 'Die Verarbeitung der Datei ist fehlgeschlagen';
           throw new Error(failMessage);
         }
 
         // Still processing, wait and try again
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        await new Promise((resolve) => setTimeout(resolve, 10000));
         attempts++;
       } catch (error) {
         console.error('Error polling task status:', error);
@@ -225,15 +249,15 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
   const handleBatchUpload = async () => {
     if (!user?.id) {
       showToast.error('Fehler', {
-        description: 'Benutzer nicht authentifiziert'
+        description: 'Benutzer nicht authentifiziert',
       });
       return;
     }
 
-    const validFiles = files.filter(file => file.examName && file.semester && file.year);
+    const validFiles = files.filter((file) => file.examName && file.semester && file.year);
     if (validFiles.length === 0) {
       showToast.error('Fehler', {
-        description: 'Bitte fülle Prüfungsname, Semester und Jahr für alle Dateien aus'
+        description: 'Bitte fülle Prüfungsname, Semester und Jahr für alle Dateien aus',
       });
       return;
     }
@@ -245,9 +269,9 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
 
       for (let i = 0; i < validFiles.length; i++) {
         const fileData = validFiles[i];
-        
+
         // Update processing status
-        const fileIndex = files.findIndex(f => f.file === fileData.file);
+        const fileIndex = files.findIndex((f) => f.file === fileData.file);
         updateFileProperty(fileIndex, 'isProcessing', true);
 
         try {
@@ -261,9 +285,12 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           formData.append('userId', user.id);
 
           // Upload document and get task ID
-          const { data: uploadData, error: uploadError } = await supabase.functions.invoke('process-pdf', {
-            body: formData
-          });
+          const { data: uploadData, error: uploadError } = await supabase.functions.invoke(
+            'process-pdf',
+            {
+              body: formData,
+            },
+          );
 
           if (uploadError) {
             throw new Error(uploadError.message || 'Fehler beim Verarbeiten der Datei');
@@ -274,19 +301,19 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           }
 
           showToast.success(`${fileData.file.name} hochgeladen`, {
-            description: 'Verarbeitung gestartet...'
+            description: 'Verarbeitung gestartet...',
           });
 
           // Poll for completion and fetch saved questions
           const questions = await pollTaskStatus(uploadData.task_id, fileData.file.name);
-          
+
           if (questions && questions.length > 0) {
             allQuestions = [...allQuestions, ...questions];
             updateFileProperty(fileIndex, 'isCompleted', true);
             updateFileProperty(fileIndex, 'isProcessing', false);
-            
+
             showToast.success(`${fileData.file.name} verarbeitet`, {
-              description: `${questions.length} Fragen extrahiert`
+              description: `${questions.length} Fragen extrahiert`,
             });
           } else {
             throw new Error('Keine Fragen aus der Datei extrahiert');
@@ -295,9 +322,9 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           console.error(`Error processing ${fileData.file.name}:`, error);
           updateFileProperty(fileIndex, 'error', error.message);
           updateFileProperty(fileIndex, 'isProcessing', false);
-          
+
           showToast.error(`Fehler bei ${fileData.file.name}`, {
-            description: error.message
+            description: error.message,
           });
         }
       }
@@ -310,14 +337,13 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           exam_name: 'Batch Upload',
           images_uploaded: 0,
           total_questions: allQuestions.length,
-          total_images: 0
+          total_images: 0,
         });
-        
+
         showToast.success('Batch-Upload abgeschlossen', {
-          description: `Insgesamt ${allQuestions.length} Fragen aus ${validFiles.length} Dateien extrahiert. Bitte überprüfe die Fragen.`
+          description: `Insgesamt ${allQuestions.length} Fragen aus ${validFiles.length} Dateien extrahiert. Bitte überprüfe die Fragen.`,
         });
       }
-
     } finally {
       setIsUploading(false);
     }
@@ -327,8 +353,8 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
     try {
       // Show loading state for large batches
       if (reviewedQuestions.length > 50) {
-        showToast.success("Verarbeitung gestartet", {
-          description: `${reviewedQuestions.length} Fragen werden verarbeitet. Dies kann einige Minuten dauern.`
+        showToast.success('Verarbeitung gestartet', {
+          description: `${reviewedQuestions.length} Fragen werden verarbeitet. Dies kann einige Minuten dauern.`,
         });
       }
 
@@ -352,7 +378,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
               university_id: question.visibility === 'university' ? universityId : null,
               exam_semester: question.semester,
               exam_year: question.year,
-              exam_name: question.exam_name
+              exam_name: question.exam_name,
             })
             .eq('id', question.id);
 
@@ -360,7 +386,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
             console.error(`Error updating question ${index + 1}:`, error);
             throw error;
           }
-          
+
           return { success: true, question, index };
         } catch (error) {
           console.error(`Failed to update question ${index + 1}:`, error);
@@ -371,46 +397,48 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
       // Process updates in batches to avoid overwhelming the database
       const batchSize = 20;
       const results = [];
-      
+
       for (let i = 0; i < updatePromises.length; i += batchSize) {
         const batch = updatePromises.slice(i, i + batchSize);
         const batchResults = await Promise.allSettled(batch);
         results.push(...batchResults);
-        
+
         // Show progress for large batches
         if (reviewedQuestions.length > 50 && i + batchSize < updatePromises.length) {
           const processed = i + batchSize;
-          showToast.success(`Fortschritt: ${processed}/${reviewedQuestions.length} Fragen aktualisiert`);
+          showToast.success(
+            `Fortschritt: ${processed}/${reviewedQuestions.length} Fragen aktualisiert`,
+          );
         }
       }
 
       // Count successful and failed updates
-      const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+      const successful = results.filter((r) => r.status === 'fulfilled' && r.value.success).length;
       const failed = results.length - successful;
 
       if (failed > 0) {
         console.warn(`${failed} questions failed to update`);
         showToast.error(`${successful} Fragen aktualisiert, ${failed} Fehler`, {
-          description: "Einige Fragen konnten nicht aktualisiert werden. Prüfe die Konsole für Details."
+          description:
+            'Einige Fragen konnten nicht aktualisiert werden. Prüfe die Konsole für Details.',
         });
       } else {
         showToast.success(`${successful} Fragen erfolgreich aktualisiert`, {
-          description: "Alle Fragen wurden erfolgreich in der Datenbank aktualisiert"
+          description: 'Alle Fragen wurden erfolgreich in der Datenbank aktualisiert',
         });
       }
-      
+
       onQuestionsLoaded(reviewedQuestions);
-      
+
       // Reset state
       setExtractedQuestions(null);
       setProcessingStats(null);
       setCurrentFilename('');
       setFiles([]);
-      
     } catch (error: any) {
       console.error('Error updating questions:', error);
-      showToast.error("Fehler beim Aktualisieren", {
-        description: error.message || "Die Fragen konnten nicht aktualisiert werden"
+      showToast.error('Fehler beim Aktualisieren', {
+        description: error.message || 'Die Fragen konnten nicht aktualisiert werden',
       });
     }
   };
@@ -444,11 +472,14 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
     );
   }
 
-  const canUpload = files.length > 0 && files.every(file => file.examName && file.semester && file.year) && !isUploading;
+  const canUpload =
+    files.length > 0 &&
+    files.every((file) => file.examName && file.semester && file.year) &&
+    !isUploading;
 
   const getUniversityContextMessage = () => {
     if (!universityId) {
-      return "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil. Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt.";
+      return 'Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil. Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt.';
     }
     return `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen. Bitte beachte, dass private Fragen derzeit nur für Premium Nutzer mit KI-Kommentaren versehen werden und es auch hier ein Limit gibt.`;
   };
@@ -461,17 +492,26 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           Batch Dokument Upload
         </CardTitle>
         <CardDescription>
-          Lade mehrere PDF- oder DOCX-Dateien gleichzeitig hoch und weise jeweils Prüfungsname, Semester und Jahr zu. Es ist erforderlich, dass die Dateien wie in <a href="https://www.altfragen.io/images/example-batch-upload.png" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">diesem Beispiel</a> formatiert sind. Für Fachschaften kann die Extraktion auf Anfrage an andere Schemata angepasst werden.
+          Lade mehrere PDF- oder DOCX-Dateien gleichzeitig hoch und weise jeweils Prüfungsname,
+          Semester und Jahr zu. Es ist erforderlich, dass die Dateien wie in{' '}
+          <a
+            href="https://www.altfragen.io/images/example-batch-upload.png"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            diesem Beispiel
+          </a>{' '}
+          formatiert sind. Für Fachschaften kann die Extraktion auf Anfrage an andere Schemata
+          angepasst werden.
         </CardDescription>
-        <div className="text-sm text-muted-foreground">
-          {getUniversityContextMessage()}
-        </div>
+        <div className="text-sm text-muted-foreground">{getUniversityContextMessage()}</div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <Label>Sichtbarkeit der Fragen</Label>
-          <Select 
-            value={visibility} 
+          <Select
+            value={visibility}
             onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
           >
             <SelectTrigger className="w-full">
@@ -500,10 +540,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({ onQuestionsLoaded, visi
           </Select>
         </div>
 
-        <FileSelector 
-          onFileSelect={handleFileSelect}
-          isUploading={isUploading}
-        />
+        <FileSelector onFileSelect={handleFileSelect} isUploading={isUploading} />
 
         {files.length > 0 && (
           <BulkExamNameAssignment

@@ -1,5 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
-import { AIAnswerComments, AICommentarySummaryExtended, AICommentaryData } from '@/types/AIAnswerComments';
+import {
+  AIAnswerComments,
+  AICommentarySummaryExtended,
+  AICommentaryData,
+} from '@/types/AIAnswerComments';
 
 // Define the expected structure for ai_answer_comments
 interface AIAnswerCommentsRow {
@@ -82,7 +86,7 @@ export class AIAnswerCommentaryService {
     try {
       // Try to get answer comments - using the more direct approach first
       let answerComments: AIAnswerCommentsRow | null = null;
-      
+
       try {
         const { data: answerCommentsData, error: answerError } = await supabase
           .from('ai_answer_comments')
@@ -145,7 +149,7 @@ export class AIAnswerCommentaryService {
               c: answerComments.chatgpt_comment_c || undefined,
               d: answerComments.chatgpt_comment_d || undefined,
               e: answerComments.chatgpt_comment_e || undefined,
-            }
+            },
           };
         }
 
@@ -159,7 +163,7 @@ export class AIAnswerCommentaryService {
               c: answerComments.gemini_new_comment_c || undefined,
               d: answerComments.gemini_new_comment_d || undefined,
               e: answerComments.gemini_new_comment_e || undefined,
-            }
+            },
           };
         }
 
@@ -173,7 +177,7 @@ export class AIAnswerCommentaryService {
               c: answerComments.mistral_comment_c || undefined,
               d: answerComments.mistral_comment_d || undefined,
               e: answerComments.mistral_comment_e || undefined,
-            }
+            },
           };
         }
 
@@ -187,7 +191,7 @@ export class AIAnswerCommentaryService {
               c: answerComments.perplexity_comment_c || undefined,
               d: answerComments.perplexity_comment_d || undefined,
               e: answerComments.perplexity_comment_e || undefined,
-            }
+            },
           };
         }
 
@@ -201,7 +205,7 @@ export class AIAnswerCommentaryService {
               c: answerComments.deepseek_comment_c || undefined,
               d: answerComments.deepseek_comment_d || undefined,
               e: answerComments.deepseek_comment_e || undefined,
-            }
+            },
           };
         }
       } else {
@@ -215,7 +219,7 @@ export class AIAnswerCommentaryService {
               c: answerComments.openai_comment_c || undefined,
               d: answerComments.openai_comment_d || undefined,
               e: answerComments.openai_comment_e || undefined,
-            }
+            },
           };
         }
 
@@ -228,7 +232,7 @@ export class AIAnswerCommentaryService {
               c: answerComments.claude_comment_c || undefined,
               d: answerComments.claude_comment_d || undefined,
               e: answerComments.claude_comment_e || undefined,
-            }
+            },
           };
         }
 
@@ -241,88 +245,90 @@ export class AIAnswerCommentaryService {
               c: answerComments.gemini_comment_c || undefined,
               d: answerComments.gemini_comment_d || undefined,
               e: answerComments.gemini_comment_e || undefined,
-            }
+            },
           };
         }
       }
 
       return {
-        answerComments: answerComments ? {
-          id: answerComments.id,
-          question_id: answerComments.question_id,
-          // Legacy fields
-          openai_general_comment: answerComments.openai_general_comment,
-          claude_general_comment: answerComments.claude_general_comment,
-          gemini_general_comment: answerComments.gemini_general_comment,
-          openai_comment_a: answerComments.openai_comment_a,
-          openai_comment_b: answerComments.openai_comment_b,
-          openai_comment_c: answerComments.openai_comment_c,
-          openai_comment_d: answerComments.openai_comment_d,
-          openai_comment_e: answerComments.openai_comment_e,
-          claude_comment_a: answerComments.claude_comment_a,
-          claude_comment_b: answerComments.claude_comment_b,
-          claude_comment_c: answerComments.claude_comment_c,
-          claude_comment_d: answerComments.claude_comment_d,
-          claude_comment_e: answerComments.claude_comment_e,
-          gemini_comment_a: answerComments.gemini_comment_a,
-          gemini_comment_b: answerComments.gemini_comment_b,
-          gemini_comment_c: answerComments.gemini_comment_c,
-          gemini_comment_d: answerComments.gemini_comment_d,
-          gemini_comment_e: answerComments.gemini_comment_e,
-          // New model fields
-          chatgpt_chosen_answer: answerComments.chatgpt_chosen_answer,
-          chatgpt_general_comment: answerComments.chatgpt_general_comment,
-          chatgpt_comment_a: answerComments.chatgpt_comment_a,
-          chatgpt_comment_b: answerComments.chatgpt_comment_b,
-          chatgpt_comment_c: answerComments.chatgpt_comment_c,
-          chatgpt_comment_d: answerComments.chatgpt_comment_d,
-          chatgpt_comment_e: answerComments.chatgpt_comment_e,
-          chatgpt_regenerated_question: answerComments.chatgpt_regenerated_question,
-          chatgpt_regenerated_option_a: answerComments.chatgpt_regenerated_option_a,
-          chatgpt_regenerated_option_b: answerComments.chatgpt_regenerated_option_b,
-          chatgpt_regenerated_option_c: answerComments.chatgpt_regenerated_option_c,
-          chatgpt_regenerated_option_d: answerComments.chatgpt_regenerated_option_d,
-          chatgpt_regenerated_option_e: answerComments.chatgpt_regenerated_option_e,
-          gemini_chosen_answer: answerComments.gemini_chosen_answer,
-          gemini_new_general_comment: answerComments.gemini_new_general_comment,
-          gemini_new_comment_a: answerComments.gemini_new_comment_a,
-          gemini_new_comment_b: answerComments.gemini_new_comment_b,
-          gemini_new_comment_c: answerComments.gemini_new_comment_c,
-          gemini_new_comment_d: answerComments.gemini_new_comment_d,
-          gemini_new_comment_e: answerComments.gemini_new_comment_e,
-          gemini_regenerated_question: answerComments.gemini_regenerated_question,
-          gemini_regenerated_option_a: answerComments.gemini_regenerated_option_a,
-          gemini_regenerated_option_b: answerComments.gemini_regenerated_option_b,
-          gemini_regenerated_option_c: answerComments.gemini_regenerated_option_c,
-          gemini_regenerated_option_d: answerComments.gemini_regenerated_option_d,
-          gemini_regenerated_option_e: answerComments.gemini_regenerated_option_e,
-          mistral_chosen_answer: answerComments.mistral_chosen_answer,
-          mistral_general_comment: answerComments.mistral_general_comment,
-          mistral_comment_a: answerComments.mistral_comment_a,
-          mistral_comment_b: answerComments.mistral_comment_b,
-          mistral_comment_c: answerComments.mistral_comment_c,
-          mistral_comment_d: answerComments.mistral_comment_d,
-          mistral_comment_e: answerComments.mistral_comment_e,
-          perplexity_chosen_answer: answerComments.perplexity_chosen_answer,
-          perplexity_general_comment: answerComments.perplexity_general_comment,
-          perplexity_comment_a: answerComments.perplexity_comment_a,
-          perplexity_comment_b: answerComments.perplexity_comment_b,
-          perplexity_comment_c: answerComments.perplexity_comment_c,
-          perplexity_comment_d: answerComments.perplexity_comment_d,
-          perplexity_comment_e: answerComments.perplexity_comment_e,
-          deepseek_chosen_answer: answerComments.deepseek_chosen_answer,
-          deepseek_general_comment: answerComments.deepseek_general_comment,
-          deepseek_comment_a: answerComments.deepseek_comment_a,
-          deepseek_comment_b: answerComments.deepseek_comment_b,
-          deepseek_comment_c: answerComments.deepseek_comment_c,
-          deepseek_comment_d: answerComments.deepseek_comment_d,
-          deepseek_comment_e: answerComments.deepseek_comment_e,
-          processing_status: answerComments.processing_status,
-          created_at: answerComments.created_at,
-          updated_at: answerComments.updated_at,
-        } : undefined,
+        answerComments: answerComments
+          ? {
+              id: answerComments.id,
+              question_id: answerComments.question_id,
+              // Legacy fields
+              openai_general_comment: answerComments.openai_general_comment,
+              claude_general_comment: answerComments.claude_general_comment,
+              gemini_general_comment: answerComments.gemini_general_comment,
+              openai_comment_a: answerComments.openai_comment_a,
+              openai_comment_b: answerComments.openai_comment_b,
+              openai_comment_c: answerComments.openai_comment_c,
+              openai_comment_d: answerComments.openai_comment_d,
+              openai_comment_e: answerComments.openai_comment_e,
+              claude_comment_a: answerComments.claude_comment_a,
+              claude_comment_b: answerComments.claude_comment_b,
+              claude_comment_c: answerComments.claude_comment_c,
+              claude_comment_d: answerComments.claude_comment_d,
+              claude_comment_e: answerComments.claude_comment_e,
+              gemini_comment_a: answerComments.gemini_comment_a,
+              gemini_comment_b: answerComments.gemini_comment_b,
+              gemini_comment_c: answerComments.gemini_comment_c,
+              gemini_comment_d: answerComments.gemini_comment_d,
+              gemini_comment_e: answerComments.gemini_comment_e,
+              // New model fields
+              chatgpt_chosen_answer: answerComments.chatgpt_chosen_answer,
+              chatgpt_general_comment: answerComments.chatgpt_general_comment,
+              chatgpt_comment_a: answerComments.chatgpt_comment_a,
+              chatgpt_comment_b: answerComments.chatgpt_comment_b,
+              chatgpt_comment_c: answerComments.chatgpt_comment_c,
+              chatgpt_comment_d: answerComments.chatgpt_comment_d,
+              chatgpt_comment_e: answerComments.chatgpt_comment_e,
+              chatgpt_regenerated_question: answerComments.chatgpt_regenerated_question,
+              chatgpt_regenerated_option_a: answerComments.chatgpt_regenerated_option_a,
+              chatgpt_regenerated_option_b: answerComments.chatgpt_regenerated_option_b,
+              chatgpt_regenerated_option_c: answerComments.chatgpt_regenerated_option_c,
+              chatgpt_regenerated_option_d: answerComments.chatgpt_regenerated_option_d,
+              chatgpt_regenerated_option_e: answerComments.chatgpt_regenerated_option_e,
+              gemini_chosen_answer: answerComments.gemini_chosen_answer,
+              gemini_new_general_comment: answerComments.gemini_new_general_comment,
+              gemini_new_comment_a: answerComments.gemini_new_comment_a,
+              gemini_new_comment_b: answerComments.gemini_new_comment_b,
+              gemini_new_comment_c: answerComments.gemini_new_comment_c,
+              gemini_new_comment_d: answerComments.gemini_new_comment_d,
+              gemini_new_comment_e: answerComments.gemini_new_comment_e,
+              gemini_regenerated_question: answerComments.gemini_regenerated_question,
+              gemini_regenerated_option_a: answerComments.gemini_regenerated_option_a,
+              gemini_regenerated_option_b: answerComments.gemini_regenerated_option_b,
+              gemini_regenerated_option_c: answerComments.gemini_regenerated_option_c,
+              gemini_regenerated_option_d: answerComments.gemini_regenerated_option_d,
+              gemini_regenerated_option_e: answerComments.gemini_regenerated_option_e,
+              mistral_chosen_answer: answerComments.mistral_chosen_answer,
+              mistral_general_comment: answerComments.mistral_general_comment,
+              mistral_comment_a: answerComments.mistral_comment_a,
+              mistral_comment_b: answerComments.mistral_comment_b,
+              mistral_comment_c: answerComments.mistral_comment_c,
+              mistral_comment_d: answerComments.mistral_comment_d,
+              mistral_comment_e: answerComments.mistral_comment_e,
+              perplexity_chosen_answer: answerComments.perplexity_chosen_answer,
+              perplexity_general_comment: answerComments.perplexity_general_comment,
+              perplexity_comment_a: answerComments.perplexity_comment_a,
+              perplexity_comment_b: answerComments.perplexity_comment_b,
+              perplexity_comment_c: answerComments.perplexity_comment_c,
+              perplexity_comment_d: answerComments.perplexity_comment_d,
+              perplexity_comment_e: answerComments.perplexity_comment_e,
+              deepseek_chosen_answer: answerComments.deepseek_chosen_answer,
+              deepseek_general_comment: answerComments.deepseek_general_comment,
+              deepseek_comment_a: answerComments.deepseek_comment_a,
+              deepseek_comment_b: answerComments.deepseek_comment_b,
+              deepseek_comment_c: answerComments.deepseek_comment_c,
+              deepseek_comment_d: answerComments.deepseek_comment_d,
+              deepseek_comment_e: answerComments.deepseek_comment_e,
+              processing_status: answerComments.processing_status,
+              created_at: answerComments.created_at,
+              updated_at: answerComments.updated_at,
+            }
+          : undefined,
         summary: summary || undefined,
-        models
+        models,
       };
     } catch (error) {
       console.error('Error fetching AI commentary:', error);
@@ -333,7 +339,7 @@ export class AIAnswerCommentaryService {
   static async triggerProcessing(): Promise<{ processed: number } | null> {
     try {
       const { data, error } = await supabase.functions.invoke('process-ai-commentary');
-      
+
       if (error) {
         console.error('Error triggering AI processing:', error);
         return null;
@@ -369,7 +375,12 @@ export class AIAnswerCommentaryService {
         .eq('ai_commentary_status', 'completed');
 
       if (totalError || pendingError || processedError || commentsError) {
-        console.error('Error fetching stats:', { totalError, pendingError, processedError, commentsError });
+        console.error('Error fetching stats:', {
+          totalError,
+          pendingError,
+          processedError,
+          commentsError,
+        });
         return null;
       }
 
@@ -377,7 +388,7 @@ export class AIAnswerCommentaryService {
         total: totalQuestions?.length || 0,
         pending: pendingQuestions?.length || 0,
         processed: processedQuestions?.length || 0,
-        withComments: questionsWithComments?.length || 0
+        withComments: questionsWithComments?.length || 0,
       };
     } catch (error) {
       console.error('Error getting processing stats:', error);
