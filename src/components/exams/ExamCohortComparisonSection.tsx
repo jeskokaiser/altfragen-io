@@ -1035,8 +1035,8 @@ const HistogramChart: React.FC<HistogramChartProps> = ({
   const paddingY = 30;
 
   // Determine display range
-  let displayMinX = minValue ?? Math.min(...distribution.map(b => b.bucketMin));
-  let displayMaxX = maxValue ?? Math.max(...distribution.map(b => b.bucketMax));
+  const displayMinX = minValue ?? Math.min(...distribution.map(b => b.bucketMin));
+  const displayMaxX = maxValue ?? Math.max(...distribution.map(b => b.bucketMax));
 
   const scaleX = (x: number) =>
     paddingX + ((x - displayMinX) / (displayMaxX - displayMinX || 1)) * (width - 2 * paddingX);

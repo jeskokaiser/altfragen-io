@@ -2,7 +2,7 @@
 import { Question } from '@/types/Question';
 
 export const mapRowsToQuestions = (rows: any[], headers: string[], filename: string): Question[] => {
-  let questions = rows.map((row, index) => {
+  const questions = rows.map((row, index) => {
     const rowData = Array.isArray(row) 
       ? headers.reduce((acc, header, index) => {
           acc[header] = row[index] || ''; // Use empty string for missing values

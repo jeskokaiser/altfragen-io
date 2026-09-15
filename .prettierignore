@@ -1,0 +1,8 @@
+dist
+node_modules
+package-lock.json
+public
+supabase/.temp
+
+# Generated from the database schema by `supabase gen types`.
+src/integrations/supabase/types.ts

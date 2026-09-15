@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-globals */
+ 
 const CACHE_NAME = 'altfragen-io-v1';
 const urlsToCache = [
   '/',
