@@ -90,7 +90,7 @@ export class CampaignService {
       throw new Error('User not authenticated');
     }
 
-    const insertData: Partial<CampaignInsert> = {
+    const insertData: CampaignInsert = {
       title: campaignData.title,
       description: campaignData.description,
       campaign_type: campaignData.campaign_type,

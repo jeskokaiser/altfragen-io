@@ -1,9 +1,9 @@
-import { Tables } from '@/integrations/supabase/types';
+import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 // Base campaign type from Supabase
 export type CampaignRow = Tables<'campaigns'>;
-export type CampaignInsert = Tables<'campaigns', 'Insert'>;
-export type CampaignUpdate = Tables<'campaigns', 'Update'>;
+export type CampaignInsert = TablesInsert<'campaigns'>;
+export type CampaignUpdate = TablesUpdate<'campaigns'>;
 
 // Enhanced campaign types with proper enums
 export type CampaignType = 'discount' | 'maintenance' | 'feedback' | 'announcement';

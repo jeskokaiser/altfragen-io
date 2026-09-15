@@ -83,7 +83,9 @@ export const fetchUniversityQuestions = async (universityId: string) => {
     exam_year,
     exam_name,
     image_key,
-    show_image_after_answer
+    show_image_after_answer,
+    question_case,
+    case_text
   `;
   
   const { data, error } = await supabase

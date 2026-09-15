@@ -240,13 +240,14 @@ const QuestionEditorPanel: React.FC = () => {
 
     try {
       const questionCase = editingQuestion.question_case;
-      const trimmedQuestionCase = typeof questionCase === 'string' && questionCase.trim() 
-        ? questionCase.trim() 
-        : null;
+      const normalizedQuestionCase =
+        typeof questionCase === 'number' && Number.isFinite(questionCase)
+          ? questionCase
+          : null;
 
       const updates: Partial<Question> = {
         correctAnswer: editingQuestion.correctAnswer,
-        question_case: trimmedQuestionCase,
+        question_case: normalizedQuestionCase,
       };
 
       const updatedQuestion = await updateQuestion(editingQuestion.id, updates);
@@ -429,11 +430,21 @@ const QuestionEditorPanel: React.FC = () => {
                 <Input
                   id="questionCase"
                   name="questionCase"
-                  value={editingQuestion.question_case || ''}
-                  placeholder="z.B. M2-F25_1_1"
+                  type="number"
+                  inputMode="numeric"
+                  value={editingQuestion.question_case ?? ''}
+                  placeholder="z.B. 12"
                   onChange={(e) => {
+                    const raw = e.target.value.trim();
+                    const parsed = raw === '' ? null : Number.parseInt(raw, 10);
                     setEditingQuestion(prev =>
-                      prev ? { ...prev, question_case: e.target.value } : prev
+                      prev
+                        ? {
+                            ...prev,
+                            question_case:
+                              parsed !== null && Number.isNaN(parsed) ? prev.question_case : parsed,
+                          }
+                        : prev
                     );
                     setHasUnsavedChanges(true);
                   }}

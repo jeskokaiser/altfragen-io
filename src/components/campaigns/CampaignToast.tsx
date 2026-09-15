@@ -165,7 +165,8 @@ const CampaignToast: React.FC = () => {
     );
 
     // Show toast with appropriate styling and actions
-    const toastId = toast.custom(
+    toast.custom(
+      (id) => (
       <div className={`p-4 rounded-lg shadow-lg ${styling.containerClass} border max-w-md`}>
         <ToastContent />
         {campaign.action_type !== 'dismiss_only' && (
@@ -174,7 +175,7 @@ const CampaignToast: React.FC = () => {
               size="sm"
               onClick={() => {
                 handleActionClick(campaign);
-                toast.dismiss(toastId);
+                toast.dismiss(id);
               }}
               className={`${styling.buttonClass} text-xs px-3 py-1 h-8`}
             >
@@ -183,7 +184,8 @@ const CampaignToast: React.FC = () => {
             </Button>
           </div>
         )}
-      </div>,
+      </div>
+      ),
       {
         duration: campaign.action_type === 'dismiss_only' ? 5000 : 10000, // Auto-dismiss faster for info-only toasts
         position: 'top-right',
@@ -197,7 +199,7 @@ const CampaignToast: React.FC = () => {
 
     // Copy code to clipboard if user clicks on it
     if (campaign.code) {
-      const codeSpan = document.querySelector(`[data-campaign-id="${campaign.id}"] .font-mono`);
+      const codeSpan = document.querySelector<HTMLElement>(`[data-campaign-id="${campaign.id}"] .font-mono`);
       if (codeSpan) {
         codeSpan.style.cursor = 'pointer';
         codeSpan.onclick = () => {
