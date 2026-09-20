@@ -1,21 +1,15 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { User } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DifficultyBadgeProps {
-  difficulty: number;
   attemptsCount?: number;
-  isPersonalized?: boolean;
   semester?: string;
   year?: string;
   subject?: string;
 }
 
 const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({
-  difficulty,
   attemptsCount = 0,
-  isPersonalized = false,
   semester,
   year,
   subject,

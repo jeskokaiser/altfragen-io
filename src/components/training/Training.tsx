@@ -22,7 +22,6 @@ const Training: React.FC = () => {
   const [configurationComplete, setConfigurationComplete] = useState(false);
   const [ignoredQuestions, setIgnoredQuestions] = useState<Set<string>>(new Set());
   const [scrollPositions, setScrollPositions] = useState<Map<number, number>>(new Map());
-  const [filterSettings, setFilterSettings] = useState<FormValues | null>(null);
 
   useEffect(() => {
     const storedQuestions = localStorage.getItem('trainingQuestions');
@@ -36,8 +35,7 @@ const Training: React.FC = () => {
     const storedFilterSettings = localStorage.getItem('trainingFilterSettings');
     if (storedFilterSettings) {
       try {
-        const parsedSettings = JSON.parse(storedFilterSettings);
-        setFilterSettings(parsedSettings);
+        JSON.parse(storedFilterSettings);
       } catch (error) {
         console.error('Error parsing filter settings:', error);
       }
@@ -59,7 +57,6 @@ const Training: React.FC = () => {
   }, [currentQuestionIndex, configurationComplete, showResults, scrollPositions]);
 
   const handleStartTraining = async (questions: Question[], settings: FormValues) => {
-    setFilterSettings(settings);
     localStorage.setItem('trainingFilterSettings', JSON.stringify(settings));
 
     const questionIds = questions.map((q) => q.id);
@@ -277,7 +274,6 @@ const Training: React.FC = () => {
           onNext={handleNext}
           onPrevious={handlePrevious}
           onAnswer={handleAnswer}
-          userAnswer={userAnswers[currentQuestionIndex]?.value || ''}
           userAnswerState={userAnswers[currentQuestionIndex]}
           onQuit={handleQuit}
           onQuestionUpdate={handleQuestionUpdate}

@@ -9,7 +9,6 @@ import { CreateCommentInput } from '@/types/Comment';
 interface CommentFormProps {
   questionId: string;
   isPrivate: boolean;
-  allowPublicComments: boolean;
   parentId?: string | null;
   onSubmit: () => void;
   onCancel?: () => void;
@@ -19,7 +18,6 @@ interface CommentFormProps {
 const CommentForm: React.FC<CommentFormProps> = ({
   questionId,
   isPrivate,
-  allowPublicComments,
   parentId,
   onSubmit,
   onCancel,

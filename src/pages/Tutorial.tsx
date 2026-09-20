@@ -15,7 +15,6 @@ import {
   CheckCircle,
   BarChart,
   Sparkles,
-  Search,
   ArrowRight,
   Calendar,
   ListPlus,

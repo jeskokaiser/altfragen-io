@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Image as ImageIcon, Move, ArrowRight, ArrowLeft, ArrowUp, ArrowDown } from 'lucide-react';
+import { Image as ImageIcon, Move, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
 import QuestionImage from './QuestionImage';
 
 interface ImageAssignmentProps {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,6 @@ import { SearchFilters } from '@/components/questions/SearchFilters';
 import { SearchResultsList } from '@/components/questions/SearchResultsList';
 import { searchQuestions, getFilterOptions } from '@/services/QuestionSearchService';
 import { QuestionSearchFilters, SortField, SortDirection } from '@/types/QuestionSearchFilters';
-import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
 import { Search, Loader2, ArrowUpDown } from 'lucide-react';
 import {
@@ -123,7 +122,7 @@ const QuestionSearch: React.FC = () => {
     setPage(0); // Reset to first page when sort changes
   };
 
-  const handleQuestionUpdated = (updatedQuestion: Question) => {
+  const handleQuestionUpdated = () => {
     // Refetch search results to reflect the update
     refetch();
   };

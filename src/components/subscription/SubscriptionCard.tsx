@@ -4,18 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Crown,
-  Check,
-  Loader2,
-  Brain,
-  Tag,
-  Mail,
-  RefreshCw,
-  AlertCircle,
-  Sparkles,
-} from 'lucide-react';
-import { showToast } from '@/utils/toast';
+import { Loader2, Mail, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface SubscriptionCardProps {
   onSubscribeClick?: () => void;
@@ -25,7 +14,6 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
   const {
     subscribed,
     subscriptionTier,
-    subscriptionEnd,
     loading,
     checkSubscription,
     createCheckoutSession,

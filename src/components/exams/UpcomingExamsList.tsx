@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -103,7 +103,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
         try {
           const s = await getExamStatsForUser(exam.id, currentUserId);
           return { examId: exam.id, stats: s };
-        } catch (e) {
+        } catch {
           return null;
         }
       });

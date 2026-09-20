@@ -1,19 +1,8 @@
 import React from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Play,
-  AlertCircle,
-  Archive,
-  RotateCcw,
-  Lock,
-  GraduationCap,
-  Globe,
-  Share2,
-  EyeOff,
-} from 'lucide-react';
+import { Play, Archive, RotateCcw, Lock, GraduationCap, Globe, Share2, EyeOff } from 'lucide-react';
 import { Question } from '@/types/Question';
-import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
@@ -28,12 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,7 +46,6 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   displayName,
   onUnclearQuestions,
 }) => {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user, universityId } = useAuth();
 
@@ -110,9 +93,6 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
   const isPrivateDataset = datasetVisibility === 'private' && user?.id === questions[0]?.user_id;
 
   // Check if dataset can be changed to private (only if all questions are private)
-  const canChangeToPrivate = !questions.some(
-    (q) => q.visibility === 'university' || q.visibility === 'public',
-  );
 
   const handleUnclearClick = () => {
     onUnclearQuestions();

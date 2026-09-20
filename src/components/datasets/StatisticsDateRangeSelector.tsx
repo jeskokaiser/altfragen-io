@@ -12,7 +12,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 
 interface StatisticsDateRangeSelectorProps {
   value: StatisticsDateRange;

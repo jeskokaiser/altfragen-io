@@ -419,24 +419,21 @@ serve(async (req) => {
         }
 
         // Try to find existing subscriber by stripe_customer_id first, then by email
-        let existingSubscriber = null;
         let subscriberLookupError = null;
 
         if (customerId) {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('subscribers')
             .select('id, user_id, email, stripe_customer_id')
             .or(`stripe_customer_id.eq.${customerId},email.eq.${email}`)
             .maybeSingle();
-          existingSubscriber = data;
           subscriberLookupError = error;
         } else {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('subscribers')
             .select('id, user_id, email, stripe_customer_id')
             .eq('email', email)
             .maybeSingle();
-          existingSubscriber = data;
           subscriberLookupError = error;
         }
 

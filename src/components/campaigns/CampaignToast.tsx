@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { CampaignService } from '@/services/CampaignService';
 import { toast } from 'sonner';
@@ -16,7 +16,6 @@ import {
 const CampaignToast: React.FC = () => {
   const { subscribed, loading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
-  const [shown, setShown] = useState<string[]>([]);
 
   useEffect(() => {
     if (!subscriptionLoading) {

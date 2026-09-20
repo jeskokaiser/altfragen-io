@@ -11,10 +11,7 @@ import {
  * Get all visible comments for a question.
  * Returns private notes for the user and public comments if the question is shared.
  */
-export const getCommentsForQuestion = async (
-  questionId: string,
-  userId: string,
-): Promise<CommentWithReplies[]> => {
+export const getCommentsForQuestion = async (questionId: string): Promise<CommentWithReplies[]> => {
   // Type assertion needed until types are regenerated after migration
   const { data: comments, error } = (await supabase
     .from('question_comments' as any)

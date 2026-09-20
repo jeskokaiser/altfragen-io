@@ -14,10 +14,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { session, isLoading, setIndex, setStatus, refresh } = useTrainingSession(
-    sessionId,
-    user?.id,
-  );
+  const { session, isLoading, setIndex, setStatus } = useTrainingSession(sessionId, user?.id);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [localCurrentIndex, setLocalCurrentIndex] = useState<number | null>(null);
@@ -155,7 +152,7 @@ const TrainingSessionRunnerPage: React.FC = () => {
 
   // This handler is just for notifying the component about state changes
   // The actual database write is handled by onSessionRecordAttempt below
-  const handleAnswer = async (answer: string, isFirstAttempt: boolean, viewedSolution: boolean) => {
+  const handleAnswer = async () => {
     // Clear cached progress for this question so it's refetched next time
     if (currentQuestion) {
       setQuestionProgress((prev) => {
@@ -188,7 +185,6 @@ const TrainingSessionRunnerPage: React.FC = () => {
           onNext={handleNext}
           onPrevious={handlePrevious}
           onAnswer={handleAnswer}
-          userAnswer={currentAnswerState?.value || ''}
           userAnswerState={currentAnswerState}
           onQuit={handleQuit}
           onSessionRecordAttempt={async (answer, isCorrect, viewedSolution, isFirstAttempt) => {

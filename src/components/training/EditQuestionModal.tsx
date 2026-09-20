@@ -40,15 +40,7 @@ import { OptionsFields } from './edit-question/OptionsFields';
 import { SubjectField } from './edit-question/SubjectField';
 import { DifficultyField } from './edit-question/DifficultyField';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+
 import { GraduationCap, Lock, Globe, Image, Trash2 } from 'lucide-react';
 import QuestionImage from '@/components/questions/QuestionImage';
 
@@ -216,8 +208,6 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
 
   const canChangeVisibility =
     question.university_id === null || (user && user.id === question.user_id);
-
-  const canChangeToPrivate = question.visibility !== 'university';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

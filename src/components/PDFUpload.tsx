@@ -1,9 +1,9 @@
-import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question, PdfProcessingTask } from '@/types/Question';
-import { AlertCircle, Upload, FileText, Check, X, ArrowRight, Search } from 'lucide-react';
+import { AlertCircle, Upload, FileText, X, ArrowRight, Search } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from '@/components/ui/command';

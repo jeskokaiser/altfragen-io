@@ -12,11 +12,22 @@ import tseslint from 'typescript-eslint';
 // zero, promote it to "error" and drop it from this list.
 const RATCHET = {
   '@typescript-eslint/no-explicit-any': 'warn',
-  '@typescript-eslint/no-unused-vars': [
-    'warn',
-    { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
-  ],
   '@typescript-eslint/ban-ts-comment': 'warn',
+};
+
+// Promoted out of RATCHET: the tree is clean, so a new violation is an error.
+const ENFORCED = {
+  '@typescript-eslint/no-unused-vars': [
+    'error',
+    {
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      caughtErrorsIgnorePattern: '^_',
+      // `({ node, ...props })` names a property solely to keep it out of the
+      // rest object. That is the point of the binding, not dead code.
+      ignoreRestSiblings: true,
+    },
+  ],
 };
 
 export default tseslint.config(
@@ -38,6 +49,7 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       ...RATCHET,
+      ...ENFORCED,
       // RATCHET, see above.
       'react-hooks/exhaustive-deps': 'warn',
     },
@@ -52,7 +64,7 @@ export default tseslint.config(
       ecmaVersion: 2022,
       globals: { ...globals.deno, ...globals.worker },
     },
-    rules: RATCHET,
+    rules: { ...RATCHET, ...ENFORCED },
   },
 
   // Build configuration runs in Node.
@@ -65,6 +77,7 @@ export default tseslint.config(
     },
     rules: {
       ...RATCHET,
+      ...ENFORCED,
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
@@ -79,5 +92,14 @@ export default tseslint.config(
   {
     files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: { '@typescript-eslint/no-empty-object-type': 'off' },
+  },
+
+  // The IMPPulse broadcast sender is an unfinished stub: it posts an
+  // unencrypted payload and never signs it, so its VAPID keys and the
+  // key-decoding helper sit unused. They record what a real implementation
+  // needs, so they stay until Web Push is actually implemented here.
+  {
+    files: ['supabase/functions/broadcast-notification/index.ts'],
+    rules: { '@typescript-eslint/no-unused-vars': 'warn' },
   },
 );

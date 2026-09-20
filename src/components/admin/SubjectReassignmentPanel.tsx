@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
@@ -31,7 +30,6 @@ interface ProcessingResult {
 }
 
 const SubjectReassignmentPanel: React.FC = () => {
-  const { user } = useAuth();
   const [examName, setExamName] = useState('');
   const [universityId, setUniversityId] = useState<string>('all');
   const [onlyNullSubjects, setOnlyNullSubjects] = useState<string>('all');

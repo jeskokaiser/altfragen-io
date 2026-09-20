@@ -102,7 +102,7 @@ export class PushNotificationService {
   /**
    * Unsubscribe from push notifications
    */
-  static async unsubscribe(userId: string): Promise<boolean> {
+  static async unsubscribe(): Promise<boolean> {
     if (!this.isSupported()) {
       throw new Error('Push notifications are not supported');
     }
@@ -115,7 +115,7 @@ export class PushNotificationService {
     }
 
     await subscription.unsubscribe();
-    await this.removeSubscription(userId);
+    await this.removeSubscription();
 
     return true;
   }
@@ -261,7 +261,7 @@ export class PushNotificationService {
   /**
    * Remove subscription from backend
    */
-  private static async removeSubscription(userId: string): Promise<void> {
+  private static async removeSubscription(): Promise<void> {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const endpoint = `${supabaseUrl}/functions/v1/remove-push-subscription`;
 
@@ -371,7 +371,7 @@ export class PushNotificationService {
         try {
           const errorJson = JSON.parse(errorText);
           errorMessage = errorJson.error || errorMessage;
-        } catch (e) {
+        } catch {
           errorMessage = errorText || errorMessage;
         }
         console.error('Backend save error:', errorMessage);
@@ -411,7 +411,7 @@ export class PushNotificationService {
         try {
           const errorJson = JSON.parse(errorText);
           errorMessage = errorJson.error || errorMessage;
-        } catch (e) {
+        } catch {
           errorMessage = errorText || errorMessage;
         }
         console.error('Backend remove error:', errorMessage);

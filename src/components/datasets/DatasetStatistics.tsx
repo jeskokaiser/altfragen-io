@@ -104,7 +104,6 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
 
   const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
   const correctPercentage = totalQuestions ? (correctAnswers / answeredQuestions) * 100 : 0;
-  const wrongPercentage = totalQuestions ? (wrongAnswers / answeredQuestions) * 100 : 0;
   const correctPercentageBar = totalQuestions ? (correctAnswers / totalQuestions) * 100 : 0;
   const wrongPercentageBar = totalQuestions ? (wrongAnswers / totalQuestions) * 100 : 0;
 

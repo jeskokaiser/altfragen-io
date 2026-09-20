@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
-import PremiumBadge from '@/components/subscription/PremiumBadge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -34,9 +32,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 
 const Subscription = () => {
-  const { subscribed, createCheckoutSession, createLifetimeCheckoutSession } = useSubscription();
-
-  const { universityName } = useAuth();
+  const { createCheckoutSession, createLifetimeCheckoutSession } = useSubscription();
 
   const [consentGiven, setConsentGiven] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);

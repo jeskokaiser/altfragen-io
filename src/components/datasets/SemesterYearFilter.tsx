@@ -19,7 +19,6 @@ interface SemesterYearFilterProps {
   onSemesterChange: (semester: string | null) => void;
   onYearChange: (year: string | null) => void;
   onClearFilters: () => void;
-  title?: string;
 }
 
 const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
@@ -29,7 +28,6 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   onSemesterChange,
   onYearChange,
   onClearFilters,
-  title = 'Filter',
 }) => {
   // Extract unique semesters from questions, ensuring we don't include empty values
   const uniqueSemesters = Array.from(

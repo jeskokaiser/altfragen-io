@@ -122,7 +122,7 @@ serve(async (req) => {
             try {
               const data = JSON.parse(text);
               console.log('Worker trigger successful:', data);
-            } catch (e) {
+            } catch {
               console.log('Worker trigger successful (non-JSON response):', text);
             }
           } else {
