@@ -93,13 +93,4 @@ export default tseslint.config(
     files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: { '@typescript-eslint/no-empty-object-type': 'off' },
   },
-
-  // The IMPPulse broadcast sender is an unfinished stub: it posts an
-  // unencrypted payload and never signs it, so its VAPID keys and the
-  // key-decoding helper sit unused. They record what a real implementation
-  // needs, so they stay until Web Push is actually implemented here.
-  {
-    files: ['supabase/functions/broadcast-notification/index.ts'],
-    rules: { '@typescript-eslint/no-unused-vars': 'warn' },
-  },
 );

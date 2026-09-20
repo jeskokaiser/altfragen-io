@@ -73,11 +73,10 @@ old ones lets the cap be lowered -- **lower it in the same commit as the
 cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
-`no-unused-vars` has already made that trip and is an error everywhere except
-`supabase/functions/broadcast-notification/index.ts`, which has its own
-override and a comment saying why. Still in RATCHET: `no-explicit-any` (184)
-and `ban-ts-comment` (8), plus `react-hooks/exhaustive-deps` and
-`react-refresh/only-export-components`, which warn by design.
+`no-unused-vars` has already made that trip: it is an error everywhere, with no
+exceptions. Still in RATCHET: `no-explicit-any` (181) and `ban-ts-comment` (8),
+plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
+which warn by design.
 
 ## Lock file
 
@@ -114,6 +113,11 @@ are queued (`ai_commentary_job_queue`), dispatched to providers in batches
 with `stripe-webhook` as the source of truth for entitlements. Free users get a
 limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
 
+**There are no push notifications.** IMPPulse was removed, together with its
+page, service worker handlers and four Edge Functions. The `push_subscriptions`
+and `broadcast_logs` tables still exist and still hold rows; nothing reads or
+writes them. Don't build on them without deciding their fate first.
+
 ## Landmines
 
 - **No tests.** There is no safety net beyond typecheck and build. Changes to
@@ -126,11 +130,6 @@ limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
   Splitting them is welcome as its own change, not smuggled into a feature.
 - **`console.*` is used for logging throughout** (~300 calls). Don't add more;
   a real logger is a pending cleanup.
-- **IMPPulse broadcast push does not work.** The `broadcast-notification` Edge
-  Function posts an unencrypted body while claiming `Content-Encoding:
-aes128gcm`, and never signs the request with the VAPID keys it reads. Its own
-  comment says "In production, implement full Web Push encryption". Treat the
-  feature as unimplemented, not as a bug to patch around.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and
   they deploy separately from the frontend.
 

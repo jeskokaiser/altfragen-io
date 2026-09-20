@@ -11,7 +11,6 @@ import MainLayout from '@/components/layout/MainLayout';
 // Import pages
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
-import IMPPulse from '@/pages/IMPPulse';
 import TermsPage from '@/pages/Terms';
 import ImpressumPage from '@/pages/Impressum';
 import PrivacyPage from '@/pages/Privacy';
@@ -47,7 +46,6 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/imppulse" element={<IMPPulse />} />
                     <Route path="/terms" element={<TermsPage />} />
                     <Route path="/impressum" element={<ImpressumPage />} />
                     <Route path="/privacy" element={<PrivacyPage />} />

@@ -19,7 +19,6 @@ import {
   Zap,
   Calendar,
   Target,
-  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Footer from '@/components/Footer';
@@ -87,12 +86,6 @@ const Index = () => {
           </Link>
 
           <nav className="flex items-center gap-4">
-            <Link to="/imppulse">
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                IMPPulse
-              </Button>
-            </Link>
             <Button onClick={handleGetStarted}>{user ? 'Dashboard' : 'Anmelden'}</Button>
           </nav>
         </div>
