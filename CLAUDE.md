@@ -113,10 +113,9 @@ are queued (`ai_commentary_job_queue`), dispatched to providers in batches
 with `stripe-webhook` as the source of truth for entitlements. Free users get a
 limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
 
-**There are no push notifications.** IMPPulse was removed, together with its
-page, service worker handlers and four Edge Functions. The `push_subscriptions`
-and `broadcast_logs` tables still exist and still hold rows; nothing reads or
-writes them. Don't build on them without deciding their fate first.
+**There are no push notifications.** IMPPulse was removed in full: the page,
+the service worker handlers, four Edge Functions, and the `push_subscriptions`
+and `broadcast_logs` tables.
 
 ## Landmines
 
