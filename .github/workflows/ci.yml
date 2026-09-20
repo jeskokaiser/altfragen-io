@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   verify:
-    name: typecheck, lint, format, build
+    name: typecheck, test, lint, format, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -35,6 +35,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Test
+        run: npm run test
 
       # Fails on any error, and on more warnings than the cap in package.json.
       - name: Lint
