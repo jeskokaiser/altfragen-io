@@ -62,6 +62,19 @@ invisible. Fix the type, or regenerate.
 
 **Never hand-edit `package-lock.json`.** Change dependencies with `npm install`.
 
+**API keys.** The browser client uses the publishable key (`sb_publishable_...`),
+not the legacy anon JWT. Edge Functions read their outbound key through
+`supabase/functions/_shared/supabaseKeys.ts`, which prefers the new
+`SUPABASE_SECRET_KEYS` / `SUPABASE_PUBLISHABLE_KEYS` bundles and falls back to
+the legacy `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY`. Use those helpers
+rather than reading the environment directly.
+
+That covers outbound keys only. Who may _call_ a function is still the
+platform's `verify_jwt` gate, which understands legacy JWTs only, so callers
+(cron jobs, database webhooks, the client) must keep sending a legacy key until
+each function authorizes requests itself. Disabling the legacy keys is
+therefore a separate piece of work, not a flip of a switch.
+
 ## The lint ratchet
 
 `npm run lint` passes with zero errors and caps warnings at a fixed number
