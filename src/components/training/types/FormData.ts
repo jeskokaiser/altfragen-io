@@ -1,4 +1,3 @@
-
 export interface FormData {
   question: string;
   optionA: string;

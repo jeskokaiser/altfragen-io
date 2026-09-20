@@ -1,5 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createUpcomingExam, deleteUpcomingExam, listUpcomingExamsForUser, linkQuestionsToExam, unlinkQuestionFromExam, updateUpcomingExam } from '@/services/UpcomingExamService';
+import {
+  createUpcomingExam,
+  deleteUpcomingExam,
+  listUpcomingExamsForUser,
+  linkQuestionsToExam,
+  unlinkQuestionFromExam,
+  updateUpcomingExam,
+} from '@/services/UpcomingExamService';
 import type { CreateUpcomingExamInput } from '@/services/UpcomingExamService';
 
 export const useUpcomingExams = (userId: string | undefined) => {
@@ -11,40 +18,49 @@ export const useUpcomingExams = (userId: string | undefined) => {
       if (!userId) return [];
       return listUpcomingExamsForUser(userId);
     },
-    enabled: !!userId
+    enabled: !!userId,
   });
 
   const createMut = useMutation({
     mutationFn: (input: CreateUpcomingExamInput) => createUpcomingExam(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['upcoming-exams', userId] });
-    }
+    },
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ examId, updates }: { examId: string; updates: any }) => updateUpcomingExam(examId, updates),
+    mutationFn: ({ examId, updates }: { examId: string; updates: any }) =>
+      updateUpcomingExam(examId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['upcoming-exams', userId] });
-    }
+    },
   });
 
   const deleteMut = useMutation({
     mutationFn: (examId: string) => deleteUpcomingExam(examId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['upcoming-exams', userId] });
-    }
+    },
   });
 
   // Questions are now automatically linked by exam_name matching
   // These mutations are kept for backward compatibility but are no-ops
   const linkMut = useMutation({
-    mutationFn: async ({ examId, questionIds, sourceOf }: { examId: string; questionIds: string[]; sourceOf: (qid: string) => 'personal' | 'university' }) => {
+    mutationFn: async ({
+      examId,
+      questionIds,
+      sourceOf,
+    }: {
+      examId: string;
+      questionIds: string[];
+      sourceOf: (qid: string) => 'personal' | 'university';
+    }) => {
       // Questions are automatically linked by exam_name, so this is a no-op
       return linkQuestionsToExam(examId, questionIds, sourceOf);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['upcoming-exams', userId] });
-    }
+    },
   });
 
   const unlinkMut = useMutation({
@@ -55,7 +71,7 @@ export const useUpcomingExams = (userId: string | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['upcoming-exams', userId] });
-    }
+    },
   });
 
   return {
@@ -66,8 +82,6 @@ export const useUpcomingExams = (userId: string | undefined) => {
     updateExam: updateMut.mutateAsync,
     deleteExam: deleteMut.mutateAsync,
     linkQuestions: linkMut.mutateAsync,
-    unlinkQuestion: unlinkMut.mutateAsync
+    unlinkQuestion: unlinkMut.mutateAsync,
   };
 };
-
-

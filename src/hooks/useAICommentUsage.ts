@@ -37,7 +37,7 @@ export const useAICommentUsage = () => {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       // Check if user has viewed AI comments today
       const { data, error } = await supabase
         .from('user_ai_comment_usage')
@@ -68,10 +68,10 @@ export const useAICommentUsage = () => {
 
     // Prevent multiple concurrent increments
     setIsIncrementing(true);
-    
+
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       // First, get the current usage to avoid race conditions
       const { data: currentData, error: fetchError } = await supabase
         .from('user_ai_comment_usage')
@@ -90,15 +90,16 @@ export const useAICommentUsage = () => {
 
       console.log(`Incrementing usage from ${currentUsage} to ${newUsage}`);
 
-      const { error } = await supabase
-        .from('user_ai_comment_usage')
-        .upsert({
+      const { error } = await supabase.from('user_ai_comment_usage').upsert(
+        {
           user_id: user.id,
           date: today,
-          usage_count: newUsage
-        }, {
-          onConflict: 'user_id,date'
-        });
+          usage_count: newUsage,
+        },
+        {
+          onConflict: 'user_id,date',
+        },
+      );
 
       if (error) {
         console.error('Error incrementing usage:', error);
@@ -132,6 +133,6 @@ export const useAICommentUsage = () => {
     incrementUsage,
     loading,
     DAILY_LIMIT: dailyLimit,
-    isIncrementing
+    isIncrementing,
   };
 };

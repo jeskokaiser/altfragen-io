@@ -4,7 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Crown, Check, Loader2, Brain, Tag, Mail, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
+import {
+  Crown,
+  Check,
+  Loader2,
+  Brain,
+  Tag,
+  Mail,
+  RefreshCw,
+  AlertCircle,
+  Sparkles,
+} from 'lucide-react';
 import { showToast } from '@/utils/toast';
 
 interface SubscriptionCardProps {
@@ -12,16 +22,16 @@ interface SubscriptionCardProps {
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick }) => {
-  const { 
-    subscribed, 
-    subscriptionTier, 
-    subscriptionEnd, 
-    loading, 
-    checkSubscription, 
-    createCheckoutSession, 
-    openCustomerPortal 
+  const {
+    subscribed,
+    subscriptionTier,
+    subscriptionEnd,
+    loading,
+    checkSubscription,
+    createCheckoutSession,
+    openCustomerPortal,
   } = useSubscription();
-  
+
   const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCheckoutPrompt, setShowCheckoutPrompt] = useState(false);
@@ -29,17 +39,17 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
   // Check if user recently initiated checkout
   useEffect(() => {
     if (!user?.id || subscribed) return;
-    
+
     const checkoutInitiated = localStorage.getItem(`checkout_initiated_${user.id}`);
     if (checkoutInitiated) {
       const checkoutTime = new Date(checkoutInitiated);
       const now = new Date();
       const timeSinceCheckout = now.getTime() - checkoutTime.getTime();
-      
+
       // Show prompt if checkout was within the last 5 minutes and user is not subscribed
       if (timeSinceCheckout < 5 * 60 * 1000) {
         setShowCheckoutPrompt(true);
-        
+
         // Auto-refresh subscription status once
         setTimeout(() => {
           handleRefreshStatus();
@@ -82,15 +92,15 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
     <Card className="p-2 border-none">
       <div className="flex items-center justify-between mb-4">
         <h4 className="text-lg font-semibold">
-        {subscribed ? 'Premium aktiv - Vielen Dank!' : 'Jetzt durchstarten!'}
-      </h4>
+          {subscribed ? 'Premium aktiv - Vielen Dank!' : 'Jetzt durchstarten!'}
+        </h4>
         {subscribed && subscriptionTier === 'Lifetime' && (
           <Badge className="bg-blue-600 dark:bg-blue-500 text-white flex items-center gap-1">
             Lifetime
           </Badge>
         )}
       </div>
-      
+
       {/* Checkout prompt for users who recently purchased */}
       {showCheckoutPrompt && !subscribed && (
         <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20">
@@ -127,7 +137,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
           </div>
         </div>
       )}
-      
+
       <div className="space-y-2">
         {subscribed ? (
           <div className="space-y-3">
@@ -143,28 +153,31 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
                 </p>
               </div>
             )}
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex gap-2">
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex gap-2">
                 {subscriptionTier !== 'Lifetime' && (
-              <Button onClick={openCustomerPortal} variant="outline" className="flex-1">
-                Abonnement verwalten
-              </Button>
+                  <Button onClick={openCustomerPortal} variant="outline" className="flex-1">
+                    Abonnement verwalten
+                  </Button>
                 )}
-              <Button 
-                onClick={() => window.location.href = 'mailto:premium@altfragen.io?subject=Premium Support Anfrage'}
-                variant="outline"
-                className="flex items-center gap-2 flex-1"
-              >
-                <Mail className="h-4 w-4" />
-                Premium Support
-              </Button>
+                <Button
+                  onClick={() =>
+                    (window.location.href =
+                      'mailto:premium@altfragen.io?subject=Premium Support Anfrage')
+                  }
+                  variant="outline"
+                  className="flex items-center gap-2 flex-1"
+                >
+                  <Mail className="h-4 w-4" />
+                  Premium Support
+                </Button>
               </div>
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <Button 
-              onClick={onSubscribeClick || (() => createCheckoutSession('monthly'))} 
+            <Button
+              onClick={onSubscribeClick || (() => createCheckoutSession('monthly'))}
               className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 w-full"
             >
               Auf Premium upgraden
@@ -173,12 +186,10 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
               Ab 9 €/Monat oder 29 €/Semester (6 Monate), jeweils mit automatischer Verlängerung.
             </div>
             <div className="text-center">
-              <span className="text-xs text-muted-foreground">
-                Gerade Premium gekauft? 
-              </span>
-              <Button 
+              <span className="text-xs text-muted-foreground">Gerade Premium gekauft?</span>
+              <Button
                 onClick={handleRefreshStatus}
-                variant="link" 
+                variant="link"
                 size="sm"
                 disabled={isRefreshing}
                 className="text-xs p-0 ml-1 h-auto underline"

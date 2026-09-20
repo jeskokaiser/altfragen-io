@@ -1,25 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Bell, BellOff, Check, AlertCircle, Info, Smartphone, Settings, Webhook } from "lucide-react";
-import { toast } from "sonner";
-import { Link } from "react-router-dom";
-import Footer from "@/components/Footer";
-import PushNotificationService from "@/services/PushNotificationService";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Bell,
+  BellOff,
+  Check,
+  AlertCircle,
+  Info,
+  Smartphone,
+  Settings,
+  Webhook,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import Footer from '@/components/Footer';
+import PushNotificationService from '@/services/PushNotificationService';
 
 const IMPPulse = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>("default");
+  const [permission, setPermission] = useState<NotificationPermission>('default');
 
   useEffect(() => {
     // Check if push notifications are supported
     const checkSupport = async () => {
       const supported = PushNotificationService.isSupported();
       setIsSupported(supported);
-      
+
       if (supported) {
         setPermission(Notification.permission);
         const subscribed = await PushNotificationService.isSubscribedToBroadcast();
@@ -37,7 +46,9 @@ const IMPPulse = () => {
       await PushNotificationService.subscribeToBroadcast();
       setIsSubscribed(true);
       setPermission('granted');
-      toast.success('Perfekt! Du erhältst eine Benachrichtigung, sobald die M2-Ergebnisse Herbst 2025 veröffentlicht werden.');
+      toast.success(
+        'Perfekt! Du erhältst eine Benachrichtigung, sobald die M2-Ergebnisse Herbst 2025 veröffentlicht werden.',
+      );
 
       // Show a welcome notification
       try {
@@ -51,16 +62,19 @@ const IMPPulse = () => {
       } catch (error) {
         console.error('Error showing welcome notification:', error);
       }
-
     } catch (error) {
       console.error('Error subscribing to push:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
-      
+
       if (errorMessage.includes('denied')) {
-        toast.error('Benachrichtigungen wurden blockiert. Bitte aktiviere sie in deinen Browser-Einstellungen.');
+        toast.error(
+          'Benachrichtigungen wurden blockiert. Bitte aktiviere sie in deinen Browser-Einstellungen.',
+        );
         setPermission('denied');
       } else {
-        toast.error('Fehler beim Aktivieren der Push-Benachrichtigungen. Bitte versuche es später erneut.');
+        toast.error(
+          'Fehler beim Aktivieren der Push-Benachrichtigungen. Bitte versuche es später erneut.',
+        );
       }
     } finally {
       setIsLoading(false);
@@ -72,7 +86,7 @@ const IMPPulse = () => {
 
     try {
       const success = await PushNotificationService.unsubscribeFromBroadcast();
-      
+
       if (success) {
         setIsSubscribed(false);
         toast.success('Push-Benachrichtigungen wurden deaktiviert');
@@ -105,7 +119,7 @@ const IMPPulse = () => {
           <Link to="/" className="font-bold text-xl flex items-center gap-2">
             Altfragen.io
           </Link>
-          
+
           <nav className="flex items-center gap-4">
             <Link to="/">
               <Button variant="ghost">Zurück zur Startseite</Button>
@@ -113,7 +127,7 @@ const IMPPulse = () => {
           </nav>
         </div>
       </header>
-      
+
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full mb-4">
@@ -121,7 +135,8 @@ const IMPPulse = () => {
           </div>
           <h1 className="text-4xl font-bold mb-4">IMPPulse</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Erhalte eine Benachrichtigung, sobald die H25 M2-Ergebnisse vom IMPP veröffentlicht werden
+            Erhalte eine Benachrichtigung, sobald die H25 M2-Ergebnisse vom IMPP veröffentlicht
+            werden
           </p>
         </div>
 
@@ -129,7 +144,9 @@ const IMPPulse = () => {
           <Alert className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Wenn Du auf einem Apple Gerät bist, nutze Safari und lade die Web-App und speichere sie als PWA (siehe unten). Ansonsten unterstützt Dein Browser keine Push-Benachrichtigungen.
+              Wenn Du auf einem Apple Gerät bist, nutze Safari und lade die Web-App und speichere
+              sie als PWA (siehe unten). Ansonsten unterstützt Dein Browser keine
+              Push-Benachrichtigungen.
             </AlertDescription>
           </Alert>
         )}
@@ -141,9 +158,7 @@ const IMPPulse = () => {
                 <Bell className="w-5 h-5" />
                 Push-Benachrichtigungen
               </CardTitle>
-              <CardDescription>
-                Erhalte wichtige Updates direkt auf dein Gerät
-              </CardDescription>
+              <CardDescription>Erhalte wichtige Updates direkt auf dein Gerät</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-secondary rounded-lg">
@@ -154,15 +169,13 @@ const IMPPulse = () => {
                     <div className="w-3 h-3 bg-gray-300 rounded-full" />
                   )}
                   <div>
-                    <p className="font-medium">
-                      {isSubscribed ? 'Aktiviert' : 'Nicht aktiviert'}
-                    </p>
+                    <p className="font-medium">{isSubscribed ? 'Aktiviert' : 'Nicht aktiviert'}</p>
                     <p className="text-sm text-muted-foreground">
-                      {permission === 'denied' 
-                        ? 'Benachrichtigungen wurden blockiert' 
+                      {permission === 'denied'
+                        ? 'Benachrichtigungen wurden blockiert'
                         : permission === 'granted'
-                        ? 'Du erhältst Benachrichtigungen'
-                        : 'Noch nicht konfiguriert'}
+                          ? 'Du erhältst Benachrichtigungen'
+                          : 'Noch nicht konfiguriert'}
                     </p>
                   </div>
                 </div>
@@ -170,8 +183,8 @@ const IMPPulse = () => {
                 {isSupported && (
                   <div className="flex gap-2 flex-shrink-0">
                     {!isSubscribed ? (
-                      <Button 
-                        onClick={subscribeToPush} 
+                      <Button
+                        onClick={subscribeToPush}
                         disabled={isLoading || permission === 'denied'}
                         className="gap-2 w-full sm:w-auto"
                       >
@@ -180,7 +193,7 @@ const IMPPulse = () => {
                       </Button>
                     ) : (
                       <>
-                        <Button 
+                        <Button
                           onClick={testNotification}
                           variant="outline"
                           className="gap-2 flex-1 sm:flex-initial"
@@ -188,8 +201,8 @@ const IMPPulse = () => {
                           <Settings className="w-4 h-4" />
                           Test
                         </Button>
-                        <Button 
-                          onClick={unsubscribeFromPush} 
+                        <Button
+                          onClick={unsubscribeFromPush}
                           disabled={isLoading}
                           variant="destructive"
                           className="gap-2 flex-1 sm:flex-initial"
@@ -209,7 +222,10 @@ const IMPPulse = () => {
                   <AlertDescription>
                     Du hast Benachrichtigungen für diese Website blockiert. Um sie zu aktivieren:
                     <ol className="list-decimal ml-6 mt-2 space-y-1">
-                      <li>Erlaube Benachrichtigungen für diese Website in den Einstellungen deines Browsers</li>
+                      <li>
+                        Erlaube Benachrichtigungen für diese Website in den Einstellungen deines
+                        Browsers
+                      </li>
                       <li>Lade die Seite neu</li>
                     </ol>
                   </AlertDescription>
@@ -231,12 +247,12 @@ const IMPPulse = () => {
                   🎓 M2-Ergebnisse Herbst 2025
                 </h3>
                 <p className="text-muted-foreground">
-                  Du wartest auf deine Ergebnisse des 2. Staatsexamens (M2) H25 vom IMPP? 
-                  Aktiviere IMPPulse und erhalte sofort eine Benachrichtigung auf dein Gerät, 
-                  sobald die Ergebnisse online verfügbar sind.
+                  Du wartest auf deine Ergebnisse des 2. Staatsexamens (M2) H25 vom IMPP? Aktiviere
+                  IMPPulse und erhalte sofort eine Benachrichtigung auf dein Gerät, sobald die
+                  Ergebnisse online verfügbar sind.
                 </p>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -245,8 +261,8 @@ const IMPPulse = () => {
                   <div>
                     <h4 className="font-semibold mb-1">📱 Sofortige Benachrichtigung</h4>
                     <p className="text-sm text-muted-foreground">
-                      Erhalte eine Push-Benachrichtigung auf dein Smartphone oder Computer, 
-                      sobald die M2-Ergebnisse vom IMPP veröffentlicht werden
+                      Erhalte eine Push-Benachrichtigung auf dein Smartphone oder Computer, sobald
+                      die M2-Ergebnisse vom IMPP veröffentlicht werden
                     </p>
                   </div>
                 </div>
@@ -270,22 +286,23 @@ const IMPPulse = () => {
                   <div>
                     <h4 className="font-semibold mb-1">⚡ Blitzschnell informiert</h4>
                     <p className="text-sm text-muted-foreground">
-                      Sei einer der Ersten, die von der Veröffentlichung erfahren – 
-                      kein ständiges Aktualisieren der IMPP-Website mehr nötig
+                      Sei einer der Ersten, die von der Veröffentlichung erfahren – kein ständiges
+                      Aktualisieren der IMPP-Website mehr nötig
                     </p>
                   </div>
                 </div>
-
-          
               </div>
 
               <Alert className="mt-4">
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Hinweis:</strong> Unser System prüft die IMPP-Ergebnisseite anhand einer Ergebnis-ID aus Hamburg täglich von 6 bis 23 Uhr alle 5 Minuten automatisch.
-                  Sollten die Ergebnisse nach LPA oder Universität zeitlich unterschiedlich veröffentlicht werden, kann es zu verfrühten oder verspäteten Benachrichtigungen kommen.
-                  Sollte das IMPP auf der Website das Wort "Nichtverfügbarkeit" entfernen, ohne die Ergebnisse veröffentlicht zu haben, kann es zu Fehlbenachrichtigungen kommen. 
-                  Das gleiche gilt, wenn unsere Abfragen vom IMPP gesperrt werden sollten.
+                  <strong>Hinweis:</strong> Unser System prüft die IMPP-Ergebnisseite anhand einer
+                  Ergebnis-ID aus Hamburg täglich von 6 bis 23 Uhr alle 5 Minuten automatisch.
+                  Sollten die Ergebnisse nach LPA oder Universität zeitlich unterschiedlich
+                  veröffentlicht werden, kann es zu verfrühten oder verspäteten Benachrichtigungen
+                  kommen. Sollte das IMPP auf der Website das Wort "Nichtverfügbarkeit" entfernen,
+                  ohne die Ergebnisse veröffentlicht zu haben, kann es zu Fehlbenachrichtigungen
+                  kommen. Das gleiche gilt, wenn unsere Abfragen vom IMPP gesperrt werden sollten.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -300,7 +317,11 @@ const IMPPulse = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Für die Nutzung von Push-Benachrichtigungen auf deinem Smartphone oder Computer ist Altfragen.io als Progressive Web App (PWA) verfügbar. Aktiviere die Benachrichtigungen in den Einstellungen deines Browsers und auf der IMPPulse-Seite der PWA. Du solltest die Test-Benachrichtigung erhalten können, wenn du auf den Test-Button klickst.
+                Für die Nutzung von Push-Benachrichtigungen auf deinem Smartphone oder Computer ist
+                Altfragen.io als Progressive Web App (PWA) verfügbar. Aktiviere die
+                Benachrichtigungen in den Einstellungen deines Browsers und auf der IMPPulse-Seite
+                der PWA. Du solltest die Test-Benachrichtigung erhalten können, wenn du auf den
+                Test-Button klickst.
               </p>
               <div className="bg-secondary p-4 rounded-lg">
                 <h4 className="font-semibold mb-2">So installierst du die App:</h4>
@@ -324,7 +345,6 @@ const IMPPulse = () => {
                 <Info className="w-5 h-5" />
                 Erklärvideo
               </CardTitle>
-
             </CardHeader>
             <CardContent>
               <div className="flex justify-center">
@@ -350,4 +370,3 @@ const IMPPulse = () => {
 };
 
 export default IMPPulse;
-

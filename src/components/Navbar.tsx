@@ -5,7 +5,23 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Menu, X, LogOut, User, Settings as SettingsIcon, Book, Home, UserPlus, HelpCircle, GraduationCap, Crown, Shield, Bug, Bell, Search as SearchIcon } from 'lucide-react';
+import {
+  Menu,
+  X,
+  LogOut,
+  User,
+  Settings as SettingsIcon,
+  Book,
+  Home,
+  UserPlus,
+  HelpCircle,
+  GraduationCap,
+  Crown,
+  Shield,
+  Bug,
+  Bell,
+  Search as SearchIcon,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -49,19 +65,31 @@ const Navbar: React.FC = () => {
   const mainNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { label: 'Suchen', href: '/search', icon: <SearchIcon className="h-4 w-4 mr-2" /> },
-    { label: 'Premium', href: '/subscription', icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} /> },
-    ...(isAdmin ? [{ label: 'Admin', href: '/ai-commentary', icon: <Shield className="mr-2 h-4 w-4 text-red-600" /> }] : []),
+    {
+      label: 'Premium',
+      href: '/subscription',
+      icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} />,
+    },
+    ...(isAdmin
+      ? [
+          {
+            label: 'Admin',
+            href: '/ai-commentary',
+            icon: <Shield className="mr-2 h-4 w-4 text-red-600" />,
+          },
+        ]
+      : []),
   ];
-  
+
   const userMenuItems = [
-      { label: 'IMPPulse', href: '/imppulse', icon: <Bell className="mr-2 h-4 w-4" /> },
-      { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
-      { 
-        label: 'Feedback/Bug melden', 
-        icon: <Bug className="mr-2 h-4 w-4" />,
-        onClick: () => {
-          const subject = encodeURIComponent('Feedback/Bug Report - Altfragen.io');
-          const body = encodeURIComponent(`Hallo Altfragen.io Team,
+    { label: 'IMPPulse', href: '/imppulse', icon: <Bell className="mr-2 h-4 w-4" /> },
+    { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
+    {
+      label: 'Feedback/Bug melden',
+      icon: <Bug className="mr-2 h-4 w-4" />,
+      onClick: () => {
+        const subject = encodeURIComponent('Feedback/Bug Report - Altfragen.io');
+        const body = encodeURIComponent(`Hallo Altfragen.io Team,
 
 ich möchte euch Feedback geben oder einen Bug melden:
 
@@ -82,9 +110,9 @@ Zusätzliche Informationen:
 
 Vielen Dank!
 `);
-          window.location.href = `mailto:hallo@altfragen.io?subject=${subject}&body=${body}`;
-        }
+        window.location.href = `mailto:hallo@altfragen.io?subject=${subject}&body=${body}`;
       },
+    },
   ];
 
   const allNavItems = [...mainNavItems, ...userMenuItems];
@@ -106,7 +134,9 @@ Vielen Dank!
                 key={item.href}
                 to={item.href}
                 className={`flex items-center transition-colors hover:text-foreground/80 ${
-                  location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                  location.pathname === item.href
+                    ? 'text-foreground font-medium'
+                    : 'text-foreground/60'
                 }`}
               >
                 {item.icon}
@@ -128,14 +158,12 @@ Vielen Dank!
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>
-                    {user.email}
-                  </DropdownMenuLabel>
+                  <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {userMenuItems.map((item) => (
-                    <DropdownMenuItem 
-                      key={item.label} 
-                      onClick={() => 'onClick' in item ? item.onClick() : navigate(item.href)}
+                    <DropdownMenuItem
+                      key={item.label}
+                      onClick={() => ('onClick' in item ? item.onClick() : navigate(item.href))}
                     >
                       {item.icon}
                       {item.label}
@@ -179,7 +207,7 @@ Vielen Dank!
       {user && isMobile && isMenuOpen && (
         <div className="container py-4 border-t bg-background">
           <nav className="flex flex-col space-y-4">
-            {allNavItems.map((item) => (
+            {allNavItems.map((item) =>
               'onClick' in item ? (
                 <button
                   key={item.label}
@@ -194,14 +222,16 @@ Vielen Dank!
                   key={item.href}
                   to={item.href}
                   className={`flex items-center py-2 ${
-                    location.pathname === item.href ? 'text-foreground font-medium' : 'text-foreground/60'
+                    location.pathname === item.href
+                      ? 'text-foreground font-medium'
+                      : 'text-foreground/60'
                   }`}
                 >
                   {item.icon}
                   {item.label}
                 </Link>
-              )
-            ))}
+              ),
+            )}
           </nav>
         </div>
       )}

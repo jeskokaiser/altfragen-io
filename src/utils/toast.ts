@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 
 type ToastOptions = {
@@ -7,25 +6,25 @@ type ToastOptions = {
 };
 
 export const showToast = {
-  success: (message: string, options?: ToastOptions) => 
-    toast.success(message, { 
+  success: (message: string, options?: ToastOptions) =>
+    toast.success(message, {
       duration: 4000,
-      ...options 
+      ...options,
     }),
-  error: (message: string, options?: ToastOptions) => 
-    toast.error(message, { 
+  error: (message: string, options?: ToastOptions) =>
+    toast.error(message, {
       duration: 4000,
-      ...options 
+      ...options,
     }),
-  info: (message: string, options?: ToastOptions) => 
-    toast(message, { 
+  info: (message: string, options?: ToastOptions) =>
+    toast(message, {
       duration: 4000,
-      ...options 
+      ...options,
     }),
   // For cases where we previously used "destructive" variant
-  warning: (message: string, options?: ToastOptions) => 
-    toast.error(message, { 
+  warning: (message: string, options?: ToastOptions) =>
+    toast.error(message, {
       duration: 4000,
-      ...options 
-    })
+      ...options,
+    }),
 };

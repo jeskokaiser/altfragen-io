@@ -16,7 +16,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/components/ui/select';
 import { ExamCohortComparisonSection } from '@/components/exams/ExamCohortComparisonSection';
 
@@ -33,15 +33,11 @@ const ExamAnalytics: React.FC = () => {
     queryKey: ['exam', examId],
     queryFn: async () => {
       const sb: any = supabase;
-      const { data, error } = await sb
-        .from('upcoming_exams')
-        .select('*')
-        .eq('id', examId)
-        .single();
+      const { data, error } = await sb.from('upcoming_exams').select('*').eq('id', examId).single();
       if (error) throw error;
       return data;
     },
-    enabled: !!examId
+    enabled: !!examId,
   });
 
   // Fetch linked questions by exam_name
@@ -49,7 +45,7 @@ const ExamAnalytics: React.FC = () => {
     queryKey: ['exam-questions', examId],
     queryFn: async () => {
       if (!examId) return [];
-      
+
       // Get the exam to find its exam_name(s)
       const sb: any = supabase;
       const { data: examData, error: examError } = await sb
@@ -57,12 +53,15 @@ const ExamAnalytics: React.FC = () => {
         .select('exam_name')
         .eq('id', examId)
         .single();
-      
+
       if (examError) throw examError;
       if (!examData?.exam_name) return [];
 
       // Split comma-separated exam_names
-      const examNames = examData.exam_name.split(',').map((n: string) => n.trim()).filter(Boolean);
+      const examNames = examData.exam_name
+        .split(',')
+        .map((n: string) => n.trim())
+        .filter(Boolean);
       if (examNames.length === 0) return [];
 
       // Query questions directly by exam_name (any of the selected exam_names)
@@ -70,7 +69,7 @@ const ExamAnalytics: React.FC = () => {
         .from('questions')
         .select('*')
         .in('exam_name', examNames);
-      
+
       if (questionsError) throw questionsError;
       if (!questionData || questionData.length === 0) return [];
 
@@ -100,10 +99,10 @@ const ExamAnalytics: React.FC = () => {
         exam_name: q.exam_name || null,
         created_at: q.created_at,
         question_case: q.question_case || null,
-        case_text: q.case_text || null
+        case_text: q.case_text || null,
       })) as Question[];
     },
-    enabled: !!examId
+    enabled: !!examId,
   });
 
   // Fetch training sessions for this exam (needed to filter session progress)
@@ -115,16 +114,16 @@ const ExamAnalytics: React.FC = () => {
         .from('training_sessions')
         .select('*')
         .eq('user_id', user.id);
-      
+
       if (error) throw error;
-      
+
       // Filter sessions that are linked to this exam
       return (data || []).filter((s: any) => {
         const fs = s.filter_settings as any;
         return fs && fs.source === 'exam' && fs.examId === examId;
       });
     },
-    enabled: !!user?.id && !!examId
+    enabled: !!user?.id && !!examId,
   });
 
   // Get session IDs for filtering progress
@@ -132,14 +131,20 @@ const ExamAnalytics: React.FC = () => {
 
   // Fetch session progress for all exam questions (only from exam-linked sessions)
   const { data: mergedProgress, isLoading: isProgressLoading } = useQuery({
-    queryKey: ['exam-progress', examId, user?.id, questions?.length, examSessionIds.sort().join(',')],
+    queryKey: [
+      'exam-progress',
+      examId,
+      user?.id,
+      questions?.length,
+      examSessionIds.sort().join(','),
+    ],
     queryFn: async () => {
       if (!user?.id || !questions || questions.length === 0) return [];
-      
+
       // Get current session IDs (in case they changed)
       const currentSessionIds = sessions?.map((s: any) => s.id) || [];
-      
-      const questionIds = questions.map(q => q.id);
+
+      const questionIds = questions.map((q) => q.id);
       const BATCH_SIZE = 300;
       const batches: string[][] = [];
       for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
@@ -147,7 +152,7 @@ const ExamAnalytics: React.FC = () => {
       }
 
       // Query session progress only (no user_progress fallback)
-      const batchPromises = batches.map(batch => {
+      const batchPromises = batches.map((batch) => {
         // Filter session progress to only include sessions linked to this exam
         if (currentSessionIds.length > 0) {
           return supabase
@@ -163,14 +168,18 @@ const ExamAnalytics: React.FC = () => {
       });
 
       const batchResults = await Promise.allSettled(batchPromises);
-      
+
       // Process session_question_progress only
-      const sessionProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> = [];
-      
-      batchResults.forEach(result => {
+      const sessionProgress: Array<{
+        question_id: string;
+        is_correct: boolean | null;
+        ts: number;
+      }> = [];
+
+      batchResults.forEach((result) => {
         if (result.status === 'fulfilled') {
           const sessionProgressResult = result.value;
-          
+
           // Process session_question_progress entries (take latest per question per batch)
           if (sessionProgressResult.data) {
             const sessionBatchMap = new Map<string, { is_correct: boolean | null; ts: number }>();
@@ -192,9 +201,9 @@ const ExamAnalytics: React.FC = () => {
 
       // Final deduplication across all batches to get the absolute latest per question
       const latestByQuestion: Record<string, { is_correct: boolean | null; ts: number }> = {};
-      
+
       // Add all session progress and take the absolute latest per question
-      sessionProgress.forEach(p => {
+      sessionProgress.forEach((p) => {
         const qid = p.question_id;
         const existing = latestByQuestion[qid];
         if (!existing || p.ts > existing.ts) {
@@ -205,10 +214,10 @@ const ExamAnalytics: React.FC = () => {
       // Convert to array format for compatibility
       return Object.entries(latestByQuestion).map(([question_id, data]) => ({
         question_id,
-        is_correct: data.is_correct
+        is_correct: data.is_correct,
       }));
     },
-    enabled: !!user?.id && !!questions && questions.length > 0 && sessions !== undefined
+    enabled: !!user?.id && !!questions && questions.length > 0 && sessions !== undefined,
   });
 
   // Fetch session-specific progress for all training sessions
@@ -216,18 +225,18 @@ const ExamAnalytics: React.FC = () => {
     queryKey: ['exam-session-progress', examId, user?.id, sessions?.length],
     queryFn: async () => {
       if (!user?.id || !sessions || sessions.length === 0) return [];
-      
+
       const sessionIds = sessions.map((s: any) => s.id);
       const { data, error } = await supabase
         .from('session_question_progress')
         .select('session_id, question_id, is_correct, updated_at, created_at')
         .eq('user_id', user.id)
         .in('session_id', sessionIds);
-      
+
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user?.id && !!sessions && sessions.length > 0
+    enabled: !!user?.id && !!sessions && sessions.length > 0,
   });
 
   // Calculate overall statistics
@@ -240,7 +249,7 @@ const ExamAnalytics: React.FC = () => {
         wrongAnswers: 0,
         answeredPercentage: 0,
         correctPercentage: 0,
-        wrongPercentage: 0
+        wrongPercentage: 0,
       };
     }
 
@@ -262,7 +271,7 @@ const ExamAnalytics: React.FC = () => {
       wrongAnswers,
       answeredPercentage,
       correctPercentage,
-      wrongPercentage
+      wrongPercentage,
     };
   }, [questions, mergedProgress]);
 
@@ -272,7 +281,7 @@ const ExamAnalytics: React.FC = () => {
 
     const stats: Record<string, { total: number; answered: number; correct: number }> = {};
 
-    questions.forEach(q => {
+    questions.forEach((q) => {
       if (!stats[q.subject]) {
         stats[q.subject] = { total: 0, answered: 0, correct: 0 };
       }
@@ -280,7 +289,7 @@ const ExamAnalytics: React.FC = () => {
     });
 
     mergedProgress.forEach((progress: any) => {
-      const question = questions.find(q => q.id === progress.question_id);
+      const question = questions.find((q) => q.id === progress.question_id);
       if (question) {
         stats[question.subject].answered += 1;
         if (progress.is_correct) {
@@ -291,10 +300,13 @@ const ExamAnalytics: React.FC = () => {
 
     return Object.entries(stats)
       .sort(([, a], [, b]) => b.total - a.total)
-      .reduce((acc, [subject, stats]) => {
-        acc[subject] = stats;
-        return acc;
-      }, {} as Record<string, { total: number; answered: number; correct: number }>);
+      .reduce(
+        (acc, [subject, stats]) => {
+          acc[subject] = stats;
+          return acc;
+        },
+        {} as Record<string, { total: number; answered: number; correct: number }>,
+      );
   }, [questions, mergedProgress]);
 
   // Calculate per-session statistics
@@ -303,7 +315,7 @@ const ExamAnalytics: React.FC = () => {
 
     return sessions.map((session: any) => {
       const sessionQuestionIds = session.question_ids || [];
-      const sessionQuestions = questions.filter(q => sessionQuestionIds.includes(q.id));
+      const sessionQuestions = questions.filter((q) => sessionQuestionIds.includes(q.id));
       const sessionProgressData = sessionProgress.filter((p: any) => p.session_id === session.id);
 
       // Deduplicate by question_id, taking the latest entry per question
@@ -312,7 +324,11 @@ const ExamAnalytics: React.FC = () => {
         const qid = p.question_id;
         if (!qid) return;
         // Use updated_at or created_at, defaulting to 0 if neither exists
-        const ts = p.updated_at ? new Date(p.updated_at).getTime() : (p.created_at ? new Date(p.created_at).getTime() : 0);
+        const ts = p.updated_at
+          ? new Date(p.updated_at).getTime()
+          : p.created_at
+            ? new Date(p.created_at).getTime()
+            : 0;
         const existing = latestByQuestion[qid];
         if (!existing || ts > existing.ts) {
           latestByQuestion[qid] = { is_correct: p.is_correct, ts };
@@ -321,7 +337,7 @@ const ExamAnalytics: React.FC = () => {
 
       const total = sessionQuestions.length;
       const answered = Object.keys(latestByQuestion).length;
-      const correct = Object.values(latestByQuestion).filter(v => v.is_correct === true).length;
+      const correct = Object.values(latestByQuestion).filter((v) => v.is_correct === true).length;
       const wrong = answered - correct;
 
       return {
@@ -333,7 +349,7 @@ const ExamAnalytics: React.FC = () => {
         correct,
         wrong,
         answeredPercentage: total ? (answered / total) * 100 : 0,
-        correctPercentage: answered ? (correct / answered) * 100 : 0
+        correctPercentage: answered ? (correct / answered) * 100 : 0,
       };
     });
   }, [sessions, questions, sessionProgress]);
@@ -356,7 +372,7 @@ const ExamAnalytics: React.FC = () => {
       { label: string; total: number; answered: number; correct: number; year: number }
     > = {};
 
-    questions.forEach(q => {
+    questions.forEach((q) => {
       let key: string;
       let year: number;
 
@@ -382,7 +398,7 @@ const ExamAnalytics: React.FC = () => {
           total: 0,
           answered: 0,
           correct: 0,
-          year: year
+          year: year,
         };
       }
 
@@ -455,25 +471,44 @@ const ExamAnalytics: React.FC = () => {
                 <CardTitle className="text-lg font-semibold">Gesamtfortschritt</CardTitle>
               </CardHeader>
               <CardContent>
-                <Progress value={overallStats.answeredPercentage} className="h-2 mb-2 dark:bg-zinc-800">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${overallStats.answeredPercentage}%` }} />
+                <Progress
+                  value={overallStats.answeredPercentage}
+                  className="h-2 mb-2 dark:bg-zinc-800"
+                >
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${overallStats.answeredPercentage}%` }}
+                  />
                 </Progress>
                 <p className="text-sm text-muted-foreground">
-                  {overallStats.answeredQuestions} von {overallStats.totalQuestions} Fragen beantwortet ({overallStats.answeredPercentage.toFixed(0)}%)
+                  {overallStats.answeredQuestions} von {overallStats.totalQuestions} Fragen
+                  beantwortet ({overallStats.answeredPercentage.toFixed(0)}%)
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold text-green-600">Richtige Antworten</CardTitle>
+                <CardTitle className="text-lg font-semibold text-green-600">
+                  Richtige Antworten
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <Progress value={(overallStats.correctAnswers / overallStats.totalQuestions) * 100} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
-                  <div className="h-full bg-green-600 transition-all" style={{ width: `${(overallStats.correctAnswers / overallStats.totalQuestions) * 100}%` }} />
+                <Progress
+                  value={(overallStats.correctAnswers / overallStats.totalQuestions) * 100}
+                  className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
+                >
+                  <div
+                    className="h-full bg-green-600 transition-all"
+                    style={{
+                      width: `${(overallStats.correctAnswers / overallStats.totalQuestions) * 100}%`,
+                    }}
+                  />
                 </Progress>
                 <p className="text-sm text-muted-foreground">
-                  {overallStats.correctAnswers} von {overallStats.totalQuestions} Fragen richtig ({((overallStats.correctAnswers / overallStats.totalQuestions) * 100).toFixed(0)}%)<br />
+                  {overallStats.correctAnswers} von {overallStats.totalQuestions} Fragen richtig (
+                  {((overallStats.correctAnswers / overallStats.totalQuestions) * 100).toFixed(0)}%)
+                  <br />
                   {overallStats.correctPercentage.toFixed(0)}% der beantworteten Fragen
                 </p>
               </CardContent>
@@ -481,14 +516,25 @@ const ExamAnalytics: React.FC = () => {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold text-red-600">Falsche Antworten</CardTitle>
+                <CardTitle className="text-lg font-semibold text-red-600">
+                  Falsche Antworten
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <Progress value={(overallStats.wrongAnswers / overallStats.totalQuestions) * 100} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
-                  <div className="h-full bg-red-600 transition-all" style={{ width: `${(overallStats.wrongAnswers / overallStats.totalQuestions) * 100}%` }} />
+                <Progress
+                  value={(overallStats.wrongAnswers / overallStats.totalQuestions) * 100}
+                  className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
+                >
+                  <div
+                    className="h-full bg-red-600 transition-all"
+                    style={{
+                      width: `${(overallStats.wrongAnswers / overallStats.totalQuestions) * 100}%`,
+                    }}
+                  />
                 </Progress>
                 <p className="text-sm text-muted-foreground">
-                  {overallStats.wrongAnswers} von {overallStats.totalQuestions} Fragen falsch ({((overallStats.wrongAnswers / overallStats.totalQuestions) * 100).toFixed(0)}%)
+                  {overallStats.wrongAnswers} von {overallStats.totalQuestions} Fragen falsch (
+                  {((overallStats.wrongAnswers / overallStats.totalQuestions) * 100).toFixed(0)}%)
                 </p>
               </CardContent>
             </Card>
@@ -499,34 +545,38 @@ const ExamAnalytics: React.FC = () => {
             <Collapsible open={isSubjectStatsOpen} onOpenChange={setIsSubjectStatsOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
                 <h3 className="text-lg font-semibold">Statistik nach Fächern</h3>
-                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isSubjectStatsOpen ? 'transform rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-200 ${isSubjectStatsOpen ? 'transform rotate-180' : ''}`}
+                />
               </CollapsibleTrigger>
               <CollapsibleContent className="px-4 pb-4">
                 {!subscribed && (
                   <div className="relative">
                     <div className="pointer-events-none select-none filter blur-sm opacity-70">
                       <div className="space-y-4">
-                        {Object.entries(subjectStats).slice(0, 4).map(([subject, stats]) => (
-                          <div key={subject} className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium">{subject}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {stats.answered} / {stats.total} beantwortet
-                              </span>
+                        {Object.entries(subjectStats)
+                          .slice(0, 4)
+                          .map(([subject, stats]) => (
+                            <div key={subject} className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">{subject}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {stats.answered} / {stats.total} beantwortet
+                                </span>
+                              </div>
+                              <div className="flex gap-2">
+                                <Progress
+                                  value={(stats.correct / stats.total) * 100}
+                                  className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
+                                >
+                                  <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
+                                </Progress>
+                                <span className="text-sm text-muted-foreground w-20 text-right">
+                                  {stats.correct} richtig
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex gap-2">
-                              <Progress
-                                value={(stats.correct / stats.total) * 100}
-                                className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
-                              >
-                                <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
-                              </Progress>
-                              <span className="text-sm text-muted-foreground w-20 text-right">
-                                {stats.correct} richtig
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
@@ -535,8 +585,8 @@ const ExamAnalytics: React.FC = () => {
                           Detailierte Fach-Statistiken sind ein Premium-Feature.
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Mit Premium siehst du auf einen Blick, in welchen Fächern du stark bist und
-                          wo noch Lücken sind – perfekt, um deine Lernzeit gezielt zu planen.
+                          Mit Premium siehst du auf einen Blick, in welchen Fächern du stark bist
+                          und wo noch Lücken sind – perfekt, um deine Lernzeit gezielt zu planen.
                         </p>
                         <Button
                           size="sm"
@@ -588,7 +638,7 @@ const ExamAnalytics: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            sessionStats.map(stat => (
+            sessionStats.map((stat) => (
               <Card key={stat.id}>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center justify-between">
@@ -616,17 +666,26 @@ const ExamAnalytics: React.FC = () => {
                       <div className="text-sm text-muted-foreground">Falsch</div>
                       <div className="text-2xl font-bold text-red-600">{stat.wrong}</div>
                       <div className="text-sm text-muted-foreground">
-                        {stat.answered > 0 ? ((stat.wrong / stat.answered) * 100).toFixed(0) : 0}% der beantworteten
+                        {stat.answered > 0 ? ((stat.wrong / stat.answered) * 100).toFixed(0) : 0}%
+                        der beantworteten
                       </div>
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
                     {stat.status !== 'completed' && (
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/training/session/${stat.id}`)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/training/session/${stat.id}`)}
+                      >
                         Session fortsetzen
                       </Button>
                     )}
-                    <Button variant="secondary" size="sm" onClick={() => navigate(`/training/session/${stat.id}/analytics`)}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/training/session/${stat.id}/analytics`)}
+                    >
                       Session-Details
                     </Button>
                   </div>
@@ -646,7 +705,7 @@ const ExamAnalytics: React.FC = () => {
                 <span className="text-sm text-muted-foreground">Gruppierung:</span>
                 <Select
                   value={groupingMode}
-                  onValueChange={value =>
+                  onValueChange={(value) =>
                     setGroupingMode(value as 'semester' | 'year' | 'filename')
                   }
                 >
@@ -666,7 +725,7 @@ const ExamAnalytics: React.FC = () => {
                 <div className="relative">
                   <div className="pointer-events-none select-none filter blur-sm opacity-70">
                     <div className="space-y-3">
-                      {groupedStats.slice(0, 4).map(group => {
+                      {groupedStats.slice(0, 4).map((group) => {
                         const answeredPercentage = group.total
                           ? (group.answered / group.total) * 100
                           : 0;
@@ -707,11 +766,7 @@ const ExamAnalytics: React.FC = () => {
                         Klausur, erkennst Lücken frühzeitig und kannst deine Vorbereitung gezielt
                         steuern.
                       </p>
-                      <Button
-                        size="sm"
-                        className="mt-1"
-                        onClick={() => navigate('/subscription')}
-                      >
+                      <Button size="sm" className="mt-1" onClick={() => navigate('/subscription')}>
                         Mehr über Premium erfahren
                       </Button>
                     </div>
@@ -727,7 +782,7 @@ const ExamAnalytics: React.FC = () => {
                     </p>
                   ) : (
                     <div className="space-y-3">
-                      {groupedStats.map(group => {
+                      {groupedStats.map((group) => {
                         const answeredPercentage = group.total
                           ? (group.answered / group.total) * 100
                           : 0;
@@ -777,4 +832,3 @@ const ExamAnalytics: React.FC = () => {
 };
 
 export default ExamAnalytics;
-

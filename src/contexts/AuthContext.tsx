@@ -12,14 +12,14 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ 
-  user: null, 
-  loading: true, 
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
   universityId: null,
   isEmailVerified: false,
   universityName: null,
   username: null,
-  logout: async () => {}
+  logout: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -50,12 +50,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     // Listen for changes on auth state (sign in, sign out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
       setUser(session?.user ?? null);
-      
+
       // REMOVED: Don't update verification status on USER_UPDATED - let the profile table be the source of truth
-      
+
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
@@ -109,13 +111,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data: authData } = await supabase.auth.getUser();
       const isConfirmedInAuth = authData?.user?.email_confirmed_at !== null;
       const isVerifiedInProfile = profileData.is_email_verified || false;
-      
-      console.log('Verification sync check:', { 
-        isConfirmedInAuth, 
+
+      console.log('Verification sync check:', {
+        isConfirmedInAuth,
         isVerifiedInProfile,
-        needsSync: isConfirmedInAuth && !isVerifiedInProfile
+        needsSync: isConfirmedInAuth && !isVerifiedInProfile,
       });
-      
+
       // If auth is verified but profile is not, sync them
       if (isConfirmedInAuth && !isVerifiedInProfile) {
         console.log('Syncing verification status: updating profile to verified');
@@ -125,18 +127,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Use profile as source of truth
         setIsEmailVerified(isVerifiedInProfile);
       }
-      
+
       if (profileData.university_id) {
         console.log('University ID found:', profileData.university_id);
         setUniversityId(profileData.university_id);
-        
+
         // Fetch university name if university_id exists
         const { data: universityData, error: universityError } = await supabase
           .from('universities')
           .select('name')
           .eq('id', profileData.university_id)
           .single();
-        
+
         if (universityError) {
           console.error('Error fetching university:', universityError);
         } else {
@@ -159,15 +161,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      universityId, 
-      isEmailVerified, 
-      universityName,
-      username,
-      logout
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        universityId,
+        isEmailVerified,
+        universityName,
+        username,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

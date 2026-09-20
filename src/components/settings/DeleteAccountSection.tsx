@@ -1,8 +1,17 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertTriangle, Trash2 } from 'lucide-react';
@@ -24,13 +33,15 @@ const DeleteAccountSection: React.FC = () => {
     setIsDeleting(true);
     try {
       const result = await deleteUserAccount(user.id);
-      
+
       if (result.success) {
         toast.success('Ihr Konto wurde erfolgreich gelöscht');
         await logout();
         window.location.href = '/';
       } else {
-        toast.error('Fehler beim Löschen des Kontos. Bitte kontaktiere uns unter hallo@altfragen.io');
+        toast.error(
+          'Fehler beim Löschen des Kontos. Bitte kontaktiere uns unter hallo@altfragen.io',
+        );
       }
     } catch (error) {
       console.error('Error deleting account:', error);
@@ -56,21 +67,18 @@ const DeleteAccountSection: React.FC = () => {
         <div className="space-y-2">
           <h3 className="font-medium text-red-700">Konto löschen</h3>
           <p className="text-sm text-red-600">
-            Diese Aktion kann nicht rückgängig gemacht werden. Alle deine privaten Fragen und persönlichen Daten werden permanent gelöscht. 
-            Öffentliche Fragen bleiben erhalten, um die Community zu unterstützen.
+            Diese Aktion kann nicht rückgängig gemacht werden. Alle deine privaten Fragen und
+            persönlichen Daten werden permanent gelöscht. Öffentliche Fragen bleiben erhalten, um
+            die Community zu unterstützen.
           </p>
-          <p className="text-sm text-red-600 font-medium">
-            Folgende Daten werden gelöscht:
-          </p>
+          <p className="text-sm text-red-600 font-medium">Folgende Daten werden gelöscht:</p>
           <ul className="text-sm text-red-600 list-disc list-inside space-y-1">
             <li>Alle privaten Fragen</li>
             <li>Dein Lernfortschritt</li>
             <li>Deine Einstellungen</li>
             <li>Dein Benutzerprofil</li>
           </ul>
-          <p className="text-sm text-red-600 font-medium">
-            Folgende Daten bleiben erhalten:
-          </p>
+          <p className="text-sm text-red-600 font-medium">Folgende Daten bleiben erhalten:</p>
           <ul className="text-sm text-red-600 list-disc list-inside">
             <li>Öffentliche Fragen (anonymisiert)</li>
           </ul>
@@ -91,12 +99,11 @@ const DeleteAccountSection: React.FC = () => {
               <AlertDialogTitle>Bist du sicher?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>
-                  Diese Aktion kann nicht rückgängig gemacht werden. Dein Konto und alle privaten Daten werden permanent gelöscht.
+                  Diese Aktion kann nicht rückgängig gemacht werden. Dein Konto und alle privaten
+                  Daten werden permanent gelöscht.
                 </p>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-delete">
-                    Gib "DELETE" ein, um zu bestätigen:
-                  </Label>
+                  <Label htmlFor="confirm-delete">Gib "DELETE" ein, um zu bestätigen:</Label>
                   <Input
                     id="confirm-delete"
                     value={confirmText}
@@ -108,9 +115,7 @@ const DeleteAccountSection: React.FC = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>
-                Abbrechen
-              </AlertDialogCancel>
+              <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteAccount}
                 disabled={!isConfirmValid || isDeleting}

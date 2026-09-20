@@ -1,9 +1,14 @@
-
 import React, { useState } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Image as ImageIcon, Move, ArrowRight, ArrowLeft, ArrowUp, ArrowDown } from 'lucide-react';
 import QuestionImage from './QuestionImage';
 
@@ -12,16 +17,13 @@ interface ImageAssignmentProps {
   onImageReassign: (fromQuestionIndex: number, toQuestionIndex: number) => void;
 }
 
-const ImageAssignment: React.FC<ImageAssignmentProps> = ({ 
-  questions, 
-  onImageReassign 
-}) => {
+const ImageAssignment: React.FC<ImageAssignmentProps> = ({ questions, onImageReassign }) => {
   const [selectedSourceQuestion, setSelectedSourceQuestion] = useState<number | null>(null);
   const [selectedTargetQuestion, setSelectedTargetQuestion] = useState<number | null>(null);
 
   const questionsWithImages = questions
     .map((q, index) => ({ question: q, index }))
-    .filter(item => item.question.image_key);
+    .filter((item) => item.question.image_key);
 
   const allQuestions = questions.map((q, index) => ({ question: q, index }));
 
@@ -68,7 +70,9 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({
       <CardContent className="space-y-6">
         {/* Quick adjacent movement section */}
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Schnelle Bewegung zu benachbarten Fragen</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">
+            Schnelle Bewegung zu benachbarten Fragen
+          </h4>
           {questionsWithImages.map((item) => {
             const { previous, next } = getAdjacentQuestions(item.index);
             return (
@@ -80,24 +84,26 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({
                         Frage {item.index + 1} (mit Bild)
                       </div>
                       <div className="text-sm">
-                        {item.question.question.length > 150 
-                          ? `${item.question.question.substring(0, 150)}...` 
+                        {item.question.question.length > 150
+                          ? `${item.question.question.substring(0, 150)}...`
                           : item.question.question}
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Show the image */}
                   <div className="max-w-xs">
                     <QuestionImage imageKey={item.question.image_key} />
                   </div>
-                  
+
                   {/* Adjacent questions context */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     {previous && (
                       <div className="p-2 bg-muted/30 rounded border-l-2 border-blue-200">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-blue-600">Vorherige Frage ({item.index})</span>
+                          <span className="font-medium text-blue-600">
+                            Vorherige Frage ({item.index})
+                          </span>
                           <Button
                             size="sm"
                             variant="outline"
@@ -109,17 +115,19 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({
                           </Button>
                         </div>
                         <div className="text-muted-foreground">
-                          {previous.question.length > 100 
-                            ? `${previous.question.substring(0, 100)}...` 
+                          {previous.question.length > 100
+                            ? `${previous.question.substring(0, 100)}...`
                             : previous.question}
                         </div>
                       </div>
                     )}
-                    
+
                     {next && (
                       <div className="p-2 bg-muted/30 rounded border-l-2 border-green-200">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-green-600">Nächste Frage ({item.index + 2})</span>
+                          <span className="font-medium text-green-600">
+                            Nächste Frage ({item.index + 2})
+                          </span>
                           <Button
                             size="sm"
                             variant="outline"
@@ -131,8 +139,8 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({
                           </Button>
                         </div>
                         <div className="text-muted-foreground">
-                          {next.question.length > 100 
-                            ? `${next.question.substring(0, 100)}...` 
+                          {next.question.length > 100
+                            ? `${next.question.substring(0, 100)}...`
                             : next.question}
                         </div>
                       </div>
@@ -146,12 +154,14 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({
 
         {/* Manual assignment section */}
         <div className="pt-4 border-t">
-          <h4 className="text-sm font-medium text-muted-foreground mb-4">Manuelle Zuweisung zu beliebiger Frage</h4>
+          <h4 className="text-sm font-medium text-muted-foreground mb-4">
+            Manuelle Zuweisung zu beliebiger Frage
+          </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="text-sm font-medium mb-2 block">Von Frage (mit Bild)</label>
-              <Select 
-                value={selectedSourceQuestion?.toString() || ""} 
+              <Select
+                value={selectedSourceQuestion?.toString() || ''}
                 onValueChange={(value) => setSelectedSourceQuestion(parseInt(value))}
               >
                 <SelectTrigger>
@@ -173,8 +183,8 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({
 
             <div>
               <label className="text-sm font-medium mb-2 block">Zu Frage</label>
-              <Select 
-                value={selectedTargetQuestion?.toString() || ""} 
+              <Select
+                value={selectedTargetQuestion?.toString() || ''}
                 onValueChange={(value) => setSelectedTargetQuestion(parseInt(value))}
               >
                 <SelectTrigger>
@@ -192,7 +202,7 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({
           </div>
 
           <div className="flex justify-center mt-4">
-            <Button 
+            <Button
               onClick={handleReassign}
               disabled={selectedSourceQuestion === null || selectedTargetQuestion === null}
               className="flex items-center gap-2"

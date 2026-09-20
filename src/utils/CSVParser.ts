@@ -1,4 +1,3 @@
-
 import Papa from 'papaparse';
 import { toast } from 'sonner';
 
@@ -12,43 +11,45 @@ export const parseCSV = (file: File): Promise<CSVParseResult> => {
     Papa.parse(file, {
       complete: (results) => {
         console.log('Total rows in CSV:', results.data.length);
-        
+
         if (!results.data || results.data.length < 2) {
-          reject(new Error("Die CSV-Datei ist leer oder ungültig"));
+          reject(new Error('Die CSV-Datei ist leer oder ungültig'));
           return;
         }
 
-        const headers = Array.isArray(results.data[0]) ? results.data[0] : Object.keys(results.data[0]);
+        const headers = Array.isArray(results.data[0])
+          ? results.data[0]
+          : Object.keys(results.data[0]);
         console.log('CSV headers:', headers);
-        
+
         // Required columns including "Jahr"
         const requiredColumns = ['Frage', 'A', 'B', 'C', 'D', 'E', 'Fach', 'Antwort', 'Kommentar'];
         const optionalColumns = ['Jahr', 'Semester']; // Optional columns that we support
-        
-        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-        
+
+        const missingColumns = requiredColumns.filter((col) => !headers.includes(col));
+
         if (missingColumns.length > 0) {
           reject(new Error(`Fehlende Spalten: ${missingColumns.join(', ')}`));
           return;
         }
-        
+
         // Log which optional columns were found
-        const foundOptionalColumns = optionalColumns.filter(col => headers.includes(col));
+        const foundOptionalColumns = optionalColumns.filter((col) => headers.includes(col));
         if (foundOptionalColumns.length > 0) {
           console.log('Found optional columns:', foundOptionalColumns);
         }
 
         resolve({
           headers,
-          rows: results.data.slice(1) // Skip header row
+          rows: results.data.slice(1), // Skip header row
         });
       },
       header: false,
       skipEmptyLines: true,
       error: (error) => {
         console.error('CSV parsing error:', error);
-        reject(new Error("Fehler beim Lesen der CSV-Datei"));
-      }
+        reject(new Error('Fehler beim Lesen der CSV-Datei'));
+      },
     });
   });
 };

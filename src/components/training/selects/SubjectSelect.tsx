@@ -1,11 +1,5 @@
-
 import React from 'react';
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -13,9 +7,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '../types/FormValues';
 
@@ -26,15 +20,13 @@ interface SubjectSelectProps {
 
 const SubjectSelect: React.FC<SubjectSelectProps> = ({ form, subjects }) => {
   const selectedSubjects = form.watch('subjects') || [];
-  const sortedSubjects = [...subjects]
-    .slice()
-    .sort((a, b) => (a || '').localeCompare(b || ''));
+  const sortedSubjects = [...subjects].slice().sort((a, b) => (a || '').localeCompare(b || ''));
 
   const handleSubjectToggle = (subject: string, checked: boolean) => {
     const currentSubjects = form.getValues('subjects') || [];
     const newSubjects = checked
       ? [...currentSubjects, subject]
-      : currentSubjects.filter(s => s !== subject);
+      : currentSubjects.filter((s) => s !== subject);
     form.setValue('subjects', newSubjects, { shouldDirty: true, shouldValidate: true });
   };
 
@@ -60,7 +52,7 @@ const SubjectSelect: React.FC<SubjectSelectProps> = ({ form, subjects }) => {
       render={({ field }) => {
         // Ensure field value is always an array
         const fieldValue = Array.isArray(field.value) ? field.value : [];
-        
+
         return (
           <FormItem>
             <FormLabel>Fach auswählen</FormLabel>
@@ -86,7 +78,9 @@ const SubjectSelect: React.FC<SubjectSelectProps> = ({ form, subjects }) => {
                     <DropdownMenuCheckboxItem
                       key={subject || 'unknown'}
                       checked={fieldValue.includes(subject || 'unknown')}
-                      onCheckedChange={(checked) => handleSubjectToggle(subject || 'unknown', checked)}
+                      onCheckedChange={(checked) =>
+                        handleSubjectToggle(subject || 'unknown', checked)
+                      }
                     >
                       {subject}
                     </DropdownMenuCheckboxItem>

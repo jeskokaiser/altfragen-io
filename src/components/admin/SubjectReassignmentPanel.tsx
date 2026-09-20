@@ -1,11 +1,16 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,25 +59,25 @@ const SubjectReassignmentPanel: React.FC = () => {
   const { data: universities } = useQuery({
     queryKey: ['universities'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('universities')
-        .select('id, name')
-        .order('name');
-      
+      const { data, error } = await supabase.from('universities').select('id, name').order('name');
+
       if (error) throw error;
       return data;
-    }
+    },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!examName.trim() || !subjects.trim()) {
       toast.error('Please fill in exam name and subjects');
       return;
     }
 
-    const subjectList = subjects.split(',').map(s => s.trim()).filter(s => s);
+    const subjectList = subjects
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s);
     if (subjectList.length === 0) {
       toast.error('Please provide at least one subject');
       return;
@@ -82,16 +87,21 @@ const SubjectReassignmentPanel: React.FC = () => {
     setResult(null);
 
     try {
-      console.log('Starting subject reassignment:', { examName, universityId, onlyNullSubjects, subjects: subjectList });
-      
+      console.log('Starting subject reassignment:', {
+        examName,
+        universityId,
+        onlyNullSubjects,
+        subjects: subjectList,
+      });
+
       // Create job
       const { data, error } = await supabase.functions.invoke('reassign-subjects', {
         body: {
           examName: examName.trim(),
           universityId: universityId === 'all' ? null : universityId,
           onlyNullSubjects: onlyNullSubjects === 'null-only',
-          availableSubjects: subjectList
-        }
+          availableSubjects: subjectList,
+        },
       });
 
       if (error) {
@@ -119,9 +129,12 @@ const SubjectReassignmentPanel: React.FC = () => {
       // Poll for job status
       pollIntervalRef.current = setInterval(async () => {
         try {
-          const { data: jobData, error: jobError } = await supabase.functions.invoke(`reassign-subjects?jobId=${jobId}`, {
-            method: 'GET'
-          });
+          const { data: jobData, error: jobError } = await supabase.functions.invoke(
+            `reassign-subjects?jobId=${jobId}`,
+            {
+              method: 'GET',
+            },
+          );
 
           if (jobError) {
             console.error('Error polling job status:', jobError);
@@ -137,11 +150,11 @@ const SubjectReassignmentPanel: React.FC = () => {
             success: job.status === 'completed',
             stats: {
               total: job.total || 0,
-              successful: (job.result?.successful) || (job.progress - (job.errors || 0)),
+              successful: job.result?.successful || job.progress - (job.errors || 0),
               errors: job.errors || 0,
-              processed: job.progress || 0
+              processed: job.progress || 0,
             },
-            message: job.message || 'Processing...'
+            message: job.message || 'Processing...',
           });
 
           // Check if job is complete
@@ -180,7 +193,6 @@ const SubjectReassignmentPanel: React.FC = () => {
           pollIntervalRef.current = null;
         }
       }, 600000); // 10 minutes max
-      
     } catch (error: any) {
       console.error('Error during subject reassignment:', error);
       // Clean up polling on error
@@ -227,11 +239,7 @@ const SubjectReassignmentPanel: React.FC = () => {
 
             <div className="space-y-2">
               <Label htmlFor="university">University (Optional)</Label>
-              <Select 
-                value={universityId} 
-                onValueChange={setUniversityId}
-                disabled={isProcessing}
-              >
+              <Select value={universityId} onValueChange={setUniversityId} disabled={isProcessing}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select university (leave empty for all)" />
                 </SelectTrigger>
@@ -248,8 +256,8 @@ const SubjectReassignmentPanel: React.FC = () => {
 
             <div className="space-y-2">
               <Label htmlFor="nullSubjects">Subject Filter</Label>
-              <Select 
-                value={onlyNullSubjects} 
+              <Select
+                value={onlyNullSubjects}
                 onValueChange={setOnlyNullSubjects}
                 disabled={isProcessing}
               >
@@ -275,26 +283,22 @@ const SubjectReassignmentPanel: React.FC = () => {
                 required
               />
               <p className="text-sm text-muted-foreground">
-                Separate multiple subjects with commas. Questions will be automatically assigned to the most appropriate subject.
+                Separate multiple subjects with commas. Questions will be automatically assigned to
+                the most appropriate subject.
               </p>
             </div>
 
             <div className="flex gap-2">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isProcessing || !examName.trim() || !subjects.trim()}
                 className="flex items-center gap-2"
               >
                 {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
                 {isProcessing ? 'Processing...' : 'Start Reassignment'}
               </Button>
-              
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={resetForm}
-                disabled={isProcessing}
-              >
+
+              <Button type="button" variant="outline" onClick={resetForm} disabled={isProcessing}>
                 Reset
               </Button>
             </div>
@@ -316,11 +320,9 @@ const SubjectReassignmentPanel: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
-              <AlertDescription>
-                {result.message}
-              </AlertDescription>
+              <AlertDescription>{result.message}</AlertDescription>
             </Alert>
-            
+
             {result.stats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
@@ -348,8 +350,8 @@ const SubjectReassignmentPanel: React.FC = () => {
                   <span>Success Rate</span>
                   <span>{Math.round((result.stats.successful / result.stats.total) * 100)}%</span>
                 </div>
-                <Progress 
-                  value={(result.stats.successful / result.stats.total) * 100} 
+                <Progress
+                  value={(result.stats.successful / result.stats.total) * 100}
                   className="h-2"
                 />
               </div>

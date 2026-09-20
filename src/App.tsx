@@ -1,23 +1,22 @@
-
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
-import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Toaster } from "sonner";
-import MainLayout from "@/components/layout/MainLayout";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { Toaster } from 'sonner';
+import MainLayout from '@/components/layout/MainLayout';
 
 // Import pages
-import Index from "@/pages/Index";
-import Auth from "@/pages/Auth";
-import IMPPulse from "@/pages/IMPPulse";
-import TermsPage from "@/pages/Terms";
-import ImpressumPage from "@/pages/Impressum";
-import PrivacyPage from "@/pages/Privacy";
-import AGBPage from "@/pages/AGB";
-import WiderrufPage from "@/pages/Widerruf";
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import IMPPulse from '@/pages/IMPPulse';
+import TermsPage from '@/pages/Terms';
+import ImpressumPage from '@/pages/Impressum';
+import PrivacyPage from '@/pages/Privacy';
+import AGBPage from '@/pages/AGB';
+import WiderrufPage from '@/pages/Widerruf';
 
 const queryClient = new QueryClient({
   defaultOptions: {

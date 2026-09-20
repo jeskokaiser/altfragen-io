@@ -1,17 +1,12 @@
 import React from 'react';
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '../types/FormValues';
 
@@ -54,4 +49,3 @@ const ExamYearSelect: React.FC<ExamYearSelectProps> = ({ form, years, disabled }
 };
 
 export default ExamYearSelect;
-

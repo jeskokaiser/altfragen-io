@@ -24,13 +24,13 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
 
   // Filter to only show answered questions
   const answeredQuestions = questions.filter((_, index) => userAnswers[index]?.value);
-  const answeredUserAnswers = userAnswers.filter(answer => answer?.value);
+  const answeredUserAnswers = userAnswers.filter((answer) => answer?.value);
 
   const calculateScore = () => {
     return answeredQuestions.reduce((score, question, index) => {
       const answer = answeredUserAnswers[index];
       if (!answer) return score;
-      
+
       // In immediate feedback mode, don't check isFirstAttempt since every answer should count if correct
       if (preferences?.immediateFeedback) {
         const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
@@ -42,7 +42,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
         if (!answer.isFirstAttempt || answer.viewedSolution) {
           return score;
         }
-        
+
         const userAnswerLetter = answer.value.trim()[0]?.toUpperCase();
         const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
         const isCorrect = userAnswerLetter === correctAnswerLetter;
@@ -53,7 +53,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
 
   const getAnswerStatusColor = (answer: AnswerState | undefined, correctLetter: string) => {
     if (!answer) return 'text-red-600';
-    
+
     const userAnswerLetter = (answer.originalAnswer || answer.value).trim()[0]?.toUpperCase();
     const isCorrectAnswer = userAnswerLetter === correctLetter;
 
@@ -61,22 +61,22 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     if (preferences?.immediateFeedback) {
       return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
     }
-    
+
     // In normal mode, show red for non-first attempts or viewed solutions, even if eventually correct
     if (answer.viewedSolution || !answer.isFirstAttempt) {
       return 'text-red-600';
     }
-    
+
     // First attempt without viewing solution: color by correctness
     return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
   };
 
   const renderUserAnswer = (answer: AnswerState | undefined, question: Question) => {
     if (!answer) return 'Keine Antwort';
-    
+
     const answerToShow = answer.originalAnswer || answer.value;
     const userAnswerLetter = answerToShow.trim()[0]?.toUpperCase();
-    
+
     if (!userAnswerLetter || !question[`option${userAnswerLetter}` as keyof Question]) {
       return 'Ungültige Antwort';
     }
@@ -84,12 +84,12 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     const answerText = `${userAnswerLetter}: ${question[`option${userAnswerLetter}` as keyof Question]}`;
     const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
     const isCorrectAnswer = userAnswerLetter === correctAnswerLetter;
-    
+
     // In immediate feedback mode, just show the answer text without context flags
     if (preferences?.immediateFeedback) {
       return answerText;
     }
-    
+
     // In normal mode, show context flags regardless of correctness
     if (answer.viewedSolution) {
       return `${answerText} (Lösung angezeigt)`;
@@ -97,7 +97,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     if (!answer.isFirstAttempt) {
       return `${answerText} (Nicht der erste Versuch)`;
     }
-    
+
     // No context flags to show, just return the answer text
     return answerText;
   };
@@ -121,7 +121,10 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
       <div className="mb-4">
         <p className="text-base md:text-lg">
           Gesamtpunktzahl: {calculateScore()} von {answeredQuestions.length} (
-          {answeredQuestions.length > 0 ? Math.round((calculateScore() / answeredQuestions.length) * 100) : 0}%)
+          {answeredQuestions.length > 0
+            ? Math.round((calculateScore() / answeredQuestions.length) * 100)
+            : 0}
+          %)
         </p>
       </div>
       <div className="space-y-3">
@@ -136,13 +139,19 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
               </h3>
               <div className="grid gap-3">
                 <div>
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">Deine Antwort:</p>
-                  <p className={`mt-1 text-sm md:text-base ${getAnswerStatusColor(answer, correctAnswerLetter)}`}>
+                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">
+                    Deine Antwort:
+                  </p>
+                  <p
+                    className={`mt-1 text-sm md:text-base ${getAnswerStatusColor(answer, correctAnswerLetter)}`}
+                  >
                     {renderUserAnswer(answer, q)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">Richtige Antwort:</p>
+                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">
+                    Richtige Antwort:
+                  </p>
                   <p className="mt-1 text-sm md:text-base text-green-600 dark:text-white">
                     {`${correctAnswerLetter}: ${q[`option${correctAnswerLetter}` as keyof Question]}`}
                   </p>
@@ -159,12 +168,10 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
         })}
       </div>
       <div className={`mt-6 flex ${isMobile ? 'flex-col' : ''} gap-3`}>
-        <Button onClick={onRestart} className="w-full md:w-auto">Neuer Test</Button>
-        <Button 
-          variant="outline" 
-          onClick={handleNavigateToDashboard}
-          className="w-full md:w-auto"
-        >
+        <Button onClick={onRestart} className="w-full md:w-auto">
+          Neuer Test
+        </Button>
+        <Button variant="outline" onClick={handleNavigateToDashboard} className="w-full md:w-auto">
           Zurück zum Dashboard
         </Button>
       </div>

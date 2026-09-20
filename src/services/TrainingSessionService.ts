@@ -1,5 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { TrainingSession, CreateTrainingSessionInput, TrainingSessionStatus } from '@/types/TrainingSession';
+import type {
+  TrainingSession,
+  CreateTrainingSessionInput,
+  TrainingSessionStatus,
+} from '@/types/TrainingSession';
 
 export class TrainingSessionService {
   static async create(userId: string, input: CreateTrainingSessionInput): Promise<TrainingSession> {
@@ -71,7 +75,7 @@ export class TrainingSessionService {
 
     if (fetchError) throw fetchError;
 
-    const newList = [ ...(current?.question_ids || []), ...questionIds ];
+    const newList = [...(current?.question_ids || []), ...questionIds];
     const { error } = await supabase
       .from('training_sessions')
       .update({ question_ids: newList, total_questions: newList.length })
@@ -90,10 +94,7 @@ export class TrainingSessionService {
   }
 
   static async remove(sessionId: string): Promise<void> {
-    const { error } = await supabase
-      .from('training_sessions')
-      .delete()
-      .eq('id', sessionId);
+    const { error } = await supabase.from('training_sessions').delete().eq('id', sessionId);
 
     if (error) throw error;
   }
@@ -134,7 +135,8 @@ export class TrainingSessionService {
     viewedSolution?: boolean;
     isFirstAttempt?: boolean;
   }): Promise<void> {
-    const { sessionId, userId, questionId, answer, isCorrect, viewedSolution, isFirstAttempt } = params;
+    const { sessionId, userId, questionId, answer, isCorrect, viewedSolution, isFirstAttempt } =
+      params;
 
     // Upsert into session_question_progress
     const { data: existing, error: fetchError } = await supabase
@@ -149,18 +151,16 @@ export class TrainingSessionService {
 
     if (!existing) {
       // First attempt - save as initial answer
-      const { error: insertError } = await supabase
-        .from('session_question_progress')
-        .insert({
-          session_id: sessionId,
-          user_id: userId,
-          question_id: questionId,
-          last_answer: answer,
-          attempts_count: 1,
-          is_correct: isCorrect,
-          viewed_solution: viewedSolution ?? false,
-          initial_answer: answer,
-        });
+      const { error: insertError } = await supabase.from('session_question_progress').insert({
+        session_id: sessionId,
+        user_id: userId,
+        question_id: questionId,
+        last_answer: answer,
+        attempts_count: 1,
+        is_correct: isCorrect,
+        viewed_solution: viewedSolution ?? false,
+        initial_answer: answer,
+      });
       if (insertError) throw insertError;
     } else {
       // Update existing progress - preserve initial_answer if it exists
@@ -170,9 +170,13 @@ export class TrainingSessionService {
       // - If answer is wrong: set to false (don't preserve previous correct state)
       const nextIsCorrect =
         answer === 'solution_viewed'
-          ? (existing.is_correct === true ? true : false)
+          ? existing.is_correct === true
+            ? true
+            : false
           : isCorrect
-            ? (isFirstAttempt ? true : false)
+            ? isFirstAttempt
+              ? true
+              : false
             : false;
 
       const { error: updateError } = await supabase
@@ -183,7 +187,7 @@ export class TrainingSessionService {
           is_correct: nextIsCorrect,
           viewed_solution: viewedSolution ?? false,
           // Only set initial_answer if it doesn't exist yet
-          ...((!existing.initial_answer) && { initial_answer: answer }),
+          ...(!existing.initial_answer && { initial_answer: answer }),
         })
         .eq('id', existing.id);
       if (updateError) throw updateError;

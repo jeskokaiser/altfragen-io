@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, ArrowLeft, School, Mail, CheckCircle, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info, ArrowLeft, School, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { NonUniversitySignupDialog } from '@/components/auth/NonUniversitySignupDialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,35 +33,34 @@ const Auth = () => {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    user,
-    isEmailVerified,
-    universityName
-  } = useAuth();
+  const { user, isEmailVerified, universityName } = useAuth();
 
   useEffect(() => {
     const handleAuthRedirect = async () => {
       const params = new URLSearchParams(location.search);
-      
+
       // Don't handle redirects while updating password
       if (isUpdatingPassword) {
         console.log('Skipping auth redirect - password update in progress');
         return;
       }
-      
+
       if (params.get('verification') === 'pending') {
         setIsVerificationScreen(true);
         return;
       }
-      
+
       const type = params.get('type');
-      
+
       // Handle password recovery
       if (type === 'recovery') {
         try {
           // Check if we have a session after the redirect from Supabase
-          const { data: { session }, error } = await supabase.auth.getSession();
-          
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession();
+
           if (error) {
             console.error('Recovery session error:', error);
             toast.error('Fehler beim Zurücksetzen des Passworts. Bitte versuche es erneut.');
@@ -73,7 +72,9 @@ const Auth = () => {
           } else {
             // No session, maybe the link expired
             console.error('No recovery session found');
-            toast.error('Der Link ist abgelaufen oder ungültig. Bitte fordere einen neuen Link an.');
+            toast.error(
+              'Der Link ist abgelaufen oder ungültig. Bitte fordere einen neuen Link an.',
+            );
             navigate('/auth');
           }
         } catch (error) {
@@ -83,21 +84,19 @@ const Auth = () => {
         }
         return;
       }
-      
+
       if (type === 'email_change' || type === 'signup') {
         handleEmailVerification();
       }
     };
-    
+
     handleAuthRedirect();
   }, [location, navigate, isUpdatingPassword]);
 
   const handleEmailVerification = async () => {
     try {
       setLoading(true);
-      const {
-        data: sessionData
-      } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData.session) {
         toast.success('E-Mail wurde erfolgreich bestätigt!');
         const userId = sessionData.session.user.id;
@@ -117,11 +116,12 @@ const Auth = () => {
 
   const updateVerificationStatus = async (userId: string, isVerified: boolean) => {
     try {
-      const {
-        error
-      } = await supabase.from('profiles').update({
-        is_email_verified: isVerified
-      }).eq('id', userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_email_verified: isVerified,
+        })
+        .eq('id', userId);
       if (error) {
         console.error('Error updating verification status:', error);
       }
@@ -137,13 +137,13 @@ const Auth = () => {
         setIsCheckingDomain(true);
         const emailDomain = email.split('@')[1]?.trim();
         if (!emailDomain) return;
-        
+
         // First try exact domain match
         const { data, error } = await supabase
           .from('universities')
           .select('id, name, email_domain')
           .eq('email_domain', emailDomain);
-        
+
         if (error) {
           console.error('Error checking university domain:', error);
           setUniversityInfo(null);
@@ -152,7 +152,7 @@ const Auth = () => {
           const university = data[0];
           setUniversityInfo({
             id: university.id,
-            name: university.name
+            name: university.name,
           });
         } else {
           // FIXED: Remove problematic endsWith fallback that was causing false matches
@@ -196,7 +196,9 @@ const Auth = () => {
     return email.split('@')[1] || '';
   };
 
-  const validateDisposableEmail = async (email: string): Promise<{ valid: boolean; error?: string }> => {
+  const validateDisposableEmail = async (
+    email: string,
+  ): Promise<{ valid: boolean; error?: string }> => {
     try {
       const { data, error } = await supabase.functions.invoke('validate-email', {
         body: { email },
@@ -235,28 +237,28 @@ const Auth = () => {
   const handleResetPassword = async () => {
     try {
       setLoading(true);
-      
+
       if (!email) {
         toast.error('Bitte gib deine E-Mail-Adresse ein');
         setLoading(false);
         return;
       }
-      
+
       if (!validateEmail(email)) {
         toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
         setLoading(false);
         return;
       }
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/auth?type=recovery'
+        redirectTo: window.location.origin + '/auth?type=recovery',
       });
-      
+
       if (error) {
         console.error('Password reset email error:', error);
         throw error;
       }
-      
+
       toast.success('Eine E-Mail zum Zurücksetzen des Passworts wurde gesendet');
       setIsForgotPassword(false);
       setEmail(''); // Clear email field
@@ -270,23 +272,23 @@ const Auth = () => {
 
   const handleUpdatePassword = async () => {
     console.log('handleUpdatePassword called, password length:', password?.length);
-    
+
     if (isUpdatingPassword) {
       console.log('Already updating password, ignoring...');
       return;
     }
-    
+
     try {
       setLoading(true);
       setIsUpdatingPassword(true);
-      
+
       if (!password) {
         toast.error('Bitte gib ein neues Passwort ein');
         setLoading(false);
         setIsUpdatingPassword(false);
         return;
       }
-      
+
       const passwordErrors = validatePassword(password);
       if (passwordErrors.length > 0) {
         toast.error(`Das Passwort muss ${passwordErrors.join(', ')} enthalten`);
@@ -294,9 +296,9 @@ const Auth = () => {
         setIsUpdatingPassword(false);
         return;
       }
-      
+
       console.log('Attempting to update password...');
-      
+
       // Set up a listener for the USER_UPDATED event
       let updateCompleted = false;
       const authListener = supabase.auth.onAuthStateChange((event, session) => {
@@ -316,7 +318,7 @@ const Auth = () => {
           }, 500);
         }
       });
-      
+
       // Try to update the password with a timeout
       const timeoutId = setTimeout(() => {
         if (!updateCompleted) {
@@ -330,24 +332,24 @@ const Auth = () => {
           navigate('/dashboard');
         }
       }, 5000); // 5 second timeout
-      
+
       try {
         const { data, error } = await supabase.auth.updateUser({
-          password: password
+          password: password,
         });
-        
+
         clearTimeout(timeoutId);
         console.log('Update password response:', { data, error });
-        
+
         if (!updateCompleted) {
           authListener.data.subscription.unsubscribe();
-          
+
           if (error) {
             console.error('Password update error:', error);
             setIsUpdatingPassword(false);
             throw error;
           }
-          
+
           toast.success('Passwort erfolgreich aktualisiert');
           navigate('/dashboard');
         }
@@ -358,16 +360,17 @@ const Auth = () => {
           throw error;
         }
       }
-      
     } catch (error: any) {
       console.error('Error updating password:', error);
       if (error?.status === 422 || (error?.message && /password/i.test(error.message))) {
         toast.error(
           'Dein Passwort erfüllt nicht die Sicherheitsanforderungen. ' +
-          'Bitte wähle ein stärkeres, noch nicht verwendetes Passwort mit Groß- und Kleinbuchstaben, Zahlen und Sonderzeichen.'
+            'Bitte wähle ein stärkeres, noch nicht verwendetes Passwort mit Groß- und Kleinbuchstaben, Zahlen und Sonderzeichen.',
         );
       } else {
-        toast.error(error?.message || 'Fehler beim Aktualisieren des Passworts. Bitte versuche es erneut.');
+        toast.error(
+          error?.message || 'Fehler beim Aktualisieren des Passworts. Bitte versuche es erneut.',
+        );
       }
       setLoading(false);
       setIsUpdatingPassword(false);
@@ -413,11 +416,9 @@ const Auth = () => {
         return;
       }
 
-      const {
-        error
-      } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
       if (error) {
         if (error.message.includes('Email not confirmed')) {
@@ -457,9 +458,9 @@ const Auth = () => {
           data: {
             university_id: universityInfo?.id || null,
             domain: getEmailDomain(email),
-            marketing_consent: acceptedMarketing
-          }
-        }
+            marketing_consent: acceptedMarketing,
+          },
+        },
       });
 
       if (signUpError) {
@@ -475,13 +476,13 @@ const Auth = () => {
       if (signUpData.user) {
         try {
           // Add a small delay to ensure the profile is created by the trigger
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
           const { error: profileError } = await supabase
             .from('profiles')
             .update({
               marketing_consent: acceptedMarketing,
-              marketing_consent_at: acceptedMarketing ? new Date().toISOString() : null
+              marketing_consent_at: acceptedMarketing ? new Date().toISOString() : null,
             })
             .eq('id', signUpData.user.id);
 
@@ -505,7 +506,7 @@ const Auth = () => {
       if (error?.status === 422 || (error?.message && /password/i.test(error.message))) {
         toast.error(
           'Dein Passwort erfüllt nicht die Sicherheitsanforderungen. ' +
-          'Bitte wähle ein stärkeres, noch nicht verwendetes Passwort mit Groß- und Kleinbuchstaben, Zahlen und Sonderzeichen.'
+            'Bitte wähle ein stärkeres, noch nicht verwendetes Passwort mit Groß- und Kleinbuchstaben, Zahlen und Sonderzeichen.',
         );
       } else {
         toast.error(error?.message || 'Fehler bei der Registrierung. Bitte versuche es erneut.');
@@ -521,32 +522,32 @@ const Auth = () => {
   const handleResendVerification = async () => {
     try {
       setLoading(true);
-      
+
       if (!email) {
         toast.error('Bitte gib deine E-Mail-Adresse ein');
         setLoading(false);
         return;
       }
-      
+
       if (!validateEmail(email)) {
         toast.error('Bitte gib eine gültige E-Mail-Adresse ein');
         setLoading(false);
         return;
       }
-      
+
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: window.location.origin + '/auth?verification=pending'
-        }
+          emailRedirectTo: window.location.origin + '/auth?verification=pending',
+        },
       });
-      
+
       if (error) {
         console.error('Resend verification error:', error);
         throw error;
       }
-      
+
       toast.success('Bestätigungslink wurde erneut gesendet. Bitte überprüfe deine E-Mails.');
     } catch (error: any) {
       console.error('Error resending verification:', error);
@@ -557,119 +558,151 @@ const Auth = () => {
   };
 
   if (isVerificationScreen) {
-    return <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
             <div className="flex justify-center mb-4">
-              {isEmailVerified ? <CheckCircle className="h-16 w-16 text-green-500" /> : <AlertCircle className="h-16 w-16 text-amber-500" />}
+              {isEmailVerified ? (
+                <CheckCircle className="h-16 w-16 text-green-500" />
+              ) : (
+                <AlertCircle className="h-16 w-16 text-amber-500" />
+              )}
             </div>
             <h2 className="text-2xl font-semibold text-slate-800">
-              {isEmailVerified ? 'E-Mail-Verifizierung abgeschlossen!' : 'E-Mail-Verifizierung ausstehend'}
+              {isEmailVerified
+                ? 'E-Mail-Verifizierung abgeschlossen!'
+                : 'E-Mail-Verifizierung ausstehend'}
             </h2>
             <p className="text-sm text-slate-600">
-              {isEmailVerified ? universityName ? `Du hast jetzt Zugriff auf den Altfragen-Pool der ${universityName}.` : 'Deine E-Mail wurde erfolgreich verifiziert.' : 'Wir haben dir einen Bestätigungslink per E-Mail gesendet.'}
+              {isEmailVerified
+                ? universityName
+                  ? `Du hast jetzt Zugriff auf den Altfragen-Pool der ${universityName}.`
+                  : 'Deine E-Mail wurde erfolgreich verifiziert.'
+                : 'Wir haben dir einen Bestätigungslink per E-Mail gesendet.'}
             </p>
           </div>
 
           <div className="space-y-4">
-            {!isEmailVerified && <Alert className="bg-amber-50 border-amber-200">
+            {!isEmailVerified && (
+              <Alert className="bg-amber-50 border-amber-200">
                 <Info className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-amber-700">
-                  Bitte überprüfe deinen Posteingang und klicke auf den Bestätigungslink. Pei Problemen melde dich unter <a href={`mailto:hallo@altfragen.io?subject=Problem%20mit%20E-Mail-Verifizierung&body=Hallo%20Altfragen.io-Team%2C%0A%0Aich%20habe%20Probleme%20mit%20der%20E-Mail-Verifizierung%20meines%20Kontos.%0A%0AMeine%20E-Mail-Adresse%3A%20${encodeURIComponent(email || '')}%0AProblembeschreibung%3A%20%0A%0A%0AFreundliche%20Gr%C3%BC%C3%9Fe`} className="text-blue-600 hover:underline">hallo@altfragen.io</a>.
+                  Bitte überprüfe deinen Posteingang und klicke auf den Bestätigungslink. Pei
+                  Problemen melde dich unter{' '}
+                  <a
+                    href={`mailto:hallo@altfragen.io?subject=Problem%20mit%20E-Mail-Verifizierung&body=Hallo%20Altfragen.io-Team%2C%0A%0Aich%20habe%20Probleme%20mit%20der%20E-Mail-Verifizierung%20meines%20Kontos.%0A%0AMeine%20E-Mail-Adresse%3A%20${encodeURIComponent(email || '')}%0AProblembeschreibung%3A%20%0A%0A%0AFreundliche%20Gr%C3%BC%C3%9Fe`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    hallo@altfragen.io
+                  </a>
+                  .
                 </AlertDescription>
-              </Alert>}
+              </Alert>
+            )}
 
-            {isEmailVerified && universityName && <Alert className="bg-green-50 border-green-200">
+            {isEmailVerified && universityName && (
+              <Alert className="bg-green-50 border-green-200">
                 <School className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-700">
                   Du bist als Student:in der {universityName} verifiziert.
                 </AlertDescription>
-              </Alert>}
+              </Alert>
+            )}
 
             <div className="pt-2 space-y-3">
-              {isEmailVerified ? <Button className="w-full" onClick={() => navigate('/dashboard')}>
+              {isEmailVerified ? (
+                <Button className="w-full" onClick={() => navigate('/dashboard')}>
                   Zum Dashboard
-                </Button> : <>
+                </Button>
+              ) : (
+                <>
                   <Button className="w-full" onClick={handleResendVerification} disabled={loading}>
                     {loading ? 'Lädt...' : 'Bestätigungslink erneut senden'}
                   </Button>
                   <div className="text-center">
-                    <button type="button" onClick={() => {
-                  setIsVerificationScreen(false);
-                  navigate('/auth');
-                }} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsVerificationScreen(false);
+                        navigate('/auth');
+                      }}
+                      className="text-sm text-slate-600 hover:text-slate-900 underline"
+                      disabled={loading}
+                    >
                       Zurück zur Anmeldung
                     </button>
                   </div>
-                </>}
+                </>
+              )}
             </div>
           </div>
         </Card>
-      </div>;
+      </div>
+    );
   }
   if (isResetPassword) {
-    return <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
-            <h2 className="text-2xl font-semibold text-slate-800">
-              Neues Passwort festlegen
-            </h2>
-            <p className="text-sm text-slate-600">
-              Bitte gib dein neues Passwort ein
-            </p>
+            <h2 className="text-2xl font-semibold text-slate-800">Neues Passwort festlegen</h2>
+            <p className="text-sm text-slate-600">Bitte gib dein neues Passwort ein</p>
           </div>
 
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            console.log('Form submitted');
-            handleUpdatePassword();
-          }} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              console.log('Form submitted');
+              handleUpdatePassword();
+            }}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="new-password">Neues Passwort</Label>
-              <Input 
-                id="new-password" 
-                type="password" 
-                placeholder="Neues Passwort eingeben" 
-                value={password} 
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Neues Passwort eingeben"
+                value={password}
                 onChange={(e) => {
                   const newValue = e.target.value;
                   console.log('Password input changed:', newValue.length);
                   setPassword(newValue);
-                }} 
-                disabled={loading} 
-                className="w-full" 
+                }}
+                disabled={loading}
+                className="w-full"
               />
             </div>
 
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
-                einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
+                Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, einen
+                Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
               </AlertDescription>
             </Alert>
 
-            <Button 
-              className="w-full" 
-              disabled={loading}
-              type="submit"
-            >
+            <Button className="w-full" disabled={loading} type="submit">
               {loading ? 'Lädt...' : 'Passwort aktualisieren'}
             </Button>
           </form>
         </Card>
-      </div>;
+      </div>
+    );
   }
   if (isForgotPassword) {
-    return <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
-            <button onClick={() => setIsForgotPassword(false)} className="absolute left-6 top-6 text-slate-600 hover:text-slate-900">
+            <button
+              onClick={() => setIsForgotPassword(false)}
+              className="absolute left-6 top-6 text-slate-600 hover:text-slate-900"
+            >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h2 className="text-2xl font-semibold text-slate-800">
-              Passwort zurücksetzen
-            </h2>
+            <h2 className="text-2xl font-semibold text-slate-800">Passwort zurücksetzen</h2>
             <p className="text-sm text-slate-600">
               Gib deine E-Mail-Adresse ein, um dein Passwort zurückzusetzen
             </p>
@@ -678,7 +711,15 @@ const Auth = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reset-email">E-Mail</Label>
-              <Input id="reset-email" type="email" placeholder="E-Mail-Adresse eingeben" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} className="w-full" />
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="E-Mail-Adresse eingeben"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="w-full"
+              />
             </div>
 
             <Button className="w-full" onClick={handleResetPassword} disabled={loading}>
@@ -686,16 +727,15 @@ const Auth = () => {
             </Button>
           </div>
         </Card>
-      </div>;
+      </div>
+    );
   }
   return (
     <>
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
-            <h2 className="text-2xl font-semibold text-slate-800">
-              Willkommen bei Altfragen.io!
-            </h2>
+            <h2 className="text-2xl font-semibold text-slate-800">Willkommen bei Altfragen.io!</h2>
             <p className="text-sm text-slate-600">
               {isSignUp ? 'Erstelle ein neues Konto' : 'Melde Dich mit deinem Konto an'}
             </p>
@@ -705,36 +745,71 @@ const Auth = () => {
             <div className="space-y-2">
               <Label htmlFor="email">E-Mail</Label>
               <div className="relative">
-                <Input id="email" type="email" placeholder="E-Mail-Adresse eingeben" value={email} onChange={e => setEmail(e.target.value)} disabled={loading || isCheckingDomain} className="w-full" />
-                {isSignUp && email && email.includes('@') && <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                    {isCheckingDomain ? <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-400"></div> : universityInfo ? <Badge className="flex items-center gap-1 bg-green-50 text-green-800 border-green-200">
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="E-Mail-Adresse eingeben"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading || isCheckingDomain}
+                  className="w-full"
+                />
+                {isSignUp && email && email.includes('@') && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    {isCheckingDomain ? (
+                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-400"></div>
+                    ) : universityInfo ? (
+                      <Badge className="flex items-center gap-1 bg-green-50 text-green-800 border-green-200">
                         <School className="h-3 w-3" />
                         {universityInfo.name}
-                      </Badge> : <Badge className="flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
+                      </Badge>
+                    ) : (
+                      <Badge className="flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
                         <Mail className="h-3 w-3" />
                         Standard
-                      </Badge>}
-                  </div>}
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </div>
-              {isSignUp && email && email.includes('@') && <div className="text-xs mt-1 text-slate-500">
-                  {universityInfo ? <span className="text-green-600">
+              {isSignUp && email && email.includes('@') && (
+                <div className="text-xs mt-1 text-slate-500">
+                  {universityInfo ? (
+                    <span className="text-green-600">
                       Du registrierst dich mit einer E-Mail von {universityInfo.name}
-                    </span> : <span className="">Standard-Konto: Du hast Zugriff auf selbst hochgeladene Fragen. Nutze deine Uni E-Mail Adresse, um auf geteilte Fragen zuzugreifen.</span>}
-                </div>}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Passwort</Label>
-              <Input id="password" type="password" placeholder="Passwort eingeben" value={password} onChange={e => setPassword(e.target.value)} disabled={loading} className="w-full" />
+                    </span>
+                  ) : (
+                    <span className="">
+                      Standard-Konto: Du hast Zugriff auf selbst hochgeladene Fragen. Nutze deine
+                      Uni E-Mail Adresse, um auf geteilte Fragen zuzugreifen.
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
-            {isSignUp && <Alert>
+            <div className="space-y-2">
+              <Label htmlFor="password">Passwort</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Passwort eingeben"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="w-full"
+              />
+            </div>
+
+            {isSignUp && (
+              <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, 
-                  einen Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
+                  Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, einen
+                  Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
                 </AlertDescription>
-              </Alert>}
+              </Alert>
+            )}
 
             {isSignUp && (
               <>
@@ -756,12 +831,12 @@ const Auth = () => {
                     ,{' '}
                     <Link to="/terms" className="text-blue-600 hover:underline" target="_blank">
                       Nutzungsbedingungen
-                    </Link>
-                    {' '}und{' '}
+                    </Link>{' '}
+                    und{' '}
                     <Link to="/privacy" className="text-blue-600 hover:underline" target="_blank">
                       Datenschutzerklärung
-                    </Link>
-                    {' '}gelesen und akzeptiere diese.
+                    </Link>{' '}
+                    gelesen und akzeptiere diese.
                   </label>
                 </div>
 
@@ -776,39 +851,58 @@ const Auth = () => {
                     htmlFor="marketing"
                     className="text-sm text-slate-600 leading-relaxed cursor-pointer"
                   >
-                    Ich möchte E-Mails mit Neuigkeiten, Angeboten und Produktupdates erhalten. Diese Einwilligung kann jederzeit widerrufen werden.
+                    Ich möchte E-Mails mit Neuigkeiten, Angeboten und Produktupdates erhalten. Diese
+                    Einwilligung kann jederzeit widerrufen werden.
                   </label>
                 </div>
               </>
             )}
 
             <div className="space-y-2 pt-2">
-              <Button className="w-full" onClick={() => handleAuth(isSignUp ? 'signup' : 'login')} disabled={loading || isCheckingDomain}>
+              <Button
+                className="w-full"
+                onClick={() => handleAuth(isSignUp ? 'signup' : 'login')}
+                disabled={loading || isCheckingDomain}
+              >
                 {loading ? 'Lädt...' : isSignUp ? 'Registrieren' : 'Anmelden'}
               </Button>
-              
+
               <div className="text-center space-y-2">
-                <button type="button" onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setAcceptedTerms(false);
-                  setAcceptedMarketing(false);
-                  // FIXED: Clear university info when switching modes
-                  setUniversityInfo(null);
-                }} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
-                  {isSignUp ? 'Bereits registriert? Hier anmelden' : 'Noch kein Konto? Hier registrieren'}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setAcceptedTerms(false);
+                    setAcceptedMarketing(false);
+                    // FIXED: Clear university info when switching modes
+                    setUniversityInfo(null);
+                  }}
+                  className="text-sm text-slate-600 hover:text-slate-900 underline"
+                  disabled={loading}
+                >
+                  {isSignUp
+                    ? 'Bereits registriert? Hier anmelden'
+                    : 'Noch kein Konto? Hier registrieren'}
                 </button>
 
-                {!isSignUp && <div>
-                    <button type="button" onClick={() => setIsForgotPassword(true)} className="text-sm text-slate-600 hover:text-slate-900 underline" disabled={loading}>
+                {!isSignUp && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPassword(true)}
+                      className="text-sm text-slate-600 hover:text-slate-900 underline"
+                      disabled={loading}
+                    >
                       Passwort vergessen?
                     </button>
-                  </div>}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </Card>
       </div>
-      
+
       <NonUniversitySignupDialog
         open={showNonUniversityDialog}
         onOpenChange={setShowNonUniversityDialog}

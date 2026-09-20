@@ -1,5 +1,11 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -21,7 +27,14 @@ interface TrainingSessionCreateDialogProps {
   context?: Record<string, unknown>; // extra metadata to embed in filter_settings (e.g., { source: 'exam', examId })
 }
 
-const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = ({ open, onOpenChange, questions, defaultTitle, onCreated, context }) => {
+const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = ({
+  open,
+  onOpenChange,
+  questions,
+  defaultTitle,
+  onCreated,
+  context,
+}) => {
   const { user } = useAuth();
   const { createSession } = useTrainingSessions(user?.id);
   const [title, setTitle] = useState(defaultTitle || '');
@@ -44,17 +57,17 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
   const loadUserProgress = useCallback(async () => {
     try {
       if (!user?.id) return;
-      
+
       // Get question IDs in batches to avoid URL length limits
-      const questionIds = questions.map(q => q.id);
+      const questionIds = questions.map((q) => q.id);
       const BATCH_SIZE = 500;
       const resultsMap = new Map<string, boolean>();
       const attemptsMap = new Map<string, number>();
-      
+
       // Process in batches
       for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
         const batch = questionIds.slice(i, i + BATCH_SIZE);
-        
+
         // Query both session_question_progress (prioritized) and user_progress (fallback)
         const [sessionProgressResult, userProgressResult] = await Promise.all([
           supabase
@@ -67,24 +80,28 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
             .from('user_progress')
             .select('question_id, is_correct, attempts_count, created_at, updated_at')
             .eq('user_id', user.id)
-            .in('question_id', batch)
+            .in('question_id', batch),
         ]);
-        
+
         // Process session_question_progress first (newer system, takes priority)
         // Aggregate latest progress per question across all sessions
         const sessionProgressByQuestion = new Map<string, any>();
         if (sessionProgressResult.data) {
-          sessionProgressResult.data.forEach(progress => {
+          sessionProgressResult.data.forEach((progress) => {
             const existing = sessionProgressByQuestion.get(progress.question_id);
             // Keep the most recent progress per question
-            if (!existing || (progress.updated_at && (!existing.updated_at || progress.updated_at > existing.updated_at))) {
+            if (
+              !existing ||
+              (progress.updated_at &&
+                (!existing.updated_at || progress.updated_at > existing.updated_at))
+            ) {
               sessionProgressByQuestion.set(progress.question_id, progress);
             }
           });
         }
-        
+
         // Process aggregated session progress
-        sessionProgressByQuestion.forEach(progress => {
+        sessionProgressByQuestion.forEach((progress) => {
           if (progress.is_correct !== null) {
             resultsMap.set(progress.question_id, progress.is_correct);
           }
@@ -92,10 +109,10 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
             attemptsMap.set(progress.question_id, progress.attempts_count);
           }
         });
-        
+
         // Process user_progress as fallback (only for questions not in session_question_progress)
         if (userProgressResult.data) {
-          userProgressResult.data.forEach(progress => {
+          userProgressResult.data.forEach((progress) => {
             // Only use if we don't have session progress for this question
             if (!sessionProgressByQuestion.has(progress.question_id)) {
               if (progress.is_correct !== null && !resultsMap.has(progress.question_id)) {
@@ -107,7 +124,7 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
             }
           });
         }
-        
+
         if (sessionProgressResult.error) {
           console.error('Error loading session progress batch:', sessionProgressResult.error);
         }
@@ -115,7 +132,7 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
           console.error('Error loading user progress batch:', userProgressResult.error);
         }
       }
-      
+
       questionResultsRef.current = resultsMap;
       attemptsCountRef.current = attemptsMap;
       setProgressDataLoaded(true);
@@ -125,39 +142,53 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
     }
   }, [user?.id, questions]);
 
-  const subjects = useMemo(() => Array.from(new Set(questions.map(q => q.subject).filter(Boolean))), [questions]);
-  const years = useMemo(() => Array.from(new Set(questions.map(q => q.year).filter(Boolean))) as string[], [questions]);
+  const subjects = useMemo(
+    () => Array.from(new Set(questions.map((q) => q.subject).filter(Boolean))),
+    [questions],
+  );
+  const years = useMemo(
+    () => Array.from(new Set(questions.map((q) => q.year).filter(Boolean))) as string[],
+    [questions],
+  );
 
   // Calculate question count based on current filter settings
-  const calculateQuestionCount = useCallback(async (values: FormValues) => {
-    if (!user?.id || !formRef.current) return;
-    
-    setIsCalculatingCount(true);
-    try {
-      const filtered = await filterQuestions(questions, values, questionResultsRef.current, user.id);
-      if (filtered.length === 0) {
-        setQuestionCount(0);
-        return;
+  const calculateQuestionCount = useCallback(
+    async (values: FormValues) => {
+      if (!user?.id || !formRef.current) return;
+
+      setIsCalculatingCount(true);
+      try {
+        const filtered = await filterQuestions(
+          questions,
+          values,
+          questionResultsRef.current,
+          user.id,
+        );
+        if (filtered.length === 0) {
+          setQuestionCount(0);
+          return;
+        }
+
+        const prioritized = prioritizeQuestions(
+          filtered,
+          questionResultsRef.current,
+          values.questionCount,
+          values.isRandomSelection,
+          values.sortByAttempts,
+          attemptsCountRef.current,
+          values.sortDirection,
+        );
+
+        setQuestionCount(prioritized.length);
+      } catch (error) {
+        console.error('Error calculating question count:', error);
+        setQuestionCount(null);
+      } finally {
+        setIsCalculatingCount(false);
       }
-      
-      const prioritized = prioritizeQuestions(
-        filtered,
-        questionResultsRef.current,
-        values.questionCount,
-        values.isRandomSelection,
-        values.sortByAttempts,
-        attemptsCountRef.current,
-        values.sortDirection
-      );
-      
-      setQuestionCount(prioritized.length);
-    } catch (error) {
-      console.error('Error calculating question count:', error);
-      setQuestionCount(null);
-    } finally {
-      setIsCalculatingCount(false);
-    }
-  }, [questions, user?.id]);
+    },
+    [questions, user?.id],
+  );
 
   // Load user progress data when dialog opens
   useEffect(() => {
@@ -188,17 +219,20 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
   }, [open, progressDataLoaded, user?.id, calculateQuestionCount]);
 
   // Handle form changes with debouncing
-  const handleFormChange = useCallback((values: FormValues) => {
-    // Clear existing timeout
-    if (calculationTimeoutRef.current) {
-      clearTimeout(calculationTimeoutRef.current);
-    }
-    
-    // Debounce calculation to avoid excessive API calls
-    calculationTimeoutRef.current = setTimeout(() => {
-      calculateQuestionCount(values);
-    }, 300);
-  }, [calculateQuestionCount]);
+  const handleFormChange = useCallback(
+    (values: FormValues) => {
+      // Clear existing timeout
+      if (calculationTimeoutRef.current) {
+        clearTimeout(calculationTimeoutRef.current);
+      }
+
+      // Debounce calculation to avoid excessive API calls
+      calculationTimeoutRef.current = setTimeout(() => {
+        calculateQuestionCount(values);
+      }, 300);
+    },
+    [calculateQuestionCount],
+  );
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -216,7 +250,12 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
     try {
       const values: FormValues = formRef.current.getValues();
 
-      const filtered = await filterQuestions(questions, values, questionResultsRef.current, user.id);
+      const filtered = await filterQuestions(
+        questions,
+        values,
+        questionResultsRef.current,
+        user.id,
+      );
       if (filtered.length === 0) {
         toast.error('Keine Fragen gefunden, die den Filterkriterien entsprechen.');
         return;
@@ -228,7 +267,7 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
         values.isRandomSelection,
         values.sortByAttempts,
         attemptsCountRef.current,
-        values.sortDirection
+        values.sortDirection,
       );
 
       if (prioritized.length === 0) {
@@ -239,7 +278,7 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
       const session = await createSession({
         title: title,
         filter_settings: { ...values, ...(context || {}) },
-        question_ids: prioritized.map(q => q.id),
+        question_ids: prioritized.map((q) => q.id),
       });
 
       if (session?.id) {
@@ -260,16 +299,29 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Neue Trainings-Session</DialogTitle>
-          <DialogDescription>Wähle Filter aus und speichere sie als Session, die du jederzeit fortsetzen kannst.</DialogDescription>
+          <DialogDescription>
+            Wähle Filter aus und speichere sie als Session, die du jederzeit fortsetzen kannst.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label htmlFor="title">Titel</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="z. B. Innere Medizin – Falsch beantwortete" />
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="z. B. Innere Medizin – Falsch beantwortete"
+            />
           </div>
 
-          <FilterForm ref={formRef} subjects={subjects} years={years} onSubmit={() => {}} onChange={handleFormChange} />
+          <FilterForm
+            ref={formRef}
+            subjects={subjects}
+            years={years}
+            onSubmit={() => {}}
+            onChange={handleFormChange}
+          />
         </div>
 
         <div className="flex justify-between items-center pt-4 border-t mt-4">
@@ -277,14 +329,21 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
             {isCalculatingCount ? (
               <span>Berechne...</span>
             ) : questionCount !== null ? (
-              <span>{questionCount} {questionCount === 1 ? 'Frage' : 'Fragen'} werden in dieser Session sein</span>
+              <span>
+                {questionCount} {questionCount === 1 ? 'Frage' : 'Fragen'} werden in dieser Session
+                sein
+              </span>
             ) : (
               <span>Wähle Filter aus, um die Anzahl zu sehen</span>
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Abbrechen</Button>
-            <Button onClick={handleCreate} disabled={isSubmitting}>Session erstellen</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleCreate} disabled={isSubmitting}>
+              Session erstellen
+            </Button>
           </div>
         </div>
       </DialogContent>

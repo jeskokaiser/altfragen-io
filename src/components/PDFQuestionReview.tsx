@@ -1,22 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Question } from '@/types/Question';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Check, X, AlertCircle, Save, ArrowLeft, ArrowRight, Image as ImageIcon, Trash2, Move, Loader2, Sparkles, LoaderCircle } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import {
+  Check,
+  X,
+  AlertCircle,
+  Save,
+  ArrowLeft,
+  ArrowRight,
+  Image as ImageIcon,
+  Trash2,
+  Move,
+  Loader2,
+  Sparkles,
+  LoaderCircle,
+} from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { 
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import QuestionImage from './questions/QuestionImage';
 import ImageAssignment from './questions/ImageAssignment';
@@ -39,14 +65,14 @@ interface PDFQuestionReviewProps {
   isEditMode?: boolean;
 }
 
-const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({ 
-  questions: initialQuestions, 
-  visibility, 
-  onSave, 
+const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
+  questions: initialQuestions,
+  visibility,
+  onSave,
   onCancel,
   filename,
   stats,
-  isEditMode = false
+  isEditMode = false,
 }) => {
   const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
@@ -64,7 +90,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const currentQuestion = questions[currentIndex];
 
   // Add keyboard navigation effect
@@ -72,11 +98,11 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle arrow keys when on the review tab
       if (activeTab !== 'review') return;
-      
+
       // Don't handle if user is typing in an input/textarea
       const target = event.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-      
+
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         handlePrevious();
@@ -87,7 +113,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
@@ -106,76 +132,78 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       }
     };
   }, []);
-  
+
   const updateQuestion = (index: number, updates: Partial<Question>) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = { ...updatedQuestions[index], ...updates };
     setQuestions(updatedQuestions);
   };
-  
+
   const handleImageReassign = (fromQuestionIndex: number, toQuestionIndex: number) => {
     const updatedQuestions = [...questions];
     const imageKey = updatedQuestions[fromQuestionIndex].image_key;
-    
+
     // Remove image from source question
-    updatedQuestions[fromQuestionIndex] = { 
-      ...updatedQuestions[fromQuestionIndex], 
-      image_key: null 
+    updatedQuestions[fromQuestionIndex] = {
+      ...updatedQuestions[fromQuestionIndex],
+      image_key: null,
     };
-    
+
     // Add image to target question
-    updatedQuestions[toQuestionIndex] = { 
-      ...updatedQuestions[toQuestionIndex], 
-      image_key: imageKey 
+    updatedQuestions[toQuestionIndex] = {
+      ...updatedQuestions[toQuestionIndex],
+      image_key: imageKey,
     };
-    
+
     setQuestions(updatedQuestions);
     setSelectedTargetQuestion(null);
   };
-  
+
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
   };
-  
+
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
     }
   };
-  
+
   const handleSave = async () => {
     setIsSaving(true);
-    
+
     try {
       // Add a small delay to show the loading state
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // Save all questions without validation
-      onSave(questions.map(q => ({
-        ...q,
-        visibility
-      })));
+      onSave(
+        questions.map((q) => ({
+          ...q,
+          visibility,
+        })),
+      );
     } finally {
       setIsSaving(false);
     }
   };
-  
+
   const handleRemoveQuestion = (index: number) => {
     if (questions.length <= 1) {
       return; // Don't remove the last question
     }
-    
+
     const newQuestions = [...questions];
     newQuestions.splice(index, 1);
-    
+
     // Adjust current index if necessary
     let newIndex = currentIndex;
     if (currentIndex >= newQuestions.length) {
       newIndex = newQuestions.length - 1;
     }
-    
+
     setQuestions(newQuestions);
     setCurrentIndex(newIndex);
   };
@@ -189,30 +217,30 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       handleImageReassign(currentIndex, selectedTargetQuestion);
     }
   };
-  
+
   const handleLLMSubjectAssignment = async () => {
     if (!subjectList.trim()) {
       showToast.error('Fehler', {
-        description: 'Bitte gib eine Liste von Fächern ein'
+        description: 'Bitte gib eine Liste von Fächern ein',
       });
       return;
     }
 
     if (!user?.id) {
       showToast.error('Fehler', {
-        description: 'Benutzer nicht authentifiziert'
+        description: 'Benutzer nicht authentifiziert',
       });
       return;
     }
 
     const availableSubjects = subjectList
       .split(',')
-      .map(subject => subject.trim())
-      .filter(subject => subject.length > 0);
+      .map((subject) => subject.trim())
+      .filter((subject) => subject.length > 0);
 
     if (availableSubjects.length === 0) {
       showToast.error('Fehler', {
-        description: 'Keine gültigen Fächer gefunden'
+        description: 'Keine gültigen Fächer gefunden',
       });
       return;
     }
@@ -222,22 +250,22 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       processed: 0,
       total: questions.length,
       currentChunk: 0,
-      totalChunks: Math.ceil(questions.length / 20) // Estimated chunks
+      totalChunks: Math.ceil(questions.length / 20), // Estimated chunks
     });
-    
+
     // Show initial progress toast
     showToast.info('KI-Fach-Zuweisung gestartet', {
-      description: `Job erstellt, Verarbeitung läuft im Hintergrund...`
+      description: `Job erstellt, Verarbeitung läuft im Hintergrund...`,
     });
-    
+
     try {
       // Create job
       const { data, error } = await supabase.functions.invoke('assign-subjects', {
         body: {
           questions: questions,
           availableSubjects: availableSubjects,
-          userId: user.id
-        }
+          userId: user.id,
+        },
       });
 
       if (error) {
@@ -263,9 +291,12 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       // Poll for job status
       pollIntervalRef.current = setInterval(async () => {
         try {
-          const { data: jobData, error: jobError } = await supabase.functions.invoke(`assign-subjects?jobId=${jobId}`, {
-            method: 'GET'
-          });
+          const { data: jobData, error: jobError } = await supabase.functions.invoke(
+            `assign-subjects?jobId=${jobId}`,
+            {
+              method: 'GET',
+            },
+          );
 
           if (jobError) {
             console.error('Error polling job status:', jobError);
@@ -280,7 +311,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             processed: job.progress || 0,
             total: job.total || questions.length,
             currentChunk: Math.ceil((job.progress || 0) / 15),
-            totalChunks: Math.ceil((job.total || questions.length) / 15)
+            totalChunks: Math.ceil((job.total || questions.length) / 15),
           });
 
           // Check if job is complete
@@ -300,14 +331,15 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             const successCount = result.successful || job.progress || 0;
             const totalProcessed = result.total || questions.length;
             const errors = result.errors || 0;
-            const successRate = totalProcessed > 0 ? Math.round((successCount / totalProcessed) * 100) : 100;
+            const successRate =
+              totalProcessed > 0 ? Math.round((successCount / totalProcessed) * 100) : 100;
 
             // Reload questions from database to get updated subjects
             // For now, we'll just show the completion message
             // The user can refresh to see updated subjects
             showToast.success('Fächer erfolgreich zugewiesen', {
               description: `${successCount} von ${totalProcessed} Fragen (${successRate}%) erfolgreich verarbeitet${errors > 0 ? `. ${errors} Fragen verwendeten Fallback-Fächer.` : ''}`,
-              duration: 6000
+              duration: 6000,
             });
 
             // Clear progress after a short delay
@@ -329,7 +361,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             setIsAssigningSubjects(false);
             showToast.error('Fehler beim Zuweisen der Fächer', {
               description: job.message || 'Die Verarbeitung ist fehlgeschlagen',
-              duration: 6000
+              duration: 6000,
             });
             setAssignmentProgress(null);
           }
@@ -345,7 +377,6 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
           pollIntervalRef.current = null;
         }
       }, 600000); // 10 minutes max
-
     } catch (error: any) {
       console.error('Error assigning subjects:', error);
       // Clean up polling on error
@@ -359,19 +390,21 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
       }
       showToast.error('Fehler beim Zuweisen der Fächer', {
         description: error.message || 'Bitte versuche es später erneut',
-        duration: 6000
+        duration: 6000,
       });
       setAssignmentProgress(null);
       setIsAssigningSubjects(false);
     }
   };
-  
+
   return (
     <div className="w-full">
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
-            <span>{isEditMode ? 'Bearbeite extrahierte Fragen' : 'Überprüfe extrahierte Fragen'}</span>
+            <span>
+              {isEditMode ? 'Bearbeite extrahierte Fragen' : 'Überprüfe extrahierte Fragen'}
+            </span>
             {activeTab === 'review' && (
               <span className="text-sm font-normal text-muted-foreground">
                 {currentIndex + 1} von {questions.length}
@@ -381,15 +414,14 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
           <CardDescription>
             <div className="space-y-2">
               <p>
-                {isEditMode 
+                {isEditMode
                   ? `Die PDF-Datei "${filename}" wurde verarbeitet und die Fragen wurden gespeichert. Du kannst sie hier bearbeiten.`
-                  : `Die PDF-Datei "${filename}" wurde verarbeitet. Bitte überprüfe die extrahierten Fragen und korrigiere sie bei Bedarf.`
-                }
+                  : `Die PDF-Datei "${filename}" wurde verarbeitet. Bitte überprüfe die extrahierten Fragen und korrigiere sie bei Bedarf.`}
               </p>
               <p className="text-xs text-muted-foreground">
                 💡 Tipp: Verwende die Pfeiltasten ← → um zwischen den Fragen zu navigieren
               </p>
-              
+
               {stats && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   <Badge variant="outline" className="bg-muted/50">
@@ -405,14 +437,14 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
             </div>
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="review">Fragen überprüfen</TabsTrigger>
               <TabsTrigger value="images">Bilder zuordnen</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="review" className="space-y-6 mt-6">
               <div className="space-y-6">
                 <div>
@@ -430,10 +462,10 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                   <div className="relative">
                     <div className="flex justify-between items-center mb-2">
                       <Label>Bild</Label>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-destructive" 
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive"
                         onClick={handleRemoveImage}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
@@ -441,16 +473,18 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       </Button>
                     </div>
                     <QuestionImage imageKey={currentQuestion.image_key} />
-                    
+
                     {/* Image movement controls directly below the image */}
                     <div className="mt-4 p-4 border rounded-lg bg-muted/30">
                       <div className="flex items-center gap-2 mb-3">
                         <Move className="h-4 w-4" />
-                        <Label className="text-sm font-medium">Bild zu anderer Frage verschieben</Label>
+                        <Label className="text-sm font-medium">
+                          Bild zu anderer Frage verschieben
+                        </Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Select 
-                          value={selectedTargetQuestion?.toString() || ""} 
+                        <Select
+                          value={selectedTargetQuestion?.toString() || ''}
                           onValueChange={(value) => setSelectedTargetQuestion(parseInt(value))}
                         >
                           <SelectTrigger className="flex-1">
@@ -458,8 +492,8 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                           </SelectTrigger>
                           <SelectContent>
                             {questions.map((item, index) => (
-                              <SelectItem 
-                                key={index} 
+                              <SelectItem
+                                key={index}
                                 value={index.toString()}
                                 disabled={index === currentIndex}
                               >
@@ -468,7 +502,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                             ))}
                           </SelectContent>
                         </Select>
-                        <Button 
+                        <Button
                           onClick={handleMoveImage}
                           disabled={selectedTargetQuestion === null}
                           size="sm"
@@ -481,7 +515,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                     </div>
                   </div>
                 )}
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="optionA">Option A</Label>
@@ -492,7 +526,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="optionB">Option B</Label>
                     <Input
@@ -502,7 +536,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="optionC">Option C</Label>
                     <Input
@@ -512,7 +546,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="optionD">Option D</Label>
                     <Input
@@ -522,7 +556,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="optionE">Option E</Label>
                     <Input
@@ -532,12 +566,14 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label>Richtige Antwort</Label>
                     <RadioGroup
                       value={currentQuestion.correctAnswer}
-                      onValueChange={(value) => updateQuestion(currentIndex, { correctAnswer: value })}
+                      onValueChange={(value) =>
+                        updateQuestion(currentIndex, { correctAnswer: value })
+                      }
                       className="flex space-x-4 mt-1"
                     >
                       {['A', 'B', 'C', 'D', 'E'].map((option) => (
@@ -549,7 +585,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                     </RadioGroup>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="subject">Fach</Label>
@@ -560,12 +596,14 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="difficulty">Schwierigkeitsgrad</Label>
-                    <Select 
-                      value={currentQuestion.difficulty.toString()} 
-                      onValueChange={(value) => updateQuestion(currentIndex, { difficulty: parseInt(value) })}
+                    <Select
+                      value={currentQuestion.difficulty.toString()}
+                      onValueChange={(value) =>
+                        updateQuestion(currentIndex, { difficulty: parseInt(value) })
+                      }
                     >
                       <SelectTrigger id="difficulty" className="mt-1">
                         <SelectValue placeholder="Schwierigkeitsgrad auswählen" />
@@ -579,7 +617,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="md:col-span-2">
                     <Label htmlFor="comment">Kommentar (optional)</Label>
                     <Textarea
@@ -591,7 +629,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                     />
                   </div>
                 </div>
-                
+
                 <Accordion type="single" collapsible>
                   <AccordionItem value="additional-info">
                     <AccordionTrigger>Zusätzliche Informationen</AccordionTrigger>
@@ -602,11 +640,13 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                           <Input
                             id="semester"
                             value={currentQuestion.semester || ''}
-                            onChange={(e) => updateQuestion(currentIndex, { semester: e.target.value })}
+                            onChange={(e) =>
+                              updateQuestion(currentIndex, { semester: e.target.value })
+                            }
                             className="mt-1"
                           />
                         </div>
-                        
+
                         <div>
                           <Label htmlFor="year">Jahr (optional)</Label>
                           <Input
@@ -619,7 +659,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                       </div>
                     </AccordionContent>
                   </AccordionItem>
-                  
+
                   <AccordionItem value="ai-subject-assignment">
                     <AccordionTrigger className="flex items-center gap-2">
                       <Sparkles className="h-4 w-4" />
@@ -628,9 +668,10 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                     <AccordionContent>
                       <div className="space-y-4 pt-2">
                         <p className="text-sm text-muted-foreground">
-                          Lass eine KI automatisch passende Fächer für alle Fragen auswählen. Gib eine kommagetrennte Liste möglicher Fächer ein.
+                          Lass eine KI automatisch passende Fächer für alle Fragen auswählen. Gib
+                          eine kommagetrennte Liste möglicher Fächer ein.
                         </p>
-                        
+
                         <div>
                           <Label htmlFor="subject-list">Verfügbare Fächer (kommagetrennt)</Label>
                           <Textarea
@@ -642,22 +683,32 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                             rows={3}
                           />
                         </div>
-                        
+
                         {/* Progress display */}
                         {assignmentProgress && (
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm text-muted-foreground">
-                              <span>Fortschritt: {assignmentProgress.processed} von {assignmentProgress.total} Fragen</span>
-                              <span>Chunk {assignmentProgress.currentChunk} von {assignmentProgress.totalChunks}</span>
+                              <span>
+                                Fortschritt: {assignmentProgress.processed} von{' '}
+                                {assignmentProgress.total} Fragen
+                              </span>
+                              <span>
+                                Chunk {assignmentProgress.currentChunk} von{' '}
+                                {assignmentProgress.totalChunks}
+                              </span>
                             </div>
-                            <Progress 
-                              value={assignmentProgress.total > 0 ? (assignmentProgress.processed / assignmentProgress.total) * 100 : 0} 
+                            <Progress
+                              value={
+                                assignmentProgress.total > 0
+                                  ? (assignmentProgress.processed / assignmentProgress.total) * 100
+                                  : 0
+                              }
                               className="w-full"
                             />
                           </div>
                         )}
-                        
-                        <Button 
+
+                        <Button
                           onClick={handleLLMSubjectAssignment}
                           disabled={isAssigningSubjects || !subjectList.trim()}
                           className="flex items-center gap-2 w-full"
@@ -674,17 +725,23 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                             </>
                           )}
                         </Button>
-                        
+
                         {isAssigningSubjects && (
                           <Alert>
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>
-                              Die KI analysiert jede Frage und weist das passende Fach zu. 
+                              Die KI analysiert jede Frage und weist das passende Fach zu.
                               {assignmentProgress && (
                                 <div className="mt-2">
-                                  <strong>Verarbeitung läuft:</strong> {assignmentProgress.processed} von {assignmentProgress.total} Fragen bearbeitet
+                                  <strong>Verarbeitung läuft:</strong>{' '}
+                                  {assignmentProgress.processed} von {assignmentProgress.total}{' '}
+                                  Fragen bearbeitet
                                   {assignmentProgress.totalChunks > 1 && (
-                                    <span> (Chunk {assignmentProgress.currentChunk} von {assignmentProgress.totalChunks})</span>
+                                    <span>
+                                      {' '}
+                                      (Chunk {assignmentProgress.currentChunk} von{' '}
+                                      {assignmentProgress.totalChunks})
+                                    </span>
                                   )}
                                 </div>
                               )}
@@ -697,27 +754,19 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                 </Accordion>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="images" className="mt-6">
-              <ImageAssignment 
-                questions={questions}
-                onImageReassign={handleImageReassign}
-              />
+              <ImageAssignment questions={questions} onImageReassign={handleImageReassign} />
             </TabsContent>
           </Tabs>
         </CardContent>
-        
+
         <CardFooter className="flex justify-between">
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-              disabled={isSaving}
-            >
+            <Button variant="outline" size="sm" onClick={onCancel} disabled={isSaving}>
               {isEditMode ? 'Fertig' : 'Abbrechen'}
             </Button>
-            
+
             {activeTab === 'review' && (
               <Button
                 variant="outline"
@@ -729,7 +778,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
               </Button>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {activeTab === 'review' && (
               <>
@@ -742,7 +791,7 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Zurück
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -754,12 +803,8 @@ const PDFQuestionReview: React.FC<PDFQuestionReviewProps> = ({
                 </Button>
               </>
             )}
-            
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="relative"
-            >
+
+            <Button onClick={handleSave} disabled={isSaving} className="relative">
               {isSaving ? (
                 <>
                   <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />

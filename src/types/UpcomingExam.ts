@@ -23,5 +23,3 @@ export interface UpcomingExamQuestionLink {
   source: QuestionSource;
   created_at: string;
 }
-
-

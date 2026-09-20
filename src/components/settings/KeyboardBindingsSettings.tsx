@@ -9,7 +9,9 @@ import { RotateCcw, Keyboard } from 'lucide-react';
 
 const KeyboardBindingsSettings: React.FC = () => {
   const { preferences, updatePreferences } = useUserPreferences();
-  const [localBindings, setLocalBindings] = useState<KeyboardBindings>(preferences.keyboardBindings);
+  const [localBindings, setLocalBindings] = useState<KeyboardBindings>(
+    preferences.keyboardBindings,
+  );
   const [isListening, setIsListening] = useState<string | null>(null);
 
   const defaultBindings: KeyboardBindings = {
@@ -55,9 +57,9 @@ const KeyboardBindingsSettings: React.FC = () => {
   const handleKeyDown = (event: React.KeyboardEvent, bindingKey: keyof KeyboardBindings) => {
     if (isListening === bindingKey) {
       event.preventDefault();
-      
+
       let capturedKey = event.key;
-      
+
       // Handle modifier keys for difficulty bindings
       if (bindingKey.startsWith('difficulty')) {
         if (event.shiftKey && ['1', '2', '3', '4', '5'].includes(capturedKey)) {
@@ -87,9 +89,9 @@ const KeyboardBindingsSettings: React.FC = () => {
         }
       }
 
-      setLocalBindings(prev => ({
+      setLocalBindings((prev) => ({
         ...prev,
-        [bindingKey]: capturedKey
+        [bindingKey]: capturedKey,
       }));
       setIsListening(null);
     }
@@ -139,9 +141,7 @@ const KeyboardBindingsSettings: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(Object.keys(bindingLabels) as (keyof KeyboardBindings)[]).map((bindingKey) => (
             <div key={bindingKey} className="space-y-2">
-              <Label htmlFor={bindingKey}>
-                {bindingLabels[bindingKey]}
-              </Label>
+              <Label htmlFor={bindingKey}>{bindingLabels[bindingKey]}</Label>
               <div className="relative">
                 <Input
                   id={bindingKey}
@@ -152,11 +152,13 @@ const KeyboardBindingsSettings: React.FC = () => {
                   onBlur={() => setIsListening(null)}
                   readOnly
                   className={`cursor-pointer ${
-                    isListening === bindingKey 
-                      ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' 
+                    isListening === bindingKey
+                      ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950'
                       : ''
                   }`}
-                  placeholder={isListening === bindingKey ? 'Taste drücken...' : 'Klicken zum Ändern'}
+                  placeholder={
+                    isListening === bindingKey ? 'Taste drücken...' : 'Klicken zum Ändern'
+                  }
                 />
                 {isListening === bindingKey && (
                   <div className="absolute inset-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900 bg-opacity-50 rounded-md">
@@ -171,18 +173,10 @@ const KeyboardBindingsSettings: React.FC = () => {
         </div>
 
         <div className="flex gap-3 pt-4 border-t">
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges}
-            className="flex-1"
-          >
+          <Button onClick={handleSave} disabled={!hasChanges} className="flex-1">
             Speichern
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            className="flex items-center gap-2"
-          >
+          <Button variant="outline" onClick={handleReset} className="flex items-center gap-2">
             <RotateCcw className="h-4 w-4" />
             Zurücksetzen
           </Button>
@@ -204,4 +198,4 @@ const KeyboardBindingsSettings: React.FC = () => {
   );
 };
 
-export default KeyboardBindingsSettings; 
+export default KeyboardBindingsSettings;

@@ -127,7 +127,7 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
   const handleClick = () => {
     const hasCommentsContent = Boolean(explanation || children);
     const canExpand = hasCommentsContent || showUpgradePrompt;
-    
+
     // Before reveal:
     // - If answer is NOT already selected/attempted: toggle expansion AND trigger answer selection (first click)
     // - If answer IS already selected/attempted: only toggle expansion (subsequent clicks to collapse/expand)
@@ -177,35 +177,37 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
   const hasCommentsContent = Boolean(explanation || children);
   const canExpand = hasCommentsContent || showUpgradePrompt;
   // Show expand icon if there is expandable content (comments or upgrade prompt)
-  const expandIcon = canExpand && (
-    isExpanded ? (
+  const expandIcon =
+    canExpand &&
+    (isExpanded ? (
       <ChevronUp className="h-4 w-4 text-slate-600 dark:text-slate-300 ml-2" />
     ) : (
       <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-300 ml-2" />
-    )
-  );
+    ));
 
   return (
     <div
       ref={answerContainerRef}
-      className={cn(
-        'leading-snug relative cursor-pointer -my-px border-y-[1px]',
-        stateClasses
-      )}
+      className={cn('leading-snug relative cursor-pointer -my-px border-y-[1px]', stateClasses)}
       onClick={handleClick}
     >
       <div className="pl-6 pr-4 py-3 flex items-center cursor-pointer">
         <div role="button" className="pr-2 grow flex relative items-center cursor-pointer">
-          <div className={cn(
-            'leading-none text-lg shrink-0 flex font-bold uppercase justify-center items-center cursor-pointer',
-            letterClasses
-          )}>
+          <div
+            className={cn(
+              'leading-none text-lg shrink-0 flex font-bold uppercase justify-center items-center cursor-pointer',
+              letterClasses,
+            )}
+          >
             {optionLetter}
           </div>
           <div className="pl-4 grow cursor-pointer flex items-center gap-2">
             <p className="cursor-pointer text-sm">{optionText}</p>
             {isRevealed && isAIGenerated && (
-              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
+              <Badge
+                variant="secondary"
+                className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+              >
                 <Sparkles className="h-3 w-3 mr-1" />
                 KI
               </Badge>
@@ -252,7 +254,7 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
                 'border-t-[1px] text-sm',
                 isRevealed && isCorrect
                   ? 'border-t-[#0b8363] bg-teal-50 dark:border-emerald-500 dark:bg-emerald-900/40'
-                  : 'border-t-slate-200 dark:border-slate-700'
+                  : 'border-t-slate-200 dark:border-slate-700',
               )}
             >
               <div className="pr-6 pl-12 py-2">
@@ -269,11 +271,16 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
                   {showUpgradePrompt ? (
                     <div className="space-y-3">
                       <p className="text-slate-600 dark:text-slate-200">
-                        Tägliches Limit für kostenlose KI-Kommentare erreicht. <a href="/subscription" className="text-blue-600 dark:text-blue-400">Jetzt upgraden</a>
+                        Tägliches Limit für kostenlose KI-Kommentare erreicht.{' '}
+                        <a href="/subscription" className="text-blue-600 dark:text-blue-400">
+                          Jetzt upgraden
+                        </a>
                       </p>
                     </div>
                   ) : (
-                    <p className="text-slate-600 dark:text-slate-200">Keine KI-Kommentare verfügbar</p>
+                    <p className="text-slate-600 dark:text-slate-200">
+                      Keine KI-Kommentare verfügbar
+                    </p>
                   )}
                 </div>
               </div>
@@ -283,4 +290,4 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
       )}
     </div>
   );
-}; 
+};

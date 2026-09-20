@@ -1,6 +1,5 @@
-
-import { Link } from "react-router-dom";
-import { Github } from "lucide-react";
+import { Link } from 'react-router-dom';
+import { Github } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -22,8 +21,14 @@ const Footer = () => {
           <Link to="/widerruf" className="hover:text-foreground transition-colors">
             Widerrufsrecht
           </Link>
-          
-          <a href="https://github.com/jeskokaiser/altfragen-io" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center" aria-label="GitHub Repository">
+
+          <a
+            href="https://github.com/jeskokaiser/altfragen-io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors flex items-center"
+            aria-label="GitHub Repository"
+          >
             <Github size={16} className="mr-1" />
             <span>GitHub</span>
           </a>

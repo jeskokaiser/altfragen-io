@@ -1,14 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,7 +40,15 @@ import { OptionsFields } from './edit-question/OptionsFields';
 import { SubjectField } from './edit-question/SubjectField';
 import { DifficultyField } from './edit-question/DifficultyField';
 import { useAuth } from '@/contexts/AuthContext';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { GraduationCap, Lock, Globe, Image, Trash2 } from 'lucide-react';
 import QuestionImage from '@/components/questions/QuestionImage';
 
@@ -33,29 +63,27 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   question,
   isOpen,
   onClose,
-  onQuestionUpdated
+  onQuestionUpdated,
 }) => {
   const {
     register,
     handleSubmit,
-    formState: {
-      isSubmitting
-    },
+    formState: { isSubmitting },
     reset,
     setValue,
-    watch
+    watch,
   } = useForm<FormData>();
-  
+
   const correctAnswer = watch('correctAnswer');
   const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(
-    (question.visibility as 'private' | 'university' | 'public') || 'private'
+    (question.visibility as 'private' | 'university' | 'public') || 'private',
   );
   const [showImageAfterAnswer, setShowImageAfterAnswer] = useState<boolean>(
-    question.show_image_after_answer || false
+    question.show_image_after_answer || false,
   );
   const [imageToRemove, setImageToRemove] = useState<boolean>(false);
   const { user, universityId } = useAuth();
-  
+
   useEffect(() => {
     if (question) {
       reset({
@@ -68,7 +96,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         correctAnswer: question.correctAnswer,
         comment: question.comment,
         subject: question.subject,
-        difficulty: question.difficulty?.toString() || '3'
+        difficulty: question.difficulty?.toString() || '3',
       });
       setVisibility((question.visibility as 'private' | 'university' | 'public') || 'private');
       setShowImageAfterAnswer(question.show_image_after_answer || false);
@@ -78,7 +106,10 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
-      if ((question.visibility === 'university' || question.visibility === 'public') && visibility === 'private') {
+      if (
+        (question.visibility === 'university' || question.visibility === 'public') &&
+        visibility === 'private'
+      ) {
         toast.error('Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.');
         return;
       }
@@ -95,19 +126,19 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         subject: data.subject,
         difficulty: parseInt(data.difficulty),
         visibility: visibility,
-        show_image_after_answer: showImageAfterAnswer
+        show_image_after_answer: showImageAfterAnswer,
       };
 
       // Handle image removal
       if (imageToRemove && question.image_key) {
         updateData.image_key = null;
-        
+
         // Optionally delete the image from storage
         try {
           const { error: deleteError } = await supabase.storage
             .from('exam-images')
             .remove([question.image_key]);
-          
+
           if (deleteError) {
             console.warn('Warning: Could not delete image from storage:', deleteError);
             // Don't fail the update if storage deletion fails
@@ -117,10 +148,12 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         }
       }
 
-      const {
-        data: updatedQuestion,
-        error
-      } = await supabase.from('questions').update(updateData).eq('id', question.id).select().single();
+      const { data: updatedQuestion, error } = await supabase
+        .from('questions')
+        .update(updateData)
+        .eq('id', question.id)
+        .select()
+        .single();
 
       if (error) {
         console.error('Error updating question:', error);
@@ -152,9 +185,10 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           user_id: updatedQuestion.user_id,
           is_unclear: updatedQuestion.is_unclear,
           marked_unclear_at: updatedQuestion.marked_unclear_at,
-          ai_commentary_status: updatedQuestion.ai_commentary_status as 'pending' | 'processing' | 'completed' | 'failed' | undefined,
+          ai_commentary_status: updatedQuestion.ai_commentary_status as
+            'pending' | 'processing' | 'completed' | 'failed' | undefined,
           ai_commentary_queued_at: updatedQuestion.ai_commentary_queued_at,
-          ai_commentary_processed_at: updatedQuestion.ai_commentary_processed_at
+          ai_commentary_processed_at: updatedQuestion.ai_commentary_processed_at,
         };
         onQuestionUpdated(mappedQuestion);
         toast.info('Frage erfolgreich aktualisiert');
@@ -180,12 +214,13 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     setImageToRemove(false);
   };
 
-  const canChangeVisibility = question.university_id === null || 
-                              (user && user.id === question.user_id);
-                              
+  const canChangeVisibility =
+    question.university_id === null || (user && user.id === question.user_id);
+
   const canChangeToPrivate = question.visibility !== 'university';
 
-  return <Dialog open={isOpen} onOpenChange={onClose}>
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Frage bearbeiten</DialogTitle>
@@ -195,26 +230,38 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <QuestionField register={register} />
             <OptionsFields register={register} />
-            
+
             <div>
               <Label htmlFor="correctAnswer">Richtige Antwort</Label>
               <div className="flex gap-2">
                 <Input id="correctAnswer" {...register('correctAnswer')} />
-                <Button type="button" variant="outline" onClick={handleMoveToComment} size="icon" title="Antwort in Kommentar übernehmen">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleMoveToComment}
+                  size="icon"
+                  title="Antwort in Kommentar übernehmen"
+                >
                   ↓
                 </Button>
               </div>
             </div>
 
-            <DifficultyField defaultValue={question.difficulty?.toString() || '3'} onValueChange={value => setValue('difficulty', value)} />
+            <DifficultyField
+              defaultValue={question.difficulty?.toString() || '3'}
+              onValueChange={(value) => setValue('difficulty', value)}
+            />
 
             <div>
               <Label htmlFor="comment">Kommentar</Label>
               <Textarea id="comment" {...register('comment')} />
             </div>
 
-            <SubjectField defaultValue={question.subject} onValueChange={value => setValue('subject', value)} />
-            
+            <SubjectField
+              defaultValue={question.subject}
+              onValueChange={(value) => setValue('subject', value)}
+            />
+
             {question.image_key && !imageToRemove && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between space-x-2">
@@ -230,16 +277,22 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                     onCheckedChange={setShowImageAfterAnswer}
                   />
                   <span className="text-xs text-muted-foreground">
-                    {showImageAfterAnswer ? 'Bild wird nach der Antwort angezeigt' : 'Bild wird sofort angezeigt'}
+                    {showImageAfterAnswer
+                      ? 'Bild wird nach der Antwort angezeigt'
+                      : 'Bild wird sofort angezeigt'}
                   </span>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Aktuelles Bild</Label>
                   <QuestionImage imageKey={question.image_key} />
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
                         <Trash2 className="h-4 w-4" />
                         Bild entfernen
                       </Button>
@@ -248,12 +301,16 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Bild entfernen</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Bist du sicher, dass du das Bild von dieser Frage entfernen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
+                          Bist du sicher, dass du das Bild von dieser Frage entfernen möchtest?
+                          Diese Aktion kann nicht rückgängig gemacht werden.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleRemoveImage} className="bg-red-600 hover:bg-red-700">
+                        <AlertDialogAction
+                          onClick={handleRemoveImage}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
                           Bild entfernen
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -279,7 +336,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                 </p>
               </div>
             )}
-            
+
             <div>
               <Label htmlFor="visibility">Sichtbarkeit</Label>
               {question.visibility === 'university' ? (
@@ -293,10 +350,12 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                   <span>Öffentlich (kann nicht geändert werden)</span>
                 </div>
               ) : (
-                <Select 
+                <Select
                   disabled={!canChangeVisibility}
-                  value={visibility} 
-                  onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
+                  value={visibility}
+                  onValueChange={(value: 'private' | 'university' | 'public') =>
+                    setVisibility(value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sichtbarkeit wählen" />
@@ -325,7 +384,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
               )}
               {question.visibility !== 'university' && question.visibility !== 'public' && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  Hinweis: Wenn du diese Frage teilst, kann die Sichtbarkeit nicht mehr zurück auf privat gesetzt werden.
+                  Hinweis: Wenn du diese Frage teilst, kann die Sichtbarkeit nicht mehr zurück auf
+                  privat gesetzt werden.
                 </p>
               )}
             </div>
@@ -341,7 +401,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           </form>
         </ScrollArea>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
 
 export default EditQuestionModal;

@@ -1,5 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Comment, CommentWithUser, CommentWithReplies, CreateCommentInput, UpdateCommentInput } from '@/types/Comment';
+import {
+  Comment,
+  CommentWithUser,
+  CommentWithReplies,
+  CreateCommentInput,
+  UpdateCommentInput,
+} from '@/types/Comment';
 
 /**
  * Get all visible comments for a question.
@@ -7,12 +13,13 @@ import { Comment, CommentWithUser, CommentWithReplies, CreateCommentInput, Updat
  */
 export const getCommentsForQuestion = async (
   questionId: string,
-  userId: string
+  userId: string,
 ): Promise<CommentWithReplies[]> => {
   // Type assertion needed until types are regenerated after migration
-  const { data: comments, error } = await supabase
+  const { data: comments, error } = (await supabase
     .from('question_comments' as any)
-    .select(`
+    .select(
+      `
       id,
       question_id,
       user_id,
@@ -21,9 +28,10 @@ export const getCommentsForQuestion = async (
       parent_id,
       created_at,
       updated_at
-    `)
+    `,
+    )
     .eq('question_id', questionId)
-    .order('created_at', { ascending: true }) as any;
+    .order('created_at', { ascending: true })) as any;
 
   if (error) {
     console.error('Error fetching comments:', error);
@@ -41,7 +49,7 @@ export const getCommentsForQuestion = async (
     .select('id, email, username')
     .in('id', userIds);
 
-  const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+  const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
   // Map comments to include user info
   const commentsWithUser: CommentWithUser[] = (comments as any[]).map((comment: any) => {
@@ -65,7 +73,7 @@ function buildThreadedComments(comments: CommentWithUser[]): CommentWithReplies[
   const rootComments: CommentWithReplies[] = [];
 
   // First pass: create all comment objects
-  comments.forEach(comment => {
+  comments.forEach((comment) => {
     commentMap.set(comment.id, {
       ...comment,
       replies: [],
@@ -73,9 +81,9 @@ function buildThreadedComments(comments: CommentWithUser[]): CommentWithReplies[
   });
 
   // Second pass: build the tree structure
-  comments.forEach(comment => {
+  comments.forEach((comment) => {
     const commentWithReplies = commentMap.get(comment.id)!;
-    
+
     if (comment.parent_id) {
       // This is a reply, add it to parent's replies
       const parent = commentMap.get(comment.parent_id);
@@ -96,9 +104,9 @@ function buildThreadedComments(comments: CommentWithUser[]): CommentWithReplies[
  */
 export const createComment = async (
   input: CreateCommentInput,
-  userId: string
+  userId: string,
 ): Promise<Comment> => {
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from('question_comments' as any)
     .insert({
       question_id: input.question_id,
@@ -108,7 +116,7 @@ export const createComment = async (
       parent_id: input.parent_id || null,
     })
     .select()
-    .single() as any;
+    .single()) as any;
 
   if (error) {
     console.error('Error creating comment:', error);
@@ -124,9 +132,9 @@ export const createComment = async (
 export const updateComment = async (
   commentId: string,
   userId: string,
-  input: UpdateCommentInput
+  input: UpdateCommentInput,
 ): Promise<Comment> => {
-  const { data, error } = await supabase
+  const { data, error } = (await supabase
     .from('question_comments' as any)
     .update({
       content: input.content.trim(),
@@ -135,7 +143,7 @@ export const updateComment = async (
     .eq('id', commentId)
     .eq('user_id', userId) // Ensure only the author can update
     .select()
-    .single() as any;
+    .single()) as any;
 
   if (error) {
     console.error('Error updating comment:', error);
@@ -152,15 +160,12 @@ export const updateComment = async (
 /**
  * Delete a comment (only by the author).
  */
-export const deleteComment = async (
-  commentId: string,
-  userId: string
-): Promise<void> => {
-  const { error } = await supabase
+export const deleteComment = async (commentId: string, userId: string): Promise<void> => {
+  const { error } = (await supabase
     .from('question_comments' as any)
     .delete()
     .eq('id', commentId)
-    .eq('user_id', userId) as any; // Ensure only the author can delete
+    .eq('user_id', userId)) as any; // Ensure only the author can delete
 
   if (error) {
     console.error('Error deleting comment:', error);
@@ -171,7 +176,9 @@ export const deleteComment = async (
 /**
  * Get question visibility to determine if public comments are allowed.
  */
-export const getQuestionVisibility = async (questionId: string): Promise<'private' | 'university' | 'public' | null> => {
+export const getQuestionVisibility = async (
+  questionId: string,
+): Promise<'private' | 'university' | 'public' | null> => {
   const { data, error } = await supabase
     .from('questions')
     .select('visibility')
@@ -185,4 +192,3 @@ export const getQuestionVisibility = async (questionId: string): Promise<'privat
 
   return data?.visibility as 'private' | 'university' | 'public' | null;
 };
-

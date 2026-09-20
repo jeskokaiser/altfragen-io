@@ -29,4 +29,3 @@ export interface QuestionSearchResult {
   pageSize: number;
   hasMore: boolean;
 }
-

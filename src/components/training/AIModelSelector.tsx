@@ -28,21 +28,18 @@ export const AIModelSelector: React.FC = () => {
     const currentModels = preferences.selectedAIModels || [];
     const newModels = checked
       ? [...currentModels, modelName]
-      : currentModels.filter(m => m !== modelName);
-    
+      : currentModels.filter((m) => m !== modelName);
+
     updatePreferences({
-      selectedAIModels: newModels
+      selectedAIModels: newModels,
     });
   };
 
   const enabledCount = preferences.selectedAIModels?.length || 0;
 
   const enhancedVersion = preferences.enhancedAIVersion ?? 'none';
-  const enhancedLabel = enhancedVersion === 'none' 
-    ? 'Original' 
-    : enhancedVersion === 'chatgpt' 
-      ? 'ChatGPT' 
-      : 'Gemini';
+  const enhancedLabel =
+    enhancedVersion === 'none' ? 'Original' : enhancedVersion === 'chatgpt' ? 'ChatGPT' : 'Gemini';
 
   return (
     <div className="flex items-center gap-2">
@@ -76,7 +73,9 @@ export const AIModelSelector: React.FC = () => {
           </DropdownMenuLabel>
           <DropdownMenuRadioGroup
             value={enhancedVersion}
-            onValueChange={(value) => updatePreferences({ enhancedAIVersion: value as 'none' | 'chatgpt' | 'gemini' })}
+            onValueChange={(value) =>
+              updatePreferences({ enhancedAIVersion: value as 'none' | 'chatgpt' | 'gemini' })
+            }
           >
             <DropdownMenuRadioItem value="none">Original</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="chatgpt">ChatGPT verbessert</DropdownMenuRadioItem>
@@ -87,4 +86,3 @@ export const AIModelSelector: React.FC = () => {
     </div>
   );
 };
-

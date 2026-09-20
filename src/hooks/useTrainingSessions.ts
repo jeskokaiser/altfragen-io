@@ -7,7 +7,8 @@ export const useTrainingSessions = (userId: string | undefined) => {
 
   const listQuery = useQuery({
     queryKey: ['training-sessions', userId],
-    queryFn: () => userId ? TrainingSessionService.list(userId) : Promise.resolve([] as TrainingSession[]),
+    queryFn: () =>
+      userId ? TrainingSessionService.list(userId) : Promise.resolve([] as TrainingSession[]),
     enabled: !!userId,
   });
 
@@ -18,14 +19,14 @@ export const useTrainingSessions = (userId: string | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] });
-    }
+    },
   });
 
   const removeMutation = useMutation({
     mutationFn: async (sessionId: string) => TrainingSessionService.remove(sessionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] });
-    }
+    },
   });
 
   return {
@@ -43,33 +44,39 @@ export const useTrainingSession = (sessionId: string | undefined, userId: string
 
   const sessionQuery = useQuery({
     queryKey: ['training-session', sessionId, userId],
-    queryFn: () => (sessionId && userId) ? TrainingSessionService.getById(sessionId, userId) : Promise.resolve(null),
+    queryFn: () =>
+      sessionId && userId
+        ? TrainingSessionService.getById(sessionId, userId)
+        : Promise.resolve(null),
     enabled: !!sessionId && !!userId,
   });
 
   const updateIndex = useMutation({
-    mutationFn: (currentIndex: number) => TrainingSessionService.updateIndex(sessionId!, currentIndex),
+    mutationFn: (currentIndex: number) =>
+      TrainingSessionService.updateIndex(sessionId!, currentIndex),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] });
       // Also invalidate the list to update progress indicators
       queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] });
-    }
+    },
   });
 
   const updateStatus = useMutation({
-    mutationFn: (status: 'active' | 'paused' | 'completed') => TrainingSessionService.updateStatus(sessionId!, status),
+    mutationFn: (status: 'active' | 'paused' | 'completed') =>
+      TrainingSessionService.updateStatus(sessionId!, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] });
       // Also invalidate the list to update status badges and progress
       queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] });
-    }
+    },
   });
 
   return {
     session: sessionQuery.data,
     isLoading: sessionQuery.isLoading,
     error: sessionQuery.error,
-    refresh: () => queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] }),
+    refresh: () =>
+      queryClient.invalidateQueries({ queryKey: ['training-session', sessionId, userId] }),
     setIndex: updateIndex.mutateAsync,
     setStatus: updateStatus.mutateAsync,
   };

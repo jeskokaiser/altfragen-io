@@ -10,12 +10,26 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
       ai_answer_comments: {
         Row: {
+          chatgpt_chosen_answer: string | null
+          chatgpt_comment_a: string | null
+          chatgpt_comment_b: string | null
+          chatgpt_comment_c: string | null
+          chatgpt_comment_d: string | null
+          chatgpt_comment_e: string | null
+          chatgpt_general_comment: string | null
+          chatgpt_model_version: string | null
+          chatgpt_regenerated_option_a: string | null
+          chatgpt_regenerated_option_b: string | null
+          chatgpt_regenerated_option_c: string | null
+          chatgpt_regenerated_option_d: string | null
+          chatgpt_regenerated_option_e: string | null
+          chatgpt_regenerated_question: string | null
           claude_comment_a: string | null
           claude_comment_b: string | null
           claude_comment_c: string | null
@@ -23,24 +37,76 @@ export type Database = {
           claude_comment_e: string | null
           claude_general_comment: string | null
           created_at: string | null
+          deepseek_chosen_answer: string | null
+          deepseek_comment_a: string | null
+          deepseek_comment_b: string | null
+          deepseek_comment_c: string | null
+          deepseek_comment_d: string | null
+          deepseek_comment_e: string | null
+          deepseek_general_comment: string | null
+          deepseek_model_version: string | null
+          gemini_chosen_answer: string | null
           gemini_comment_a: string | null
           gemini_comment_b: string | null
           gemini_comment_c: string | null
           gemini_comment_d: string | null
           gemini_comment_e: string | null
           gemini_general_comment: string | null
+          gemini_model_version: string | null
+          gemini_new_comment_a: string | null
+          gemini_new_comment_b: string | null
+          gemini_new_comment_c: string | null
+          gemini_new_comment_d: string | null
+          gemini_new_comment_e: string | null
+          gemini_new_general_comment: string | null
+          gemini_regenerated_option_a: string | null
+          gemini_regenerated_option_b: string | null
+          gemini_regenerated_option_c: string | null
+          gemini_regenerated_option_d: string | null
+          gemini_regenerated_option_e: string | null
+          gemini_regenerated_question: string | null
           id: string
+          mistral_chosen_answer: string | null
+          mistral_comment_a: string | null
+          mistral_comment_b: string | null
+          mistral_comment_c: string | null
+          mistral_comment_d: string | null
+          mistral_comment_e: string | null
+          mistral_general_comment: string | null
+          mistral_model_version: string | null
           openai_comment_a: string | null
           openai_comment_b: string | null
           openai_comment_c: string | null
           openai_comment_d: string | null
           openai_comment_e: string | null
           openai_general_comment: string | null
+          perplexity_chosen_answer: string | null
+          perplexity_comment_a: string | null
+          perplexity_comment_b: string | null
+          perplexity_comment_c: string | null
+          perplexity_comment_d: string | null
+          perplexity_comment_e: string | null
+          perplexity_general_comment: string | null
+          perplexity_model_version: string | null
           processing_status: string | null
           question_id: string | null
           updated_at: string | null
         }
         Insert: {
+          chatgpt_chosen_answer?: string | null
+          chatgpt_comment_a?: string | null
+          chatgpt_comment_b?: string | null
+          chatgpt_comment_c?: string | null
+          chatgpt_comment_d?: string | null
+          chatgpt_comment_e?: string | null
+          chatgpt_general_comment?: string | null
+          chatgpt_model_version?: string | null
+          chatgpt_regenerated_option_a?: string | null
+          chatgpt_regenerated_option_b?: string | null
+          chatgpt_regenerated_option_c?: string | null
+          chatgpt_regenerated_option_d?: string | null
+          chatgpt_regenerated_option_e?: string | null
+          chatgpt_regenerated_question?: string | null
           claude_comment_a?: string | null
           claude_comment_b?: string | null
           claude_comment_c?: string | null
@@ -48,24 +114,76 @@ export type Database = {
           claude_comment_e?: string | null
           claude_general_comment?: string | null
           created_at?: string | null
+          deepseek_chosen_answer?: string | null
+          deepseek_comment_a?: string | null
+          deepseek_comment_b?: string | null
+          deepseek_comment_c?: string | null
+          deepseek_comment_d?: string | null
+          deepseek_comment_e?: string | null
+          deepseek_general_comment?: string | null
+          deepseek_model_version?: string | null
+          gemini_chosen_answer?: string | null
           gemini_comment_a?: string | null
           gemini_comment_b?: string | null
           gemini_comment_c?: string | null
           gemini_comment_d?: string | null
           gemini_comment_e?: string | null
           gemini_general_comment?: string | null
+          gemini_model_version?: string | null
+          gemini_new_comment_a?: string | null
+          gemini_new_comment_b?: string | null
+          gemini_new_comment_c?: string | null
+          gemini_new_comment_d?: string | null
+          gemini_new_comment_e?: string | null
+          gemini_new_general_comment?: string | null
+          gemini_regenerated_option_a?: string | null
+          gemini_regenerated_option_b?: string | null
+          gemini_regenerated_option_c?: string | null
+          gemini_regenerated_option_d?: string | null
+          gemini_regenerated_option_e?: string | null
+          gemini_regenerated_question?: string | null
           id?: string
+          mistral_chosen_answer?: string | null
+          mistral_comment_a?: string | null
+          mistral_comment_b?: string | null
+          mistral_comment_c?: string | null
+          mistral_comment_d?: string | null
+          mistral_comment_e?: string | null
+          mistral_general_comment?: string | null
+          mistral_model_version?: string | null
           openai_comment_a?: string | null
           openai_comment_b?: string | null
           openai_comment_c?: string | null
           openai_comment_d?: string | null
           openai_comment_e?: string | null
           openai_general_comment?: string | null
+          perplexity_chosen_answer?: string | null
+          perplexity_comment_a?: string | null
+          perplexity_comment_b?: string | null
+          perplexity_comment_c?: string | null
+          perplexity_comment_d?: string | null
+          perplexity_comment_e?: string | null
+          perplexity_general_comment?: string | null
+          perplexity_model_version?: string | null
           processing_status?: string | null
           question_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          chatgpt_chosen_answer?: string | null
+          chatgpt_comment_a?: string | null
+          chatgpt_comment_b?: string | null
+          chatgpt_comment_c?: string | null
+          chatgpt_comment_d?: string | null
+          chatgpt_comment_e?: string | null
+          chatgpt_general_comment?: string | null
+          chatgpt_model_version?: string | null
+          chatgpt_regenerated_option_a?: string | null
+          chatgpt_regenerated_option_b?: string | null
+          chatgpt_regenerated_option_c?: string | null
+          chatgpt_regenerated_option_d?: string | null
+          chatgpt_regenerated_option_e?: string | null
+          chatgpt_regenerated_question?: string | null
           claude_comment_a?: string | null
           claude_comment_b?: string | null
           claude_comment_c?: string | null
@@ -73,19 +191,57 @@ export type Database = {
           claude_comment_e?: string | null
           claude_general_comment?: string | null
           created_at?: string | null
+          deepseek_chosen_answer?: string | null
+          deepseek_comment_a?: string | null
+          deepseek_comment_b?: string | null
+          deepseek_comment_c?: string | null
+          deepseek_comment_d?: string | null
+          deepseek_comment_e?: string | null
+          deepseek_general_comment?: string | null
+          deepseek_model_version?: string | null
+          gemini_chosen_answer?: string | null
           gemini_comment_a?: string | null
           gemini_comment_b?: string | null
           gemini_comment_c?: string | null
           gemini_comment_d?: string | null
           gemini_comment_e?: string | null
           gemini_general_comment?: string | null
+          gemini_model_version?: string | null
+          gemini_new_comment_a?: string | null
+          gemini_new_comment_b?: string | null
+          gemini_new_comment_c?: string | null
+          gemini_new_comment_d?: string | null
+          gemini_new_comment_e?: string | null
+          gemini_new_general_comment?: string | null
+          gemini_regenerated_option_a?: string | null
+          gemini_regenerated_option_b?: string | null
+          gemini_regenerated_option_c?: string | null
+          gemini_regenerated_option_d?: string | null
+          gemini_regenerated_option_e?: string | null
+          gemini_regenerated_question?: string | null
           id?: string
+          mistral_chosen_answer?: string | null
+          mistral_comment_a?: string | null
+          mistral_comment_b?: string | null
+          mistral_comment_c?: string | null
+          mistral_comment_d?: string | null
+          mistral_comment_e?: string | null
+          mistral_general_comment?: string | null
+          mistral_model_version?: string | null
           openai_comment_a?: string | null
           openai_comment_b?: string | null
           openai_comment_c?: string | null
           openai_comment_d?: string | null
           openai_comment_e?: string | null
           openai_general_comment?: string | null
+          perplexity_chosen_answer?: string | null
+          perplexity_comment_a?: string | null
+          perplexity_comment_b?: string | null
+          perplexity_comment_c?: string | null
+          perplexity_comment_d?: string | null
+          perplexity_comment_e?: string | null
+          perplexity_general_comment?: string | null
+          perplexity_model_version?: string | null
           processing_status?: string | null
           question_id?: string | null
           updated_at?: string | null
@@ -100,35 +256,94 @@ export type Database = {
           },
         ]
       }
-      ai_commentary_cron_logs: {
+      ai_commentary_batch_jobs: {
         Row: {
+          batch_id: string
           created_at: string
-          error_message: string | null
-          executed_at: string
-          execution_time_ms: number | null
+          error_file_id: string | null
           id: string
-          questions_processed: number | null
-          status: string | null
+          input_file_id: string | null
+          output_file_id: string | null
+          provider: string
+          question_ids: string[]
+          status: string
+          updated_at: string
         }
         Insert: {
+          batch_id: string
           created_at?: string
-          error_message?: string | null
-          executed_at?: string
-          execution_time_ms?: number | null
+          error_file_id?: string | null
           id?: string
-          questions_processed?: number | null
-          status?: string | null
+          input_file_id?: string | null
+          output_file_id?: string | null
+          provider: string
+          question_ids: string[]
+          status?: string
+          updated_at?: string
         }
         Update: {
+          batch_id?: string
           created_at?: string
-          error_message?: string | null
-          executed_at?: string
-          execution_time_ms?: number | null
+          error_file_id?: string | null
           id?: string
-          questions_processed?: number | null
-          status?: string | null
+          input_file_id?: string | null
+          output_file_id?: string | null
+          provider?: string
+          question_ids?: string[]
+          status?: string
+          updated_at?: string
         }
         Relationships: []
+      }
+      ai_commentary_job_queue: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          question_id: string
+          status: string
+          target_level: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          question_id: string
+          status?: string
+          target_level?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          question_id?: string
+          status?: string
+          target_level?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_commentary_job_queue_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ai_commentary_settings: {
         Row: {
@@ -140,6 +355,7 @@ export type Database = {
           id: string
           lifetime_promotion_end_date: string | null
           lifetime_status: boolean | null
+          max_free_sessions: number | null
           models_enabled: Json | null
           processing_delay_minutes: number | null
           rate_limit_per_user_per_day: number | null
@@ -154,6 +370,7 @@ export type Database = {
           id?: string
           lifetime_promotion_end_date?: string | null
           lifetime_status?: boolean | null
+          max_free_sessions?: number | null
           models_enabled?: Json | null
           processing_delay_minutes?: number | null
           rate_limit_per_user_per_day?: number | null
@@ -168,12 +385,48 @@ export type Database = {
           id?: string
           lifetime_promotion_end_date?: string | null
           lifetime_status?: boolean | null
+          max_free_sessions?: number | null
           models_enabled?: Json | null
           processing_delay_minutes?: number | null
           rate_limit_per_user_per_day?: number | null
           updated_at?: string
         }
         Relationships: []
+      }
+      ai_commentary_state: {
+        Row: {
+          last_full_content_hash: string | null
+          last_full_processed_at: string | null
+          last_partial_content_hash: string | null
+          last_partial_processed_at: string | null
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_full_content_hash?: string | null
+          last_full_processed_at?: string | null
+          last_partial_content_hash?: string | null
+          last_partial_processed_at?: string | null
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_full_content_hash?: string | null
+          last_full_processed_at?: string | null
+          last_partial_content_hash?: string | null
+          last_partial_processed_at?: string | null
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_commentary_state_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ai_commentary_summaries: {
         Row: {
@@ -218,6 +471,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ai_commentary_summaries_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_private_credits_ledger: {
+        Row: {
+          created_at: string
+          credits_delta: number
+          event_ts: string
+          id: string
+          ref: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_delta: number
+          event_ts?: string
+          id?: string
+          ref: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_delta?: number
+          event_ts?: string
+          id?: string
+          ref?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_private_quota_ledger: {
+        Row: {
+          created_at: string
+          event_ts: string
+          id: string
+          kind: string
+          question_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_ts?: string
+          id?: string
+          kind: string
+          question_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_ts?: string
+          id?: string
+          kind?: string
+          question_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_private_quota_ledger_question_id_fkey"
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
@@ -333,117 +651,29 @@ export type Database = {
         }
         Relationships: []
       }
-      draft_questions: {
+      disposable_email_blocklist: {
         Row: {
-          comment: string | null
-          correct_answer: string
           created_at: string
-          creator_id: string
-          difficulty: number | null
+          domains: Json
+          fetched_at: string
           id: string
-          option_a: string
-          option_b: string
-          option_c: string
-          option_d: string
-          option_e: string
-          question: string
-          session_id: string
-          status: string | null
           updated_at: string
         }
         Insert: {
-          comment?: string | null
-          correct_answer: string
           created_at?: string
-          creator_id: string
-          difficulty?: number | null
+          domains?: Json
+          fetched_at?: string
           id?: string
-          option_a: string
-          option_b: string
-          option_c: string
-          option_d: string
-          option_e: string
-          question: string
-          session_id: string
-          status?: string | null
           updated_at?: string
         }
         Update: {
-          comment?: string | null
-          correct_answer?: string
           created_at?: string
-          creator_id?: string
-          difficulty?: number | null
+          domains?: Json
+          fetched_at?: string
           id?: string
-          option_a?: string
-          option_b?: string
-          option_c?: string
-          option_d?: string
-          option_e?: string
-          question?: string
-          session_id?: string
-          status?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "draft_questions_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "exam_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      exam_sessions: {
-        Row: {
-          created_at: string
-          creator_id: string
-          description: string | null
-          id: string
-          is_active: boolean | null
-          semester: string | null
-          subject: string
-          title: string
-          university_id: string | null
-          updated_at: string
-          year: string | null
-        }
-        Insert: {
-          created_at?: string
-          creator_id: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          semester?: string | null
-          subject: string
-          title: string
-          university_id?: string | null
-          updated_at?: string
-          year?: string | null
-        }
-        Update: {
-          created_at?: string
-          creator_id?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          semester?: string | null
-          subject?: string
-          title?: string
-          university_id?: string | null
-          updated_at?: string
-          year?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "exam_sessions_university_id_fkey"
-            columns: ["university_id"]
-            isOneToOne: false
-            referencedRelation: "universities"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       job_progress: {
         Row: {
@@ -487,6 +717,7 @@ export type Database = {
           email: string | null
           id: string
           is_admin: boolean | null
+          is_email_exported: boolean | null
           is_email_verified: boolean | null
           is_premium: boolean | null
           last_reminder_at: string | null
@@ -503,6 +734,7 @@ export type Database = {
           email?: string | null
           id: string
           is_admin?: boolean | null
+          is_email_exported?: boolean | null
           is_email_verified?: boolean | null
           is_premium?: boolean | null
           last_reminder_at?: string | null
@@ -519,6 +751,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_admin?: boolean | null
+          is_email_exported?: boolean | null
           is_email_verified?: boolean | null
           is_premium?: boolean | null
           last_reminder_at?: string | null
@@ -573,11 +806,60 @@ export type Database = {
         }
         Relationships: []
       }
+      question_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_private: boolean
+          parent_id: string | null
+          question_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_private?: boolean
+          parent_id?: string | null
+          question_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_private?: boolean
+          parent_id?: string | null
+          question_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "question_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_comments_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questions: {
         Row: {
           ai_commentary_processed_at: string | null
           ai_commentary_queued_at: string | null
           ai_commentary_status: string | null
+          case_text: string | null
           comment: string | null
           correct_answer: string
           created_at: string
@@ -599,6 +881,8 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
+          question_case: number | null
+          question_exam_number: number | null
           show_image_after_answer: boolean | null
           subject: string
           university_id: string | null
@@ -610,6 +894,7 @@ export type Database = {
           ai_commentary_processed_at?: string | null
           ai_commentary_queued_at?: string | null
           ai_commentary_status?: string | null
+          case_text?: string | null
           comment?: string | null
           correct_answer: string
           created_at?: string
@@ -631,6 +916,8 @@ export type Database = {
           option_d: string
           option_e: string
           question: string
+          question_case?: number | null
+          question_exam_number?: number | null
           show_image_after_answer?: boolean | null
           subject: string
           university_id?: string | null
@@ -642,6 +929,7 @@ export type Database = {
           ai_commentary_processed_at?: string | null
           ai_commentary_queued_at?: string | null
           ai_commentary_status?: string | null
+          case_text?: string | null
           comment?: string | null
           correct_answer?: string
           created_at?: string
@@ -663,6 +951,8 @@ export type Database = {
           option_d?: string
           option_e?: string
           question?: string
+          question_case?: number | null
+          question_exam_number?: number | null
           show_image_after_answer?: boolean | null
           subject?: string
           university_id?: string | null
@@ -680,81 +970,12 @@ export type Database = {
           },
         ]
       }
-      session_activities: {
-        Row: {
-          activity_type: string
-          created_at: string | null
-          entity_id: string | null
-          id: string
-          message: string
-          session_id: string
-          user_id: string
-        }
-        Insert: {
-          activity_type: string
-          created_at?: string | null
-          entity_id?: string | null
-          id?: string
-          message: string
-          session_id: string
-          user_id: string
-        }
-        Update: {
-          activity_type?: string
-          created_at?: string | null
-          entity_id?: string | null
-          id?: string
-          message?: string
-          session_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "session_activities_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "exam_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      session_participants: {
-        Row: {
-          id: string
-          joined_at: string
-          role: string
-          session_id: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          joined_at?: string
-          role?: string
-          session_id: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          joined_at?: string
-          role?: string
-          session_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "session_participants_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "exam_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       session_question_progress: {
         Row: {
           attempts_count: number
           created_at: string
           id: string
+          initial_answer: string | null
           is_correct: boolean | null
           last_answer: string | null
           question_id: string
@@ -767,6 +988,7 @@ export type Database = {
           attempts_count?: number
           created_at?: string
           id?: string
+          initial_answer?: string | null
           is_correct?: boolean | null
           last_answer?: string | null
           question_id: string
@@ -779,6 +1001,7 @@ export type Database = {
           attempts_count?: number
           created_at?: string
           id?: string
+          initial_answer?: string | null
           is_correct?: boolean | null
           last_answer?: string | null
           question_id?: string
@@ -803,6 +1026,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subject_jobs: {
+        Row: {
+          available_subjects: string[] | null
+          created_at: string
+          errors: number
+          exam_name: string | null
+          id: string
+          message: string | null
+          only_null_subjects: boolean | null
+          payload: Json | null
+          progress: number
+          result: Json | null
+          status: string
+          total: number
+          type: string
+          university_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          available_subjects?: string[] | null
+          created_at?: string
+          errors?: number
+          exam_name?: string | null
+          id: string
+          message?: string | null
+          only_null_subjects?: boolean | null
+          payload?: Json | null
+          progress?: number
+          result?: Json | null
+          status: string
+          total?: number
+          type: string
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          available_subjects?: string[] | null
+          created_at?: string
+          errors?: number
+          exam_name?: string | null
+          id?: string
+          message?: string | null
+          only_null_subjects?: boolean | null
+          payload?: Json | null
+          progress?: number
+          result?: Json | null
+          status?: string
+          total?: number
+          type?: string
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       subscribers: {
         Row: {
@@ -903,6 +1183,38 @@ export type Database = {
         }
         Relationships: []
       }
+      university_moderators: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          university_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          university_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          university_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "university_moderators_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       upcoming_exam_questions: {
         Row: {
           created_at: string
@@ -945,6 +1257,7 @@ export type Database = {
           created_by: string
           description: string | null
           due_date: string
+          exam_name: string | null
           id: string
           subject: string | null
           title: string
@@ -956,6 +1269,7 @@ export type Database = {
           created_by: string
           description?: string | null
           due_date: string
+          exam_name?: string | null
           id?: string
           subject?: string | null
           title: string
@@ -967,6 +1281,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           due_date?: string
+          exam_name?: string | null
           id?: string
           subject?: string | null
           title?: string
@@ -1010,13 +1325,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_ignored_questions: {
+        Row: {
+          created_at: string
+          id: string
+          marked_unclear_at: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          marked_unclear_at?: string
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          marked_unclear_at?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_unclear_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_preferences: {
         Row: {
           archived_datasets: string[] | null
           created_at: string | null
+          enhanced_ai_version: string | null
           id: string
           immediate_feedback: boolean | null
           keyboard_bindings: Json | null
+          selected_ai_models: Json | null
           selected_university_datasets: string[] | null
           statistics_date_range: Json | null
           updated_at: string | null
@@ -1025,9 +1374,11 @@ export type Database = {
         Insert: {
           archived_datasets?: string[] | null
           created_at?: string | null
+          enhanced_ai_version?: string | null
           id?: string
           immediate_feedback?: boolean | null
           keyboard_bindings?: Json | null
+          selected_ai_models?: Json | null
           selected_university_datasets?: string[] | null
           statistics_date_range?: Json | null
           updated_at?: string | null
@@ -1036,13 +1387,45 @@ export type Database = {
         Update: {
           archived_datasets?: string[] | null
           created_at?: string | null
+          enhanced_ai_version?: string | null
           id?: string
           immediate_feedback?: boolean | null
           keyboard_bindings?: Json | null
+          selected_ai_models?: Json | null
           selected_university_datasets?: string[] | null
           statistics_date_range?: Json | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_private_ai_quota: {
+        Row: {
+          created_at: string
+          free_used_count: number
+          id: string
+          month_start: string
+          paid_credits_remaining: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          free_used_count?: number
+          id?: string
+          month_start: string
+          paid_credits_remaining?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          free_used_count?: number
+          id?: string
+          month_start?: string
+          paid_credits_remaining?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1090,46 +1473,112 @@ export type Database = {
           },
         ]
       }
-      user_ignored_questions: {
-        Row: {
-          created_at: string
-          id: string
-          marked_unclear_at: string
-          question_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          marked_unclear_at?: string
-          question_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          marked_unclear_at?: string
-          question_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_ignored_questions_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      ai_commentary_claim_next_batch: {
+        Args: { batch_size: number; lease_seconds?: number; worker_id: string }
+        Returns: {
+          attempts: number
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          question_id: string
+          status: string
+          target_level: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ai_commentary_job_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      ai_private_credits_remaining: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      ai_private_full_used_30d: { Args: { p_user_id: string }; Returns: number }
+      ai_question_content_hash: {
+        Args: { p_question_id: string }
+        Returns: string
+      }
       check_user_university_match: {
         Args: { university_uuid: string; user_uuid: string }
         Returns: boolean
+      }
+      exam_recon_assign_tasks: {
+        Args: { p_seed?: string; p_workspace_id: string }
+        Returns: string
+      }
+      exam_recon_create_split_canonical: {
+        Args: { p_created_by?: string; p_from: string }
+        Returns: string
+      }
+      exam_recon_find_similar_canonicals: {
+        Args: {
+          p_canonical_id: string
+          p_limit?: number
+          p_threshold?: number
+          p_workspace_id: string
+        }
+        Returns: {
+          candidate_id: string
+          normalized_prompt: string
+          prompt_hash: string
+          similarity: number
+        }[]
+      }
+      exam_recon_is_member: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      exam_recon_is_moderator: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      exam_recon_mark_stale_tasks: {
+        Args: { p_stale_after?: string; p_workspace_id: string }
+        Returns: number
+      }
+      exam_recon_merge_canonicals: {
+        Args: { p_from: string; p_reason?: string; p_to: string }
+        Returns: undefined
+      }
+      exam_recon_normalize_text: { Args: { p_text: string }; Returns: string }
+      exam_recon_prompt_hash: { Args: { p_text: string }; Returns: string }
+      exam_recon_publish_workspace: {
+        Args: { p_workspace_id: string }
+        Returns: number
+      }
+      exam_recon_resolve_canonical: {
+        Args: { p_canonical_id: string }
+        Returns: string
+      }
+      exam_recon_split_move_slots: {
+        Args: {
+          p_from: string
+          p_new: string
+          p_reason?: string
+          p_slot_ids: string[]
+        }
+        Returns: undefined
+      }
+      get_exam_cohort_stats: {
+        Args: { p_exam_id: string; p_user_id: string }
+        Returns: Database["public"]["CompositeTypes"]["exam_cohort_stats"]
+        SetofOptions: {
+          from: "*"
+          to: "exam_cohort_stats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_question_session_id: {
         Args: { question_uuid: string }
@@ -1142,20 +1591,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_session_host: {
-        Args: { session_uuid: string; user_uuid: string }
-        Returns: boolean
-      }
-      is_session_participant: {
-        Args: { session_uuid: string; user_uuid: string }
-        Returns: boolean
-      }
-      should_auto_trigger_ai_commentary: {
-        Args: { user_id_param: string }
+      is_admin: { Args: never; Returns: boolean }
+      is_premium_user: { Args: { p_user_id: string }; Returns: boolean }
+      is_verified_in_university: {
+        Args: { p_university_id: string }
         Returns: boolean
       }
       update_question_answer_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           execution_time_ms: number
           updated_count: number
@@ -1166,7 +1609,26 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
-      [_ in never]: never
+      exam_cohort_stats: {
+        mean_score: number | null
+        stddev_score: number | null
+        sample_size: number | null
+        user_score: number | null
+        user_percentile: number | null
+        user_answered: number | null
+        user_correct: number | null
+        user_answered_percentile: number | null
+        user_accuracy_percentile: number | null
+        cohort_answered_mean: number | null
+        cohort_answered_median: number | null
+        cohort_answered_p80: number | null
+        cohort_accuracy_mean: number | null
+        cohort_accuracy_median: number | null
+        p0: number | null
+        score_distribution: Json | null
+        answered_distribution: Json | null
+        accuracy_distribution: Json | null
+      }
     }
   }
 }
@@ -1179,12 +1641,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1208,11 +1670,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1233,11 +1695,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1258,11 +1720,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1275,11 +1737,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

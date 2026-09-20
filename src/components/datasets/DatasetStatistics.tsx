@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Progress } from "@/components/ui/progress";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { Progress } from '@/components/ui/progress';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface DatasetStatisticsProps {
   questions: Question[];
@@ -38,27 +37,30 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         supabase
           .from('session_question_progress')
           .select('question_id, is_correct, updated_at, created_at')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id),
       ]);
 
       if (userProgressResult.error) throw userProgressResult.error;
       if (sessionProgressResult.error) throw sessionProgressResult.error;
 
       // Merge progress: prioritize session_question_progress, take latest per question
-      const progressMap = new Map<string, { question_id: string; is_correct: boolean | null; ts: number; source: 'session' | 'user' }>();
+      const progressMap = new Map<
+        string,
+        { question_id: string; is_correct: boolean | null; ts: number; source: 'session' | 'user' }
+      >();
 
       // First, process session_question_progress (newer system, takes priority)
       (sessionProgressResult.data || []).forEach((p: any) => {
         if (!p.question_id) return;
         const ts = new Date(p.updated_at || p.created_at).getTime();
         const existing = progressMap.get(p.question_id);
-        
+
         if (!existing || ts > existing.ts || (ts === existing.ts && existing.source === 'user')) {
           progressMap.set(p.question_id, {
             question_id: p.question_id,
             is_correct: p.is_correct,
             ts,
-            source: 'session'
+            source: 'session',
           });
         }
       });
@@ -68,14 +70,14 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         if (!p.question_id) return;
         const ts = new Date(p.updated_at || p.created_at).getTime();
         const existing = progressMap.get(p.question_id);
-        
+
         if (!existing || (ts > existing.ts && existing.source === 'session')) {
           // Only replace if significantly newer (session takes priority for equal timestamps)
           progressMap.set(p.question_id, {
             question_id: p.question_id,
             is_correct: p.is_correct,
             ts,
-            source: 'user'
+            source: 'user',
           });
         }
       });
@@ -83,21 +85,21 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
       // Return simplified format
       return Array.from(progressMap.values()).map(({ question_id, is_correct }) => ({
         question_id,
-        is_correct
+        is_correct,
       }));
     },
-    enabled: !!user
+    enabled: !!user,
   });
 
   // Filter progress data to only include questions from this dataset
-  const datasetQuestionIds = questions.map(q => q.id);
-  const filteredProgress = mergedProgress?.filter(progress =>
-    datasetQuestionIds.includes(progress.question_id)
+  const datasetQuestionIds = questions.map((q) => q.id);
+  const filteredProgress = mergedProgress?.filter((progress) =>
+    datasetQuestionIds.includes(progress.question_id),
   );
 
   const totalQuestions = questions.length;
   const answeredQuestions = filteredProgress?.length || 0;
-  const correctAnswers = filteredProgress?.filter(p => p.is_correct)?.length || 0;
+  const correctAnswers = filteredProgress?.filter((p) => p.is_correct)?.length || 0;
   const wrongAnswers = answeredQuestions - correctAnswers;
 
   const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
@@ -111,7 +113,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     const stats: Record<string, { total: number; answered: number; correct: number }> = {};
 
     // Initialize stats for each subject
-    questions.forEach(q => {
+    questions.forEach((q) => {
       if (!stats[q.subject]) {
         stats[q.subject] = { total: 0, answered: 0, correct: 0 };
       }
@@ -119,8 +121,8 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     });
 
     // Add progress stats for each subject
-    filteredProgress?.forEach(progress => {
-      const question = questions.find(q => q.id === progress.question_id);
+    filteredProgress?.forEach((progress) => {
+      const question = questions.find((q) => q.id === progress.question_id);
       if (question) {
         stats[question.subject].answered += 1;
         if (progress.is_correct) {
@@ -132,10 +134,13 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     // Convert to array and sort by total questions descending
     return Object.entries(stats)
       .sort(([, a], [, b]) => b.total - a.total)
-      .reduce((acc, [subject, stats]) => {
-        acc[subject] = stats;
-        return acc;
-      }, {} as Record<string, { total: number; answered: number; correct: number }>);
+      .reduce(
+        (acc, [subject, stats]) => {
+          acc[subject] = stats;
+          return acc;
+        },
+        {} as Record<string, { total: number; answered: number; correct: number }>,
+      );
   }, [questions, filteredProgress]);
 
   return (
@@ -145,30 +150,42 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2">Gesamtfortschritt</h3>
           <Progress value={answeredPercentage} className="h-2 mb-2 dark:bg-zinc-800">
-            <div className="h-full bg-primary transition-all dark:bg-zinc-400" style={{ width: `${answeredPercentage}%` }} />
+            <div
+              className="h-full bg-primary transition-all dark:bg-zinc-400"
+              style={{ width: `${answeredPercentage}%` }}
+            />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {answeredQuestions} von {totalQuestions} Fragen beantwortet ({answeredPercentage.toFixed(0)}%)
+            {answeredQuestions} von {totalQuestions} Fragen beantwortet (
+            {answeredPercentage.toFixed(0)}%)
           </p>
         </div>
-        
+
         {/* Richtige Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-green-600">Richtige Antworten</h3>
           <Progress value={correctPercentageBar} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
-            <div className="h-full bg-zinc-100 transition-all dark:bg-zinc-800" style={{ width: `${correctPercentageBar}%` }} />
+            <div
+              className="h-full bg-zinc-100 transition-all dark:bg-zinc-800"
+              style={{ width: `${correctPercentageBar}%` }}
+            />
           </Progress>
           <p className="text-sm text-muted-foreground">
-            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}%)<br />
+            {correctAnswers} von {totalQuestions} Fragen richtig ({correctPercentageBar.toFixed(0)}
+            %)
+            <br />
             {correctPercentage.toFixed(0)}% der beantworteten Fragen
           </p>
         </div>
-        
+
         {/* Falsche Antworten */}
         <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-2 text-red-600">Falsche Antworten</h3>
           <Progress value={wrongPercentageBar} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
-            <div className="h-full bg-zinc-100 transition-all dark:bg-zinc-800" style={{ width: `${wrongPercentageBar}%` }} />
+            <div
+              className="h-full bg-zinc-100 transition-all dark:bg-zinc-800"
+              style={{ width: `${wrongPercentageBar}%` }}
+            />
           </Progress>
           <p className="text-sm text-muted-foreground">
             {wrongAnswers} von {totalQuestions} Fragen falsch ({wrongPercentageBar.toFixed(0)}%)
@@ -176,14 +193,12 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         </div>
       </div>
 
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="border rounded-lg"
-      >
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border rounded-lg">
         <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
           <h3 className="text-lg font-semibold">Statistik nach Fächern</h3>
-          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`}
+          />
         </CollapsibleTrigger>
         <CollapsibleContent className="px-4 pb-4">
           <div className="space-y-4">
@@ -196,8 +211,8 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <Progress 
-                    value={(stats.correct / stats.total) * 100} 
+                  <Progress
+                    value={(stats.correct / stats.total) * 100}
                     className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
                   >
                     <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />

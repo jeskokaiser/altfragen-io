@@ -1,19 +1,42 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Question } from '@/types/Question';
-import { AlertCircle, Upload, FileText, X, Lock, GraduationCap, Globe, Crown, Scan } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertCircle,
+  Upload,
+  FileText,
+  X,
+  Lock,
+  GraduationCap,
+  Globe,
+  Crown,
+  Scan,
+} from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
-import { Progress } from "@/components/ui/progress";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from '@/components/ui/progress';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { showToast } from '@/utils/toast';
 import { fetchQuestionsByFilename } from '@/services/DatabaseService';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,8 +44,8 @@ import { supabase } from '@/integrations/supabase/client';
 const metadataSchema = z.object({
   examName: z.string().optional(),
   examYear: z.string().optional(),
-  examSemester: z.enum(["WS", "SS"]).optional(),
-  subject: z.string().optional()
+  examSemester: z.enum(['WS', 'SS']).optional(),
+  subject: z.string().optional(),
 });
 
 type MetadataFormValues = z.infer<typeof metadataSchema>;
@@ -32,7 +55,10 @@ interface OCRUploadProps {
   visibility: 'private' | 'university' | 'public';
 }
 
-const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: initialVisibility }) => {
+const OCRUpload: React.FC<OCRUploadProps> = ({
+  onQuestionsLoaded,
+  visibility: initialVisibility,
+}) => {
   const { user, universityId, universityName } = useAuth();
   const { subscribed, loading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
@@ -40,7 +66,9 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(initialVisibility);
+  const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>(
+    initialVisibility,
+  );
 
   // Generate years from 2010 to current year
   const currentYear = new Date().getFullYear();
@@ -49,11 +77,11 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
   const form = useForm<MetadataFormValues>({
     resolver: zodResolver(metadataSchema),
     defaultValues: {
-      examName: "",
+      examName: '',
       examYear: new Date().getFullYear().toString(),
       examSemester: undefined,
-      subject: ""
-    }
+      subject: '',
+    },
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,9 +91,9 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
     setError(null);
 
     if (!file) {
-      setError("Bitte wähle eine Datei aus");
-      showToast.error("Keine Datei ausgewählt", {
-        description: "Bitte wähle eine Datei aus"
+      setError('Bitte wähle eine Datei aus');
+      showToast.error('Keine Datei ausgewählt', {
+        description: 'Bitte wähle eine Datei aus',
       });
       return;
     }
@@ -76,9 +104,9 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
     const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
 
     if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-      setError("Bitte wähle eine PDF-, PNG- oder JPEG-Datei aus");
-      showToast.error("Ungültiges Dateiformat", {
-        description: "Es werden nur PDF-, PNG- und JPEG-Dateien unterstützt"
+      setError('Bitte wähle eine PDF-, PNG- oder JPEG-Datei aus');
+      showToast.error('Ungültiges Dateiformat', {
+        description: 'Es werden nur PDF-, PNG- und JPEG-Dateien unterstützt',
       });
       return;
     }
@@ -88,15 +116,15 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
     if (file.size > MAX_FILE_SIZE) {
       const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
       setError(`Datei zu groß: ${sizeMB}MB. Maximum erlaubte Größe ist 100MB.`);
-      showToast.error("Datei zu groß", {
-        description: `Die Datei ist ${sizeMB}MB groß. Maximum erlaubte Größe ist 100MB.`
+      showToast.error('Datei zu groß', {
+        description: `Die Datei ist ${sizeMB}MB groß. Maximum erlaubte Größe ist 100MB.`,
       });
       return;
     }
 
     setSelectedFile(file);
-    showToast.info("Datei ausgewählt", {
-      description: `${file.name} wurde ausgewählt`
+    showToast.info('Datei ausgewählt', {
+      description: `${file.name} wurde ausgewählt`,
     });
   };
 
@@ -108,9 +136,9 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
 
   const handleUpload = async () => {
     if (!selectedFile || !user?.id) {
-      setError("Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist");
-      showToast.error("Upload nicht möglich", {
-        description: "Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist"
+      setError('Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist');
+      showToast.error('Upload nicht möglich', {
+        description: 'Bitte wähle eine Datei aus und stelle sicher, dass du angemeldet bist',
       });
       return;
     }
@@ -120,8 +148,8 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
     setError(null);
     setIsUploading(true);
     setUploadProgress(10);
-    showToast.info("OCR-Verarbeitung gestartet", {
-      description: "Deine Datei wird verarbeitet..."
+    showToast.info('OCR-Verarbeitung gestartet', {
+      description: 'Deine Datei wird verarbeitet...',
     });
 
     try {
@@ -129,11 +157,11 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
       formData.append('file', selectedFile);
       formData.append('userId', user.id);
       formData.append('visibility', visibility);
-      
+
       if (universityId && visibility === 'university') {
         formData.append('universityId', universityId);
       }
-      
+
       if (formValues.examName) {
         formData.append('examName', formValues.examName);
       }
@@ -152,7 +180,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
       // Call OCR service
       const response = await fetch('https://api.altfragen.io/ocr-service/process', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       setUploadProgress(70);
@@ -161,21 +189,23 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
         const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
         // Handle 413 Payload Too Large specifically
         if (response.status === 413) {
-          throw new Error(errorData.detail || "Datei zu groß. Maximum erlaubte Größe ist 100MB.");
+          throw new Error(errorData.detail || 'Datei zu groß. Maximum erlaubte Größe ist 100MB.');
         }
-        throw new Error(errorData.detail || errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.detail || errorData.error || `HTTP error! status: ${response.status}`,
+        );
       }
 
       const data = await response.json();
       setUploadProgress(90);
 
       if (!data.success) {
-        throw new Error(data.error || "OCR-Verarbeitung fehlgeschlagen");
+        throw new Error(data.error || 'OCR-Verarbeitung fehlgeschlagen');
       }
 
       // Fetch the saved questions from database
       const savedQuestions = await fetchQuestionsByFilename(selectedFile.name, user.id);
-      
+
       setUploadProgress(100);
       setIsUploading(false);
 
@@ -191,31 +221,31 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
               .eq('created_by', user.id)
               .eq('exam_name', formValues.examName.trim())
               .maybeSingle();
-            
+
             if (matchingExam) {
-              showToast.success("Fragen erfolgreich extrahiert", {
-                description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert, gespeichert und automatisch zur Prüfung "${matchingExam.title}" verknüpft`
+              showToast.success('Fragen erfolgreich extrahiert', {
+                description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert, gespeichert und automatisch zur Prüfung "${matchingExam.title}" verknüpft`,
               });
             } else {
-              showToast.success("Fragen erfolgreich extrahiert", {
-                description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert. Erstelle eine Prüfung mit exam_name "${formValues.examName.trim()}" um sie zu verknüpfen.`
+              showToast.success('Fragen erfolgreich extrahiert', {
+                description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert. Erstelle eine Prüfung mit exam_name "${formValues.examName.trim()}" um sie zu verknüpfen.`,
               });
             }
           } catch (linkError) {
             // If check fails, still show success for the upload
             console.error('Error checking exam link:', linkError);
-            showToast.success("Fragen erfolgreich extrahiert", {
-              description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert`
+            showToast.success('Fragen erfolgreich extrahiert', {
+              description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert`,
             });
           }
         } else {
-          showToast.success("Fragen erfolgreich extrahiert", {
-            description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert`
+          showToast.success('Fragen erfolgreich extrahiert', {
+            description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert`,
           });
         }
-        
+
         onQuestionsLoaded(savedQuestions);
-        
+
         // Reset form
         setSelectedFile(null);
         form.reset();
@@ -223,25 +253,25 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
           fileInputRef.current.value = '';
         }
       } else {
-        showToast.warning("Keine Fragen gefunden", {
-          description: "Es wurden keine Fragen in der Datei gefunden"
+        showToast.warning('Keine Fragen gefunden', {
+          description: 'Es wurden keine Fragen in der Datei gefunden',
         });
       }
     } catch (error: any) {
       console.error('Error processing OCR:', error);
-      setError(error.message || "Ein unerwarteter Fehler ist aufgetreten");
+      setError(error.message || 'Ein unerwarteter Fehler ist aufgetreten');
       setIsUploading(false);
       setUploadProgress(0);
-      
-      showToast.error("Fehler bei der OCR-Verarbeitung", {
-        description: error.message || "Bitte versuche es später erneut"
+
+      showToast.error('Fehler bei der OCR-Verarbeitung', {
+        description: error.message || 'Bitte versuche es später erneut',
       });
     }
   };
 
   const getUniversityContextMessage = () => {
     if (!universityId) {
-      return "Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.";
+      return 'Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.';
     }
     return `Du bist der Universität ${universityName || ''} zugeordnet und kannst Fragen mit anderen Studierenden teilen.`;
   };
@@ -255,9 +285,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
             <Scan className="h-5 w-5" />
             OCR-Upload
           </CardTitle>
-          <CardDescription>
-            Premium Feature
-          </CardDescription>
+          <CardDescription>Premium Feature</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-center py-8 space-y-4">
@@ -267,10 +295,11 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
                 Premium Feature
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Der OCR-Upload ist nur für Premium-Nutzer verfügbar. Upgrade zu Premium, um Dokumente hochzuladen und automatisch Fragen zu extrahieren.
+                Der OCR-Upload ist nur für Premium-Nutzer verfügbar. Upgrade zu Premium, um
+                Dokumente hochzuladen und automatisch Fragen zu extrahieren.
               </p>
-              <Button 
-                onClick={() => navigate('/subscription')} 
+              <Button
+                onClick={() => navigate('/subscription')}
                 className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2 mx-auto"
               >
                 <Crown className="h-4 w-4" />
@@ -287,9 +316,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-xl">OCR-Upload</CardTitle>
-        <CardDescription>
-          {getUniversityContextMessage()}
-        </CardDescription>
+        <CardDescription>{getUniversityContextMessage()}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
@@ -308,10 +335,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
                 <FormItem>
                   <FormLabel>Prüfungsname (optional)</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="z.B. Anatomie Klausur" 
-                      {...field} 
-                    />
+                    <Input placeholder="z.B. Anatomie Klausur" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -325,10 +349,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Semester (optional)</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Wähle Semester" />
@@ -350,10 +371,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Jahr (optional)</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Jahr wählen" />
@@ -380,10 +398,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
                 <FormItem>
                   <FormLabel>Fach (optional)</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="z.B. Anatomie" 
-                      {...field} 
-                    />
+                    <Input placeholder="z.B. Anatomie" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -392,8 +407,8 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
 
             <div>
               <label className="text-sm font-medium mb-1 block">Sichtbarkeit der Fragen</label>
-              <Select 
-                value={visibility} 
+              <Select
+                value={visibility}
                 onValueChange={(value: 'private' | 'university' | 'public') => setVisibility(value)}
                 disabled={isUploading}
               >
@@ -450,12 +465,14 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
                 </Button>
               </div>
             ) : (
-              <div 
+              <div
                 className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors cursor-pointer"
                 onClick={triggerFileInput}
               >
                 <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground mb-1">Klicke um eine Datei hochzuladen</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Klicke um eine Datei hochzuladen
+                </p>
                 <p className="text-xs text-muted-foreground">PDF, PNG oder JPEG</p>
                 <input
                   ref={fileInputRef}
@@ -494,4 +511,3 @@ const OCRUpload: React.FC<OCRUploadProps> = ({ onQuestionsLoaded, visibility: in
 };
 
 export default OCRUpload;
-

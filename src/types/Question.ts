@@ -1,10 +1,10 @@
 export interface AnswerDistribution {
-  a: number;  // percentage
+  a: number; // percentage
   b: number;
   c: number;
   d: number;
   e: number;
-  total: number;  // sample size
+  total: number; // sample size
 }
 
 export interface Question {
@@ -34,9 +34,9 @@ export interface Question {
   ai_commentary_status?: 'pending' | 'processing' | 'completed' | 'failed';
   ai_commentary_queued_at?: string;
   ai_commentary_processed_at?: string;
-  question_case?: string | null;
+  question_case?: number | null;
   case_text?: string | null;
-  
+
   // Answer distribution statistics
   first_answer_stats?: AnswerDistribution | null;
   first_answer_stats_updated_at?: string | null;

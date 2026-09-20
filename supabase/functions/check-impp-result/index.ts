@@ -4,7 +4,7 @@
 // Checks if IMPP results are available and triggers push notification if they are
 // Designed to be called via cron job
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -38,10 +38,10 @@ serve(async (req) => {
       const payload: CheckResultPayload = await req.json();
       notificationId = payload.notificationId;
     } else {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Default notification ID if not provided
@@ -53,14 +53,14 @@ serve(async (req) => {
     // Fetch the IMPP result page with timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
+
     let response: Response;
     try {
       response = await fetch(imppUrl, {
         method: 'GET',
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; Altfragen-io/1.0; +https://altfragen.io)',
-          'Accept': 'text/html,application/xhtml+xml',
+          Accept: 'text/html,application/xhtml+xml',
           'Accept-Language': 'de-DE,de;q=0.9',
         },
         signal: controller.signal,
@@ -77,7 +77,7 @@ serve(async (req) => {
             checked_url: imppUrl,
             error: 'Request timeout',
           }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
       throw error;
@@ -88,7 +88,7 @@ serve(async (req) => {
     if (!response.ok) {
       // Log the status for monitoring
       console.log(`HTTP ${response.status}: ${response.statusText}`);
-      
+
       // Handle specific HTTP error codes gracefully
       if (response.status === 429) {
         return new Response(
@@ -99,10 +99,10 @@ serve(async (req) => {
             checked_url: imppUrl,
             error: 'Rate limit exceeded (HTTP 429)',
           }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
-      
+
       if (response.status === 403) {
         return new Response(
           JSON.stringify({
@@ -112,10 +112,10 @@ serve(async (req) => {
             checked_url: imppUrl,
             error: 'Access forbidden (HTTP 403)',
           }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
-      
+
       throw new Error(`Failed to fetch IMPP page: ${response.status} ${response.statusText}`);
     }
 
@@ -123,7 +123,7 @@ serve(async (req) => {
     console.log(`Response length: ${htmlContent.length} bytes`);
 
     // ===== FAIL-SAFE CHECKS =====
-    
+
     // 1. Check if we got blocked or rate limited (common error patterns)
     const errorPatterns = [
       'rate limit',
@@ -136,11 +136,11 @@ serve(async (req) => {
       '429 Too Many',
       'cloudflare',
     ];
-    
-    const hasErrorPattern = errorPatterns.some(pattern => 
-      htmlContent.toLowerCase().includes(pattern.toLowerCase())
+
+    const hasErrorPattern = errorPatterns.some((pattern) =>
+      htmlContent.toLowerCase().includes(pattern.toLowerCase()),
     );
-    
+
     if (hasErrorPattern) {
       console.log('Detected potential blocking/rate limiting in response');
       return new Response(
@@ -151,7 +151,7 @@ serve(async (req) => {
           checked_url: imppUrl,
           error: 'Site may be blocking requests',
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -166,7 +166,7 @@ serve(async (req) => {
           checked_url: imppUrl,
           error: 'Response is not valid HTML',
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -181,15 +181,16 @@ serve(async (req) => {
           checked_url: imppUrl,
           error: 'Response size suggests error page',
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
     // 4. Look for positive indicators that this is the actual IMPP page
-    const hasImppIndicators = htmlContent.includes('IMPP') || 
-                             htmlContent.includes('Institut für medizinische') ||
-                             htmlContent.includes('result-notification');
-    
+    const hasImppIndicators =
+      htmlContent.includes('IMPP') ||
+      htmlContent.includes('Institut für medizinische') ||
+      htmlContent.includes('result-notification');
+
     if (!hasImppIndicators) {
       console.log('Response does not contain expected IMPP page indicators');
       return new Response(
@@ -200,12 +201,12 @@ serve(async (req) => {
           checked_url: imppUrl,
           error: 'Response does not match expected IMPP page structure',
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
     // ===== ACTUAL RESULT CHECK =====
-    
+
     // Check if "Nichtverfügbarkeit" is in the content
     const hasNichtverfuegbarkeit = htmlContent.includes('Nichtverfügbarkeit');
     console.log(`Valid page received. Nichtverfügbarkeit found: ${hasNichtverfuegbarkeit}`);
@@ -219,7 +220,7 @@ serve(async (req) => {
           message: 'Results are not yet available',
           checked_url: imppUrl,
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -228,20 +229,20 @@ serve(async (req) => {
 
     // Call the broadcast-notification function
     const broadcastUrl = `${SUPABASE_URL}/functions/v1/broadcast-notification`;
-    
+
     const broadcastPayload = {
       secret: WEBHOOK_SECRET,
       title: 'M2 Ergebnisse verfügbar!',
       body: 'Die H25 M2-Ergebnisse sind jetzt online beim IMPP verfügbar.',
       url: 'https://impp.de',
-      tag: 'impp-result-available'
+      tag: 'impp-result-available',
     };
 
     const broadcastResponse = await fetch(broadcastUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       },
       body: JSON.stringify(broadcastPayload),
     });
@@ -260,18 +261,16 @@ serve(async (req) => {
         message: 'Results are available and push notification has been sent',
         broadcast_stats: broadcastResult.stats,
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
-
   } catch (error) {
     console.error('IMPP check error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });
-

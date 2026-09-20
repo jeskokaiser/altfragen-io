@@ -1,11 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
-import { 
-  CampaignRow, 
-  CampaignInsert, 
-  CampaignUpdate, 
+import {
+  CampaignRow,
+  CampaignInsert,
+  CampaignUpdate,
   EnhancedCampaign,
-  CampaignFormData 
+  CampaignFormData,
 } from '@/types/Campaign';
 
 // Legacy exports for backward compatibility
@@ -27,13 +27,13 @@ export class CampaignService {
       throw error;
     }
 
-    return data as EnhancedCampaign[] || [];
+    return (data as EnhancedCampaign[]) || [];
   }
 
   // Fetch campaigns for a specific user based on their subscription status
   static async getCampaignsForUser(isSubscribed: boolean): Promise<EnhancedCampaign[]> {
     console.log('CampaignService: Fetching campaigns for user, subscribed:', isSubscribed);
-    
+
     const { data, error } = await supabase
       .from('campaigns')
       .select('*')
@@ -47,24 +47,25 @@ export class CampaignService {
     }
 
     const now = new Date();
-    const filteredData = (data as EnhancedCampaign[])?.filter(campaign => {
-      // Check if campaign should be shown to this user based on subscription status
-      if (isSubscribed && !campaign.show_to_premium) {
-        return false;
-      }
-      
-      // Include if no end_date or end_date is in the future
-      if (campaign.end_date && new Date(campaign.end_date) <= now) {
-        return false;
-      }
-      
-      // Include if no start_date or start_date is in the past
-      if (campaign.start_date && new Date(campaign.start_date) > now) {
-        return false;
-      }
-      
-      return true;
-    }) || [];
+    const filteredData =
+      (data as EnhancedCampaign[])?.filter((campaign) => {
+        // Check if campaign should be shown to this user based on subscription status
+        if (isSubscribed && !campaign.show_to_premium) {
+          return false;
+        }
+
+        // Include if no end_date or end_date is in the future
+        if (campaign.end_date && new Date(campaign.end_date) <= now) {
+          return false;
+        }
+
+        // Include if no start_date or start_date is in the past
+        if (campaign.start_date && new Date(campaign.start_date) > now) {
+          return false;
+        }
+
+        return true;
+      }) || [];
 
     console.log('CampaignService: Filtered campaigns for user:', filteredData);
     return filteredData;
@@ -77,20 +78,25 @@ export class CampaignService {
   }
 
   // Get campaigns by type
-  static async getCampaignsByType(campaignType: string, isSubscribed: boolean = false): Promise<EnhancedCampaign[]> {
+  static async getCampaignsByType(
+    campaignType: string,
+    isSubscribed: boolean = false,
+  ): Promise<EnhancedCampaign[]> {
     const allCampaigns = await this.getCampaignsForUser(isSubscribed);
-    return allCampaigns.filter(campaign => campaign.campaign_type === campaignType);
+    return allCampaigns.filter((campaign) => campaign.campaign_type === campaignType);
   }
 
   // Create a new campaign with enhanced data
   static async createEnhancedCampaign(campaignData: CampaignFormData): Promise<EnhancedCampaign> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    const insertData: Partial<CampaignInsert> = {
+    const insertData: CampaignInsert = {
       title: campaignData.title,
       description: campaignData.description,
       campaign_type: campaignData.campaign_type,
@@ -106,14 +112,10 @@ export class CampaignService {
       end_date: campaignData.end_date || null,
       priority: campaignData.priority,
       display_type: campaignData.display_type,
-      created_by: user.id
+      created_by: user.id,
     };
 
-    const { data, error } = await supabase
-      .from('campaigns')
-      .insert(insertData)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('campaigns').insert(insertData).select().single();
 
     if (error) {
       console.error('Error creating campaign:', error);
@@ -124,9 +126,13 @@ export class CampaignService {
   }
 
   // Legacy create method - maintained for backward compatibility
-  static async createCampaign(campaign: Omit<CampaignInsert, 'id' | 'created_at' | 'updated_at' | 'created_by'>): Promise<EnhancedCampaign> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+  static async createCampaign(
+    campaign: Omit<CampaignInsert, 'id' | 'created_at' | 'updated_at' | 'created_by'>,
+  ): Promise<EnhancedCampaign> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('User not authenticated');
     }
@@ -135,7 +141,7 @@ export class CampaignService {
       .from('campaigns')
       .insert({
         ...campaign,
-        created_by: user.id
+        created_by: user.id,
       })
       .select()
       .single();
@@ -149,7 +155,10 @@ export class CampaignService {
   }
 
   // Update an existing campaign
-  static async updateCampaign(id: string, updates: Partial<CampaignUpdate>): Promise<EnhancedCampaign> {
+  static async updateCampaign(
+    id: string,
+    updates: Partial<CampaignUpdate>,
+  ): Promise<EnhancedCampaign> {
     const { data, error } = await supabase
       .from('campaigns')
       .update(updates)
@@ -166,7 +175,10 @@ export class CampaignService {
   }
 
   // Update campaign with enhanced data
-  static async updateEnhancedCampaign(id: string, campaignData: CampaignFormData): Promise<EnhancedCampaign> {
+  static async updateEnhancedCampaign(
+    id: string,
+    campaignData: CampaignFormData,
+  ): Promise<EnhancedCampaign> {
     const updateData: Partial<CampaignUpdate> = {
       title: campaignData.title,
       description: campaignData.description,
@@ -183,7 +195,7 @@ export class CampaignService {
       end_date: campaignData.end_date || null,
       priority: campaignData.priority,
       display_type: campaignData.display_type,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     return this.updateCampaign(id, updateData);
@@ -191,10 +203,7 @@ export class CampaignService {
 
   // Delete a campaign
   static async deleteCampaign(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('campaigns')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('campaigns').delete().eq('id', id);
 
     if (error) {
       console.error('Error deleting campaign:', error);
@@ -218,7 +227,9 @@ export class CampaignService {
   }
 
   // Get announcement campaigns
-  static async getAnnouncementCampaigns(isSubscribed: boolean = false): Promise<EnhancedCampaign[]> {
+  static async getAnnouncementCampaigns(
+    isSubscribed: boolean = false,
+  ): Promise<EnhancedCampaign[]> {
     return this.getCampaignsByType('announcement', isSubscribed);
   }
-} 
+}

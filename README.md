@@ -1,4 +1,3 @@
-
 # Altfragen.io
 
 ## Overview
@@ -12,21 +11,25 @@ Altfragen.io is an intelligent platform for efficient exam preparation using pas
 ## Features
 
 ### 📚 Personal Question Database
+
 - Upload past exam questions as CSV files
 - Organize questions by subject and difficulty
 - Filter and manage your question collection
 
 ### 🧠 Intelligent Learning System
+
 - Smart question selection based on your learning history
 - Focus on questions you haven't mastered yet
 - Prioritize content based on your performance
 
 ### 📊 Progress Tracking
+
 - Detailed statistics on your learning progress
 - Track improvement over time
 - Identify areas that need more attention
 
 ### 🔍 Advanced Filtering
+
 - Filter questions by subject
 - Filter by difficulty level
 - Only practice questions you've answered incorrectly
@@ -34,6 +37,7 @@ Altfragen.io is an intelligent platform for efficient exam preparation using pas
 - Random selection for simulating real exam conditions
 
 ### 💻 User-Friendly Interface
+
 - Clean, intuitive design
 - Responsive layout works on desktop, tablet, and mobile
 - Dark mode support
@@ -45,10 +49,10 @@ Altfragen.io is an intelligent platform for efficient exam preparation using pas
 - Register with E-Mail
 - Start learning for free :)
 
-
 ## CSV File Format
 
 To upload questions, prepare a CSV file with the following columns:
+
 - Question (text of the question)
 - Options A through E (answer choices)
 - Correct Answer (letter A-E)
@@ -71,7 +75,7 @@ The code for this project is primarily built using lovable.dev
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License (LICENSE.md file) for more details. 
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License (LICENSE.md file) for more details.
 
 ## Contributing
 

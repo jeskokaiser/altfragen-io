@@ -29,7 +29,7 @@ const TrainingSessionAnalytics: React.FC = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!sessionId
+    enabled: !!sessionId,
   });
 
   // Fetch questions for this session
@@ -40,7 +40,7 @@ const TrainingSessionAnalytics: React.FC = () => {
       const details = await fetchQuestionDetails(session.question_ids);
       return details as Question[];
     },
-    enabled: !!session
+    enabled: !!session,
   });
 
   // Fetch session-specific progress for questions
@@ -48,31 +48,31 @@ const TrainingSessionAnalytics: React.FC = () => {
     queryKey: ['session-progress', sessionId, user?.id, questions?.length],
     queryFn: async () => {
       if (!user?.id || !questions || questions.length === 0 || !sessionId) return [];
-      
-      const questionIds = questions.map(q => q.id);
+
+      const questionIds = questions.map((q) => q.id);
       const BATCH_SIZE = 300;
       const batches: string[][] = [];
       for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
         batches.push(questionIds.slice(i, i + BATCH_SIZE));
       }
 
-      const batchPromises = batches.map(batch =>
+      const batchPromises = batches.map((batch) =>
         supabase
           .from('session_question_progress')
           .select('question_id, is_correct, updated_at, created_at')
           .eq('session_id', sessionId)
           .eq('user_id', user.id)
-          .in('question_id', batch)
+          .in('question_id', batch),
       );
 
       const results = await Promise.allSettled(batchPromises);
       const allProgress = results
-        .filter(r => r.status === 'fulfilled')
+        .filter((r) => r.status === 'fulfilled')
         .flatMap((r: any) => r.value.data || []);
 
       return allProgress;
     },
-    enabled: !!user?.id && !!questions && questions.length > 0 && !!sessionId
+    enabled: !!user?.id && !!questions && questions.length > 0 && !!sessionId,
   });
 
   // Calculate statistics
@@ -85,7 +85,7 @@ const TrainingSessionAnalytics: React.FC = () => {
         wrongAnswers: 0,
         answeredPercentage: 0,
         correctPercentage: 0,
-        wrongPercentage: 0
+        wrongPercentage: 0,
       };
     }
 
@@ -105,7 +105,7 @@ const TrainingSessionAnalytics: React.FC = () => {
       wrongAnswers,
       answeredPercentage,
       correctPercentage,
-      wrongPercentage
+      wrongPercentage,
     };
   }, [questions, userProgress]);
 
@@ -115,7 +115,7 @@ const TrainingSessionAnalytics: React.FC = () => {
 
     const stats: Record<string, { total: number; answered: number; correct: number }> = {};
 
-    questions.forEach(q => {
+    questions.forEach((q) => {
       if (!stats[q.subject]) {
         stats[q.subject] = { total: 0, answered: 0, correct: 0 };
       }
@@ -123,7 +123,7 @@ const TrainingSessionAnalytics: React.FC = () => {
     });
 
     userProgress.forEach((progress: any) => {
-      const question = questions.find(q => q.id === progress.question_id);
+      const question = questions.find((q) => q.id === progress.question_id);
       if (question) {
         stats[question.subject].answered += 1;
         if (progress.is_correct) {
@@ -134,10 +134,13 @@ const TrainingSessionAnalytics: React.FC = () => {
 
     return Object.entries(stats)
       .sort(([, a], [, b]) => b.total - a.total)
-      .reduce((acc, [subject, stats]) => {
-        acc[subject] = stats;
-        return acc;
-      }, {} as Record<string, { total: number; answered: number; correct: number }>);
+      .reduce(
+        (acc, [subject, stats]) => {
+          acc[subject] = stats;
+          return acc;
+        },
+        {} as Record<string, { total: number; answered: number; correct: number }>,
+      );
   }, [questions, userProgress]);
 
   if (isSessionLoading || isQuestionsLoading || isProgressLoading) {
@@ -164,9 +167,10 @@ const TrainingSessionAnalytics: React.FC = () => {
   }
 
   // Extract exam ID from filter_settings if this session is linked to an exam
-  const examId = (session.filter_settings as any)?.source === 'exam' 
-    ? (session.filter_settings as any)?.examId 
-    : null;
+  const examId =
+    (session.filter_settings as any)?.source === 'exam'
+      ? (session.filter_settings as any)?.examId
+      : null;
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
@@ -175,10 +179,7 @@ const TrainingSessionAnalytics: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         {examId && (
-          <Button 
-            variant="outline" 
-            onClick={() => navigate(`/exam/${examId}/analytics`)}
-          >
+          <Button variant="outline" onClick={() => navigate(`/exam/${examId}/analytics`)}>
             Gesamtauswertung
           </Button>
         )}
@@ -186,7 +187,9 @@ const TrainingSessionAnalytics: React.FC = () => {
           <h1 className="text-2xl font-bold">{session.title}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
             <span>Status: {session.status}</span>
-            <span>• {session.current_index + 1} / {session.total_questions} Fragen</span>
+            <span>
+              • {session.current_index + 1} / {session.total_questions} Fragen
+            </span>
           </div>
         </div>
         {session.status !== 'completed' && (
@@ -205,24 +208,38 @@ const TrainingSessionAnalytics: React.FC = () => {
           </CardHeader>
           <CardContent>
             <Progress value={stats.answeredPercentage} className="h-2 mb-2 dark:bg-zinc-800">
-              <div className="h-full bg-primary transition-all" style={{ width: `${stats.answeredPercentage}%` }} />
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${stats.answeredPercentage}%` }}
+              />
             </Progress>
             <p className="text-sm text-muted-foreground">
-              {stats.answeredQuestions} von {stats.totalQuestions} Fragen beantwortet ({stats.answeredPercentage.toFixed(0)}%)
+              {stats.answeredQuestions} von {stats.totalQuestions} Fragen beantwortet (
+              {stats.answeredPercentage.toFixed(0)}%)
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-green-600">Richtige Antworten</CardTitle>
+            <CardTitle className="text-lg font-semibold text-green-600">
+              Richtige Antworten
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <Progress value={(stats.correctAnswers / stats.totalQuestions) * 100} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
-              <div className="h-full bg-green-600 transition-all" style={{ width: `${(stats.correctAnswers / stats.totalQuestions) * 100}%` }} />
+            <Progress
+              value={(stats.correctAnswers / stats.totalQuestions) * 100}
+              className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
+            >
+              <div
+                className="h-full bg-green-600 transition-all"
+                style={{ width: `${(stats.correctAnswers / stats.totalQuestions) * 100}%` }}
+              />
             </Progress>
             <p className="text-sm text-muted-foreground">
-              {stats.correctAnswers} von {stats.totalQuestions} Fragen richtig ({((stats.correctAnswers / stats.totalQuestions) * 100).toFixed(0)}%)<br />
+              {stats.correctAnswers} von {stats.totalQuestions} Fragen richtig (
+              {((stats.correctAnswers / stats.totalQuestions) * 100).toFixed(0)}%)
+              <br />
               {stats.correctPercentage.toFixed(0)}% der beantworteten Fragen
             </p>
           </CardContent>
@@ -233,11 +250,18 @@ const TrainingSessionAnalytics: React.FC = () => {
             <CardTitle className="text-lg font-semibold text-red-600">Falsche Antworten</CardTitle>
           </CardHeader>
           <CardContent>
-            <Progress value={(stats.wrongAnswers / stats.totalQuestions) * 100} className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800">
-              <div className="h-full bg-red-600 transition-all" style={{ width: `${(stats.wrongAnswers / stats.totalQuestions) * 100}%` }} />
+            <Progress
+              value={(stats.wrongAnswers / stats.totalQuestions) * 100}
+              className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
+            >
+              <div
+                className="h-full bg-red-600 transition-all"
+                style={{ width: `${(stats.wrongAnswers / stats.totalQuestions) * 100}%` }}
+              />
             </Progress>
             <p className="text-sm text-muted-foreground">
-              {stats.wrongAnswers} von {stats.totalQuestions} Fragen falsch ({((stats.wrongAnswers / stats.totalQuestions) * 100).toFixed(0)}%)
+              {stats.wrongAnswers} von {stats.totalQuestions} Fragen falsch (
+              {((stats.wrongAnswers / stats.totalQuestions) * 100).toFixed(0)}%)
             </p>
           </CardContent>
         </Card>
@@ -248,7 +272,9 @@ const TrainingSessionAnalytics: React.FC = () => {
         <Collapsible open={isSubjectStatsOpen} onOpenChange={setIsSubjectStatsOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
             <h3 className="text-lg font-semibold">Statistik nach Fächern</h3>
-            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isSubjectStatsOpen ? 'transform rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${isSubjectStatsOpen ? 'transform rotate-180' : ''}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent className="px-4 pb-4">
             <div className="space-y-4">
@@ -261,8 +287,8 @@ const TrainingSessionAnalytics: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <Progress 
-                      value={(subjectStat.correct / subjectStat.total) * 100} 
+                    <Progress
+                      value={(subjectStat.correct / subjectStat.total) * 100}
                       className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
                     >
                       <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
@@ -282,4 +308,3 @@ const TrainingSessionAnalytics: React.FC = () => {
 };
 
 export default TrainingSessionAnalytics;
-

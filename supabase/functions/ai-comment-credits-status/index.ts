@@ -1,64 +1,54 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
-      console.error("[AI-CREDITS-STATUS] Missing Supabase env vars", {
+      console.error('[AI-CREDITS-STATUS] Missing Supabase env vars', {
         hasUrl: !!supabaseUrl,
         hasAnonKey: !!supabaseAnonKey,
         hasServiceKey: !!supabaseServiceKey,
       });
-      return new Response(
-        JSON.stringify({ error: "Missing Supabase configuration" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+      return new Response(JSON.stringify({ error: 'Missing Supabase configuration' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Use anon client only to authenticate the user token (respecting RLS)
     const anonClient = createClient(supabaseUrl, supabaseAnonKey);
 
-    const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace('Bearer ', '');
 
     if (!token) {
-      return new Response(
-        JSON.stringify({ error: "Missing Authorization header" }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const { data: authData, error: authError } =
-      await anonClient.auth.getUser(token);
+    const { data: authData, error: authError } = await anonClient.auth.getUser(token);
 
     if (authError || !authData.user) {
-      console.error("[AI-CREDITS-STATUS] Auth error", authError);
-      return new Response(
-        JSON.stringify({ error: "Not authenticated" }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+      console.error('[AI-CREDITS-STATUS] Auth error', authError);
+      return new Response(JSON.stringify({ error: 'Not authenticated' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const user = authData.user;
@@ -71,24 +61,24 @@ serve(async (req) => {
     // Load profile to check premium status (same flag used elsewhere in the app).
     // Use maybeSingle so that users without a profile row are simply treated as non-premium.
     const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("is_premium")
-      .eq("id", user.id)
+      .from('profiles')
+      .select('is_premium')
+      .eq('id', user.id)
       .maybeSingle();
 
-    if (profileError && profileError.code !== "PGRST116") {
-      console.error("[AI-CREDITS-STATUS] Failed to load profile", profileError);
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('[AI-CREDITS-STATUS] Failed to load profile', profileError);
     }
 
     // Also consider active subscription in subscribers table (source of truth for billing)
     const { data: subscriber, error: subscriberError } = await supabaseClient
-      .from("subscribers")
-      .select("subscribed, subscription_end")
-      .eq("user_id", user.id)
+      .from('subscribers')
+      .select('subscribed, subscription_end')
+      .eq('user_id', user.id)
       .maybeSingle();
 
-    if (subscriberError && subscriberError.code !== "PGRST116") {
-      console.error("[AI-CREDITS-STATUS] Failed to load subscriber", subscriberError);
+    if (subscriberError && subscriberError.code !== 'PGRST116') {
+      console.error('[AI-CREDITS-STATUS] Failed to load subscriber', subscriberError);
     }
 
     const now = new Date();
@@ -96,8 +86,7 @@ serve(async (req) => {
       ? new Date(subscriber.subscription_end)
       : null;
     const hasActiveSubscription =
-      !!subscriber?.subscribed &&
-      (!subscriptionEnd || subscriptionEnd.getTime() > now.getTime());
+      !!subscriber?.subscribed && (!subscriptionEnd || subscriptionEnd.getTime() > now.getTime());
 
     const isPremium = !!profile?.is_premium || hasActiveSubscription;
 
@@ -110,12 +99,12 @@ serve(async (req) => {
 
     // Canonical usage from ledger (rolling 30 days)
     const { data: fullUsed30d, error: usedError } = await supabaseClient.rpc(
-      "ai_private_full_used_30d",
+      'ai_private_full_used_30d',
       { p_user_id: user.id },
     );
 
     if (usedError) {
-      console.error("[AI-CREDITS-STATUS] Failed to load rolling 30d usage", usedError);
+      console.error('[AI-CREDITS-STATUS] Failed to load rolling 30d usage', usedError);
     }
 
     const used = Number(fullUsed30d ?? 0);
@@ -123,11 +112,13 @@ serve(async (req) => {
     const remainingFree = Math.max(0, BASE_MONTHLY_FREE_LIMIT - used);
 
     // Canonical credits remaining from ledger (sum of deltas)
-    const { data: creditsRemainingRaw, error: creditsError } =
-      await supabaseClient.rpc("ai_private_credits_remaining", { p_user_id: user.id });
+    const { data: creditsRemainingRaw, error: creditsError } = await supabaseClient.rpc(
+      'ai_private_credits_remaining',
+      { p_user_id: user.id },
+    );
 
     if (creditsError) {
-      console.error("[AI-CREDITS-STATUS] Failed to load credits remaining", creditsError);
+      console.error('[AI-CREDITS-STATUS] Failed to load credits remaining', creditsError);
     }
 
     const paidCreditsRemaining = Math.max(0, Number(creditsRemainingRaw ?? 0));
@@ -148,18 +139,13 @@ serve(async (req) => {
 
     return new Response(JSON.stringify(body), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error("[AI-CREDITS-STATUS] Unexpected error", error);
-    return new Response(
-      JSON.stringify({ error: "Internal error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+    console.error('[AI-CREDITS-STATUS] Unexpected error', error);
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
-
-

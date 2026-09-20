@@ -1,0 +1,6 @@
+# Revisions listed here are pure formatting and are skipped by git blame.
+# Enable locally with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: apply Prettier to the whole tree
+b4124af717c95ca265a20f5bdecc2667e0ddffd9

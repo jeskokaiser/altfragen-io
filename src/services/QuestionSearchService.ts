@@ -1,8 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
-import { QuestionSearchOptions, QuestionSearchResult, SortField, SortDirection } from '@/types/QuestionSearchFilters';
+import {
+  QuestionSearchOptions,
+  QuestionSearchResult,
+  SortField,
+  SortDirection,
+} from '@/types/QuestionSearchFilters';
 
-export const searchQuestions = async (options: QuestionSearchOptions): Promise<QuestionSearchResult> => {
+export const searchQuestions = async (
+  options: QuestionSearchOptions,
+): Promise<QuestionSearchResult> => {
   const {
     searchText,
     filters,
@@ -11,7 +18,7 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
     sortBy = 'created_at',
     sortDirection = 'desc',
     userId,
-    universityId
+    universityId,
   } = options;
 
   const from = page * pageSize;
@@ -169,11 +176,11 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
   // Map sort field to database column name
   const getSortColumn = (field: SortField): string => {
     const columnMap: Record<SortField, string> = {
-      'created_at': 'created_at',
-      'subject': 'subject',
-      'difficulty': 'difficulty',
-      'exam_name': 'exam_name',
-      'exam_year': 'exam_year'
+      created_at: 'created_at',
+      subject: 'subject',
+      difficulty: 'difficulty',
+      exam_name: 'exam_name',
+      exam_year: 'exam_year',
     };
     return columnMap[field] || 'created_at';
   };
@@ -194,7 +201,7 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
   const [personalResult, universityResult, publicResult] = await Promise.all([
     personalQuery,
     universityQuery || Promise.resolve({ data: [], error: null, count: 0 }),
-    publicQuery || Promise.resolve({ data: [], error: null, count: 0 })
+    publicQuery || Promise.resolve({ data: [], error: null, count: 0 }),
   ]);
 
   // Combine results
@@ -217,7 +224,7 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
   }
 
   // Map to Question format
-  const mappedQuestions: Question[] = allQuestions.map(q => ({
+  const mappedQuestions: Question[] = allQuestions.map((q) => ({
     id: q.id,
     question: q.question,
     optionA: q.option_a,
@@ -240,20 +247,18 @@ export const searchQuestions = async (options: QuestionSearchOptions): Promise<Q
     year: q.exam_year || null,
     image_key: q.image_key || null,
     show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null
+    exam_name: q.exam_name || null,
   }));
 
   // Remove duplicates (in case a question matches multiple criteria)
-  const uniqueQuestions = Array.from(
-    new Map(mappedQuestions.map(q => [q.id, q])).values()
-  );
+  const uniqueQuestions = Array.from(new Map(mappedQuestions.map((q) => [q.id, q])).values());
 
   return {
     questions: uniqueQuestions,
     totalCount,
     page,
     pageSize,
-    hasMore: uniqueQuestions.length === pageSize
+    hasMore: uniqueQuestions.length === pageSize,
   };
 };
 
@@ -262,10 +267,7 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
   const queries: Promise<any>[] = [];
 
   // Get subjects
-  const personalSubjectsQuery = supabase
-    .from('questions')
-    .select('subject')
-    .eq('user_id', userId);
+  const personalSubjectsQuery = supabase.from('questions').select('subject').eq('user_id', userId);
 
   const universitySubjectsQuery = universityId
     ? supabase
@@ -370,7 +372,7 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
     publicSemesters,
     personalYears,
     universityYears,
-    publicYears
+    publicYears,
   ] = await Promise.all([
     personalSubjectsQuery,
     universitySubjectsQuery || Promise.resolve({ data: [], error: null }),
@@ -383,7 +385,7 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
     publicSemestersQuery || Promise.resolve({ data: [], error: null }),
     personalYearsQuery,
     universityYearsQuery || Promise.resolve({ data: [], error: null }),
-    publicYearsQuery || Promise.resolve({ data: [], error: null })
+    publicYearsQuery || Promise.resolve({ data: [], error: null }),
   ]);
 
   // Helper function to filter out empty/null values
@@ -396,39 +398,38 @@ export const getFilterOptions = async (userId: string, universityId?: string | n
     new Set([
       ...(personalSubjects.data || []).map((q: any) => q.subject).filter(filterValid),
       ...(universitySubjects?.data || []).map((q: any) => q.subject).filter(filterValid),
-      ...(publicSubjects.data || []).map((q: any) => q.subject).filter(filterValid)
-    ])
+      ...(publicSubjects.data || []).map((q: any) => q.subject).filter(filterValid),
+    ]),
   ).sort((a, b) => a.localeCompare(b, 'de'));
 
   const examNames = Array.from(
     new Set([
       ...(personalExamNames.data || []).map((q: any) => q.exam_name).filter(filterValid),
       ...(universityExamNames?.data || []).map((q: any) => q.exam_name).filter(filterValid),
-      ...(publicExamNames.data || []).map((q: any) => q.exam_name).filter(filterValid)
-    ])
+      ...(publicExamNames.data || []).map((q: any) => q.exam_name).filter(filterValid),
+    ]),
   ).sort((a, b) => a.localeCompare(b, 'de'));
 
   const semesters = Array.from(
     new Set([
       ...(personalSemesters.data || []).map((q: any) => q.exam_semester).filter(filterValid),
       ...(universitySemesters?.data || []).map((q: any) => q.exam_semester).filter(filterValid),
-      ...(publicSemesters.data || []).map((q: any) => q.exam_semester).filter(filterValid)
-    ])
+      ...(publicSemesters.data || []).map((q: any) => q.exam_semester).filter(filterValid),
+    ]),
   ).sort();
 
   const years = Array.from(
     new Set([
       ...(personalYears.data || []).map((q: any) => q.exam_year).filter(filterValid),
       ...(universityYears?.data || []).map((q: any) => q.exam_year).filter(filterValid),
-      ...(publicYears.data || []).map((q: any) => q.exam_year).filter(filterValid)
-    ])
+      ...(publicYears.data || []).map((q: any) => q.exam_year).filter(filterValid),
+    ]),
   ).sort((a, b) => b.localeCompare(a)); // Sort descending (newest first)
 
   return {
     subjects,
     examNames,
     semesters,
-    years
+    years,
   };
 };
-

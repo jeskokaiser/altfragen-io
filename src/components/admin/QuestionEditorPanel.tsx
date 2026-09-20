@@ -4,7 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { fetchQuestionsByExamName, updateQuestion } from '@/services/DatabaseService';
@@ -13,7 +19,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import QuestionImage from '@/components/questions/QuestionImage';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const QuestionEditorPanel: React.FC = () => {
   const [examNames, setExamNames] = useState<string[]>([]);
@@ -45,7 +61,7 @@ const QuestionEditorPanel: React.FC = () => {
       }
 
       const uniqueExamNames = Array.from(
-        new Set(data.map((q: any) => q.exam_name).filter((name: string | null) => name))
+        new Set(data.map((q: any) => q.exam_name).filter((name: string | null) => name)),
       ).sort() as string[];
 
       setExamNames(uniqueExamNames);
@@ -75,7 +91,11 @@ const QuestionEditorPanel: React.FC = () => {
 
   // Update editing question when questions array or index changes
   useEffect(() => {
-    if (questions.length > 0 && currentQuestionIndex >= 0 && currentQuestionIndex < questions.length) {
+    if (
+      questions.length > 0 &&
+      currentQuestionIndex >= 0 &&
+      currentQuestionIndex < questions.length
+    ) {
       // Create a new object reference to ensure React detects the change
       const currentQuestion = questions[currentQuestionIndex];
       setEditingQuestion({
@@ -85,7 +105,7 @@ const QuestionEditorPanel: React.FC = () => {
         optionC: currentQuestion.optionC || '',
         optionD: currentQuestion.optionD || '',
         optionE: currentQuestion.optionE || '',
-        correctAnswer: currentQuestion.correctAnswer || ''
+        correctAnswer: currentQuestion.correctAnswer || '',
       });
       setHasUnsavedChanges(false);
     } else if (questions.length === 0) {
@@ -101,7 +121,7 @@ const QuestionEditorPanel: React.FC = () => {
       const result = await fetchQuestionsByExamName(selectedExamName, currentPage, pageSize);
       setQuestions(result.questions);
       setTotalCount(result.totalCount);
-      
+
       // Set index based on navigation direction
       if (result.questions.length > 0) {
         if (isNavigatingToPreviousPage) {
@@ -183,7 +203,7 @@ const QuestionEditorPanel: React.FC = () => {
         .from('exam-images')
         .upload(fileName, file, {
           contentType: file.type,
-          upsert: true
+          upsert: true,
         });
 
       if (uploadError) {
@@ -192,14 +212,12 @@ const QuestionEditorPanel: React.FC = () => {
 
       // Delete old image if exists
       if (editingQuestion.image_key) {
-        await supabase.storage
-          .from('exam-images')
-          .remove([editingQuestion.image_key]);
+        await supabase.storage.from('exam-images').remove([editingQuestion.image_key]);
       }
 
       // Update question with new image_key
       const updatedQuestion = await updateQuestion(editingQuestion.id, {
-        image_key: fileName
+        image_key: fileName,
       });
 
       setEditingQuestion(updatedQuestion);
@@ -217,13 +235,11 @@ const QuestionEditorPanel: React.FC = () => {
 
     try {
       // Delete from storage
-      await supabase.storage
-        .from('exam-images')
-        .remove([editingQuestion.image_key]);
+      await supabase.storage.from('exam-images').remove([editingQuestion.image_key]);
 
       // Update question
       const updatedQuestion = await updateQuestion(editingQuestion.id, {
-        image_key: null
+        image_key: null,
       });
 
       setEditingQuestion(updatedQuestion);
@@ -240,19 +256,18 @@ const QuestionEditorPanel: React.FC = () => {
 
     try {
       const questionCase = editingQuestion.question_case;
-      const trimmedQuestionCase = typeof questionCase === 'string' && questionCase.trim() 
-        ? questionCase.trim() 
-        : null;
+      const normalizedQuestionCase =
+        typeof questionCase === 'number' && Number.isFinite(questionCase) ? questionCase : null;
 
       const updates: Partial<Question> = {
         correctAnswer: editingQuestion.correctAnswer,
-        question_case: trimmedQuestionCase,
+        question_case: normalizedQuestionCase,
       };
 
       const updatedQuestion = await updateQuestion(editingQuestion.id, updates);
       toast.success('Frage erfolgreich aktualisiert');
       setHasUnsavedChanges(false);
-      
+
       // Update the question in the current list
       const updatedQuestions = [...questions];
       updatedQuestions[currentQuestionIndex] = updatedQuestion;
@@ -292,7 +307,7 @@ const QuestionEditorPanel: React.FC = () => {
             </div>
 
             <div className="flex items-end">
-              <Button 
+              <Button
                 onClick={() => {
                   setCurrentPage(0);
                   loadQuestions();
@@ -303,15 +318,13 @@ const QuestionEditorPanel: React.FC = () => {
               </Button>
             </div>
           </div>
-          
+
           <div className="text-xs text-muted-foreground">
             Sortierung: question_case ASC, dann question_exam_number ASC
           </div>
 
           {selectedExamName && (
-            <div className="text-sm text-muted-foreground">
-              {totalCount} Fragen gefunden
-            </div>
+            <div className="text-sm text-muted-foreground">{totalCount} Fragen gefunden</div>
           )}
         </CardContent>
       </Card>
@@ -347,7 +360,9 @@ const QuestionEditorPanel: React.FC = () => {
                 <Button
                   variant="outline"
                   onClick={handleNext}
-                  disabled={currentQuestionIndex === questions.length - 1 && currentPage >= totalPages - 1}
+                  disabled={
+                    currentQuestionIndex === questions.length - 1 && currentPage >= totalPages - 1
+                  }
                 >
                   Nächste
                   <ChevronRight className="h-4 w-4 ml-2" />
@@ -366,9 +381,7 @@ const QuestionEditorPanel: React.FC = () => {
               {/* Question Text */}
               <div className="space-y-2">
                 <Label>Frage</Label>
-                <div className="p-4 bg-muted rounded-lg">
-                  {editingQuestion.question}
-                </div>
+                <div className="p-4 bg-muted rounded-lg">{editingQuestion.question}</div>
               </div>
 
               {/* Answer Options - Compact, Read Only */}
@@ -408,8 +421,8 @@ const QuestionEditorPanel: React.FC = () => {
                             variant={isSelected ? 'default' : 'outline'}
                             className="h-7 px-2 text-xs"
                             onClick={() => {
-                              setEditingQuestion(prev =>
-                                prev ? { ...prev, correctAnswer: letter } : prev
+                              setEditingQuestion((prev) =>
+                                prev ? { ...prev, correctAnswer: letter } : prev,
                               );
                               setHasUnsavedChanges(true);
                             }}
@@ -429,11 +442,21 @@ const QuestionEditorPanel: React.FC = () => {
                 <Input
                   id="questionCase"
                   name="questionCase"
-                  value={editingQuestion.question_case || ''}
-                  placeholder="z.B. M2-F25_1_1"
+                  type="number"
+                  inputMode="numeric"
+                  value={editingQuestion.question_case ?? ''}
+                  placeholder="z.B. 12"
                   onChange={(e) => {
-                    setEditingQuestion(prev =>
-                      prev ? { ...prev, question_case: e.target.value } : prev
+                    const raw = e.target.value.trim();
+                    const parsed = raw === '' ? null : Number.parseInt(raw, 10);
+                    setEditingQuestion((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            question_case:
+                              parsed !== null && Number.isNaN(parsed) ? prev.question_case : parsed,
+                          }
+                        : prev,
                     );
                     setHasUnsavedChanges(true);
                   }}
@@ -451,14 +474,19 @@ const QuestionEditorPanel: React.FC = () => {
               {/* Image Upload */}
               <div className="space-y-4">
                 <h3 className="font-semibold">Bild</h3>
-                
+
                 {editingQuestion.image_key && !imageToRemove && (
                   <div className="space-y-2">
                     <Label>Aktuelles Bild</Label>
                     <QuestionImage imageKey={editingQuestion.image_key} />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button type="button" variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Bild entfernen
                         </Button>
@@ -515,9 +543,7 @@ const QuestionEditorPanel: React.FC = () => {
 
       {!loading && selectedExamName && questions.length === 0 && (
         <Alert>
-          <AlertDescription>
-            Keine Fragen für dieses Exam gefunden.
-          </AlertDescription>
+          <AlertDescription>Keine Fragen für dieses Exam gefunden.</AlertDescription>
         </Alert>
       )}
     </div>
@@ -525,4 +551,3 @@ const QuestionEditorPanel: React.FC = () => {
 };
 
 export default QuestionEditorPanel;
-

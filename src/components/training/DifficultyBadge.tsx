@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { User } from 'lucide-react';
@@ -13,16 +12,14 @@ interface DifficultyBadgeProps {
   subject?: string;
 }
 
-const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ 
-  difficulty, 
+const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({
+  difficulty,
   attemptsCount = 0,
   isPersonalized = false,
   semester,
   year,
-  subject
+  subject,
 }) => {
-  
-
   // Combine semester and year into one badge
   const semesterYear = semester && year ? `${semester} ${year}` : null;
 
@@ -31,13 +28,13 @@ const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({
       <Badge variant="outline" className="text-xs">
         Versuche: {attemptsCount}
       </Badge>
-      
+
       {subject && (
         <Badge variant="outline" className="text-xs">
           {subject}
         </Badge>
       )}
-      
+
       {semesterYear && (
         <Badge variant="outline" className="text-xs">
           {semesterYear}

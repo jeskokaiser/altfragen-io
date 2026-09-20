@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Question } from '@/types/Question';
 import { Card } from '@/components/ui/card';
@@ -30,20 +29,18 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
   onSemesterChange,
   onYearChange,
   onClearFilters,
-  title = "Filter",
+  title = 'Filter',
 }) => {
   // Extract unique semesters from questions, ensuring we don't include empty values
   const uniqueSemesters = Array.from(
-    new Set(
-      questions
-        .filter(q => q.semester && q.semester.trim() !== '')
-        .map(q => q.semester)
-    )
+    new Set(questions.filter((q) => q.semester && q.semester.trim() !== '').map((q) => q.semester)),
   ).sort();
-  
+
   // Generate years from 2010 to current year
   const currentYear = new Date().getFullYear();
-  const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) => (currentYear - i).toString());
+  const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) =>
+    (currentYear - i).toString(),
+  );
 
   const hasFilters = !!(selectedSemester || selectedYear);
 
@@ -70,7 +67,7 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="year-filter">Jahr</Label>
             <Select
@@ -91,14 +88,9 @@ const SemesterYearFilter: React.FC<SemesterYearFilterProps> = ({
             </Select>
           </div>
         </div>
-        
+
         {hasFilters && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onClearFilters}
-            className="w-full sm:w-auto"
-          >
+          <Button variant="outline" size="sm" onClick={onClearFilters} className="w-full sm:w-auto">
             <FilterX className="mr-2 h-4 w-4" />
             Filter zurücksetzen
           </Button>
