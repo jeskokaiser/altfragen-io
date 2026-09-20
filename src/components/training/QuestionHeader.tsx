@@ -2,8 +2,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import ProgressBar from './ProgressBar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
 
 interface QuestionHeaderProps {
   currentIndex: number;
@@ -17,7 +15,6 @@ const QuestionHeader: React.FC<QuestionHeaderProps> = ({
   onQuit,
 }) => {
   const isMobile = useIsMobile();
-  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="flex flex-col gap-3 mb-4">

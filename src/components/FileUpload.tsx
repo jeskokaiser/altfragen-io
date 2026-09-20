@@ -3,20 +3,10 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Question } from '@/types/Question';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSubscription } from '@/contexts/SubscriptionContext';
 import { parseCSV } from '@/utils/CSVParser';
 import { mapRowsToQuestions } from '@/utils/QuestionMapper';
 import { saveQuestions } from '@/services/DatabaseService';
-import {
-  AlertCircle,
-  Lock,
-  GraduationCap,
-  Globe,
-  FileText,
-  FileUp,
-  Files,
-  Scan,
-} from 'lucide-react';
+import { AlertCircle, Lock, GraduationCap, Globe, FileText, Files, Scan } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
@@ -37,10 +27,8 @@ interface FileUploadProps {
 
 const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
   const { user, universityId, universityName } = useAuth();
-  const { subscribed } = useSubscription();
   const [error, setError] = React.useState<string | null>(null);
   const [visibility, setVisibility] = useState<'private' | 'university' | 'public'>('private');
-  const [uploadType, setUploadType] = useState<'csv' | 'pdf' | 'batch-pdf' | 'ocr'>('csv');
 
   const handleFileUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,17 +101,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
     [user, universityId, onQuestionsLoaded, visibility],
   );
 
-  const renderVisibilityIcon = () => {
-    switch (visibility) {
-      case 'university':
-        return <GraduationCap className="h-4 w-4" />;
-      case 'public':
-        return <Globe className="h-4 w-4" />;
-      default:
-        return <Lock className="h-4 w-4" />;
-    }
-  };
-
   const getUniversityContextMessage = () => {
     if (!universityId) {
       return 'Du bist keiner Universität zugeordnet. Um Fragen mit deiner Universität zu teilen, aktualisiere dein Profil.';
@@ -154,27 +131,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
       <Tabs defaultValue="csv" className="w-full">
         <TabsList className="grid grid-cols-3">
-          <TabsTrigger
-            value="csv"
-            onClick={() => setUploadType('csv')}
-            className="flex items-center gap-2"
-          >
+          <TabsTrigger value="csv" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             CSV-Datei
           </TabsTrigger>
-          <TabsTrigger
-            value="batch-pdf"
-            onClick={() => setUploadType('batch-pdf')}
-            className="flex items-center gap-2"
-          >
+          <TabsTrigger value="batch-pdf" className="flex items-center gap-2">
             <Files className="h-4 w-4" />
             Batch Dokumente
           </TabsTrigger>
-          <TabsTrigger
-            value="ocr"
-            onClick={() => setUploadType('ocr')}
-            className="flex items-center gap-2"
-          >
+          <TabsTrigger value="ocr" className="flex items-center gap-2">
             <Scan className="h-4 w-4" />
             OCR Upload
           </TabsTrigger>

@@ -211,7 +211,10 @@ export const linkQuestionsToExam = async (
   }));
 };
 
-export const unlinkQuestionFromExam = async (examId: string, questionId: string): Promise<void> => {
+export const unlinkQuestionFromExam = async (
+  _examId: string,
+  _questionId: string,
+): Promise<void> => {
   // Questions are now automatically linked by exam_name matching
   // Unlinking would require changing the question's exam_name, which is not desired
   // This function is kept for backward compatibility but is a no-op

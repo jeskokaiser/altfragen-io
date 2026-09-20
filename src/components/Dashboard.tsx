@@ -1,22 +1,15 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import DatasetList from './datasets/DatasetList';
 import FileUpload from './FileUpload';
 import DashboardHeader from './datasets/DashboardHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import SemesterYearFilter from './datasets/SemesterYearFilter';
-import { Calendar, SlidersHorizontal, GraduationCap, ListPlus } from 'lucide-react';
-import DatasetSelectionButton from './datasets/DatasetSelectionButton';
-import UniversityDatasetSelector from './datasets/UniversityDatasetSelector';
-import SelectedDatasetsDisplay from './datasets/SelectedDatasetsDisplay';
+import { Calendar, ListPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useQuestionFiltering } from '@/hooks/useQuestionFiltering';
-import { useQuestionGrouping } from '@/hooks/useQuestionGrouping';
 import { useUpcomingExams } from '@/hooks/useUpcomingExams';
 import { useQueryClient } from '@tanstack/react-query';
 import UpcomingExamCreateDialog from './exams/UpcomingExamCreateDialog';
@@ -24,10 +17,7 @@ import UpcomingExamEditDialog from './exams/UpcomingExamEditDialog';
 import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
 import { deleteUpcomingExam } from '@/services/UpcomingExamService';
-import {
-  fetchQuestionDetails,
-  fetchUserDifficultiesForQuestions,
-} from '@/services/DatabaseService';
+import { fetchUserDifficultiesForQuestions } from '@/services/DatabaseService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { toast } from 'sonner';
@@ -40,18 +30,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const { preferences, isDatasetArchived, updateSelectedUniversityDatasets, updatePreferences } =
-    useUserPreferences();
+  const { preferences, updatePreferences } = useUserPreferences();
   const { exams, isLoading: isExamsLoading } = useUpcomingExams(user?.id);
 
   // State variables
-  const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
-  const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [uniSelectedSemester, setUniSelectedSemester] = useState<string | null>(null);
-  const [uniSelectedYear, setUniSelectedYear] = useState<string | null>(null);
-  const [isDatasetSelectorOpen, setIsDatasetSelectorOpen] = useState(false);
-  const [selectedUniversityDatasets, setSelectedUniversityDatasets] = useState<string[]>([]);
   const [isCreateExamOpen, setIsCreateExamOpen] = useState(false);
   const [isEditExamOpen, setIsEditExamOpen] = useState(false);
   const [examToEdit, setExamToEdit] = useState<string | null>(null);
@@ -82,7 +64,6 @@ const Dashboard = () => {
 
   // Fetch all dashboard data
   const {
-    questions,
     isQuestionsLoading,
     questionsError,
     todayNewCount,
@@ -221,91 +202,18 @@ const Dashboard = () => {
     }
   }, [user, isCreatingCreditsCheckout, aiCreditsPacks]);
 
-  // Update selected university datasets when preferences change
-  useEffect(() => {
-    if (preferences?.selectedUniversityDatasets) {
-      setSelectedUniversityDatasets(preferences.selectedUniversityDatasets);
-    }
-  }, [preferences?.selectedUniversityDatasets]);
-
   // Filter questions for personal datasets
-  const filteredQuestions = useQuestionFiltering({
-    questions,
-    userId: user?.id,
-    universityId,
-    selectedSemester,
-    selectedYear,
-    isDatasetArchived,
-    filterType: 'personal',
-  });
 
   // Filter questions for university datasets
-  const universityQuestions = useQuestionFiltering({
-    questions,
-    userId: user?.id,
-    universityId,
-    selectedSemester: uniSelectedSemester,
-    selectedYear: uniSelectedYear,
-    isDatasetArchived,
-    filterType: 'university',
-  });
 
   // Group questions
-  const groupedQuestions = useQuestionGrouping(filteredQuestions);
-  const groupedUniversityQuestions = useQuestionGrouping(universityQuestions);
 
   // Display filtered university datasets only if specific datasets are selected
-  const displayedUniversityDatasets = useMemo(() => {
-    if (selectedUniversityDatasets.length === 0) {
-      return {};
-    }
-
-    return Object.entries(groupedUniversityQuestions)
-      .filter(([key]) => selectedUniversityDatasets.includes(key))
-      .reduce(
-        (acc, [key, questions]) => {
-          acc[key] = questions;
-          return acc;
-        },
-        {} as Record<string, Question[]>,
-      );
-  }, [groupedUniversityQuestions, selectedUniversityDatasets]);
 
   // Memoized event handlers
-  const handleDatasetClick = useCallback(
-    (filename: string) => {
-      setSelectedFilename(selectedFilename === filename ? null : filename);
-    },
-    [selectedFilename],
-  );
-
-  const handleStartTraining = useCallback(
-    (questions: Question[], filterSettings?: any) => {
-      localStorage.setItem('trainingQuestions', JSON.stringify(questions));
-      if (filterSettings) {
-        localStorage.setItem('trainingFilterSettings', JSON.stringify(filterSettings));
-      }
-      navigate('/training/sessions');
-    },
-    [navigate],
-  );
 
   const handleQuestionsLoaded = useCallback(() => {
     window.location.reload();
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setSelectedSemester(null);
-    setSelectedYear(null);
-  }, []);
-
-  const handleClearUniFilters = useCallback(() => {
-    setUniSelectedSemester(null);
-    setUniSelectedYear(null);
-  }, []);
-
-  const handleOpenDatasetSelector = useCallback(() => {
-    setIsDatasetSelectorOpen(true);
   }, []);
 
   const handleOpenCreateExam = useCallback(() => {
@@ -492,28 +400,6 @@ const Dashboard = () => {
     [exams, user?.id],
   );
 
-  const handleSelectedDatasetsChange = useCallback(
-    (datasets: string[]) => {
-      setSelectedUniversityDatasets(datasets);
-      updateSelectedUniversityDatasets(datasets);
-    },
-    [updateSelectedUniversityDatasets],
-  );
-
-  const handleRemoveDataset = useCallback(
-    (filename: string) => {
-      const newDatasets = selectedUniversityDatasets.filter((f) => f !== filename);
-      setSelectedUniversityDatasets(newDatasets);
-      updateSelectedUniversityDatasets(newDatasets);
-    },
-    [selectedUniversityDatasets, updateSelectedUniversityDatasets],
-  );
-
-  const handleClearAllSelectedDatasets = useCallback(() => {
-    setSelectedUniversityDatasets([]);
-    updateSelectedUniversityDatasets([]);
-  }, [updateSelectedUniversityDatasets]);
-
   const handleDateRangeChange = useCallback(
     (dateRange: StatisticsDateRange) => {
       if (preferences) {
@@ -524,20 +410,6 @@ const Dashboard = () => {
   );
 
   // Memoized computed values
-  const hasSemesterOrYearData = useMemo(
-    () => filteredQuestions.some((q) => q.semester || q.year),
-    [filteredQuestions],
-  );
-
-  const hasUniSemesterOrYearData = useMemo(
-    () => universityQuestions.some((q) => q.semester || q.year),
-    [universityQuestions],
-  );
-
-  const hasUniversityQuestions = useMemo(
-    () => Object.keys(groupedUniversityQuestions).length > 0,
-    [groupedUniversityQuestions],
-  );
 
   if (!user) {
     return <div>Loading...</div>;

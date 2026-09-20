@@ -11,18 +11,14 @@ import {
   LogOut,
   User,
   Settings as SettingsIcon,
-  Book,
   Home,
-  UserPlus,
   HelpCircle,
   GraduationCap,
   Crown,
   Shield,
   Bug,
-  Bell,
   Search as SearchIcon,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +31,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 
 const Navbar: React.FC = () => {
-  const { user, logout, universityId, universityName } = useAuth();
+  const { user, logout } = useAuth();
   const { subscribed } = useSubscription();
   const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
@@ -82,7 +78,6 @@ const Navbar: React.FC = () => {
   ];
 
   const userMenuItems = [
-    { label: 'IMPPulse', href: '/imppulse', icon: <Bell className="mr-2 h-4 w-4" /> },
     { label: 'Tutorial', href: '/tutorial', icon: <HelpCircle className="mr-2 h-4 w-4" /> },
     {
       label: 'Feedback/Bug melden',

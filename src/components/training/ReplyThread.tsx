@@ -22,7 +22,7 @@ const ReplyThread: React.FC<ReplyThreadProps> = ({
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
 
-  const handleReply = (parentId: string) => {
+  const handleReply = () => {
     setShowReplyForm(true);
   };
 
@@ -53,7 +53,6 @@ const ReplyThread: React.FC<ReplyThreadProps> = ({
           <CommentForm
             questionId={questionId}
             isPrivate={false}
-            allowPublicComments={allowPublicComments}
             parentId={comment.id}
             onSubmit={handleReplySubmitted}
             onCancel={handleReplyCancel}

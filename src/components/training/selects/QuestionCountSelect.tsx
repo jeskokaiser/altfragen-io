@@ -55,7 +55,7 @@ const QuestionCountSelect: React.FC<QuestionCountSelectProps> = ({ form }) => {
     <FormField
       control={form.control}
       name="questionCount"
-      render={({ field }) => (
+      render={() => (
         <FormItem className="space-y-2">
           <FormLabel>Anzahl der Fragen</FormLabel>
           <div className="space-y-2">

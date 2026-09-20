@@ -141,7 +141,7 @@ const UnclearQuestions = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleQuestionUpdated = (updatedQuestion: Question) => {
+  const handleQuestionUpdated = () => {
     queryClient.invalidateQueries({ queryKey: ['unclear-questions'] });
     queryClient.invalidateQueries({ queryKey: ['questions'] });
   };

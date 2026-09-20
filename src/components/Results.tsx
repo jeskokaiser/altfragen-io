@@ -82,8 +82,6 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
     }
 
     const answerText = `${userAnswerLetter}: ${question[`option${userAnswerLetter}` as keyof Question]}`;
-    const correctAnswerLetter = question.correctAnswer.trim()[0]?.toUpperCase();
-    const isCorrectAnswer = userAnswerLetter === correctAnswerLetter;
 
     // In immediate feedback mode, just show the answer text without context flags
     if (preferences?.immediateFeedback) {

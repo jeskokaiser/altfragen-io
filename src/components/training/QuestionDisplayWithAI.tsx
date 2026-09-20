@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
@@ -12,7 +12,6 @@ import QuestionImage from '@/components/questions/QuestionImage';
 import { Pencil, X, Image as ImageIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
-import { AICommentaryData } from '@/types/AIAnswerComments';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useTrainingKeyboard, TrainingKeyboardActions } from '@/hooks/useTrainingKeyboard';
 import { AmbossAnswer } from './AmbossAnswer';
@@ -28,7 +27,7 @@ import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import CommentsSection from './CommentsSection';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MessageSquare } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getCommentsForQuestion } from '@/services/CommentService';
 
@@ -46,7 +45,6 @@ interface QuestionDisplayWithAIProps {
     viewedSolution?: boolean,
     isFirstAttempt?: boolean,
   ) => Promise<void>;
-  userAnswer: string;
   userAnswerState?: AnswerState;
   onQuit: () => void;
   onQuestionUpdate?: (updatedQuestion: Question) => void;
@@ -60,7 +58,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   onNext,
   onPrevious,
   onAnswer,
-  userAnswer,
   userAnswerState,
   onQuit,
   onQuestionUpdate,
@@ -119,11 +116,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   } = usePremiumFeatures();
 
   // Fetch AI commentary data
-  const {
-    data: aiCommentary,
-    isLoading: aiLoading,
-    error: aiError,
-  } = useQuery({
+  const { data: aiCommentary, isLoading: aiLoading } = useQuery({
     queryKey: ['ai-commentary', currentQuestion.id],
     queryFn: () => AIAnswerCommentaryService.getCommentaryForQuestion(currentQuestion.id),
     enabled: !!currentQuestion.id,
@@ -132,7 +125,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   // Fetch comments to check if any exist (for red indicator)
   const { data: comments } = useQuery({
     queryKey: ['question-comments', currentQuestion.id, user?.id],
-    queryFn: () => getCommentsForQuestion(currentQuestion.id, user?.id || ''),
+    queryFn: () => getCommentsForQuestion(currentQuestion.id),
     enabled: !!currentQuestion.id && !!user?.id,
   });
 
@@ -492,11 +485,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     }
   };
 
-  const {
-    isUnclear,
-    isLoading: unclearLoading,
-    toggleUnclear,
-  } = useUnclearQuestions(currentQuestion.id);
+  const { isLoading: unclearLoading, toggleUnclear } = useUnclearQuestions(currentQuestion.id);
 
   // Toggle ChatGPT enhanced version: if currently chatgpt, switch to none; otherwise switch to chatgpt
   const handleToggleChatGPT = () => {
@@ -746,7 +735,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                 key={`${currentQuestion.id}-${difficultyUpdateKey}`}
                 questionId={currentQuestion.id}
                 difficulty={currentQuestion.difficulty || 3}
-                onEditClick={() => setIsEditModalOpen(true)}
                 disabled={false}
                 semester={currentQuestion.semester}
                 year={currentQuestion.year}
@@ -879,7 +867,6 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                 // Extract which models chose this answer option (only if user has access and can show AI content)
                 const modelIcons: ModelName[] = [];
                 if (aiCommentary && showFeedback && canShowAIContent) {
-                  const optionLower = letter.toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'e';
                   const models = aiCommentary.models;
 
                   // Check each new model's chosenAnswer and filter by user preferences

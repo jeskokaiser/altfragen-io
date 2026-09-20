@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 interface DifficultyControlsProps {
   questionId: string;
   difficulty: number;
-  onEditClick?: () => void;
   disabled?: boolean;
   semester?: string;
   year?: string;
@@ -18,7 +17,6 @@ interface DifficultyControlsProps {
 const DifficultyControls: React.FC<DifficultyControlsProps> = ({
   questionId,
   difficulty,
-  onEditClick,
   disabled = false,
   semester,
   year,
@@ -26,13 +24,11 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
 }) => {
   const [currentDifficulty, setCurrentDifficulty] = useState(difficulty);
   const [attemptsCount, setAttemptsCount] = useState(0);
-  const [isUserSpecificDifficulty, setIsUserSpecificDifficulty] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
     if (disabled) {
       setCurrentDifficulty(difficulty);
-      setIsUserSpecificDifficulty(false);
       setAttemptsCount(0);
       return;
     }
@@ -58,14 +54,11 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
         // If user has a specific difficulty, use that instead of the question's default
         if (data.user_difficulty !== null) {
           setCurrentDifficulty(data.user_difficulty);
-          setIsUserSpecificDifficulty(true);
         } else {
           setCurrentDifficulty(difficulty);
-          setIsUserSpecificDifficulty(false);
         }
       } else {
         setCurrentDifficulty(difficulty);
-        setIsUserSpecificDifficulty(false);
         setAttemptsCount(0);
       }
     };
@@ -114,7 +107,6 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
       }
 
       setCurrentDifficulty(newDifficulty);
-      setIsUserSpecificDifficulty(true);
       toast.info('Persönlicher Schwierigkeitsgrad aktualisiert');
     } catch (error) {
       console.error('Error updating difficulty:', error);
@@ -126,9 +118,7 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
     <div className="flex flex-col gap-4 mb-4">
       <div className="flex justify-between items-center">
         <DifficultyBadge
-          difficulty={currentDifficulty}
           attemptsCount={attemptsCount}
-          isPersonalized={isUserSpecificDifficulty}
           semester={semester}
           year={year}
           subject={subject}

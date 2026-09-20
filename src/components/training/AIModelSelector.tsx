@@ -38,8 +38,6 @@ export const AIModelSelector: React.FC = () => {
   const enabledCount = preferences.selectedAIModels?.length || 0;
 
   const enhancedVersion = preferences.enhancedAIVersion ?? 'none';
-  const enhancedLabel =
-    enhancedVersion === 'none' ? 'Original' : enhancedVersion === 'chatgpt' ? 'ChatGPT' : 'Gemini';
 
   return (
     <div className="flex items-center gap-2">

@@ -281,7 +281,7 @@ serve(async (req) => {
     let body: { email?: string };
     try {
       body = await req.json();
-    } catch (error) {
+    } catch {
       return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

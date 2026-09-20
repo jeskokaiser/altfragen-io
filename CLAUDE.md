@@ -66,13 +66,17 @@ invisible. Fix the type, or regenerate.
 
 `npm run lint` passes with zero errors and caps warnings at a fixed number
 (`--max-warnings` in `package.json`). That number is the count of pre-existing
-violations from before the gate existed -- mostly `no-explicit-any` and
-`no-unused-vars`, listed as `RATCHET` in `eslint.config.js`.
+violations still to be cleaned up, listed as `RATCHET` in `eslint.config.js`.
 
 So: a new violation pushes the count over the cap and fails CI. Cleaning up
 old ones lets the cap be lowered -- **lower it in the same commit as the
 cleanup**, otherwise the slack invites new violations. When a RATCHET rule
-reaches zero, promote it to `"error"` and remove it from the list.
+reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
+
+`no-unused-vars` has already made that trip: it is an error everywhere, with no
+exceptions. Still in RATCHET: `no-explicit-any` (181) and `ban-ts-comment` (8),
+plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
+which warn by design.
 
 ## Lock file
 
@@ -109,6 +113,10 @@ are queued (`ai_commentary_job_queue`), dispatched to providers in batches
 with `stripe-webhook` as the source of truth for entitlements. Free users get a
 limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
 
+**There are no push notifications.** IMPPulse was removed in full: the page,
+the service worker handlers, four Edge Functions, and the `push_subscriptions`
+and `broadcast_logs` tables.
+
 ## Landmines
 
 - **No tests.** There is no safety net beyond typecheck and build. Changes to
@@ -116,9 +124,9 @@ limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
   `utils/cohortScoring.ts` carry real risk -- say so rather than assuming a
   green build means correct.
 - **Some files are very large**: `ExamCohortComparisonSection.tsx` (~1300
-  lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~900),
-  `admin/CampaignManagement.tsx` and `Dashboard.tsx` (~880 each). Splitting
-  them is welcome as its own change, not smuggled into a feature.
+  lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
+  `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
+  Splitting them is welcome as its own change, not smuggled into a feature.
 - **`console.*` is used for logging throughout** (~300 calls). Don't add more;
   a real logger is a pending cleanup.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and

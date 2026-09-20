@@ -30,7 +30,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ questionId, questionV
     error,
   } = useQuery({
     queryKey: ['question-comments', questionId, user?.id],
-    queryFn: () => getCommentsForQuestion(questionId, user?.id || ''),
+    queryFn: () => getCommentsForQuestion(questionId),
     enabled: !!questionId && !!user?.id,
   });
 
@@ -177,7 +177,6 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ questionId, questionV
           <CommentForm
             questionId={questionId}
             isPrivate={false}
-            allowPublicComments={allowPublicComments}
             onSubmit={handleCommentsUpdate}
             userId={user.id}
           />

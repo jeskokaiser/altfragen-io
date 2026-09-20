@@ -33,7 +33,7 @@ const Auth = () => {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isEmailVerified, universityName } = useAuth();
+  const { isEmailVerified, universityName } = useAuth();
 
   useEffect(() => {
     const handleAuthRedirect = async () => {
@@ -301,7 +301,7 @@ const Auth = () => {
 
       // Set up a listener for the USER_UPDATED event
       let updateCompleted = false;
-      const authListener = supabase.auth.onAuthStateChange((event, session) => {
+      const authListener = supabase.auth.onAuthStateChange((event) => {
         console.log('Auth event during password update:', event);
         if (event === 'USER_UPDATED') {
           updateCompleted = true;

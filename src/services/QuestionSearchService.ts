@@ -4,7 +4,6 @@ import {
   QuestionSearchOptions,
   QuestionSearchResult,
   SortField,
-  SortDirection,
 } from '@/types/QuestionSearchFilters';
 
 export const searchQuestions = async (
@@ -51,7 +50,6 @@ export const searchQuestions = async (
   `;
 
   // Build queries for personal, university, and public questions
-  const queries: Promise<any>[] = [];
 
   // Personal questions query
   let personalQuery = supabase
@@ -264,8 +262,6 @@ export const searchQuestions = async (
 
 // Helper function to get distinct filter values
 export const getFilterOptions = async (userId: string, universityId?: string | null) => {
-  const queries: Promise<any>[] = [];
-
   // Get subjects
   const personalSubjectsQuery = supabase.from('questions').select('subject').eq('user_id', userId);
 

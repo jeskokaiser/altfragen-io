@@ -543,48 +543,6 @@ export type Database = {
           },
         ]
       }
-      broadcast_logs: {
-        Row: {
-          body: string
-          created_at: string | null
-          error_details: Json | null
-          failed_count: number
-          id: string
-          invalid_removed: number
-          subscribers_count: number
-          successful_count: number
-          tag: string | null
-          title: string
-          url: string | null
-        }
-        Insert: {
-          body: string
-          created_at?: string | null
-          error_details?: Json | null
-          failed_count?: number
-          id?: string
-          invalid_removed?: number
-          subscribers_count?: number
-          successful_count?: number
-          tag?: string | null
-          title: string
-          url?: string | null
-        }
-        Update: {
-          body?: string
-          created_at?: string | null
-          error_details?: Json | null
-          failed_count?: number
-          id?: string
-          invalid_removed?: number
-          subscribers_count?: number
-          successful_count?: number
-          tag?: string | null
-          title?: string
-          url?: string | null
-        }
-        Relationships: []
-      }
       campaigns: {
         Row: {
           action_text: string | null
@@ -772,39 +730,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      push_subscriptions: {
-        Row: {
-          auth: string
-          created_at: string | null
-          endpoint: string
-          id: string
-          p256dh: string
-          type: string
-          updated_at: string | null
-          user_agent: string | null
-        }
-        Insert: {
-          auth: string
-          created_at?: string | null
-          endpoint: string
-          id?: string
-          p256dh: string
-          type?: string
-          updated_at?: string | null
-          user_agent?: string | null
-        }
-        Update: {
-          auth?: string
-          created_at?: string | null
-          endpoint?: string
-          id?: string
-          p256dh?: string
-          type?: string
-          updated_at?: string | null
-          user_agent?: string | null
-        }
-        Relationships: []
       }
       question_comments: {
         Row: {

@@ -19,7 +19,6 @@ import {
   Zap,
   Calendar,
   Target,
-  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Footer from '@/components/Footer';
@@ -87,12 +86,6 @@ const Index = () => {
           </Link>
 
           <nav className="flex items-center gap-4">
-            <Link to="/imppulse">
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                IMPPulse
-              </Button>
-            </Link>
             <Button onClick={handleGetStarted}>{user ? 'Dashboard' : 'Anmelden'}</Button>
           </nav>
         </div>
@@ -167,28 +160,24 @@ const Index = () => {
             icon={<Search className="w-6 h-6" />}
             title="Intelligente Suche"
             description="Durchsuche tausende Fragen mit erweiterten Filtern nach Fach, Modul, Semester, Jahr, Schwierigkeit und mehr."
-            color="blue"
             gradient="from-blue-500 to-cyan-500"
           />
           <FeatureCard
             icon={<MessageSquare className="w-6 h-6" />}
             title="Kommentare & Notizen"
             description="Private Notizen für dich und öffentliche Diskussionen mit anderen Student:innen zu jeder Frage."
-            color="purple"
             gradient="from-purple-500 to-pink-500"
           />
           <FeatureCard
             icon={<Brain className="w-6 h-6" />}
             title="Multi-Model KI"
             description="5 KI-Modelle (ChatGPT, Gemini, Mistral, Perplexity, DeepSeek) für umfassende Erklärungen jeder Frage."
-            color="emerald"
             gradient="from-emerald-500 to-teal-500"
           />
           <FeatureCard
             icon={<BarChart className="w-6 h-6" />}
             title="Training & Prüfungen"
             description="Verbesserte Sessions mit Analytics, bevorstehende Prüfungen und detaillierte Fortschrittsverfolgung."
-            color="indigo"
             gradient="from-indigo-500 to-purple-500"
           />
         </div>
@@ -703,13 +692,11 @@ const FeatureCard = ({
   icon,
   title,
   description,
-  color,
   gradient,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
-  color: string;
   gradient: string;
 }) => {
   return (

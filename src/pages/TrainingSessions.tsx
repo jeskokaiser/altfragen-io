@@ -2,20 +2,15 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import TrainingSessionsList from '@/components/training/TrainingSessionsList';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { Plus, Lock } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TrainingSessionsPage: React.FC = () => {
   const { user, universityId } = useAuth();
-  const { subscribed } = useSubscription();
   const location = useLocation();
-  const { questions, isQuestionsLoading } = useDashboardData(user?.id, universityId);
-  const { sessions, refetch } = useTrainingSessions(user?.id);
+  const { questions } = useDashboardData(user?.id, universityId);
+  const { refetch } = useTrainingSessions(user?.id);
   const [open, setOpen] = useState(false);
 
   // Refetch sessions when navigating to this page to ensure fresh data
@@ -28,8 +23,6 @@ const TrainingSessionsPage: React.FC = () => {
   const availableQuestions = useMemo(() => questions || [], [questions]);
 
   // Check if user has reached the session limit (5 for free users)
-  const totalSessions = sessions?.length || 0;
-  const hasReachedSessionLimit = !subscribed && totalSessions >= 5;
 
   // Generate default title with current date whenever the dialog opens
   const defaultTitle = useMemo(() => {

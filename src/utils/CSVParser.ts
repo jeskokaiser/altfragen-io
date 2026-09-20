@@ -1,5 +1,4 @@
 import Papa from 'papaparse';
-import { toast } from 'sonner';
 
 export interface CSVParseResult {
   headers: string[];

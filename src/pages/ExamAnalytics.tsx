@@ -23,7 +23,7 @@ import { ExamCohortComparisonSection } from '@/components/exams/ExamCohortCompar
 const ExamAnalytics: React.FC = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
-  const { user, universityId, universityName } = useAuth();
+  const { user } = useAuth();
   const { subscribed } = useSubscription();
   const [isSubjectStatsOpen, setIsSubjectStatsOpen] = useState(true);
   const [groupingMode, setGroupingMode] = useState<'semester' | 'year' | 'filename'>('semester');

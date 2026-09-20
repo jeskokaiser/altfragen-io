@@ -1,9 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import {
-  AIAnswerComments,
-  AICommentarySummaryExtended,
-  AICommentaryData,
-} from '@/types/AIAnswerComments';
+import { AICommentarySummaryExtended, AICommentaryData } from '@/types/AIAnswerComments';
 
 // Define the expected structure for ai_answer_comments
 interface AIAnswerCommentsRow {

@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Check, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { ModelIcon, ModelName } from './ModelIcon';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
@@ -49,7 +46,6 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
   const hasAutoExpandedRef = useRef(false);
   const prevSelectedRef = useRef(false);
   const answerContainerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   // Reset when moving to a new question
   useEffect(() => {

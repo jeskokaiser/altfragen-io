@@ -22,13 +22,10 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import {
-  Check,
-  X,
   AlertCircle,
   Save,
   ArrowLeft,
   ArrowRight,
-  Image as ImageIcon,
   Trash2,
   Move,
   Loader2,
