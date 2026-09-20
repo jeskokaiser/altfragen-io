@@ -46,6 +46,19 @@ in a saved session were invisible to its „Nur neue Fragen“ and „Nur falsch
 Fragen“ filters. That is fixed; the disagreement that is not is under Not
 started.
 
+**There are tests.** vitest runs from `npm run test`, inside `npm run verify`
+and in CI. 60 specs cover the three places where a mistake is both plausible
+and invisible: the Stripe entitlement decisions, the user progress merge and
+answer recording, and the cohort scoring. The entitlement decisions had to be
+lifted out of `stripe-webhook/index.ts` first — the function is Deno and
+imports Stripe over URL, so nothing in it is reachable from a Node runner.
+They now live in `stripe-webhook/entitlements.ts`, which imports nothing; the
+extraction was checked against the old logic over all 14,580 input
+combinations before the specs were written.
+
+Specs sit next to the code. They import from `vitest` explicitly rather than
+enabling globals, so the eslint config needs no exception for them.
+
 ## In progress: data access into services
 
 19 files outside `src/services/` still query Supabase directly. This is the
@@ -81,11 +94,12 @@ numbers users see, so it wants a deliberate decision, not a refactor.
 `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830). Safer
 now that CI exists, but still its own change rather than part of a feature.
 
-**Tests.** There are none, which makes this the largest remaining risk.
-`stripe-webhook` is 630 lines deciding entitlements with no coverage at all.
-Start there, then `TrainingSessionService` (progress) and
-`utils/cohortScoring.ts`. A Playwright smoke test over login → training session
-→ answer would cover the path most likely to break silently.
+**More tests.** The harness exists and the three riskiest pieces of pure
+logic are covered (see Done). Still uncovered: `TrainingSessionService`, which
+writes session progress, and the webhook's persistence half — the entitlement
+decisions are tested, what they get written into is not. A Playwright smoke
+test over login → training session → answer would cover the path most likely
+to break silently, and needs a browser harness this repo does not have yet.
 
 **A real logger.** ~285 `console.*` calls.
 

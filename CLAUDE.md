@@ -16,7 +16,8 @@ update it when you finish one.
 ```bash
 npm ci               # install (not npm install -- see Lock file below)
 npm run dev          # vite dev server on :8080
-npm run verify       # typecheck + lint + format:check + build -- what CI runs
+npm run test         # vitest; specs live next to the code as *.test.ts
+npm run verify       # the whole gate: typecheck, test, lint, format, build
 ```
 
 Run `npm run verify` before proposing a change. It is the same gate as
@@ -144,10 +145,13 @@ and `broadcast_logs` tables.
 
 ## Landmines
 
-- **No tests.** There is no safety net beyond typecheck and build. Changes to
-  `stripe-webhook` (entitlements), `TrainingSessionService` (progress) and
-  `utils/cohortScoring.ts` carry real risk -- say so rather than assuming a
-  green build means correct.
+- **Thin test coverage.** There are specs, but only for pure logic: the Stripe
+  entitlement decisions (`stripe-webhook/entitlements.ts`), the user progress
+  merge and answer recording (`UserProgressService`), and
+  `utils/cohortScoring.ts`. Everything touching the database, React or Stripe
+  itself is uncovered -- `TrainingSessionService` (progress) most of all. Say
+  what a change was actually verified against rather than assuming a green run
+  means correct.
 - **Some files are very large**: `ExamCohortComparisonSection.tsx` (~1300
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
   `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
