@@ -43,12 +43,16 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 
 ## Rules
 
-**New database access goes through `src/services/`.** This is the direction of
-travel, not the current state: 29 files outside `src/services/` query Supabase
-directly today -- pages, components, hooks and contexts alike. So expect to
-find queries in components, but don't add more. When you touch a component that
-queries directly and the change is small, moving that query into a service is a
-welcome drive-by; when it isn't, leave it.
+**Database access goes through `src/services/`.** Still the direction of travel
+rather than the finished state: 26 files outside `src/services/` query Supabase
+directly -- pages, components, hooks and contexts alike. So expect to find
+queries in components, but don't add more. When you touch one and the change is
+small, moving that query into a service is a welcome drive-by.
+
+Rows coming out of `questions` are mapped to the domain type by
+`src/services/questionRowMapper.ts`. Use it rather than writing the snake_case
+to camelCase translation again -- it used to be copied by hand at ten call
+sites, each with its own subset of fields and its own defaults.
 
 **`src/integrations/supabase/types.ts` is generated.** Regenerate it after any
 schema change -- via the Supabase MCP server's `generate_typescript_types`, or
@@ -87,7 +91,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (181) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (177) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 

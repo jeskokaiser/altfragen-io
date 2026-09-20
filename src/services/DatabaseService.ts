@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
+import { mapQuestionRow, mapQuestionRowWithStats } from './questionRowMapper';
 
 export const saveQuestions = async (
   questions: Question[],
@@ -43,29 +44,7 @@ export const saveQuestions = async (
 
   if (fetchError) throw fetchError;
 
-  return insertedQuestions.map((q) => ({
-    id: q.id,
-    question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
-    subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
-    filename: q.filename,
-    difficulty: q.difficulty,
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null,
-  }));
+  return insertedQuestions.map(mapQuestionRow);
 };
 
 export const fetchUniversityQuestions = async (universityId: string) => {
@@ -101,32 +80,7 @@ export const fetchUniversityQuestions = async (universityId: string) => {
 
   if (error) throw error;
 
-  return data.map((q) => ({
-    id: q.id,
-    question: q.question,
-    optionA: '', // Load on demand
-    optionB: '', // Load on demand
-    optionC: '', // Load on demand
-    optionD: '', // Load on demand
-    optionE: '', // Load on demand
-    subject: q.subject,
-    correctAnswer: '', // Load on demand
-    comment: '', // Load on demand
-    filename: q.filename,
-    difficulty: q.difficulty,
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: q.user_id,
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null,
-    question_case: q.question_case || null,
-    case_text: q.case_text || null,
-  }));
+  return data.map(mapQuestionRow);
 };
 
 export const updateQuestionVisibility = async (
@@ -256,31 +210,7 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
   // For now, skip fetching user difficulties in the dashboard to improve performance
   // User difficulties will be fetched on-demand when questions are actually displayed
   const allQuestions = [...personalQuestions, ...universityQuestions, ...publicQuestions].map(
-    (q) => ({
-      id: q.id,
-      question: q.question,
-      optionA: '', // These will be loaded on-demand when needed
-      optionB: '',
-      optionC: '',
-      optionD: '',
-      optionE: '',
-      subject: q.subject,
-      correctAnswer: '', // Will be loaded on-demand
-      comment: '', // Will be loaded on-demand
-      filename: q.filename,
-      created_at: q.created_at,
-      difficulty: q.difficulty, // Use default difficulty, user-specific will be fetched on-demand
-      is_unclear: q.is_unclear,
-      marked_unclear_at: q.marked_unclear_at,
-      university_id: q.university_id,
-      visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-      user_id: q.user_id,
-      semester: q.exam_semester || null,
-      year: q.exam_year || null,
-      image_key: q.image_key || null,
-      show_image_after_answer: q.show_image_after_answer || false,
-      exam_name: q.exam_name || null,
-    }),
+    mapQuestionRow,
   );
 
   return allQuestions;
@@ -394,31 +324,7 @@ export const fetchAllQuestionsPaginated = async (
     ...(personalQuestions || []),
     ...universityQuestions,
     ...publicQuestions,
-  ].map((q) => ({
-    id: q.id,
-    question: q.question,
-    optionA: '',
-    optionB: '',
-    optionC: '',
-    optionD: '',
-    optionE: '',
-    subject: q.subject,
-    correctAnswer: '',
-    comment: '',
-    filename: q.filename,
-    created_at: q.created_at,
-    difficulty: q.difficulty,
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: q.user_id,
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null,
-  }));
+  ].map(mapQuestionRow);
 
   return {
     questions: allQuestions,
@@ -550,36 +456,7 @@ export const fetchQuestionDetails = async (questionIds: string[]) => {
     .filter((r: any) => !r.value.error)
     .flatMap((r: any) => r.value.data || []);
 
-  return allData.map((q) => ({
-    id: q.id,
-    question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
-    subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
-    filename: q.filename,
-    created_at: q.created_at,
-    difficulty: q.difficulty,
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: q.user_id,
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null,
-
-    // Answer distribution statistics
-    first_answer_stats: q.first_answer_stats || null,
-    first_answer_stats_updated_at: q.first_answer_stats_updated_at || null,
-    first_answer_sample_size: q.first_answer_sample_size || 0,
-  }));
+  return allData.map(mapQuestionRowWithStats);
 };
 
 export const fetchQuestionsByFilename = async (
@@ -595,32 +472,7 @@ export const fetchQuestionsByFilename = async (
 
   if (error) throw error;
 
-  return data.map((q) => ({
-    id: q.id,
-    question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
-    subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
-    filename: q.filename,
-    difficulty: q.difficulty,
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: q.user_id,
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null,
-    question_case: q.question_case || null,
-    case_text: q.case_text || null,
-  }));
+  return data.map(mapQuestionRow);
 };
 
 export const fetchQuestionsByExamName = async (
@@ -651,33 +503,7 @@ export const fetchQuestionsByExamName = async (
 
   if (error) throw error;
 
-  const questions = data.map((q) => ({
-    id: q.id,
-    question: q.question,
-    optionA: q.option_a,
-    optionB: q.option_b,
-    optionC: q.option_c,
-    optionD: q.option_d,
-    optionE: q.option_e,
-    subject: q.subject,
-    correctAnswer: q.correct_answer,
-    comment: q.comment,
-    filename: q.filename,
-    difficulty: q.difficulty,
-    is_unclear: q.is_unclear,
-    marked_unclear_at: q.marked_unclear_at,
-    university_id: q.university_id,
-    visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: q.user_id,
-    semester: q.exam_semester || null,
-    year: q.exam_year || null,
-    image_key: q.image_key || null,
-    show_image_after_answer: q.show_image_after_answer || false,
-    exam_name: q.exam_name || null,
-    created_at: q.created_at,
-    question_case: q.question_case || null,
-    case_text: q.case_text || null,
-  }));
+  const questions = data.map(mapQuestionRow);
 
   return {
     questions,
@@ -714,31 +540,5 @@ export const updateQuestion = async (
 
   if (error) throw error;
 
-  return {
-    id: updatedQuestion.id,
-    question: updatedQuestion.question,
-    optionA: updatedQuestion.option_a,
-    optionB: updatedQuestion.option_b,
-    optionC: updatedQuestion.option_c,
-    optionD: updatedQuestion.option_d,
-    optionE: updatedQuestion.option_e,
-    subject: updatedQuestion.subject,
-    correctAnswer: updatedQuestion.correct_answer,
-    comment: updatedQuestion.comment,
-    filename: updatedQuestion.filename,
-    difficulty: updatedQuestion.difficulty,
-    is_unclear: updatedQuestion.is_unclear,
-    marked_unclear_at: updatedQuestion.marked_unclear_at,
-    university_id: updatedQuestion.university_id,
-    visibility: (updatedQuestion.visibility as 'private' | 'university' | 'public') || 'private',
-    user_id: updatedQuestion.user_id,
-    semester: updatedQuestion.exam_semester || null,
-    year: updatedQuestion.exam_year || null,
-    image_key: updatedQuestion.image_key || null,
-    show_image_after_answer: updatedQuestion.show_image_after_answer || false,
-    exam_name: updatedQuestion.exam_name || null,
-    created_at: updatedQuestion.created_at,
-    question_case: updatedQuestion.question_case || null,
-    case_text: updatedQuestion.case_text || null,
-  };
+  return mapQuestionRow(updatedQuestion);
 };
