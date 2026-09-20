@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { getPublishableKey, getSecretKey } from '../_shared/supabaseKeys.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,8 +23,8 @@ serve(async (req) => {
     log('Function started');
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseAnonKey = getPublishableKey();
+    const supabaseServiceKey = getSecretKey();
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     const aiCreditsPriceId = Deno.env.get('STRIPE_PRICE_AI_PRIVATE_CREDITS_ID');
 

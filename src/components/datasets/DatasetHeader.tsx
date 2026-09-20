@@ -19,9 +19,9 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateDatasetVisibility } from '@/services/DatabaseService';
+import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
 
 interface DatasetHeaderProps {
   filename: string;
@@ -55,33 +55,7 @@ const DatasetHeader: React.FC<DatasetHeaderProps> = ({
     queryFn: async () => {
       if (!user) return 0;
 
-      const { data, error } = await supabase
-        .from('user_ignored_questions')
-        .select(
-          `
-          id,
-          questions:question_id (
-            filename,
-            exam_name
-          )
-        `,
-        )
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching ignored questions count:', error);
-        return 0;
-      }
-
-      // Count questions that match this dataset's filename OR exam_name
-      const count =
-        data?.filter(
-          (item) =>
-            item.questions &&
-            (item.questions.filename === filename || item.questions.exam_name === filename),
-        ).length || 0;
-
-      return count;
+      return UnclearQuestionsService.countUnclearInDataset(user.id, filename);
     },
     enabled: !!user,
   });

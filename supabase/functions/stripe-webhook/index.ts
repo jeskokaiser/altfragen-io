@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { getSecretKey } from '../_shared/supabaseKeys.ts';
 
 const log = (step: string, details?: unknown) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -236,7 +237,7 @@ serve(async (req) => {
   const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const supabaseServiceKey = getSecretKey();
   const aiCreditsPriceId = Deno.env.get('STRIPE_PRICE_AI_PRIVATE_CREDITS_ID');
   const monthlyPriceId = Deno.env.get('STRIPE_PRICE_MONTHLY_ID');
   const semesterPriceId = Deno.env.get('STRIPE_PRICE_SEMESTER_ID');

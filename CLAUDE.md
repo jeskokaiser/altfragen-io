@@ -7,6 +7,10 @@ Cursor reads this file too (`AGENTS.md` is a symlink to it). Keep it accurate --
 when a convention here stops matching the code, fix one or the other, and say
 which in the commit message.
 
+This file is the conventions. `docs/modernisation.md` is the plan: what has been
+cleaned up, what is next, and why. Read it before starting a larger change, and
+update it when you finish one.
+
 ## Commands
 
 ```bash
@@ -43,12 +47,16 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 
 ## Rules
 
-**New database access goes through `src/services/`.** This is the direction of
-travel, not the current state: 29 files outside `src/services/` query Supabase
-directly today -- pages, components, hooks and contexts alike. So expect to
-find queries in components, but don't add more. When you touch a component that
-queries directly and the change is small, moving that query into a service is a
-welcome drive-by; when it isn't, leave it.
+**Database access goes through `src/services/`.** Still the direction of travel
+rather than the finished state: 26 files outside `src/services/` query Supabase
+directly -- pages, components, hooks and contexts alike. So expect to find
+queries in components, but don't add more. When you touch one and the change is
+small, moving that query into a service is a welcome drive-by.
+
+Rows coming out of `questions` are mapped to the domain type by
+`src/services/questionRowMapper.ts`. Use it rather than writing the snake_case
+to camelCase translation again -- it used to be copied by hand at ten call
+sites, each with its own subset of fields and its own defaults.
 
 **`src/integrations/supabase/types.ts` is generated.** Regenerate it after any
 schema change -- via the Supabase MCP server's `generate_typescript_types`, or
@@ -62,6 +70,19 @@ invisible. Fix the type, or regenerate.
 
 **Never hand-edit `package-lock.json`.** Change dependencies with `npm install`.
 
+**API keys.** The browser client uses the publishable key (`sb_publishable_...`),
+not the legacy anon JWT. Edge Functions read their outbound key through
+`supabase/functions/_shared/supabaseKeys.ts`, which prefers the new
+`SUPABASE_SECRET_KEYS` / `SUPABASE_PUBLISHABLE_KEYS` bundles and falls back to
+the legacy `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY`. Use those helpers
+rather than reading the environment directly.
+
+That covers outbound keys only. Who may _call_ a function is still the
+platform's `verify_jwt` gate, which understands legacy JWTs only, so callers
+(cron jobs, database webhooks, the client) must keep sending a legacy key until
+each function authorizes requests itself. Disabling the legacy keys is
+therefore a separate piece of work, not a flip of a switch.
+
 ## The lint ratchet
 
 `npm run lint` passes with zero errors and caps warnings at a fixed number
@@ -74,7 +95,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (181) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (177) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
@@ -127,7 +148,7 @@ and `broadcast_logs` tables.
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
   `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
   Splitting them is welcome as its own change, not smuggled into a feature.
-- **`console.*` is used for logging throughout** (~300 calls). Don't add more;
+- **`console.*` is used for logging throughout** (~285 calls). Don't add more;
   a real logger is a pending cleanup.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and
   they deploy separately from the frontend.

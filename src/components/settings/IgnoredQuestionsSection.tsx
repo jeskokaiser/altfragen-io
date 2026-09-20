@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Question } from '@/types/Question';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, X, ChevronDown } from 'lucide-react';
@@ -26,82 +24,7 @@ const IgnoredQuestionsSection = () => {
         return [];
       }
 
-      // Get all ignored questions for this user
-      const { data: unclearData, error: unclearError } = await supabase
-        .from('user_ignored_questions')
-        .select(
-          `
-          id,
-          question_id,
-          marked_unclear_at,
-          created_at,
-          questions:question_id (
-            id,
-            question,
-            option_a,
-            option_b,
-            option_c,
-            option_d,
-            option_e,
-            subject,
-            correct_answer,
-            comment,
-            filename,
-            difficulty,
-            created_at,
-            user_id,
-            visibility,
-            university_id,
-            exam_semester,
-            exam_year,
-            image_key,
-            show_image_after_answer,
-            exam_name
-          )
-        `,
-        )
-        .eq('user_id', user.id)
-        .order('marked_unclear_at', { ascending: false });
-
-      if (unclearError) {
-        console.error('Error fetching ignored questions:', unclearError);
-        throw unclearError;
-      }
-
-      if (!unclearData || unclearData.length === 0) {
-        return [];
-      }
-
-      const filteredQuestions =
-        unclearData
-          ?.filter((item) => !!item.questions)
-          .map((item) => ({
-            id: item.questions.id,
-            question: item.questions.question,
-            optionA: item.questions.option_a,
-            optionB: item.questions.option_b,
-            optionC: item.questions.option_c,
-            optionD: item.questions.option_d,
-            optionE: item.questions.option_e,
-            subject: item.questions.subject,
-            correctAnswer: item.questions.correct_answer,
-            comment: item.questions.comment,
-            filename: item.questions.filename,
-            difficulty: item.questions.difficulty || 3,
-            created_at: item.questions.created_at,
-            user_id: item.questions.user_id,
-            visibility: item.questions.visibility,
-            university_id: item.questions.university_id,
-            semester: item.questions.exam_semester,
-            year: item.questions.exam_year,
-            image_key: item.questions.image_key,
-            show_image_after_answer: item.questions.show_image_after_answer,
-            exam_name: item.questions.exam_name,
-            is_unclear: true,
-            marked_unclear_at: item.marked_unclear_at,
-          })) || [];
-
-      return filteredQuestions as Question[];
+      return UnclearQuestionsService.listUnclearWithQuestions(user.id);
     },
     enabled: !!user && isOpen,
   });
