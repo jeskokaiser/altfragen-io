@@ -16,7 +16,7 @@ import FilterForm, { FilterFormRef } from './FilterForm';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
 import { FormValues } from './types/FormValues';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchTrainingProgressMaps } from '@/services/UserProgressService';
 
 interface TrainingSessionCreateDialogProps {
   open: boolean;
@@ -55,90 +55,21 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
   }, [open, defaultTitle]);
 
   const loadUserProgress = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
-      if (!user?.id) return;
+      const { results, attempts } = await fetchTrainingProgressMaps(
+        user.id,
+        questions.map((q) => q.id),
+      );
 
-      // Get question IDs in batches to avoid URL length limits
-      const questionIds = questions.map((q) => q.id);
-      const BATCH_SIZE = 500;
-      const resultsMap = new Map<string, boolean>();
-      const attemptsMap = new Map<string, number>();
-
-      // Process in batches
-      for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-        const batch = questionIds.slice(i, i + BATCH_SIZE);
-
-        // Query both session_question_progress (prioritized) and user_progress (fallback)
-        const [sessionProgressResult, userProgressResult] = await Promise.all([
-          supabase
-            .from('session_question_progress')
-            .select('question_id, is_correct, attempts_count, created_at, updated_at')
-            .eq('user_id', user.id)
-            .in('question_id', batch)
-            .order('updated_at', { ascending: false }),
-          supabase
-            .from('user_progress')
-            .select('question_id, is_correct, attempts_count, created_at, updated_at')
-            .eq('user_id', user.id)
-            .in('question_id', batch),
-        ]);
-
-        // Process session_question_progress first (newer system, takes priority)
-        // Aggregate latest progress per question across all sessions
-        const sessionProgressByQuestion = new Map<string, any>();
-        if (sessionProgressResult.data) {
-          sessionProgressResult.data.forEach((progress) => {
-            const existing = sessionProgressByQuestion.get(progress.question_id);
-            // Keep the most recent progress per question
-            if (
-              !existing ||
-              (progress.updated_at &&
-                (!existing.updated_at || progress.updated_at > existing.updated_at))
-            ) {
-              sessionProgressByQuestion.set(progress.question_id, progress);
-            }
-          });
-        }
-
-        // Process aggregated session progress
-        sessionProgressByQuestion.forEach((progress) => {
-          if (progress.is_correct !== null) {
-            resultsMap.set(progress.question_id, progress.is_correct);
-          }
-          if (progress.attempts_count !== null) {
-            attemptsMap.set(progress.question_id, progress.attempts_count);
-          }
-        });
-
-        // Process user_progress as fallback (only for questions not in session_question_progress)
-        if (userProgressResult.data) {
-          userProgressResult.data.forEach((progress) => {
-            // Only use if we don't have session progress for this question
-            if (!sessionProgressByQuestion.has(progress.question_id)) {
-              if (progress.is_correct !== null && !resultsMap.has(progress.question_id)) {
-                resultsMap.set(progress.question_id, progress.is_correct);
-              }
-              if (progress.attempts_count !== null && !attemptsMap.has(progress.question_id)) {
-                attemptsMap.set(progress.question_id, progress.attempts_count);
-              }
-            }
-          });
-        }
-
-        if (sessionProgressResult.error) {
-          console.error('Error loading session progress batch:', sessionProgressResult.error);
-        }
-        if (userProgressResult.error) {
-          console.error('Error loading user progress batch:', userProgressResult.error);
-        }
-      }
-
-      questionResultsRef.current = resultsMap;
-      attemptsCountRef.current = attemptsMap;
-      setProgressDataLoaded(true);
+      questionResultsRef.current = results;
+      attemptsCountRef.current = attempts;
     } catch (error) {
       console.error('Error loading user progress:', error);
-      setProgressDataLoaded(true); // Set to true even on error to allow calculation
+    } finally {
+      // Set even on error, so the count calculation is not blocked forever.
+      setProgressDataLoaded(true);
     }
   }, [user?.id, questions]);
 

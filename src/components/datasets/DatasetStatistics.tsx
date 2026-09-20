@@ -1,8 +1,8 @@
 import React from 'react';
 import { Question } from '@/types/Question';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchMergedQuestionProgress, QuestionProgress } from '@/services/UserProgressService';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
@@ -23,85 +23,27 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     localStorage.setItem('statsCollapsibleState', JSON.stringify(isOpen));
   }, [isOpen]);
 
-  const { data: mergedProgress } = useQuery({
+  const datasetQuestionIds = React.useMemo(() => questions.map((q) => q.id), [questions]);
+
+  const { data: progress } = useQuery({
     queryKey: ['user-progress', user?.id, questions[0]?.filename],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id) return new Map<string, QuestionProgress>();
 
-      // Query both tables
-      const [userProgressResult, sessionProgressResult] = await Promise.all([
-        supabase
-          .from('user_progress')
-          .select('question_id, is_correct, updated_at, created_at')
-          .eq('user_id', user.id),
-        supabase
-          .from('session_question_progress')
-          .select('question_id, is_correct, updated_at, created_at')
-          .eq('user_id', user.id),
-      ]);
-
-      if (userProgressResult.error) throw userProgressResult.error;
-      if (sessionProgressResult.error) throw sessionProgressResult.error;
-
-      // Merge progress: prioritize session_question_progress, take latest per question
-      const progressMap = new Map<
-        string,
-        { question_id: string; is_correct: boolean | null; ts: number; source: 'session' | 'user' }
-      >();
-
-      // First, process session_question_progress (newer system, takes priority)
-      (sessionProgressResult.data || []).forEach((p: any) => {
-        if (!p.question_id) return;
-        const ts = new Date(p.updated_at || p.created_at).getTime();
-        const existing = progressMap.get(p.question_id);
-
-        if (!existing || ts > existing.ts || (ts === existing.ts && existing.source === 'user')) {
-          progressMap.set(p.question_id, {
-            question_id: p.question_id,
-            is_correct: p.is_correct,
-            ts,
-            source: 'session',
-          });
-        }
-      });
-
-      // Then, process user_progress for questions not already present or if newer
-      (userProgressResult.data || []).forEach((p: any) => {
-        if (!p.question_id) return;
-        const ts = new Date(p.updated_at || p.created_at).getTime();
-        const existing = progressMap.get(p.question_id);
-
-        if (!existing || (ts > existing.ts && existing.source === 'session')) {
-          // Only replace if significantly newer (session takes priority for equal timestamps)
-          progressMap.set(p.question_id, {
-            question_id: p.question_id,
-            is_correct: p.is_correct,
-            ts,
-            source: 'user',
-          });
-        }
-      });
-
-      // Return simplified format
-      return Array.from(progressMap.values()).map(({ question_id, is_correct }) => ({
-        question_id,
-        is_correct,
-      }));
+      // 'latest' rather than the training filters' 'session': the statistics
+      // report the most recent answer, wherever it was given.
+      return fetchMergedQuestionProgress(user.id, datasetQuestionIds, 'latest');
     },
     enabled: !!user,
   });
 
-  // Filter progress data to only include questions from this dataset
-  const datasetQuestionIds = questions.map((q) => q.id);
-  const filteredProgress = mergedProgress?.filter((progress) =>
-    datasetQuestionIds.includes(progress.question_id),
-  );
-
-  const totalQuestions = questions.length;
-  const answeredQuestions = filteredProgress?.length || 0;
-  const correctAnswers = filteredProgress?.filter((p) => p.is_correct)?.length || 0;
+  const answeredQuestions = progress?.size ?? 0;
+  const correctAnswers = progress
+    ? Array.from(progress.values()).filter((p) => p.isCorrect).length
+    : 0;
   const wrongAnswers = answeredQuestions - correctAnswers;
 
+  const totalQuestions = questions.length;
   const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
   const correctPercentage = totalQuestions ? (correctAnswers / answeredQuestions) * 100 : 0;
   const correctPercentageBar = totalQuestions ? (correctAnswers / totalQuestions) * 100 : 0;
@@ -120,13 +62,13 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
     });
 
     // Add progress stats for each subject
-    filteredProgress?.forEach((progress) => {
-      const question = questions.find((q) => q.id === progress.question_id);
-      if (question) {
-        stats[question.subject].answered += 1;
-        if (progress.is_correct) {
-          stats[question.subject].correct += 1;
-        }
+    questions.forEach((q) => {
+      const questionProgress = progress?.get(q.id);
+      if (!questionProgress) return;
+
+      stats[q.subject].answered += 1;
+      if (questionProgress.isCorrect) {
+        stats[q.subject].correct += 1;
       }
     });
 
@@ -140,7 +82,7 @@ const DatasetStatistics = ({ questions }: DatasetStatisticsProps) => {
         },
         {} as Record<string, { total: number; answered: number; correct: number }>,
       );
-  }, [questions, filteredProgress]);
+  }, [questions, progress]);
 
   return (
     <div className="space-y-6">

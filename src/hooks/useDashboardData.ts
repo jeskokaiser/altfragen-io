@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { fetchAllQuestions } from '@/services/DatabaseService';
+import {
+  fetchProgressActivity,
+  fetchQuestionIdsWithProgressBefore,
+} from '@/services/UserProgressService';
 import { StatisticsDateRange } from '@/contexts/UserPreferencesContext';
 
 // Helper function to calculate date range bounds
@@ -39,6 +42,16 @@ const getDateRangeBounds = (
   };
 };
 
+/** Midnight UTC today, the boundary the daily statistics are cut at. */
+const startOfToday = (): string => {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  return today.toISOString();
+};
+
+const distinctQuestionIds = (rows: { questionId: string }[]): Set<string> =>
+  new Set(rows.map((row) => row.questionId));
+
 export const useDashboardData = (
   userId: string | undefined,
   universityId?: string | null,
@@ -53,86 +66,26 @@ export const useDashboardData = (
     enabled: !!userId,
   });
 
+  // "New" means answered today and never before.
   const todayNewCountQuery = useQuery({
     queryKey: ['today-new', userId],
     queryFn: async () => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
+      if (!userId) return 0;
 
-      // Query both tables for questions first answered today
-      // "New" means questions that have their first progress record created today
-      const [sessionProgressResult, userProgressResult] = await Promise.all([
-        supabase
-          .from('session_question_progress')
-          .select('question_id, created_at')
-          .eq('user_id', userId)
-          .gte('created_at', todayISO),
-        supabase
-          .from('user_progress')
-          .select('question_id, created_at')
-          .eq('user_id', userId)
-          .gte('created_at', todayISO),
-      ]);
+      const today = startOfToday();
+      const answeredToday = distinctQuestionIds(
+        await fetchProgressActivity(userId, { createdFrom: today }),
+      );
 
-      if (sessionProgressResult.error) throw sessionProgressResult.error;
-      if (userProgressResult.error) throw userProgressResult.error;
+      if (answeredToday.size === 0) return 0;
 
-      // Collect unique question IDs from today
-      const questionsFromToday = new Set<string>();
-      (sessionProgressResult.data || []).forEach((p: any) => {
-        if (p.question_id) questionsFromToday.add(p.question_id);
-      });
-      (userProgressResult.data || []).forEach((p: any) => {
-        if (p.question_id) questionsFromToday.add(p.question_id);
-      });
+      const answeredBefore = await fetchQuestionIdsWithProgressBefore(
+        userId,
+        Array.from(answeredToday),
+        today,
+      );
 
-      if (questionsFromToday.size === 0) return 0;
-
-      // Check which of these questions have progress records before today
-      const questionIdsArray = Array.from(questionsFromToday);
-      const BATCH_SIZE = 300;
-      const batches: string[][] = [];
-      for (let i = 0; i < questionIdsArray.length; i += BATCH_SIZE) {
-        batches.push(questionIdsArray.slice(i, i + BATCH_SIZE));
-      }
-
-      const beforeTodayPromises = batches.map((batch) => {
-        return Promise.all([
-          supabase
-            .from('session_question_progress')
-            .select('question_id')
-            .eq('user_id', userId)
-            .in('question_id', batch)
-            .lt('created_at', todayISO),
-          supabase
-            .from('user_progress')
-            .select('question_id')
-            .eq('user_id', userId)
-            .in('question_id', batch)
-            .lt('created_at', todayISO),
-        ]);
-      });
-
-      const beforeTodayResults = await Promise.all(beforeTodayPromises);
-
-      // Collect questions that have progress before today
-      const questionsWithPreviousProgress = new Set<string>();
-      beforeTodayResults.forEach(([sessionResult, userResult]) => {
-        (sessionResult.data || []).forEach((p: any) => {
-          if (p.question_id) questionsWithPreviousProgress.add(p.question_id);
-        });
-        (userResult.data || []).forEach((p: any) => {
-          if (p.question_id) questionsWithPreviousProgress.add(p.question_id);
-        });
-      });
-
-      // "New" questions = those answered today but without previous progress
-      const newQuestionsCount = Array.from(questionsFromToday).filter(
-        (qid) => !questionsWithPreviousProgress.has(qid),
-      ).length;
-
-      return newQuestionsCount;
+      return Array.from(answeredToday).filter((id) => !answeredBefore.has(id)).length;
     },
     enabled: !!userId,
   });
@@ -140,144 +93,49 @@ export const useDashboardData = (
   const todayPracticeCountQuery = useQuery({
     queryKey: ['today-practice', userId],
     queryFn: async () => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
+      if (!userId) return 0;
 
-      // Query both tables for questions updated today
-      const [sessionProgressResult, userProgressResult] = await Promise.all([
-        supabase
-          .from('session_question_progress')
-          .select('question_id, updated_at, created_at')
-          .eq('user_id', userId)
-          .gte('updated_at', todayISO),
-        supabase
-          .from('user_progress')
-          .select('question_id, updated_at, created_at')
-          .eq('user_id', userId)
-          .gte('updated_at', todayISO),
-      ]);
+      const rows = await fetchProgressActivity(userId, { updatedFrom: startOfToday() });
 
-      if (sessionProgressResult.error) throw sessionProgressResult.error;
-      if (userProgressResult.error) throw userProgressResult.error;
-
-      // Collect unique question IDs, prioritizing session_question_progress
-      const uniqueQuestions = new Set<string>();
-
-      // First add from session_question_progress (newer system)
-      (sessionProgressResult.data || []).forEach((p: any) => {
-        if (p.question_id) uniqueQuestions.add(p.question_id);
-      });
-
-      // Then add from user_progress only if not already present
-      (userProgressResult.data || []).forEach((p: any) => {
-        if (p.question_id && !uniqueQuestions.has(p.question_id)) {
-          uniqueQuestions.add(p.question_id);
-        }
-      });
-
-      return uniqueQuestions.size;
+      return distinctQuestionIds(rows).size;
     },
     enabled: !!userId,
   });
 
-  // Calculate "wiederholt" (repeated) questions - questions answered today that were not answered for the first time today
+  // "Repeated" means answered today with a previous answer to look back on: either
+  // progress from before today, or an earlier session today. A question first
+  // answered in session 1 and answered again in session 2 counts as both new and
+  // repeated, which is why this is its own query rather than a subtraction.
   const todayRepeatedCountQuery = useQuery({
     queryKey: ['today-repeated', userId],
     queryFn: async () => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
+      if (!userId) return 0;
 
-      // Get all questions answered today
-      const [sessionProgressToday, userProgressToday] = await Promise.all([
-        supabase
-          .from('session_question_progress')
-          .select('question_id, created_at, session_id')
-          .eq('user_id', userId)
-          .gte('created_at', todayISO),
-        supabase
-          .from('user_progress')
-          .select('question_id, created_at')
-          .eq('user_id', userId)
-          .gte('created_at', todayISO),
-      ]);
+      const today = startOfToday();
+      const rows = await fetchProgressActivity(userId, { createdFrom: today });
+      const answeredToday = distinctQuestionIds(rows);
 
-      if (sessionProgressToday.error) throw sessionProgressToday.error;
-      if (userProgressToday.error) throw userProgressToday.error;
+      if (answeredToday.size === 0) return 0;
 
-      // Collect all questions answered today
-      const questionsFromToday = new Set<string>();
-      const sessionProgressByQuestion = new Map<string, number>(); // Track how many sessions per question today
-
-      (sessionProgressToday.data || []).forEach((p: any) => {
-        if (p.question_id) {
-          questionsFromToday.add(p.question_id);
-          sessionProgressByQuestion.set(
-            p.question_id,
-            (sessionProgressByQuestion.get(p.question_id) || 0) + 1,
+      const sessionsPerQuestion = new Map<string, number>();
+      rows
+        .filter((row) => row.source === 'session')
+        .forEach((row) => {
+          sessionsPerQuestion.set(
+            row.questionId,
+            (sessionsPerQuestion.get(row.questionId) || 0) + 1,
           );
-        }
-      });
-
-      (userProgressToday.data || []).forEach((p: any) => {
-        if (p.question_id) questionsFromToday.add(p.question_id);
-      });
-
-      if (questionsFromToday.size === 0) return 0;
-
-      // Check which questions have progress from before today OR were answered in multiple sessions today
-      const questionIdsArray = Array.from(questionsFromToday);
-      const BATCH_SIZE = 300;
-      const batches: string[][] = [];
-      for (let i = 0; i < questionIdsArray.length; i += BATCH_SIZE) {
-        batches.push(questionIdsArray.slice(i, i + BATCH_SIZE));
-      }
-
-      const beforeTodayPromises = batches.map((batch) => {
-        return Promise.all([
-          supabase
-            .from('session_question_progress')
-            .select('question_id')
-            .eq('user_id', userId)
-            .in('question_id', batch)
-            .lt('created_at', todayISO),
-          supabase
-            .from('user_progress')
-            .select('question_id')
-            .eq('user_id', userId)
-            .in('question_id', batch)
-            .lt('created_at', todayISO),
-        ]);
-      });
-
-      const beforeTodayResults = await Promise.all(beforeTodayPromises);
-
-      // Collect questions that have progress before today
-      const questionsWithPreviousProgress = new Set<string>();
-      beforeTodayResults.forEach(([sessionResult, userResult]) => {
-        (sessionResult.data || []).forEach((p: any) => {
-          if (p.question_id) questionsWithPreviousProgress.add(p.question_id);
         });
-        (userResult.data || []).forEach((p: any) => {
-          if (p.question_id) questionsWithPreviousProgress.add(p.question_id);
-        });
-      });
 
-      // Count questions that are "wiederholt":
-      // 1. Questions answered today that have progress from before today, OR
-      // 2. Questions answered today in multiple sessions (the second+ session makes it "wiederholt")
-      //    Note: If a question is answered in Session 1 (first time ever) and Session 2 today,
-      //    it counts as "Neu" from Session 1, but the Session 2 answer makes it "wiederholt"
-      const repeatedQuestions = Array.from(questionsFromToday).filter((qid) => {
-        const hasPreviousProgress = questionsWithPreviousProgress.has(qid);
-        const answeredInMultipleSessions = (sessionProgressByQuestion.get(qid) || 0) > 1;
-        // A question is "wiederholt" if it has previous progress OR was answered in multiple sessions today
-        // (because answering it in a second session means it's being repeated)
-        return hasPreviousProgress || answeredInMultipleSessions;
-      });
+      const answeredBefore = await fetchQuestionIdsWithProgressBefore(
+        userId,
+        Array.from(answeredToday),
+        today,
+      );
 
-      return repeatedQuestions.length;
+      return Array.from(answeredToday).filter(
+        (id) => answeredBefore.has(id) || (sessionsPerQuestion.get(id) || 0) > 1,
+      ).length;
     },
     enabled: !!userId,
   });
@@ -285,102 +143,27 @@ export const useDashboardData = (
   const totalAnsweredCountQuery = useQuery({
     queryKey: ['total-answers', userId, dateRange],
     queryFn: async () => {
+      if (!userId) return 0;
+
       const { start, end } = getDateRangeBounds(dateRange || { preset: 'all' });
+      const rows = await fetchProgressActivity(userId, { createdFrom: start, createdTo: end });
 
-      // Query both tables
-      let sessionQuery = supabase
-        .from('session_question_progress')
-        .select('question_id, created_at')
-        .eq('user_id', userId);
-
-      let userQuery = supabase
-        .from('user_progress')
-        .select('question_id, created_at')
-        .eq('user_id', userId);
-
-      // Apply date range filter if not 'all'
-      if (start) {
-        sessionQuery = sessionQuery.gte('created_at', start);
-        userQuery = userQuery.gte('created_at', start);
-      }
-      if (end) {
-        sessionQuery = sessionQuery.lte('created_at', end);
-        userQuery = userQuery.lte('created_at', end);
-      }
-
-      const [sessionProgressResult, userProgressResult] = await Promise.all([
-        sessionQuery,
-        userQuery,
-      ]);
-
-      if (sessionProgressResult.error) throw sessionProgressResult.error;
-      if (userProgressResult.error) throw userProgressResult.error;
-
-      // Collect unique question IDs, prioritizing session_question_progress
-      const uniqueQuestions = new Set<string>();
-
-      // First add from session_question_progress (newer system)
-      (sessionProgressResult.data || []).forEach((p: any) => {
-        if (p.question_id) uniqueQuestions.add(p.question_id);
-      });
-
-      // Then add from user_progress only if not already present
-      (userProgressResult.data || []).forEach((p: any) => {
-        if (p.question_id && !uniqueQuestions.has(p.question_id)) {
-          uniqueQuestions.add(p.question_id);
-        }
-      });
-
-      return uniqueQuestions.size;
+      return distinctQuestionIds(rows).size;
     },
     enabled: !!userId,
   });
 
+  // Attempts are summed across both tables rather than deduplicated: answering the
+  // same question in a session and in a one-off run is two attempts.
   const totalAttemptsCountQuery = useQuery({
     queryKey: ['total-attempts', userId, dateRange],
     queryFn: async () => {
+      if (!userId) return 0;
+
       const { start, end } = getDateRangeBounds(dateRange || { preset: 'all' });
+      const rows = await fetchProgressActivity(userId, { createdFrom: start, createdTo: end });
 
-      // Query both tables for attempts_count
-      let sessionQuery = supabase
-        .from('session_question_progress')
-        .select('attempts_count, created_at')
-        .eq('user_id', userId);
-
-      let userQuery = supabase
-        .from('user_progress')
-        .select('attempts_count, created_at')
-        .eq('user_id', userId);
-
-      // Apply date range filter if not 'all'
-      if (start) {
-        sessionQuery = sessionQuery.gte('created_at', start);
-        userQuery = userQuery.gte('created_at', start);
-      }
-      if (end) {
-        sessionQuery = sessionQuery.lte('created_at', end);
-        userQuery = userQuery.lte('created_at', end);
-      }
-
-      const [sessionProgressResult, userProgressResult] = await Promise.all([
-        sessionQuery,
-        userQuery,
-      ]);
-
-      if (sessionProgressResult.error) throw sessionProgressResult.error;
-      if (userProgressResult.error) throw userProgressResult.error;
-
-      // Sum attempts from both tables
-      const sessionAttempts = (sessionProgressResult.data || []).reduce(
-        (sum, record) => sum + (record.attempts_count || 0),
-        0,
-      );
-      const userAttempts = (userProgressResult.data || []).reduce(
-        (sum, record) => sum + (record.attempts_count || 0),
-        0,
-      );
-
-      return sessionAttempts + userAttempts;
+      return rows.reduce((sum, row) => sum + (row.attemptsCount || 0), 0);
     },
     enabled: !!userId,
   });

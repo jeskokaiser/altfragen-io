@@ -335,67 +335,6 @@ export const fetchAllQuestionsPaginated = async (
   };
 };
 
-export const fetchUserDifficulty = async (
-  userId: string,
-  questionId: string,
-): Promise<number | null> => {
-  if (!userId || !questionId) return null;
-
-  const { data, error } = await supabase
-    .from('user_progress')
-    .select('user_difficulty')
-    .eq('user_id', userId)
-    .eq('question_id', questionId)
-    .maybeSingle();
-
-  if (error || !data) return null;
-
-  return data.user_difficulty;
-};
-
-export const fetchUserDifficultiesForQuestions = async (
-  userId: string,
-  questionIds: string[],
-): Promise<Record<string, number>> => {
-  if (!userId || questionIds.length === 0) return {};
-
-  const userDifficulties: Record<string, number> = {};
-
-  // Batch the question IDs to avoid URL length limits
-  const BATCH_SIZE = 500;
-  const batches = [];
-
-  for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-    batches.push(questionIds.slice(i, i + BATCH_SIZE));
-  }
-
-  // Fetch all batches in parallel
-  const batchPromises = batches.map((batch) =>
-    supabase
-      .from('user_progress')
-      .select('question_id, user_difficulty')
-      .eq('user_id', userId)
-      .in('question_id', batch)
-      .not('user_difficulty', 'is', null),
-  );
-
-  try {
-    const results = await Promise.all(batchPromises);
-    const allProgressData = results.flatMap((result) => result.data || []);
-
-    // Combine all batch results
-    allProgressData.forEach((item) => {
-      if (item.user_difficulty !== null) {
-        userDifficulties[item.question_id] = item.user_difficulty;
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching user difficulties:', error);
-  }
-
-  return userDifficulties;
-};
-
 export const fetchQuestionDetails = async (questionIds: string[]) => {
   if (!questionIds.length) return [];
 

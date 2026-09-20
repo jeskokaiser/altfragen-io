@@ -48,7 +48,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 26 files outside `src/services/` query Supabase
+rather than the finished state: 19 files outside `src/services/` query Supabase
 directly -- pages, components, hooks and contexts alike. So expect to find
 queries in components, but don't add more. When you touch one and the change is
 small, moving that query into a service is a welcome drive-by.
@@ -95,7 +95,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (177) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (161) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
@@ -122,7 +122,11 @@ not a string.
 
 **Training sessions** (`training_sessions`, `session_question_progress`) back
 the `/training/session/*` routes via `TrainingSessionService`. A one-off run
-and a saved session share the same runner.
+and a saved session share the same runner, but not the same table: a one-off run
+records into `user_progress`, a session into `session_question_progress`. Reading
+a user's progress therefore means merging both, which is what
+`UserProgressService` is for -- including the choice of which row wins when a
+question has both (`ProgressPreference`, see `docs/modernisation.md`).
 
 **AI commentary** is a batch pipeline, not a request/response call: questions
 are queued (`ai_commentary_job_queue`), dispatched to providers in batches

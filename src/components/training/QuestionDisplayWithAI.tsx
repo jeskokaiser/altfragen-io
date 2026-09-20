@@ -21,7 +21,6 @@ import { ModelName } from './ModelIcon';
 import { AIModelSelector } from './AIModelSelector';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
 import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import CommentsSection from './CommentsSection';
@@ -30,6 +29,7 @@ import { MessageSquare } from 'lucide-react';
 import { Collapsible } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getCommentsForQuestion } from '@/services/CommentService';
+import { recordAnswerAttempt, setUserDifficulty } from '@/services/UserProgressService';
 
 interface QuestionDisplayWithAIProps {
   questionData: Question;
@@ -272,50 +272,14 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     if (!user) return;
 
     try {
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from('user_progress')
-        .select('is_correct, attempts_count')
-        .eq('user_id', user.id)
-        .eq('question_id', currentQuestion.id)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      if (!existingProgress) {
-        const { error: insertError } = await supabase.from('user_progress').insert({
-          user_id: user.id,
-          question_id: currentQuestion.id,
-          user_answer: answer,
-          // Treat solution_viewed as an explicit wrong attempt
-          is_correct: answer === 'solution_viewed' ? false : isAnswerCorrect,
-          attempts_count: 1,
-        });
-
-        if (insertError) throw insertError;
-      } else {
-        // When the user views the solution without answering, count it as a wrong attempt.
-        // However, don't downgrade an already-correct question: keep existing is_correct if it is true.
-        const nextIsCorrect =
-          answer === 'solution_viewed'
-            ? existingProgress.is_correct === true
-              ? true
-              : false
-            : isAnswerCorrect
-              ? preferences?.immediateFeedback || isFirstAttempt
-              : existingProgress.is_correct;
-
-        const { error: updateError } = await supabase
-          .from('user_progress')
-          .update({
-            user_answer: answer,
-            attempts_count: (existingProgress.attempts_count || 1) + 1,
-            is_correct: nextIsCorrect,
-          })
-          .eq('user_id', user.id)
-          .eq('question_id', currentQuestion.id);
-
-        if (updateError) throw updateError;
-      }
+      await recordAnswerAttempt({
+        userId: user.id,
+        questionId: currentQuestion.id,
+        answer,
+        isCorrect: isAnswerCorrect,
+        isFirstAttempt,
+        immediateFeedback: preferences?.immediateFeedback ?? false,
+      });
 
       // Invalidate dashboard queries to ensure fresh data when user returns
       queryClient.invalidateQueries({ queryKey: ['today-new', user.id] });
@@ -515,33 +479,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     if (newDifficulty < 1 || newDifficulty > 5) return;
 
     try {
-      // Check if user progress entry already exists
-      const { data: existingProgress } = await supabase
-        .from('user_progress')
-        .select('id')
-        .eq('question_id', currentQuestion.id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (existingProgress) {
-        // Update existing progress entry
-        const { error } = await supabase
-          .from('user_progress')
-          .update({ user_difficulty: newDifficulty })
-          .eq('id', existingProgress.id);
-
-        if (error) throw error;
-      } else {
-        // Create new progress entry
-        const { error } = await supabase.from('user_progress').insert({
-          user_id: user.id,
-          question_id: currentQuestion.id,
-          user_difficulty: newDifficulty,
-          attempts_count: 0,
-        });
-
-        if (error) throw error;
-      }
+      await setUserDifficulty(user.id, currentQuestion.id, newDifficulty);
 
       toast.info(`Schwierigkeitsgrad auf ${newDifficulty} gesetzt`);
 

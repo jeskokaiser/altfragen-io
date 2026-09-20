@@ -7,7 +7,7 @@ import FilterForm, { FilterFormRef } from './FilterForm';
 import { filterQuestions, prioritizeQuestions } from '@/utils/questionFilters';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchTrainingProgressMaps } from '@/services/UserProgressService';
 
 interface TrainingConfigProps {
   questions: Question[];
@@ -23,52 +23,24 @@ const TrainingConfig: React.FC<TrainingConfigProps> = ({ questions, onStart }) =
 
   // Load user progress data
   useEffect(() => {
-    if (user) {
-      loadUserProgress();
-    }
-  }, [user]);
-
-  const loadUserProgress = async () => {
-    try {
+    const loadUserProgress = async () => {
       if (!user?.id) return;
 
-      // Get question IDs in batches to avoid URL length limits
-      const questionIds = questions.map((q) => q.id);
-      const BATCH_SIZE = 500;
-      const resultsMap = new Map<string, boolean>();
-      const attemptsMap = new Map<string, number>();
+      try {
+        const { results, attempts } = await fetchTrainingProgressMaps(
+          user.id,
+          questions.map((q) => q.id),
+        );
 
-      // Process in batches
-      for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-        const batch = questionIds.slice(i, i + BATCH_SIZE);
-
-        const { data: progressData, error } = await supabase
-          .from('user_progress')
-          .select('question_id, is_correct, attempts_count')
-          .eq('user_id', user.id)
-          .in('question_id', batch);
-
-        if (error) {
-          console.error('Error loading user progress batch:', error);
-          continue;
-        }
-
-        progressData?.forEach((progress) => {
-          if (progress.is_correct !== null) {
-            resultsMap.set(progress.question_id, progress.is_correct);
-          }
-          if (progress.attempts_count !== null) {
-            attemptsMap.set(progress.question_id, progress.attempts_count);
-          }
-        });
+        setQuestionResults(results);
+        setAttemptsCount(attempts);
+      } catch (error) {
+        console.error('Error loading user progress:', error);
       }
+    };
 
-      setQuestionResults(resultsMap);
-      setAttemptsCount(attemptsMap);
-    } catch (error) {
-      console.error('Error loading user progress:', error);
-    }
-  };
+    loadUserProgress();
+  }, [user, questions]);
 
   const onSubmit = async (values: FormValues) => {
     setIsProcessing(true);

@@ -17,7 +17,7 @@ import UpcomingExamEditDialog from './exams/UpcomingExamEditDialog';
 import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
 import { deleteUpcomingExam } from '@/services/UpcomingExamService';
-import { fetchUserDifficultiesForQuestions } from '@/services/DatabaseService';
+import { fetchUserDifficultiesForQuestions } from '@/services/UserProgressService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { toast } from 'sonner';
