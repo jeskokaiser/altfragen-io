@@ -7,6 +7,10 @@ Cursor reads this file too (`AGENTS.md` is a symlink to it). Keep it accurate --
 when a convention here stops matching the code, fix one or the other, and say
 which in the commit message.
 
+This file is the conventions. `docs/modernisation.md` is the plan: what has been
+cleaned up, what is next, and why. Read it before starting a larger change, and
+update it when you finish one.
+
 ## Commands
 
 ```bash
@@ -144,7 +148,7 @@ and `broadcast_logs` tables.
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
   `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
   Splitting them is welcome as its own change, not smuggled into a feature.
-- **`console.*` is used for logging throughout** (~300 calls). Don't add more;
+- **`console.*` is used for logging throughout** (~285 calls). Don't add more;
   a real logger is a pending cleanup.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and
   they deploy separately from the frontend.
