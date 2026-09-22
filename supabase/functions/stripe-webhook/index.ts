@@ -3,6 +3,7 @@ import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { getSecretKey } from '../_shared/supabaseKeys.ts';
 import {
+  applySubscriptionEvent,
   creditsForQuantity,
   isTransientSubscriptionCreation,
   quotaMonthStart,
@@ -28,11 +29,7 @@ async function syncSubscriptionState(
     customer: subscription.customer,
   });
 
-  const {
-    subscribed: hasActiveSub,
-    tier: subscriptionTier,
-    subscriptionEnd,
-  } = resolveSubscriptionEntitlement(
+  const incomingEntitlement = resolveSubscriptionEntitlement(
     {
       status: subscription.status,
       priceId: subscription.items.data[0]?.price?.id,
@@ -45,9 +42,7 @@ async function syncSubscriptionState(
   log('Resolved subscription entitlement', {
     subscriptionId: subscription.id,
     status: subscription.status,
-    hasActiveSub,
-    subscriptionTier,
-    subscriptionEnd,
+    ...incomingEntitlement,
   });
 
   // Get customer and email
@@ -71,7 +66,9 @@ async function syncSubscriptionState(
   // Try to find existing subscriber by stripe_customer_id first, then by email
   const { data: existingSubscriber, error: subscriberLookupError } = await supabase
     .from('subscribers')
-    .select('id, user_id, email, stripe_customer_id')
+    .select(
+      'id, user_id, email, stripe_customer_id, subscribed, subscription_tier, subscription_end',
+    )
     .or(`stripe_customer_id.eq.${customerId},email.eq.${email}`)
     .maybeSingle();
 
@@ -80,6 +77,29 @@ async function syncSubscriptionState(
       error: subscriberLookupError.message,
       customerId,
       email,
+    });
+  }
+
+  // A lifetime purchase and a subscription share this row, so a cancellation
+  // must not revoke access that was bought outright.
+  const {
+    subscribed: hasActiveSub,
+    tier: subscriptionTier,
+    subscriptionEnd,
+  } = applySubscriptionEvent(
+    {
+      tier: existingSubscriber?.subscription_tier,
+      subscribed: existingSubscriber?.subscribed,
+      subscriptionEnd: existingSubscriber?.subscription_end,
+    },
+    incomingEntitlement,
+  );
+
+  if (subscriptionTier !== incomingEntitlement.tier) {
+    log('Keeping the stored entitlement instead of the one this event implies', {
+      subscriptionId: subscription.id,
+      stored: subscriptionTier,
+      implied: incomingEntitlement.tier,
     });
   }
 

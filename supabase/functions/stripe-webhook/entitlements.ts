@@ -100,6 +100,40 @@ export const resolveSubscriptionEntitlement = (
   };
 };
 
+/** The entitlement a `subscribers` row already carries, as far as it is known. */
+export interface StoredEntitlement {
+  tier?: string | null;
+  subscribed?: boolean | null;
+  subscriptionEnd?: string | null;
+}
+
+/** Whether a stored row was bought as lifetime access. */
+export const isLifetimeEntitlement = (stored?: StoredEntitlement | null): boolean =>
+  stored?.tier === LIFETIME_TIER;
+
+/**
+ * What to store after a subscription event, given what is already stored.
+ *
+ * Lifetime access is bought once and outlives any subscription. Both live in
+ * the same `subscribers` row, keyed by email, and subscription events upsert
+ * that row -- so without this, a lifetime buyer who cancels the monthly plan
+ * they no longer need, or whose old plan simply lapses, has their lifetime
+ * access revoked by the cancellation event. A subscription event therefore
+ * leaves a lifetime row exactly as it found it.
+ */
+export const applySubscriptionEvent = (
+  stored: StoredEntitlement | null | undefined,
+  incoming: Entitlement,
+): Entitlement => {
+  if (!isLifetimeEntitlement(stored)) return incoming;
+
+  return {
+    subscribed: stored?.subscribed ?? true,
+    tier: LIFETIME_TIER,
+    subscriptionEnd: stored?.subscriptionEnd ?? null,
+  };
+};
+
 /**
  * Whether a subscription event is the transient state Stripe reports before the
  * first payment goes through.

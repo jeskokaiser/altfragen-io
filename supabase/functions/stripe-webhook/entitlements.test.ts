@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   CREDITS_PER_PACK,
+  applySubscriptionEvent,
   creditsForQuantity,
+  isLifetimeEntitlement,
   isTransientSubscriptionCreation,
   quotaMonthStart,
   resolveLifetimeEntitlement,
@@ -133,6 +135,94 @@ describe('isTransientSubscriptionCreation', () => {
 
   it('acts on a subscription created as active', () => {
     expect(isTransientSubscriptionCreation('customer.subscription.created', 'active')).toBe(false);
+  });
+});
+
+describe('applySubscriptionEvent', () => {
+  const revoked = { subscribed: false, tier: null, subscriptionEnd: null };
+  const active = {
+    subscribed: true,
+    tier: 'Monthly',
+    subscriptionEnd: '2026-04-15T12:00:00.000Z',
+  };
+  const lifetimeRow = {
+    tier: 'Lifetime',
+    subscribed: true,
+    subscriptionEnd: '2126-03-15T12:00:00.000Z',
+  };
+
+  it('takes the event at face value when nothing is stored yet', () => {
+    expect(applySubscriptionEvent(null, active)).toEqual(active);
+    expect(applySubscriptionEvent(undefined, revoked)).toEqual(revoked);
+  });
+
+  it('lets an event revoke an ordinary subscription', () => {
+    const stored = {
+      tier: 'Monthly',
+      subscribed: true,
+      subscriptionEnd: '2026-04-15T12:00:00.000Z',
+    };
+
+    expect(applySubscriptionEvent(stored, revoked)).toEqual(revoked);
+  });
+
+  it('does not let a cancellation revoke lifetime access', () => {
+    // The case this guard exists for: a lifetime buyer cancels the monthly plan
+    // they no longer need, and the cancellation event upserts the same row.
+    expect(applySubscriptionEvent(lifetimeRow, revoked)).toEqual({
+      subscribed: true,
+      tier: 'Lifetime',
+      subscriptionEnd: '2126-03-15T12:00:00.000Z',
+    });
+  });
+
+  it('does not downgrade lifetime access to a running subscription', () => {
+    expect(applySubscriptionEvent(lifetimeRow, active).tier).toBe('Lifetime');
+  });
+
+  it('leaves a lifetime row exactly as it found it, rather than re-granting', () => {
+    // Whatever put a lifetime row into this state, a subscription event is not
+    // the thing that should decide to undo it.
+    const withdrawn = { tier: 'Lifetime', subscribed: false, subscriptionEnd: null };
+
+    expect(applySubscriptionEvent(withdrawn, active)).toEqual({
+      subscribed: false,
+      tier: 'Lifetime',
+      subscriptionEnd: null,
+    });
+  });
+
+  it('does not invent an end date for a lifetime row that has none', () => {
+    const noEnd = { tier: 'Lifetime', subscribed: true };
+
+    expect(applySubscriptionEvent(noEnd, revoked).subscriptionEnd).toBeNull();
+  });
+
+  it('assumes access for a lifetime row that does not say', () => {
+    const unknownFlag = { tier: 'Lifetime', subscriptionEnd: '2126-03-15T12:00:00.000Z' };
+
+    expect(applySubscriptionEvent(unknownFlag, revoked).subscribed).toBe(true);
+  });
+});
+
+describe('isLifetimeEntitlement', () => {
+  it('recognises the tier the webhook writes', () => {
+    expect(isLifetimeEntitlement({ tier: 'Lifetime' })).toBe(true);
+  });
+
+  it('does not treat other tiers as lifetime', () => {
+    // The table carries legacy spellings such as 'Premium (legacy)' and
+    // 'Weekly'; none of them were bought outright.
+    ['Monthly', 'Semester', 'Unknown', 'Premium (legacy)', 'Weekly', 'lifetime', null].forEach(
+      (tier) => {
+        expect(isLifetimeEntitlement({ tier })).toBe(false);
+      },
+    );
+  });
+
+  it('handles a missing row', () => {
+    expect(isLifetimeEntitlement(null)).toBe(false);
+    expect(isLifetimeEntitlement(undefined)).toBe(false);
   });
 });
 
