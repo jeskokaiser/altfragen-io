@@ -49,7 +49,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 19 files outside `src/services/` query Supabase
+rather than the finished state: 15 files outside `src/services/` query Supabase
 directly -- pages, components, hooks and contexts alike. So expect to find
 queries in components, but don't add more. When you touch one and the change is
 small, moving that query into a service is a welcome drive-by.
@@ -115,6 +115,9 @@ this server-side; keep the client in step.
 
 **Universities** come from the user's profile (`AuthContext` exposes
 `universityId`). Shared questions and public comments are scoped to it.
+`ProfileService` and `UniversityService` own the two tables. A university is
+matched to a sign-up by an **exact** email domain; a suffix match was tried once
+and put people into universities they did not belong to.
 
 **Questions** are `src/types/Question.ts`. Note the DB uses snake_case
 (`option_a`, `exam_year`) while the domain type is camelCase (`optionA`) --
@@ -145,18 +148,18 @@ and `broadcast_logs` tables.
 
 ## Landmines
 
-- **Thin test coverage.** There are specs, but only for pure logic: the Stripe
-  entitlement decisions (`stripe-webhook/entitlements.ts`), the user progress
-  merge and answer recording (`UserProgressService`), and
-  `utils/cohortScoring.ts`. Everything touching the database, React or Stripe
-  itself is uncovered -- `TrainingSessionService` (progress) most of all. Say
-  what a change was actually verified against rather than assuming a green run
-  means correct.
+- **Thin test coverage.** There are specs for the Stripe entitlement decisions
+  (`stripe-webhook/entitlements.ts`), `utils/cohortScoring.ts`, and the
+  services that own `user_progress`, `profiles` and `universities` -- the last
+  three through the Supabase double in `src/test/supabaseDouble.ts`. React and
+  Stripe itself are uncovered, and so is `TrainingSessionService` (progress),
+  which matters most. Say what a change was actually verified against rather
+  than assuming a green run means correct.
 - **Some files are very large**: `ExamCohortComparisonSection.tsx` (~1300
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
   `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
   Splitting them is welcome as its own change, not smuggled into a feature.
-- **`console.*` is used for logging throughout** (~285 calls). Don't add more;
+- **`console.*` is used for logging throughout** (~270 calls). Don't add more;
   a real logger is a pending cleanup.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and
   they deploy separately from the frontend.

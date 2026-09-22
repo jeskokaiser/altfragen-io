@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { setEmailVerified, setMarketingConsent } from '@/services/ProfileService';
+import { findUniversityByEmailDomain } from '@/services/UniversityService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -116,17 +118,9 @@ const Auth = () => {
 
   const updateVerificationStatus = async (userId: string, isVerified: boolean) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          is_email_verified: isVerified,
-        })
-        .eq('id', userId);
-      if (error) {
-        console.error('Error updating verification status:', error);
-      }
+      await setEmailVerified(userId, isVerified);
     } catch (error) {
-      console.error('Error in updateVerificationStatus:', error);
+      console.error('Error updating verification status:', error);
     }
   };
 
@@ -138,27 +132,9 @@ const Auth = () => {
         const emailDomain = email.split('@')[1]?.trim();
         if (!emailDomain) return;
 
-        // First try exact domain match
-        const { data, error } = await supabase
-          .from('universities')
-          .select('id, name, email_domain')
-          .eq('email_domain', emailDomain);
-
-        if (error) {
-          console.error('Error checking university domain:', error);
-          setUniversityInfo(null);
-        } else if (data && data.length > 0) {
-          // Exact match found
-          const university = data[0];
-          setUniversityInfo({
-            id: university.id,
-            name: university.name,
-          });
-        } else {
-          // FIXED: Remove problematic endsWith fallback that was causing false matches
-          // If no exact match, the user is not at a university
-          setUniversityInfo(null);
-        }
+        // Exact match only: a suffix fallback used to put people into the
+        // wrong university, and with it into that university's questions.
+        setUniversityInfo(await findUniversityByEmailDomain(emailDomain));
       } catch (error) {
         console.error('Error in checkEmailDomain:', error);
         setUniversityInfo(null);
@@ -478,18 +454,7 @@ const Auth = () => {
           // Add a small delay to ensure the profile is created by the trigger
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({
-              marketing_consent: acceptedMarketing,
-              marketing_consent_at: acceptedMarketing ? new Date().toISOString() : null,
-            })
-            .eq('id', signUpData.user.id);
-
-          if (profileError) {
-            console.error('Error updating marketing consent:', profileError);
-            // Don't fail the signup process for this error
-          }
+          await setMarketingConsent(signUpData.user.id, acceptedMarketing);
         } catch (error) {
           console.error('Error saving marketing consent:', error);
           // Don't fail the signup process for this error
