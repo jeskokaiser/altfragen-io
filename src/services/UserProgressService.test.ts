@@ -1,78 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  payloadOf,
+  queriesFor,
+  queueResponse,
+  recordedQueries,
+  resetSupabaseDouble,
+} from '@/test/supabaseDouble';
 
-/**
- * A stand-in for the Supabase query builder.
- *
- * The real builder is thenable: awaiting it runs the query. This double keeps
- * the chain, records every call so a spec can assert on the payload that would
- * have been sent, and hands out queued responses per table.
- */
-interface SupabaseResult {
-  data?: unknown;
-  error?: unknown;
-}
-
-interface RecordedQuery {
-  table: string;
-  ops: Array<{ method: string; args: unknown[] }>;
-}
-
-const responses = new Map<string, SupabaseResult[]>();
-const queries: RecordedQuery[] = [];
-
-const queueResponse = (table: string, result: SupabaseResult) => {
-  const existing = responses.get(table) ?? [];
-  existing.push(result);
-  responses.set(table, existing);
-};
-
-const nextResponse = (table: string): SupabaseResult =>
-  responses.get(table)?.shift() ?? { data: [], error: null };
-
-const CHAIN_METHODS = [
-  'select',
-  'eq',
-  'in',
-  'gte',
-  'lte',
-  'lt',
-  'not',
-  'order',
-  'update',
-  'insert',
-  'delete',
-] as const;
-
-const createBuilder = (table: string) => {
-  const recorded: RecordedQuery = { table, ops: [] };
-  queries.push(recorded);
-
-  const settle = () => {
-    const { data = null, error = null } = nextResponse(table);
-    return Promise.resolve({ data, error });
-  };
-
-  const builder: Record<string, unknown> = {
-    then: (onFulfilled: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) =>
-      settle().then(onFulfilled, onRejected),
-    maybeSingle: (...args: unknown[]) => {
-      recorded.ops.push({ method: 'maybeSingle', args });
-      return settle();
-    },
-  };
-
-  CHAIN_METHODS.forEach((method) => {
-    builder[method] = (...args: unknown[]) => {
-      recorded.ops.push({ method, args });
-      return builder;
-    };
-  });
-
-  return builder;
-};
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: (table: string) => createBuilder(table) },
+vi.mock('@/integrations/supabase/client', async () => ({
+  supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
 import {
@@ -86,19 +22,7 @@ import {
 
 const USER = 'user-1';
 
-/** The payload a recorded insert or update would have sent. */
-const payloadOf = (query: RecordedQuery, method: 'insert' | 'update'): Record<string, unknown> => {
-  const op = query.ops.find((candidate) => candidate.method === method);
-  if (!op) throw new Error(`no ${method} recorded for ${query.table}`);
-  return op.args[0] as Record<string, unknown>;
-};
-
-const queriesFor = (table: string) => queries.filter((query) => query.table === table);
-
-beforeEach(() => {
-  responses.clear();
-  queries.length = 0;
-});
+beforeEach(resetSupabaseDouble);
 
 describe('fetchMergedQuestionProgress', () => {
   it('leaves questions without progress out of the map', async () => {
@@ -301,7 +225,7 @@ describe('fetchMergedQuestionProgress', () => {
     const merged = await fetchMergedQuestionProgress(USER, []);
 
     expect(merged.size).toBe(0);
-    expect(queries).toHaveLength(0);
+    expect(recordedQueries).toHaveLength(0);
   });
 });
 

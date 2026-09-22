@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchIsAdmin } from '@/services/ProfileService';
 
 export const useAdminRole = () => {
   const { user, loading: authLoading } = useAuth();
@@ -16,18 +16,7 @@ export const useAdminRole = () => {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error checking admin role:', error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!data?.is_admin);
-        }
+        setIsAdmin(await fetchIsAdmin(user.id));
       } catch (error) {
         console.error('Error checking admin role:', error);
         setIsAdmin(false);

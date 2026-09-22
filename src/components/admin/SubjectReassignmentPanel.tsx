@@ -14,6 +14,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchUniversities } from '@/services/UniversityService';
 import { toast } from 'sonner';
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -56,12 +57,7 @@ const SubjectReassignmentPanel: React.FC = () => {
   // Fetch universities for the dropdown
   const { data: universities } = useQuery({
     queryKey: ['universities'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('universities').select('id, name').order('name');
-
-      if (error) throw error;
-      return data;
-    },
+    queryFn: fetchUniversities,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

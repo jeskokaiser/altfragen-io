@@ -18,6 +18,7 @@ import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
 import { deleteUpcomingExam } from '@/services/UpcomingExamService';
 import { fetchUserDifficultiesForQuestions } from '@/services/UserProgressService';
+import { fetchIsPremium } from '@/services/ProfileService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { toast } from 'sonner';
@@ -85,18 +86,10 @@ const Dashboard = () => {
         setAiCreditsLoading(true);
         setAiCreditsError(null);
 
-        // Get premium status from profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_premium')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
+        // The German message is what the user sees, so it stays here.
+        const isPremium = await fetchIsPremium(user.id).catch(() => {
           throw new Error('Fehler beim Laden des Profils');
-        }
-
-        const isPremium = profile?.is_premium ?? false;
+        });
         const BASE_MONTHLY_FREE_LIMIT = 100;
 
         // Calculate rolling 30-day window start (for display)

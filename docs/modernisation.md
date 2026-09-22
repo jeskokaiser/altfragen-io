@@ -46,35 +46,57 @@ in a saved session were invisible to its „Nur neue Fragen“ and „Nur falsch
 Fragen“ filters. That is fixed; the disagreement that is not is under Not
 started.
 
+**`profiles` and `universities` have services.** `ProfileService` and
+`UniversityService` own them. Five files queried the two tables directly — the
+auth context, the auth page, the admin role hook, the subject reassignment
+panel and the dashboard. The same email-verification update was written out
+twice, in the context and the page, and had to be kept in step by hand.
+
+The services throw on a database error rather than returning a fallback: what
+a failure means differs per screen — a missing admin flag means "not an
+admin", a missing profile on sign-in means the session is unusable — so the
+caller decides, and the German message a user sees stays next to the screen
+that shows it.
+
+Not done here: `AuthContext` still reads the profile and then the university
+name in two round trips, though `profiles_university_id_fkey` would let
+PostgREST embed them in one. It is the root of auth state and the embed cannot
+be tested from this repo, so it stays a separate change.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 60 specs cover the three places where a mistake is both plausible
-and invisible: the Stripe entitlement decisions, the user progress merge and
-answer recording, and the cohort scoring. The entitlement decisions had to be
-lifted out of `stripe-webhook/index.ts` first — the function is Deno and
-imports Stripe over URL, so nothing in it is reachable from a Node runner.
-They now live in `stripe-webhook/entitlements.ts`, which imports nothing; the
-extraction was checked against the old logic over all 14,580 input
-combinations before the specs were written.
+and in CI. 90 specs cover the places where a mistake is both plausible and
+invisible: the Stripe entitlement decisions, the user progress merge and
+answer recording, the cohort scoring, and the profile and university reads.
+The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
+first — the function is Deno and imports Stripe over URL, so nothing in it is
+reachable from a Node runner. They now live in
+`stripe-webhook/entitlements.ts`, which imports nothing; the extraction was
+checked against the old logic over all 14,580 input combinations before the
+specs were written.
 
 Specs sit next to the code. They import from `vitest` explicitly rather than
-enabling globals, so the eslint config needs no exception for them.
+enabling globals, so the eslint config needs no exception for them. A service
+spec drives the Supabase query builder through the double in
+`src/test/supabaseDouble.ts`, which records the payload each call would have
+sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-19 files outside `src/services/` still query Supabase directly. This is the
+15 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
 Suggested slices, roughly in order of value:
 
 1. ~~**`user_progress`**~~ — done, see above.
-2. **`profiles` / `universities`** — five files, no service. `AuthContext`,
-   `pages/Auth.tsx`, `useAdminRole`, `SubjectReassignmentPanel`, `Dashboard`.
+2. ~~**`profiles` / `universities`**~~ — done, see above.
 3. **`ai_commentary_settings`** — four files read it directly.
 4. **Contexts** — `UserPreferencesContext`, `SubscriptionContext`.
 
-Expect `no-explicit-any` to fall as this proceeds: most of the remaining 177
-sit on or near these queries.
+`no-explicit-any` was expected to fall as this proceeds. It has not so far:
+still 161, unchanged by both slices, because the casts sit in the components
+around the queries rather than in the queries themselves. Treat the two as
+separate jobs.
 
 ## Not started
 
@@ -94,14 +116,14 @@ numbers users see, so it wants a deliberate decision, not a refactor.
 `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830). Safer
 now that CI exists, but still its own change rather than part of a feature.
 
-**More tests.** The harness exists and the three riskiest pieces of pure
-logic are covered (see Done). Still uncovered: `TrainingSessionService`, which
-writes session progress, and the webhook's persistence half — the entitlement
-decisions are tested, what they get written into is not. A Playwright smoke
+**More tests.** The harness exists and the riskiest logic is covered (see
+Done). Still uncovered: `TrainingSessionService`, which writes session
+progress, and the webhook's persistence half — the entitlement decisions are
+tested, what they get written into is not. A Playwright smoke
 test over login → training session → answer would cover the path most likely
 to break silently, and needs a browser harness this repo does not have yet.
 
-**A real logger.** ~285 `console.*` calls.
+**A real logger.** ~270 `console.*` calls.
 
 **Finish the API key migration.** The outbound half is done. Who may _call_ an
 Edge Function is still the platform's `verify_jwt` gate, which understands

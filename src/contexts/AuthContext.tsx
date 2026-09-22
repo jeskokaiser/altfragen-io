@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchUserProfile as fetchProfile, setEmailVerified } from '@/services/ProfileService';
+import { fetchUniversityName } from '@/services/UniversityService';
 import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -74,85 +76,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateEmailVerificationStatus = async (userId: string, isVerified: boolean) => {
     try {
-      console.log('Updating email verification status:', { userId, isVerified });
-      // Update the profile with the verification status
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_email_verified: isVerified })
-        .eq('id', userId);
-
-      if (error) {
-        console.error('Error updating email verification status:', error);
-      }
+      await setEmailVerified(userId, isVerified);
     } catch (error) {
-      console.error('Error in updateEmailVerificationStatus:', error);
+      console.error('Error updating email verification status:', error);
     }
   };
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log('Fetching user profile for ID:', userId);
-      // Fetch user profile information
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('university_id, is_email_verified, username')
-        .eq('id', userId)
-        .single();
+      const profile = await fetchProfile(userId);
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        setLoading(false);
-        return;
-      }
-
-      console.log('Profile data retrieved:', profileData);
-
-      // FIXED: Smart sync - only update profile if auth is verified but profile is not
+      // Smart sync: auth holds the authoritative answer, so only write back when
+      // auth says verified and the profile has not caught up.
       const { data: authData } = await supabase.auth.getUser();
       const isConfirmedInAuth = authData?.user?.email_confirmed_at !== null;
-      const isVerifiedInProfile = profileData.is_email_verified || false;
 
-      console.log('Verification sync check:', {
-        isConfirmedInAuth,
-        isVerifiedInProfile,
-        needsSync: isConfirmedInAuth && !isVerifiedInProfile,
-      });
-
-      // If auth is verified but profile is not, sync them
-      if (isConfirmedInAuth && !isVerifiedInProfile) {
-        console.log('Syncing verification status: updating profile to verified');
+      if (isConfirmedInAuth && !profile.isEmailVerified) {
         await updateEmailVerificationStatus(userId, true);
         setIsEmailVerified(true);
       } else {
-        // Use profile as source of truth
-        setIsEmailVerified(isVerifiedInProfile);
+        setIsEmailVerified(profile.isEmailVerified);
       }
 
-      if (profileData.university_id) {
-        console.log('University ID found:', profileData.university_id);
-        setUniversityId(profileData.university_id);
+      setUniversityId(profile.universityId);
 
-        // Fetch university name if university_id exists
-        const { data: universityData, error: universityError } = await supabase
-          .from('universities')
-          .select('name')
-          .eq('id', profileData.university_id)
-          .single();
-
-        if (universityError) {
-          console.error('Error fetching university:', universityError);
-        } else {
-          console.log('University data retrieved:', universityData);
-          setUniversityName(universityData.name);
+      if (profile.universityId) {
+        // A failure here must not cost the rest of the profile, so it is caught
+        // separately: the user keeps their university, just not its name.
+        try {
+          setUniversityName(await fetchUniversityName(profile.universityId));
+        } catch (error) {
+          console.error('Error fetching university:', error);
         }
       } else {
-        console.log('No university ID found in profile');
-        setUniversityId(null);
         setUniversityName(null);
       }
 
-      // Set username
-      setUsername(profileData.username || null);
+      setUsername(profile.username);
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
     } finally {
