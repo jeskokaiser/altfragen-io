@@ -38,17 +38,36 @@ tested.
 
 **One question row mapper** instead of ten hand-written copies.
 
+**`user_progress` has a service.** `UserProgressService` owns the table and the
+merge with `session_question_progress` that every read of it needs. Seven files
+used to do that merge by hand, and they did not agree: `TrainingConfig` read
+`user_progress` alone, so the 545k question/user pairs that only ever appeared
+in a saved session were invisible to its „Nur neue Fragen“ and „Nur falsche
+Fragen“ filters. That is fixed; the disagreement that is not is under Not
+started.
+
+**There are tests.** vitest runs from `npm run test`, inside `npm run verify`
+and in CI. 60 specs cover the three places where a mistake is both plausible
+and invisible: the Stripe entitlement decisions, the user progress merge and
+answer recording, and the cohort scoring. The entitlement decisions had to be
+lifted out of `stripe-webhook/index.ts` first — the function is Deno and
+imports Stripe over URL, so nothing in it is reachable from a Node runner.
+They now live in `stripe-webhook/entitlements.ts`, which imports nothing; the
+extraction was checked against the old logic over all 14,580 input
+combinations before the specs were written.
+
+Specs sit next to the code. They import from `vitest` explicitly rather than
+enabling globals, so the eslint config needs no exception for them.
+
 ## In progress: data access into services
 
-26 files outside `src/services/` still query Supabase directly. This is the
+19 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
 Suggested slices, roughly in order of value:
 
-1. **`user_progress`** — seven files read answers and difficulty; no service
-   owns the table. `DatabaseService` already has `fetchUserDifficulty` and
-   `fetchUserDifficultiesForQuestions` to build on.
+1. ~~**`user_progress`**~~ — done, see above.
 2. **`profiles` / `universities`** — five files, no service. `AuthContext`,
    `pages/Auth.tsx`, `useAdminRole`, `SubjectReassignmentPanel`, `Dashboard`.
 3. **`ai_commentary_settings`** — four files read it directly.
@@ -59,16 +78,28 @@ sit on or near these queries.
 
 ## Not started
 
+**Decide which progress row wins.** Answers live in two tables: `user_progress`
+(one row per question, written by one-off runs) and `session_question_progress`
+(one row per session and question, written by saved sessions). A question can
+have rows in both, and the codebase carries two rules for which one counts —
+the session row always, or the most recent row. `ProgressPreference` in
+`UserProgressService` now holds both, so the disagreement sits in one place
+instead of five — but it is still a disagreement: of the 31.7k questions with
+rows in both tables, 15.1k have a newer `user_progress` row, and the training
+filters report the older session result for them. Picking one rule changes
+numbers users see, so it wants a deliberate decision, not a refactor.
+
 **Split the large files.** `ExamCohortComparisonSection.tsx` (~1300 lines),
 `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
 `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830). Safer
 now that CI exists, but still its own change rather than part of a feature.
 
-**Tests.** There are none, which makes this the largest remaining risk.
-`stripe-webhook` is 630 lines deciding entitlements with no coverage at all.
-Start there, then `TrainingSessionService` (progress) and
-`utils/cohortScoring.ts`. A Playwright smoke test over login → training session
-→ answer would cover the path most likely to break silently.
+**More tests.** The harness exists and the three riskiest pieces of pure
+logic are covered (see Done). Still uncovered: `TrainingSessionService`, which
+writes session progress, and the webhook's persistence half — the entitlement
+decisions are tested, what they get written into is not. A Playwright smoke
+test over login → training session → answer would cover the path most likely
+to break silently, and needs a browser harness this repo does not have yet.
 
 **A real logger.** ~285 `console.*` calls.
 

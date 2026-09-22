@@ -1,7 +1,7 @@
 import { Question } from '@/types/Question';
 import { FormValues } from '@/components/training/types/FormValues';
 import { UnclearQuestionsService } from '@/services/UnclearQuestionsService';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchMergedQuestionProgress } from '@/services/UserProgressService';
 
 export const filterQuestions = async (
   questions: Question[],
@@ -46,75 +46,10 @@ export const filterQuestions = async (
   if (userId && (normalizedValues.newQuestionsOnly || normalizedValues.excludeTodaysQuestions)) {
     console.log('Applying new question filters...');
 
-    // Get progress data from both session_question_progress (prioritized) and user_progress (fallback)
-    const questionIds = filteredQuestions.map((q) => q.id);
-    const BATCH_SIZE = 500;
-    const progressMap = new Map<string, { created_at: string; updated_at: string | null }>();
-
-    // Process in batches
-    for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-      const batch = questionIds.slice(i, i + BATCH_SIZE);
-
-      const [sessionProgressResult, userProgressResult] = await Promise.all([
-        supabase
-          .from('session_question_progress')
-          .select('question_id, created_at, updated_at')
-          .eq('user_id', userId)
-          .in('question_id', batch)
-          .order('updated_at', { ascending: false }),
-        supabase
-          .from('user_progress')
-          .select('question_id, created_at, updated_at')
-          .eq('user_id', userId)
-          .in('question_id', batch),
-      ]);
-
-      // Process session_question_progress first (newer system, takes priority)
-      // Aggregate latest progress per question across all sessions
-      if (sessionProgressResult.data) {
-        const sessionProgressByQuestion = new Map<string, any>();
-        sessionProgressResult.data.forEach((progress) => {
-          const existing = sessionProgressByQuestion.get(progress.question_id);
-          // Keep the most recent progress per question
-          if (
-            !existing ||
-            (progress.updated_at &&
-              (!existing.updated_at || progress.updated_at > existing.updated_at))
-          ) {
-            sessionProgressByQuestion.set(progress.question_id, progress);
-          }
-        });
-
-        sessionProgressByQuestion.forEach((progress) => {
-          progressMap.set(progress.question_id, {
-            created_at: progress.created_at,
-            updated_at: progress.updated_at,
-          });
-        });
-      }
-
-      // Process user_progress as fallback (only for questions not in session_question_progress)
-      if (userProgressResult.data) {
-        userProgressResult.data.forEach((progress) => {
-          if (!progressMap.has(progress.question_id)) {
-            progressMap.set(progress.question_id, {
-              created_at: progress.created_at,
-              updated_at: progress.updated_at,
-            });
-          }
-        });
-      }
-
-      if (sessionProgressResult.error) {
-        console.error(
-          'Error fetching session progress for filtering:',
-          sessionProgressResult.error,
-        );
-      }
-      if (userProgressResult.error) {
-        console.error('Error fetching user progress for filtering:', userProgressResult.error);
-      }
-    }
+    const progressMap = await fetchMergedQuestionProgress(
+      userId,
+      filteredQuestions.map((q) => q.id),
+    );
 
     // Filter new questions only
     if (normalizedValues.newQuestionsOnly) {
@@ -139,8 +74,8 @@ export const filterQuestions = async (
         if (!progress) return true; // Include questions never answered
 
         // Check if question was answered today (either created or updated today)
-        const createdToday = progress.created_at >= todayISOString;
-        const updatedToday = progress.updated_at && progress.updated_at >= todayISOString;
+        const createdToday = progress.createdAt >= todayISOString;
+        const updatedToday = progress.updatedAt && progress.updatedAt >= todayISOString;
 
         return !createdToday && !updatedToday;
       });

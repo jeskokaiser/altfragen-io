@@ -2,14 +2,20 @@ import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { getSecretKey } from '../_shared/supabaseKeys.ts';
+import {
+  applySubscriptionEvent,
+  creditsForQuantity,
+  isTransientSubscriptionCreation,
+  quotaMonthStart,
+  resolveLifetimeEntitlement,
+  resolveSubscriptionEntitlement,
+} from './entitlements.ts';
 
 const log = (step: string, details?: unknown) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
 };
 
 // Helper to sync subscription state between Stripe and Supabase
-const PREMIUM_STATUSES = new Set<Stripe.Subscription.Status>(['active', 'trialing']);
-
 async function syncSubscriptionState(
   supabase: ReturnType<typeof createClient>,
   stripe: Stripe,
@@ -23,52 +29,21 @@ async function syncSubscriptionState(
     customer: subscription.customer,
   });
 
-  // Determine if subscription should be treated as active/premium
-  const hasActiveSub = PREMIUM_STATUSES.has(subscription.status);
-
-  let subscriptionEnd: string | null = null;
-  if (subscription.current_period_end) {
-    const periodEndTimestamp = subscription.current_period_end * 1000;
-    if (periodEndTimestamp && !isNaN(periodEndTimestamp)) {
-      subscriptionEnd = new Date(periodEndTimestamp).toISOString();
-    }
-  }
-
-  // Determine subscription tier from price ID or metadata
-  let subscriptionTier: string | null = null;
-  if (hasActiveSub) {
-    const priceId = subscription.items.data[0]?.price?.id;
-
-    if (semesterPriceId && priceId === semesterPriceId) {
-      subscriptionTier = 'Semester';
-    } else if (monthlyPriceId && priceId === monthlyPriceId) {
-      subscriptionTier = 'Monthly';
-    } else {
-      const metadata = subscription.metadata;
-      if (metadata?.price_type === 'semester' || metadata?.price_type === 'Semester') {
-        subscriptionTier = 'Semester';
-      } else if (metadata?.price_type === 'monthly' || metadata?.price_type === 'Monthly') {
-        subscriptionTier = 'Monthly';
-      } else if (priceId) {
-        subscriptionTier = 'Unknown';
-      } else {
-        subscriptionTier = null;
-      }
-    }
-
-    log('Determined subscription tier in helper', {
-      subscriptionId: subscription.id,
-      subscriptionTier,
-      subscriptionEnd,
-    });
-  } else {
-    subscriptionTier = null;
-    subscriptionEnd = null;
-    log('Subscription not in premium status, clearing tier and end', {
-      subscriptionId: subscription.id,
+  const incomingEntitlement = resolveSubscriptionEntitlement(
+    {
       status: subscription.status,
-    });
-  }
+      priceId: subscription.items.data[0]?.price?.id,
+      priceType: subscription.metadata?.price_type,
+      currentPeriodEnd: subscription.current_period_end,
+    },
+    { monthly: monthlyPriceId, semester: semesterPriceId },
+  );
+
+  log('Resolved subscription entitlement', {
+    subscriptionId: subscription.id,
+    status: subscription.status,
+    ...incomingEntitlement,
+  });
 
   // Get customer and email
   const customerId = subscription.customer as string | null;
@@ -91,7 +66,9 @@ async function syncSubscriptionState(
   // Try to find existing subscriber by stripe_customer_id first, then by email
   const { data: existingSubscriber, error: subscriberLookupError } = await supabase
     .from('subscribers')
-    .select('id, user_id, email, stripe_customer_id')
+    .select(
+      'id, user_id, email, stripe_customer_id, subscribed, subscription_tier, subscription_end',
+    )
     .or(`stripe_customer_id.eq.${customerId},email.eq.${email}`)
     .maybeSingle();
 
@@ -100,6 +77,29 @@ async function syncSubscriptionState(
       error: subscriberLookupError.message,
       customerId,
       email,
+    });
+  }
+
+  // A lifetime purchase and a subscription share this row, so a cancellation
+  // must not revoke access that was bought outright.
+  const {
+    subscribed: hasActiveSub,
+    tier: subscriptionTier,
+    subscriptionEnd,
+  } = applySubscriptionEvent(
+    {
+      tier: existingSubscriber?.subscription_tier,
+      subscribed: existingSubscriber?.subscribed,
+      subscriptionEnd: existingSubscriber?.subscription_end,
+    },
+    incomingEntitlement,
+  );
+
+  if (subscriptionTier !== incomingEntitlement.tier) {
+    log('Keeping the stored entitlement instead of the one this event implies', {
+      subscriptionId: subscription.id,
+      stored: subscriptionTier,
+      implied: incomingEntitlement.tier,
     });
   }
 
@@ -299,7 +299,7 @@ serve(async (req) => {
     //   - checkout.session.completed (subscription mode), and/or
     //   - later customer.subscription.updated events
     // to reflect the final status (active / trialing / canceled).
-    if (event.type === 'customer.subscription.created' && subscription.status === 'incomplete') {
+    if (isTransientSubscriptionCreation(event.type, subscription.status)) {
       log('Ignoring transient incomplete subscription on creation', {
         subscriptionId: subscription.id,
         status: subscription.status,
@@ -388,9 +388,7 @@ serve(async (req) => {
           userId,
         });
 
-        // Set subscription_end to 100 years in the future
-        const farFutureDate = new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000);
-        const subscriptionEnd = farFutureDate.toISOString();
+        const lifetime = resolveLifetimeEntitlement(new Date());
 
         // Get customer and email
         const customerId = session.customer as string | null;
@@ -453,9 +451,9 @@ serve(async (req) => {
               email,
               user_id: userId,
               stripe_customer_id: customerId,
-              subscribed: true,
-              subscription_tier: 'Lifetime',
-              subscription_end: subscriptionEnd,
+              subscribed: lifetime.subscribed,
+              subscription_tier: lifetime.tier,
+              subscription_end: lifetime.subscriptionEnd,
               updated_at: new Date().toISOString(),
             },
             { onConflict: 'email' },
@@ -472,8 +470,8 @@ serve(async (req) => {
               email,
               userId,
               customerId,
-              subscriptionTier: 'Lifetime',
-              subscriptionEnd,
+              subscriptionTier: lifetime.tier,
+              subscriptionEnd: lifetime.subscriptionEnd,
             });
           }
         } catch (dbError) {
@@ -516,16 +514,11 @@ serve(async (req) => {
         return new Response('OK', { status: 200 });
       }
 
-      // 100 private questions per pack
-      const CREDITS_PER_PACK = 100;
-
       const now = new Date();
-      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
-        .toISOString()
-        .slice(0, 10);
+      const monthStart = quotaMonthStart(now);
 
       const quantity = lineItems.data[0]?.quantity ?? 1;
-      const creditsToAdd = CREDITS_PER_PACK * quantity;
+      const creditsToAdd = creditsForQuantity(quantity);
 
       log('Crediting AI private question credits', {
         userId,

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DifficultyBadge from './DifficultyBadge';
 import DifficultyToggle from './DifficultyToggle';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchUserQuestionProgress, setUserDifficulty } from '@/services/UserProgressService';
 
 interface DifficultyControlsProps {
   questionId: string;
@@ -33,37 +33,21 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
       return;
     }
 
-    const fetchUserProgress = async () => {
+    const loadUserProgress = async () => {
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('attempts_count, user_difficulty')
-        .eq('question_id', questionId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      try {
+        const progress = await fetchUserQuestionProgress(user.id, questionId);
 
-      if (error) {
+        // The user's own difficulty overrides the question's default.
+        setAttemptsCount(progress?.attemptsCount ?? 0);
+        setCurrentDifficulty(progress?.userDifficulty ?? difficulty);
+      } catch (error) {
         console.error('Error fetching user progress:', error);
-        return;
-      }
-
-      if (data) {
-        setAttemptsCount(data.attempts_count || 0);
-
-        // If user has a specific difficulty, use that instead of the question's default
-        if (data.user_difficulty !== null) {
-          setCurrentDifficulty(data.user_difficulty);
-        } else {
-          setCurrentDifficulty(difficulty);
-        }
-      } else {
-        setCurrentDifficulty(difficulty);
-        setAttemptsCount(0);
       }
     };
 
-    fetchUserProgress();
+    loadUserProgress();
   }, [questionId, difficulty, user, disabled]);
 
   const handleDifficultyChange = async (value: string) => {
@@ -78,33 +62,7 @@ const DifficultyControls: React.FC<DifficultyControlsProps> = ({
     }
 
     try {
-      // Check if user progress entry already exists
-      const { data: existingProgress } = await supabase
-        .from('user_progress')
-        .select('id')
-        .eq('question_id', questionId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (existingProgress) {
-        // Update existing progress entry
-        const { error } = await supabase
-          .from('user_progress')
-          .update({ user_difficulty: newDifficulty })
-          .eq('id', existingProgress.id);
-
-        if (error) throw error;
-      } else {
-        // Create new progress entry
-        const { error } = await supabase.from('user_progress').insert({
-          user_id: user.id,
-          question_id: questionId,
-          user_difficulty: newDifficulty,
-          attempts_count: 0,
-        });
-
-        if (error) throw error;
-      }
+      await setUserDifficulty(user.id, questionId, newDifficulty);
 
       setCurrentDifficulty(newDifficulty);
       toast.info('Persönlicher Schwierigkeitsgrad aktualisiert');
