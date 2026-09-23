@@ -52,6 +52,16 @@ export const deleteUpcomingExam = async (examId: string): Promise<void> => {
   if (error) throw error;
 };
 
+/** The exams with these IDs. An ID that matches no exam is simply absent. */
+export const fetchUpcomingExamsByIds = async (examIds: string[]): Promise<UpcomingExam[]> => {
+  if (examIds.length === 0) return [];
+
+  const { data, error } = await supabase.from('upcoming_exams').select('*').in('id', examIds);
+
+  if (error) throw error;
+  return (data ?? []) as UpcomingExam[];
+};
+
 export const findUpcomingExamByTitle = async (
   userId: string,
   title: string,

@@ -78,7 +78,7 @@ values: a failed read gives 10 sessions (stricter than the configured 20) but
 used before; making the comment default fail closed is a product decision.
 
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 103 specs cover the places where a mistake is both plausible and
+and in CI. 107 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, and
 the AI commentary settings.
@@ -97,7 +97,7 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-13 files outside `src/services/` still query Supabase directly. This is the
+12 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
@@ -123,8 +123,9 @@ query, moving the query removes it; elsewhere the casts are a separate job.
 
 The same leftover had widened a whole service: `UpcomingExamService` cast its
 client to `any` "until Supabase types include upcoming_exams", long after
-they did, which switched type checking off for 13 queries. Typing it took
-`no-explicit-any` to 150. One callback there stays `any` on purpose, with a
+they did, which switched type checking off for 13 queries. Typing it, and
+moving the last `upcoming_exams` query out of `TrainingSessionsList`, took
+`no-explicit-any` to 149. One callback there stays `any` on purpose, with a
 comment saying why: removing the annotation would have hidden it, not typed it.
 
 ## Not started

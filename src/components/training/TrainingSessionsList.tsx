@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchUpcomingExamsByIds } from '@/services/UpcomingExamService';
 import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
 import type { UpcomingExam } from '@/types/UpcomingExam';
 
@@ -71,15 +71,11 @@ const TrainingSessionsList: React.FC = () => {
         return;
       }
 
-      // Fetch exam details
-      const { data: exams } = await (supabase as any)
-        .from('upcoming_exams')
-        .select('*')
-        .in('id', examIds);
+      // Exam details are decoration: if they cannot be loaded, the sessions
+      // still show, just without their exam.
+      const exams = await fetchUpcomingExamsByIds(examIds).catch((): UpcomingExam[] => []);
 
-      const examMap = new Map<string, UpcomingExam>(
-        (exams || []).map((e: UpcomingExam) => [e.id, e]),
-      );
+      const examMap = new Map(exams.map((exam) => [exam.id, exam] as const));
 
       const enhanced: SessionWithExam[] = sessions.map((session) => {
         const fs = session.filter_settings as any;

@@ -49,7 +49,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 13 files outside `src/services/` query Supabase
+rather than the finished state: 12 files outside `src/services/` query Supabase
 directly -- pages, components, hooks and contexts alike. So expect to find
 queries in components, but don't add more. When you touch one and the change is
 small, moving that query into a service is a welcome drive-by.
@@ -99,7 +99,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (150) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (149) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
