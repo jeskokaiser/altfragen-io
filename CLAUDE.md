@@ -67,7 +67,10 @@ casts and columns silently read as `undefined` at runtime. If a column looks
 absent from the types, regenerate before reaching for a cast.
 
 **Don't add `as any` to silence the compiler.** It is how the drift above stayed
-invisible. Fix the type, or regenerate.
+invisible. Fix the type, or regenerate. An existing cast commented "until the
+types include ..." is usually stale -- the types were regenerated -- so check
+before keeping one. And removing an annotation is not the same as typing: with
+`noImplicitAny` off, a parameter that cannot be inferred silently stays `any`.
 
 **Never hand-edit `package-lock.json`.** Change dependencies with `npm install`.
 
@@ -96,7 +99,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (157) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (150) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 

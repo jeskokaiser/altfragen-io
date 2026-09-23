@@ -121,6 +121,12 @@ the queries themselves — left over from before the types were regenerated,
 each commented "may not be in generated types yet". Where a cast guards a
 query, moving the query removes it; elsewhere the casts are a separate job.
 
+The same leftover had widened a whole service: `UpcomingExamService` cast its
+client to `any` "until Supabase types include upcoming_exams", long after
+they did, which switched type checking off for 13 queries. Typing it took
+`no-explicit-any` to 150. One callback there stays `any` on purpose, with a
+comment saying why: removing the annotation would have hidden it, not typed it.
+
 ## Not started
 
 **Decide which progress row wins.** Answers live in two tables: `user_progress`

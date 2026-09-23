@@ -6,8 +6,6 @@ import {
   QuestionSource,
 } from '@/types/UpcomingExam';
 
-const sb: any = supabase as any; // Temporary: widen typing until Supabase types include upcoming_exams
-
 export interface CreateUpcomingExamInput {
   title: string;
   due_date: string; // ISO date
@@ -18,7 +16,7 @@ export interface CreateUpcomingExamInput {
 }
 
 export const createUpcomingExam = async (input: CreateUpcomingExamInput): Promise<UpcomingExam> => {
-  const { data, error } = await sb
+  const { data, error } = await supabase
     .from('upcoming_exams')
     .insert({
       title: input.title,
@@ -39,7 +37,7 @@ export const updateUpcomingExam = async (
   examId: string,
   updates: Partial<Omit<UpcomingExam, 'id' | 'created_by' | 'created_at' | 'updated_at'>>,
 ): Promise<UpcomingExam> => {
-  const { data, error } = await sb
+  const { data, error } = await supabase
     .from('upcoming_exams')
     .update(updates)
     .eq('id', examId)
@@ -50,7 +48,7 @@ export const updateUpcomingExam = async (
 };
 
 export const deleteUpcomingExam = async (examId: string): Promise<void> => {
-  const { error } = await sb.from('upcoming_exams').delete().eq('id', examId);
+  const { error } = await supabase.from('upcoming_exams').delete().eq('id', examId);
   if (error) throw error;
 };
 
@@ -58,7 +56,7 @@ export const findUpcomingExamByTitle = async (
   userId: string,
   title: string,
 ): Promise<UpcomingExam | null> => {
-  const { data, error } = await sb
+  const { data, error } = await supabase
     .from('upcoming_exams')
     .select('*')
     .eq('created_by', userId)
@@ -74,7 +72,7 @@ export const findUpcomingExamByTitle = async (
 export const listUpcomingExamsForUser = async (
   userId: string,
 ): Promise<UpcomingExamWithStats[]> => {
-  const { data: exams, error } = await sb
+  const { data: exams, error } = await supabase
     .from('upcoming_exams')
     .select('*')
     .eq('created_by', userId)
@@ -102,7 +100,7 @@ export const listUpcomingExamsForUser = async (
 
   if (allExamNames.size > 0) {
     // Query all questions with matching exam_names
-    const { data: questions, error: questionsError } = await sb
+    const { data: questions, error: questionsError } = await supabase
       .from('questions')
       .select('exam_name')
       .in('exam_name', Array.from(allExamNames));
@@ -111,7 +109,7 @@ export const listUpcomingExamsForUser = async (
       console.error('Error counting questions by exam_name:', questionsError);
     } else if (questions) {
       // Count questions per exam_name
-      questions.forEach((q: any) => {
+      questions.forEach((q) => {
         const examName = q.exam_name;
         if (examName) {
           countByExamName[examName] = (countByExamName[examName] || 0) + 1;
@@ -147,7 +145,7 @@ export const getLinkedQuestionIdsForExam = async (
   userId?: string,
 ): Promise<Array<{ question_id: string; source: QuestionSource }>> => {
   // Get the exam to find its exam_name(s)
-  const { data: exam, error: examError } = await sb
+  const { data: exam, error: examError } = await supabase
     .from('upcoming_exams')
     .select('exam_name')
     .eq('id', examId)
@@ -164,7 +162,7 @@ export const getLinkedQuestionIdsForExam = async (
   if (examNames.length === 0) return [];
 
   // Query questions by exam_name (any of the selected exam_names)
-  const { data: questions, error } = await sb
+  const { data: questions, error } = await supabase
     .from('questions')
     .select('id, visibility, user_id')
     .in('exam_name', examNames);
@@ -173,7 +171,7 @@ export const getLinkedQuestionIdsForExam = async (
   if (!questions || questions.length === 0) return [];
 
   // Derive source from question properties
-  return questions.map((q: any) => {
+  return questions.map((q) => {
     const isPersonal = q.visibility === 'private' || (userId && q.user_id === userId);
     return {
       question_id: q.id as string,
@@ -193,7 +191,7 @@ export const linkQuestionsToExam = async (
   if (questionIds.length === 0) return [];
 
   // Get the exam to find its exam_name
-  const { data: exam, error: examError } = await sb
+  const { data: exam, error: examError } = await supabase
     .from('upcoming_exams')
     .select('exam_name')
     .eq('id', examId)
@@ -233,7 +231,7 @@ export const getExamStatsForUser = async (
   userId: string,
 ): Promise<ExamUserStats> => {
   // Get the exam to find its exam_name(s)
-  const { data: exam, error: examError } = await sb
+  const { data: exam, error: examError } = await supabase
     .from('upcoming_exams')
     .select('exam_name')
     .eq('id', examId)
@@ -254,21 +252,21 @@ export const getExamStatsForUser = async (
   }
 
   // Get linked questions by exam_name (any of the selected exam_names)
-  const { data: questions, error: questionsErr } = await sb
+  const { data: questions, error: questionsErr } = await supabase
     .from('questions')
     .select('id')
     .in('exam_name', examNames);
 
   if (questionsErr) throw questionsErr;
 
-  const questionIds: string[] = (questions || []).map((q: any) => q.id);
+  const questionIds: string[] = (questions || []).map((q) => q.id);
   const totalLinked = questionIds.length;
   if (totalLinked === 0) {
     return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
   }
 
   // Fetch training sessions linked to this exam to filter session progress
-  const { data: allSessions, error: sessionsErr } = await sb
+  const { data: allSessions, error: sessionsErr } = await supabase
     .from('training_sessions')
     .select('id, filter_settings')
     .eq('user_id', userId);
@@ -277,11 +275,11 @@ export const getExamStatsForUser = async (
 
   // Get session IDs linked to this exam
   const linkedSessionIds = (allSessions || [])
-    .filter((s: any) => {
+    .filter((s) => {
       const fs = s.filter_settings as any;
       return fs && fs.source === 'exam' && fs.examId === examId;
     })
-    .map((s: any) => s.id);
+    .map((s) => s.id);
 
   // Fetch user progress from both tables in batches to avoid URL length limits
   const BATCH_SIZE = 300;
@@ -294,7 +292,7 @@ export const getExamStatsForUser = async (
   const batchPromises = batches.map((batch) => {
     // Filter session progress to only include sessions linked to this exam
     if (linkedSessionIds.length > 0) {
-      return sb
+      return supabase
         .from('session_question_progress')
         .select('question_id, is_correct, updated_at, created_at')
         .eq('user_id', userId)
@@ -319,6 +317,8 @@ export const getExamStatsForUser = async (
       // Process session_question_progress entries (take latest per question per batch)
       if (sessionProgressResult.data) {
         const sessionBatchMap = new Map<string, { is_correct: boolean | null; ts: number }>();
+        // Still `any`: the batches mix a typed query with a plain Promise, and
+        // Promise.allSettled loses the row type across that union.
         sessionProgressResult.data.forEach((p: any) => {
           const qid = p.question_id as string;
           if (!qid) return;
