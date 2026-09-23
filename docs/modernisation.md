@@ -63,10 +63,25 @@ name in two round trips, though `profiles_university_id_fkey` would let
 PostgREST embed them in one. It is the root of auth state and the embed cannot
 be tested from this repo, so it stays a separate change.
 
+**`ai_commentary_settings` has a service.** It is a single row of app-wide
+limits, and four screens read it themselves, each with its own fallback for an
+empty column. Two of them disagreed about the same column: the session list
+fell back to 10 free sessions, the exam list to 5 (after starting at 10). The
+fallbacks now live once, in `DEFAULT_AI_COMMENTARY_SETTINGS`, and the screens
+share one cached query through `useAICommentarySettings`.
+
+Two behaviour notes. An empty daily limit used `||`, so a limit of 0 — "no free
+AI comments" — silently became 50; it is `??` now and 0 means 0. The database
+holds 30, so nothing changes today. And the defaults are not the configured
+values: a failed read gives 10 sessions (stricter than the configured 20) but
+50 daily comments (looser than the configured 30). Both are what the screens
+used before; making the comment default fail closed is a product decision.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 90 specs cover the places where a mistake is both plausible and
+and in CI. 107 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
-answer recording, the cohort scoring, and the profile and university reads.
+answer recording, the cohort scoring, the profile and university reads, and
+the AI commentary settings.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -82,21 +97,36 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-15 files outside `src/services/` still query Supabase directly. This is the
+12 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
+
+Count them with a pattern that sees through a cast: `supabase.from(` alone
+misses `(supabase as any).from(`, and a file whose only direct query is written
+that way drops out of the count while still querying. The count above uses
+`\(?supabase( as any\))?[[:space:]]*\.from\(`, which agrees with the old
+pattern on every earlier figure.
 
 Suggested slices, roughly in order of value:
 
 1. ~~**`user_progress`**~~ — done, see above.
 2. ~~**`profiles` / `universities`**~~ — done, see above.
-3. **`ai_commentary_settings`** — four files read it directly.
+3. ~~**`ai_commentary_settings`**~~ — done, see above.
 4. **Contexts** — `UserPreferencesContext`, `SubscriptionContext`.
 
-`no-explicit-any` was expected to fall as this proceeds. It has not so far:
-still 161, unchanged by both slices, because the casts sit in the components
-around the queries rather than in the queries themselves. Treat the two as
-separate jobs.
+`no-explicit-any` was expected to fall as this proceeds. It mostly does not:
+slices 1 and 2 left it at 161, because those casts sit in the components
+around the queries. Slice 3 moved it to 157, because there the casts sat on
+the queries themselves — left over from before the types were regenerated,
+each commented "may not be in generated types yet". Where a cast guards a
+query, moving the query removes it; elsewhere the casts are a separate job.
+
+The same leftover had widened a whole service: `UpcomingExamService` cast its
+client to `any` "until Supabase types include upcoming_exams", long after
+they did, which switched type checking off for 13 queries. Typing it, and
+moving the last `upcoming_exams` query out of `TrainingSessionsList`, took
+`no-explicit-any` to 149. One callback there stays `any` on purpose, with a
+comment saying why: removing the annotation would have hidden it, not typed it.
 
 ## Not started
 
