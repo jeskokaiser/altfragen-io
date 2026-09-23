@@ -49,7 +49,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 15 files outside `src/services/` query Supabase
+rather than the finished state: 13 files outside `src/services/` query Supabase
 directly -- pages, components, hooks and contexts alike. So expect to find
 queries in components, but don't add more. When you touch one and the change is
 small, moving that query into a service is a welcome drive-by.
@@ -96,7 +96,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (161) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (157) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
@@ -141,6 +141,10 @@ are queued (`ai_commentary_job_queue`), dispatched to providers in batches
 **Monetisation** is Stripe: subscription, lifetime, and consumable AI credits,
 with `stripe-webhook` as the source of truth for entitlements. Free users get a
 limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
+The limits themselves -- free sessions, free daily comments, whether the
+lifetime offer is showing -- are one admin-edited row, `ai_commentary_settings`.
+Read it through `useAICommentarySettings`, which shares one cached query and
+one set of fallbacks; do not read the row directly.
 
 **There are no push notifications.** IMPPulse was removed in full: the page,
 the service worker handlers, four Edge Functions, and the `push_subscriptions`
@@ -150,8 +154,9 @@ and `broadcast_logs` tables.
 
 - **Thin test coverage.** There are specs for the Stripe entitlement decisions
   (`stripe-webhook/entitlements.ts`), `utils/cohortScoring.ts`, and the
-  services that own `user_progress`, `profiles` and `universities` -- the last
-  three through the Supabase double in `src/test/supabaseDouble.ts`. React and
+  services that own `user_progress`, `profiles`, `universities` and
+  `ai_commentary_settings` -- those through the Supabase double in
+  `src/test/supabaseDouble.ts`. React and
   Stripe itself are uncovered, and so is `TrainingSessionService` (progress),
   which matters most. Say what a change was actually verified against rather
   than assuming a green run means correct.

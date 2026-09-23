@@ -20,7 +20,7 @@ import { getExamStatsForUser, type ExamUserStats } from '@/services/UpcomingExam
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,38 +57,14 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
   onOpenAnalytics,
 }) => {
   const [stats, setStats] = useState<Record<string, ExamUserStats>>({});
-  const [maxFreeSessions, setMaxFreeSessions] = useState<number>(10); // Default to 10 if not set in DB
   const navigate = useNavigate();
   const { subscribed } = useSubscription();
 
   const { sessions } = useTrainingSessions(currentUserId);
 
-  // Fetch max_free_sessions from database
-  useEffect(() => {
-    const fetchMaxFreeSessions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('ai_commentary_settings')
-          .select('max_free_sessions')
-          .single();
-
-        if (error) {
-          console.error('Error fetching max_free_sessions:', error);
-          // Keep default value of 5
-        } else {
-          // Use the value from DB if it's not null, otherwise keep default of 5
-          // Type assertion needed as max_free_sessions may not be in generated types yet
-          const maxSessions = (data as any)?.max_free_sessions;
-          setMaxFreeSessions(maxSessions ?? 5);
-        }
-      } catch (error) {
-        console.error('Error in fetchMaxFreeSessions:', error);
-        // Keep default value of 5
-      }
-    };
-
-    fetchMaxFreeSessions();
-  }, []);
+  const {
+    settings: { maxFreeSessions },
+  } = useAICommentarySettings();
 
   // Check if user has reached the session limit
   const totalSessions = sessions?.length || 0;

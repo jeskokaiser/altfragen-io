@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
 import type { UpcomingExam } from '@/types/UpcomingExam';
 
 interface SessionWithExam {
@@ -46,34 +47,9 @@ const TrainingSessionsList: React.FC = () => {
     null,
   );
   const [sessionsWithExams, setSessionsWithExams] = useState<SessionWithExam[]>([]);
-  const [maxFreeSessions, setMaxFreeSessions] = useState<number>(10); // Default to 10 if not set in DB
-
-  // Fetch max_free_sessions from database
-  useEffect(() => {
-    const fetchMaxFreeSessions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('ai_commentary_settings')
-          .select('max_free_sessions')
-          .single();
-
-        if (error) {
-          console.error('Error fetching max_free_sessions:', error);
-          // Keep default value of 10
-        } else {
-          // Use the value from DB if it's not null, otherwise keep default of 10
-          // Type assertion needed as max_free_sessions may not be in generated types yet
-          const maxSessions = (data as any)?.max_free_sessions;
-          setMaxFreeSessions(maxSessions ?? 10);
-        }
-      } catch (error) {
-        console.error('Error in fetchMaxFreeSessions:', error);
-        // Keep default value of 10
-      }
-    };
-
-    fetchMaxFreeSessions();
-  }, []);
+  const {
+    settings: { maxFreeSessions },
+  } = useAICommentarySettings();
 
   // Fetch exam information for sessions
   useEffect(() => {

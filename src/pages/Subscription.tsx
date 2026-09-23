@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -29,7 +29,8 @@ import {
   ReceiptEuro,
   Sparkles,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
+import { isLifetimePromotionActive } from '@/services/AICommentarySettingsService';
 
 const Subscription = () => {
   const { createCheckoutSession, createLifetimeCheckoutSession } = useSubscription();
@@ -39,50 +40,8 @@ const Subscription = () => {
   const [showLifetimeConsentModal, setShowLifetimeConsentModal] = useState(false);
   const [lifetimeConsentGiven, setLifetimeConsentGiven] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'semester' | 'lifetime'>('monthly');
-  const [isPromotionActive, setIsPromotionActive] = useState(false);
-  const [promotionLoading, setPromotionLoading] = useState(true);
-
-  // Load promotion status from database
-  useEffect(() => {
-    const loadPromotionStatus = async () => {
-      try {
-        setPromotionLoading(true);
-        const { data, error } = await supabase
-          .from('ai_commentary_settings')
-          .select('lifetime_status, lifetime_promotion_end_date')
-          .limit(1)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error loading lifetime promotion status:', error);
-          setIsPromotionActive(false);
-          return;
-        }
-
-        if (data) {
-          const lifetimeStatus = (data as any).lifetime_status ?? false;
-          const endDate = (data as any).lifetime_promotion_end_date;
-
-          if (lifetimeStatus && endDate) {
-            const now = new Date();
-            const promotionEndDate = new Date(endDate);
-            setIsPromotionActive(now < promotionEndDate);
-          } else {
-            setIsPromotionActive(false);
-          }
-        } else {
-          setIsPromotionActive(false);
-        }
-      } catch (error) {
-        console.error('Error loading lifetime promotion status:', error);
-        setIsPromotionActive(false);
-      } finally {
-        setPromotionLoading(false);
-      }
-    };
-
-    loadPromotionStatus();
-  }, []);
+  const { settings: aiSettings, isLoading: promotionLoading } = useAICommentarySettings();
+  const isPromotionActive = isLifetimePromotionActive(aiSettings, new Date());
 
   const features = [
     {
