@@ -97,11 +97,22 @@ the three first visits of the two weeks before the fix. The insert is
 `ON CONFLICT (user_id) DO NOTHING` now, checked against the database under the
 `authenticated` role.
 
+**`subscribers` is read through a service.** `SubscriptionService` holds the
+browser's one query of the table, the premium check in `SubscriptionContext`.
+The context asked for its row by `user_id` _or_ `email`, which reads like a
+fallback for a paid-for row the webhook has not linked to a user yet. It never
+was one: RLS lets a user read only rows with their own `user_id`, so the email
+could not find anything the id did not. The service asks by `user_id` alone and
+says why; linking the row is the webhook's job, and today every subscribed row
+is linked. The checkout and customer-portal calls stay in the context: they
+call Edge Functions, not the database.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 130 specs cover the places where a mistake is both plausible and
+and in CI. 137 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
-AI commentary settings, and the user preferences mapping.
+AI commentary settings, the user preferences mapping, and the subscription
+read.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -117,7 +128,7 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-11 files outside `src/services/` still query Supabase directly. This is the
+10 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
@@ -132,8 +143,20 @@ Suggested slices, roughly in order of value:
 1. ~~**`user_progress`**~~ — done, see above.
 2. ~~**`profiles` / `universities`**~~ — done, see above.
 3. ~~**`ai_commentary_settings`**~~ — done, see above.
-4. **Contexts** — ~~`UserPreferencesContext`~~ (done, see above),
-   `SubscriptionContext`.
+4. ~~**Contexts**~~ — `UserPreferencesContext` and `SubscriptionContext`,
+   done, see above.
+5. **`user_ai_comment_usage`** — `useAICommentUsage`, the free AI-comment
+   allowance. Its increment reads the count and writes count + 1, so two tabs
+   can both write the same number and one view goes uncounted. An atomic
+   increment in the database would close that; moving the query is the
+   moment to do it, as its own commit.
+6. **The analytics pages** — `ExamAnalytics` and `TrainingSessionAnalytics`
+   read `training_sessions` and `session_question_progress`, which
+   `TrainingSessionService` owns, and `upcoming_exams`, as does `Dashboard`.
+7. **`questions` from components** — the PDF uploads, the two question
+   editors, `useSubjects`, `ArchivedDatasets`, `Dashboard`, and one read in
+   `ExamAnalytics`. Eight files, the upload path among them, so the largest
+   slice and the one to take in parts.
 
 `no-explicit-any` was expected to fall as this proceeds. It mostly does not:
 slices 1 and 2 left it at 161, because those casts sit in the components
@@ -193,7 +216,7 @@ tested, what they get written into is not. A Playwright smoke
 test over login → training session → answer would cover the path most likely
 to break silently, and needs a browser harness this repo does not have yet.
 
-**A real logger.** ~270 `console.*` calls.
+**A real logger.** ~260 `console.*` calls.
 
 **Finish the API key migration.** The outbound half is done. Who may _call_ an
 Edge Function is still the platform's `verify_jwt` gate, which understands
