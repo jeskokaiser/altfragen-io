@@ -1,41 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import {
+  createUserPreferences,
+  defaultUserPreferences,
+  fetchUserPreferences,
+  mergePreferences,
+  saveUserPreferences,
+  type UserPreferences,
+} from '@/services/UserPreferencesService';
 
-export interface KeyboardBindings {
-  answerA: string;
-  answerB: string;
-  answerC: string;
-  answerD: string;
-  answerE: string;
-  confirmAnswer: string;
-  nextQuestion: string;
-  showSolution: string;
-  toggleChatGPT: string;
-  toggleGemini: string;
-  difficulty1: string;
-  difficulty2: string;
-  difficulty3: string;
-  difficulty4: string;
-  difficulty5: string;
-}
-
-export interface StatisticsDateRange {
-  preset: 'all' | '7days' | '30days' | '90days' | 'custom';
-  start?: string; // ISO date string
-  end?: string; // ISO date string
-}
-
-interface UserPreferences {
-  immediateFeedback: boolean;
-  archivedDatasets: string[];
-  selectedUniversityDatasets: string[];
-  keyboardBindings: KeyboardBindings;
-  statisticsDateRange: StatisticsDateRange;
-  selectedAIModels: string[];
-  enhancedAIVersion: 'none' | 'chatgpt' | 'gemini';
-}
+export type { KeyboardBindings, StatisticsDateRange } from '@/services/UserPreferencesService';
 
 interface UserPreferencesContextType {
   preferences: UserPreferences;
@@ -51,35 +26,7 @@ interface UserPreferencesContextType {
 const UserPreferencesContext = createContext<UserPreferencesContextType | undefined>(undefined);
 
 export function UserPreferencesProvider({ children }: { children: React.ReactNode }) {
-  const defaultKeyboardBindings: KeyboardBindings = {
-    answerA: '1',
-    answerB: '2',
-    answerC: '3',
-    answerD: '4',
-    answerE: '5',
-    confirmAnswer: ' ', // Space bar
-    nextQuestion: ' ', // Space bar (same as confirm)
-    showSolution: 's', // 's' key for show solution
-    toggleChatGPT: 'q', // 'q' key for toggle ChatGPT enhanced version
-    toggleGemini: 'w', // 'w' key for toggle Gemini enhanced version
-    difficulty1: 'Shift+1', // Shift+1 for difficulty 1
-    difficulty2: 'Shift+2', // Shift+2 for difficulty 2
-    difficulty3: 'Shift+3', // Shift+3 for difficulty 3
-    difficulty4: 'Shift+4', // Shift+4 for difficulty 4
-    difficulty5: 'Shift+5', // Shift+5 for difficulty 5
-  };
-
-  const defaultAIModels = ['chatgpt', 'new-gemini', 'mistral', 'perplexity', 'deepseek'];
-
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    immediateFeedback: false,
-    archivedDatasets: [],
-    selectedUniversityDatasets: [],
-    keyboardBindings: defaultKeyboardBindings,
-    statisticsDateRange: { preset: 'all' },
-    selectedAIModels: defaultAIModels,
-    enhancedAIVersion: 'none',
-  });
+  const [preferences, setPreferences] = useState<UserPreferences>(defaultUserPreferences);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -87,15 +34,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (user) {
       loadUserPreferences();
     } else {
-      setPreferences({
-        immediateFeedback: false,
-        archivedDatasets: [],
-        selectedUniversityDatasets: [],
-        keyboardBindings: defaultKeyboardBindings,
-        statisticsDateRange: { preset: 'all' },
-        selectedAIModels: defaultAIModels,
-        enhancedAIVersion: 'none',
-      });
+      setPreferences(defaultUserPreferences());
       setIsLoading(false);
     }
   }, [user]);
@@ -104,67 +43,8 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (!user) return;
 
     try {
-      const { data: existingPrefs, error: fetchError } = await supabase
-        .from('user_preferences')
-        .select()
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      if (existingPrefs) {
-        const selectedAIModels = (existingPrefs as any).selected_ai_models || defaultAIModels;
-        const enhancedVersion = (existingPrefs as any).enhanced_ai_version;
-        // Handle migration from old boolean to new string format
-        let enhancedAIVersion: 'none' | 'chatgpt' | 'gemini' = 'none';
-        if (enhancedVersion === 'chatgpt' || enhancedVersion === 'gemini') {
-          enhancedAIVersion = enhancedVersion;
-        } else if ((existingPrefs as any).show_enhanced_ai_versions === true) {
-          // Migrate old boolean: default to chatgpt if it was enabled
-          enhancedAIVersion = 'chatgpt';
-        }
-
-        // Merge existing keyboard bindings with defaults to ensure new fields are included
-        const existingBindings = (existingPrefs as any).keyboard_bindings || {};
-        const mergedKeyboardBindings: KeyboardBindings = {
-          ...defaultKeyboardBindings,
-          ...existingBindings,
-        };
-
-        setPreferences({
-          immediateFeedback: existingPrefs.immediate_feedback,
-          archivedDatasets: existingPrefs.archived_datasets || [],
-          selectedUniversityDatasets: existingPrefs.selected_university_datasets || [],
-          keyboardBindings: mergedKeyboardBindings,
-          statisticsDateRange: (existingPrefs as any).statistics_date_range || { preset: 'all' },
-          selectedAIModels: Array.isArray(selectedAIModels) ? selectedAIModels : defaultAIModels,
-          enhancedAIVersion,
-        });
-      } else {
-        const { error: insertError } = await supabase.from('user_preferences').insert({
-          user_id: user.id,
-          immediate_feedback: false,
-          archived_datasets: [],
-          selected_university_datasets: [],
-          keyboard_bindings: defaultKeyboardBindings as any,
-          statistics_date_range: { preset: 'all' } as any,
-          selected_ai_models: defaultAIModels as any,
-          enhanced_ai_version: 'none',
-        });
-
-        if (insertError) throw insertError;
-        setPreferences({
-          immediateFeedback: false,
-          archivedDatasets: [],
-          selectedUniversityDatasets: [],
-          keyboardBindings: defaultKeyboardBindings,
-          statisticsDateRange: { preset: 'all' },
-          selectedAIModels: defaultAIModels,
-          enhancedAIVersion: 'none',
-        });
-      }
+      const stored = await fetchUserPreferences(user.id);
+      setPreferences(stored ?? (await createUserPreferences(user.id)));
     } catch (error) {
       console.error('Error loading preferences:', error);
       toast.error('Einstellungen konnten nicht geladen werden');
@@ -177,26 +57,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .update({
-          immediate_feedback: newPreferences.immediateFeedback ?? preferences.immediateFeedback,
-          archived_datasets: newPreferences.archivedDatasets ?? preferences.archivedDatasets,
-          selected_university_datasets:
-            newPreferences.selectedUniversityDatasets ?? preferences.selectedUniversityDatasets,
-          keyboard_bindings: (newPreferences.keyboardBindings ??
-            preferences.keyboardBindings) as any,
-          statistics_date_range: (newPreferences.statisticsDateRange ??
-            preferences.statisticsDateRange) as any,
-          selected_ai_models: (newPreferences.selectedAIModels ??
-            preferences.selectedAIModels) as any,
-          enhanced_ai_version: (newPreferences.enhancedAIVersion ??
-            preferences.enhancedAIVersion) as any,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await saveUserPreferences(user.id, mergePreferences(preferences, newPreferences));
 
       setPreferences((prev) => ({ ...prev, ...newPreferences }));
       toast.success('Einstellungen erfolgreich aktualisiert');

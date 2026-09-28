@@ -77,11 +77,22 @@ values: a failed read gives 10 sessions (stricter than the configured 20) but
 50 daily comments (looser than the configured 30). Both are what the screens
 used before; making the comment default fail closed is a product decision.
 
+**`user_preferences` has a service.** `UserPreferencesService` owns the row
+that remembers a user's settings between visits: keyboard bindings, AI models,
+archived datasets, the statistics date range. The context read and wrote it
+through twelve `as any` casts on the jsonb columns (see below). The service
+maps them with type guards instead, and was checked against every combination
+of stored values in production — 146 — to map each exactly as the context did.
+A branch went with the casts: a migration from an old
+`show_enhanced_ai_versions` flag, reading a column that no longer exists, so it
+could not have run. The defaults live once; the keyboard settings page kept its
+own copy for its reset button.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 107 specs cover the places where a mistake is both plausible and
+and in CI. 129 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
-answer recording, the cohort scoring, the profile and university reads, and
-the AI commentary settings.
+answer recording, the cohort scoring, the profile and university reads, the
+AI commentary settings, and the user preferences mapping.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -97,7 +108,7 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-12 files outside `src/services/` still query Supabase directly. This is the
+11 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
@@ -112,7 +123,8 @@ Suggested slices, roughly in order of value:
 1. ~~**`user_progress`**~~ — done, see above.
 2. ~~**`profiles` / `universities`**~~ — done, see above.
 3. ~~**`ai_commentary_settings`**~~ — done, see above.
-4. **Contexts** — `UserPreferencesContext`, `SubscriptionContext`.
+4. **Contexts** — ~~`UserPreferencesContext`~~ (done, see above),
+   `SubscriptionContext`.
 
 `no-explicit-any` was expected to fall as this proceeds. It mostly does not:
 slices 1 and 2 left it at 161, because those casts sit in the components
@@ -127,6 +139,14 @@ they did, which switched type checking off for 13 queries. Typing it, and
 moving the last `upcoming_exams` query out of `TrainingSessionsList`, took
 `no-explicit-any` to 149. One callback there stays `any` on purpose, with a
 comment saying why: removing the annotation would have hidden it, not typed it.
+
+`UserPreferencesContext` took it to 137. Its twelve casts sat on the jsonb
+columns. On the reads they stood in for a check: the columns come back as
+`Json`, and the casts passed them on as bindings, a date range and a model list
+without looking — and one read a column that no longer exists. On the writes,
+three were needed only because `KeyboardBindings` and `StatisticsDateRange`
+were interfaces, which have no index signature and so are not assignable to
+`Json`; as type aliases they are. The other four were not needed at all.
 
 ## Not started
 

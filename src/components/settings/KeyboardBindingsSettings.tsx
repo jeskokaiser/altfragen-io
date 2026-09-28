@@ -3,7 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUserPreferences, KeyboardBindings } from '@/contexts/UserPreferencesContext';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import {
+  DEFAULT_KEYBOARD_BINDINGS,
+  type KeyboardBindings,
+} from '@/services/UserPreferencesService';
 import { toast } from 'sonner';
 import { RotateCcw, Keyboard } from 'lucide-react';
 
@@ -13,24 +17,6 @@ const KeyboardBindingsSettings: React.FC = () => {
     preferences.keyboardBindings,
   );
   const [isListening, setIsListening] = useState<string | null>(null);
-
-  const defaultBindings: KeyboardBindings = {
-    answerA: '1',
-    answerB: '2',
-    answerC: '3',
-    answerD: '4',
-    answerE: '5',
-    confirmAnswer: ' ',
-    nextQuestion: ' ',
-    showSolution: 's',
-    toggleChatGPT: 'q',
-    toggleGemini: 'w',
-    difficulty1: 'Shift+1',
-    difficulty2: 'Shift+2',
-    difficulty3: 'Shift+3',
-    difficulty4: 'Shift+4',
-    difficulty5: 'Shift+5',
-  };
 
   const bindingLabels = {
     answerA: 'Antwort A',
@@ -107,7 +93,7 @@ const KeyboardBindingsSettings: React.FC = () => {
   };
 
   const handleReset = () => {
-    setLocalBindings(defaultBindings);
+    setLocalBindings(DEFAULT_KEYBOARD_BINDINGS);
     toast.info('Tastenbelegung auf Standard zurückgesetzt');
   };
 
