@@ -195,12 +195,24 @@ export const fetchUserPreferences = async (userId: string): Promise<UserPreferen
   return data ? toUserPreferences(data) : null;
 };
 
-/** Stores the defaults for a user who has no row yet, and returns them. */
+/**
+ * Stores the defaults for a user who has no row yet, and returns them.
+ *
+ * Safe to call twice. The context loads on every change of the auth user, and
+ * a page load changes it several times in quick succession, so a new user's
+ * first visit starts three or four loads at once; each finds no row and calls
+ * this. A plain insert let the first through and failed the rest on the unique
+ * `user_id`, and each failure showed "Einstellungen konnten nicht geladen
+ * werden". The rest now do nothing -- the row they would have written, the
+ * defaults, is the row that is there.
+ */
 export const createUserPreferences = async (userId: string): Promise<UserPreferences> => {
   const preferences = defaultUserPreferences();
   const row: TablesInsert<'user_preferences'> = { user_id: userId, ...toRow(preferences) };
 
-  const { error } = await supabase.from('user_preferences').insert(row);
+  const { error } = await supabase
+    .from('user_preferences')
+    .upsert(row, { onConflict: 'user_id', ignoreDuplicates: true });
 
   if (error) throw error;
 

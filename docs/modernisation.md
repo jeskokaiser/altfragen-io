@@ -88,8 +88,17 @@ A branch went with the casts: a migration from an old
 could not have run. The defaults live once; the keyboard settings page kept its
 own copy for its reset button.
 
+Moving the insert surfaced a bug that the API logs confirm. A new user's first
+visit starts three or four preference loads at once (see `AuthContext` under
+Not started), each finds no row, and each inserted the defaults: the unique
+`user_id` let the first through and failed the rest with 409, and every failure
+showed „Einstellungen konnten nicht geladen werden“. The logs show it on each of
+the three first visits of the two weeks before the fix. The insert is
+`ON CONFLICT (user_id) DO NOTHING` now, checked against the database under the
+`authenticated` role.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 129 specs cover the places where a mistake is both plausible and
+and in CI. 130 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
 AI commentary settings, and the user preferences mapping.
@@ -160,6 +169,17 @@ instead of five — but it is still a disagreement: of the 31.7k questions with
 rows in both tables, 15.1k have a newer `user_progress` row, and the training
 filters report the older session result for them. Picking one rule changes
 numbers users see, so it wants a deliberate decision, not a refactor.
+
+**Stop `AuthContext` announcing the same user over and over.** It sets `user`
+from `getSession()` and again on every auth event, each time as a new object,
+so every effect keyed on `user` reruns for a user who has not changed. On a new
+user's first visit that came to seven `profiles` reads, five reads of each
+progress table, four preference loads and four `subscribers` reads within one
+minute. The preference insert has been made safe against it (see Done);
+the redundant reads remain. Keying the effects on `user?.id`, or having the
+context keep its `user` while the id is unchanged, would end them — but this
+is the root of auth state, so it wants its own change and a careful look at
+what `USER_UPDATED` must still refresh.
 
 **Split the large files.** `ExamCohortComparisonSection.tsx` (~1300 lines),
 `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),

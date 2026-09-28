@@ -215,7 +215,7 @@ describe('createUserPreferences', () => {
     const created = await createUserPreferences('user-1');
 
     expect(created).toEqual(defaultUserPreferences());
-    expect(payloadOf(queriesFor('user_preferences')[0], 'insert')).toEqual({
+    expect(payloadOf(queriesFor('user_preferences')[0], 'upsert')).toEqual({
       user_id: 'user-1',
       immediate_feedback: false,
       archived_datasets: [],
@@ -225,6 +225,20 @@ describe('createUserPreferences', () => {
       selected_ai_models: DEFAULT_AI_MODELS,
       enhanced_ai_version: 'none',
     });
+  });
+
+  it('leaves a row that already exists alone instead of failing on it', async () => {
+    // A new user's first visit starts several loads at once, and each finds no
+    // row. With a plain insert all but the first failed on the unique user_id,
+    // and each failure told the user their settings could not be loaded.
+    // `ON CONFLICT (user_id) DO NOTHING` was checked against the database
+    // under the authenticated role: a no-op on an existing row, an insert
+    // otherwise, and still refused for another user's id.
+    await createUserPreferences('user-1');
+
+    const [upsert] = queriesFor('user_preferences')[0].ops;
+    expect(upsert.method).toBe('upsert');
+    expect(upsert.args[1]).toEqual({ onConflict: 'user_id', ignoreDuplicates: true });
   });
 
   it('throws when the row cannot be stored', async () => {
