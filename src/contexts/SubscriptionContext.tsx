@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchSubscriptionStatus } from '@/services/SubscriptionService';
 import { showToast } from '@/utils/toast';
 
 interface SubscriptionContextType {
@@ -46,56 +47,32 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     }
 
     try {
-      console.log('Querying subscribers table for user:', user.id);
       setLoading(true);
 
-      // Query subscribers table directly - webhook updates this in real-time
-      const { data: subscriberData, error } = await supabase
-        .from('subscribers')
-        .select('subscribed, subscription_tier, subscription_end')
-        .or(`user_id.eq.${user.id},email.eq.${user.email}`)
-        .maybeSingle();
+      // The webhook keeps the subscribers row current, so reading it is enough
+      const status = await fetchSubscriptionStatus(user.id);
 
-      if (error) {
-        console.error('Subscription query error:', error);
-        throw new Error(error.message || 'Failed to check subscription');
+      // Check if subscription status changed from unsubscribed to subscribed
+      // Only show toast if there was a recent checkout (to avoid showing on every page refresh)
+      const wasUnsubscribed = !subscribed;
+
+      if (
+        wasUnsubscribed &&
+        status.subscribed &&
+        localStorage.getItem(`checkout_initiated_${user.id}`)
+      ) {
+        console.log('🎉 Subscription status changed from unsubscribed to subscribed!');
+        showToast.success(
+          '🎉 Premium erfolgreich aktiviert! Du hast jetzt Zugang zu allen Premium-Features.',
+        );
+
+        // Clean up checkout tracking
+        localStorage.removeItem(`checkout_initiated_${user.id}`);
       }
 
-      console.log('Subscription check result:', subscriberData);
-
-      if (subscriberData) {
-        const subscriptionData = {
-          subscribed: subscriberData.subscribed || false,
-          subscription_tier: subscriberData.subscription_tier || null,
-          subscription_end: subscriberData.subscription_end || null,
-        };
-
-        // Check if subscription status changed from unsubscribed to subscribed
-        // Only show toast if there was a recent checkout (to avoid showing on every page refresh)
-        const wasUnsubscribed = !subscribed;
-        const isNowSubscribed = subscriptionData.subscribed;
-        const hasRecentCheckout = localStorage.getItem(`checkout_initiated_${user.id}`);
-
-        if (wasUnsubscribed && isNowSubscribed && hasRecentCheckout) {
-          console.log('🎉 Subscription status changed from unsubscribed to subscribed!');
-          showToast.success(
-            '🎉 Premium erfolgreich aktiviert! Du hast jetzt Zugang zu allen Premium-Features.',
-          );
-
-          // Clean up checkout tracking
-          localStorage.removeItem(`checkout_initiated_${user.id}`);
-        }
-
-        // Update state
-        setSubscribed(subscriptionData.subscribed);
-        setSubscriptionTier(subscriptionData.subscription_tier);
-        setSubscriptionEnd(subscriptionData.subscription_end);
-      } else {
-        // No subscriber record found - user is not subscribed
-        setSubscribed(false);
-        setSubscriptionTier(null);
-        setSubscriptionEnd(null);
-      }
+      setSubscribed(status.subscribed);
+      setSubscriptionTier(status.subscriptionTier);
+      setSubscriptionEnd(status.subscriptionEnd);
     } catch (error) {
       console.error('Überprüfung des Abonnements fehlgeschlagen:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

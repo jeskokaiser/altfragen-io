@@ -49,7 +49,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 12 files outside `src/services/` query Supabase
+rather than the finished state: 10 files outside `src/services/` query Supabase
 directly -- pages, components, hooks and contexts alike. So expect to find
 queries in components, but don't add more. When you touch one and the change is
 small, moving that query into a service is a welcome drive-by.
@@ -99,7 +99,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (149) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (137) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
@@ -142,7 +142,10 @@ are queued (`ai_commentary_job_queue`), dispatched to providers in batches
 `ai_answer_comments` / `ai_commentary_summaries`. Multiple models per question.
 
 **Monetisation** is Stripe: subscription, lifetime, and consumable AI credits,
-with `stripe-webhook` as the source of truth for entitlements. Free users get a
+with `stripe-webhook` as the source of truth for entitlements. The browser reads
+its own `subscribers` row through `SubscriptionService`, by `user_id` -- RLS
+allows nothing else -- so a row the webhook has not linked to a user is
+invisible to that user, however it was paid for. Free users get a
 limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
 The limits themselves -- free sessions, free daily comments, whether the
 lifetime offer is showing -- are one admin-edited row, `ai_commentary_settings`.
@@ -157,8 +160,9 @@ and `broadcast_logs` tables.
 
 - **Thin test coverage.** There are specs for the Stripe entitlement decisions
   (`stripe-webhook/entitlements.ts`), `utils/cohortScoring.ts`, and the
-  services that own `user_progress`, `profiles`, `universities` and
-  `ai_commentary_settings` -- those through the Supabase double in
+  services that own `user_progress`, `profiles`, `universities`,
+  `ai_commentary_settings` and `user_preferences`, and the read of
+  `subscribers` -- those through the Supabase double in
   `src/test/supabaseDouble.ts`. React and
   Stripe itself are uncovered, and so is `TrainingSessionService` (progress),
   which matters most. Say what a change was actually verified against rather
@@ -167,7 +171,7 @@ and `broadcast_logs` tables.
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
   `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
   Splitting them is welcome as its own change, not smuggled into a feature.
-- **`console.*` is used for logging throughout** (~270 calls). Don't add more;
+- **`console.*` is used for logging throughout** (~260 calls). Don't add more;
   a real logger is a pending cleanup.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and
   they deploy separately from the frontend.
