@@ -31,15 +31,21 @@ export const fetchDailyUsage = async (userId: string, date: string): Promise<num
   return data?.usage_count ?? 0;
 };
 
-/** Counts one more AI comment for the user on `date`, and returns the new count. */
-export const incrementDailyUsage = async (userId: string, date: string): Promise<number> => {
-  const newUsage = (await fetchDailyUsage(userId, date)) + 1;
-
-  const { error } = await supabase
-    .from('user_ai_comment_usage')
-    .upsert({ user_id: userId, date, usage_count: newUsage }, { onConflict: 'user_id,date' });
+/**
+ * Counts one more AI comment for the signed-in user on `date`, and returns the
+ * new count.
+ *
+ * One statement in the database -- `increment_ai_comment_usage`, an
+ * `INSERT ... ON CONFLICT DO UPDATE SET usage_count = usage_count + 1`. The
+ * hook used to read the count and write count + 1, and two tabs doing that at
+ * once both wrote the same number, so one comment went uncounted. The function
+ * takes the user from the session rather than a parameter, so it can only
+ * count for the caller.
+ */
+export const incrementDailyUsage = async (date: string): Promise<number> => {
+  const { data, error } = await supabase.rpc('increment_ai_comment_usage', { p_date: date });
 
   if (error) throw error;
 
-  return newUsage;
+  return data;
 };

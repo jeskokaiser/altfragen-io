@@ -146,7 +146,10 @@ with `stripe-webhook` as the source of truth for entitlements. The browser reads
 its own `subscribers` row through `SubscriptionService`, by `user_id` -- RLS
 allows nothing else -- so a row the webhook has not linked to a user is
 invisible to that user, however it was paid for. Free users get a
-limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
+limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`),
+counted by the database function `increment_ai_comment_usage` -- never by
+reading the count and writing it back. The allowance is checked in the browser
+only; see `docs/modernisation.md` before relying on it.
 The limits themselves -- free sessions, free daily comments, whether the
 lifetime offer is showing -- are one admin-edited row, `ai_commentary_settings`.
 Read it through `useAICommentarySettings`, which shares one cached query and

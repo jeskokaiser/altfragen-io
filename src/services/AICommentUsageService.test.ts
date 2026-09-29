@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { payloadOf, queriesFor, queueResponse, resetSupabaseDouble } from '@/test/supabaseDouble';
+import { queriesFor, queueResponse, resetSupabaseDouble } from '@/test/supabaseDouble';
 
 vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
@@ -43,39 +43,30 @@ describe('fetchDailyUsage', () => {
 });
 
 describe('incrementDailyUsage', () => {
-  it("writes one more than the day's count and returns it", async () => {
-    queueResponse('user_ai_comment_usage', { data: { usage_count: 12 } });
+  it('counts in the database and returns the count it reports', async () => {
+    // The count comes back from the one statement that raised it, so a view
+    // counted in another tab meanwhile is included.
+    queueResponse('increment_ai_comment_usage', { data: 13 });
 
-    expect(await incrementDailyUsage('user-1', '2026-09-29')).toBe(13);
-
-    const [, write] = queriesFor('user_ai_comment_usage');
-    expect(payloadOf(write, 'upsert')).toEqual({
-      user_id: 'user-1',
-      date: '2026-09-29',
-      usage_count: 13,
-    });
-    expect(write.ops.find((op) => op.method === 'upsert')?.args[1]).toEqual({
-      onConflict: 'user_id,date',
-    });
+    expect(await incrementDailyUsage('2026-02-14')).toBe(13);
+    expect(queriesFor('increment_ai_comment_usage')[0].ops).toEqual([
+      { method: 'rpc', args: [{ p_date: '2026-02-14' }] },
+    ]);
   });
 
-  it('starts the day at 1', async () => {
-    queueResponse('user_ai_comment_usage', { data: null });
+  it('does not read the count first', async () => {
+    // Reading and then writing count + 1 is the race this replaced: two tabs
+    // read the same count and both write it plus one.
+    queueResponse('increment_ai_comment_usage', { data: 1 });
 
-    expect(await incrementDailyUsage('user-1', '2026-09-29')).toBe(1);
+    await incrementDailyUsage('2026-02-14');
+
+    expect(queriesFor('user_ai_comment_usage')).toHaveLength(0);
   });
 
-  it('writes nothing when the count cannot be read', async () => {
-    queueResponse('user_ai_comment_usage', { error: { message: 'boom' } });
+  it('throws when the database refuses the count', async () => {
+    queueResponse('increment_ai_comment_usage', { error: { message: 'boom' } });
 
-    await expect(incrementDailyUsage('user-1', '2026-09-29')).rejects.toEqual({ message: 'boom' });
-    expect(queriesFor('user_ai_comment_usage')).toHaveLength(1);
-  });
-
-  it('throws when the new count cannot be written', async () => {
-    queueResponse('user_ai_comment_usage', { data: { usage_count: 12 } });
-    queueResponse('user_ai_comment_usage', { error: { message: 'boom' } });
-
-    await expect(incrementDailyUsage('user-1', '2026-09-29')).rejects.toEqual({ message: 'boom' });
+    await expect(incrementDailyUsage('2026-02-14')).rejects.toEqual({ message: 'boom' });
   });
 });

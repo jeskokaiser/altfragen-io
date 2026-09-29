@@ -38,7 +38,7 @@ export const useAICommentUsage = () => {
     setIsIncrementing(true);
 
     try {
-      setDailyUsage(await incrementDailyUsage(user.id, usageDate()));
+      setDailyUsage(await incrementDailyUsage(usageDate()));
       return true;
     } catch (error) {
       console.error('Error incrementing usage:', error);

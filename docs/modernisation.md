@@ -114,8 +114,17 @@ UTC day worked out in two places; the service has `usageDate` once, and
 documents what it means: the free allowance starts over at midnight UTC — 01:00
 or 02:00 in Germany — not at local midnight.
 
+The count is raised in the database now, by `increment_ai_comment_usage`: one
+`INSERT … ON CONFLICT DO UPDATE SET usage_count = usage_count + 1` that returns
+the new count. The hook used to read the count and write count + 1, so two tabs
+could both write the same number and lose a view. The function is
+`SECURITY INVOKER`, so the table's RLS still applies, takes the user from the
+session, and can be called by `authenticated` only. It was applied as the
+named migration `increment_ai_comment_usage`; this repository keeps no
+migration files, so the database is where it lives.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 145 specs cover the places where a mistake is both plausible and
+and in CI. 144 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
 AI commentary settings, the user preferences mapping, the subscription read,
@@ -152,10 +161,7 @@ Suggested slices, roughly in order of value:
 3. ~~**`ai_commentary_settings`**~~ — done, see above.
 4. ~~**Contexts**~~ — `UserPreferencesContext` and `SubscriptionContext`,
    done, see above.
-5. ~~**`user_ai_comment_usage`**~~ — moved, see above. Still open: the
-   increment reads the count and writes count + 1, so two tabs can both write
-   the same number and one view goes uncounted. An atomic increment in the
-   database would close that, as its own commit.
+5. ~~**`user_ai_comment_usage`**~~ — done, see above.
 6. **The analytics pages** — `ExamAnalytics` and `TrainingSessionAnalytics`
    read `training_sessions` and `session_question_progress`, which
    `TrainingSessionService` owns, and `upcoming_exams`, as does `Dashboard`.
@@ -198,6 +204,16 @@ instead of five — but it is still a disagreement: of the 31.7k questions with
 rows in both tables, 15.1k have a newer `user_progress` row, and the training
 filters report the older session result for them. Picking one rule changes
 numbers users see, so it wants a deliberate decision, not a refactor.
+
+**Decide whether the free AI-comment allowance should be enforced.** Today it
+is a courtesy gate in the browser. The count is correct now, but its owner may
+still write it — RLS lets a user insert and update their own usage rows — and
+the comments it gates are readable by every signed-in user anyway
+(`ai_answer_comments` and `ai_commentary_summaries` have a `true` read
+policy). Enforcing the limit would mean revoking those writes, leaving
+`increment_ai_comment_usage` as the only way to count, and serving the comments
+through something that checks the count. That changes what free users get, so
+it is a product decision before it is a technical one.
 
 **Stop `AuthContext` announcing the same user over and over.** It sets `user`
 from `getSession()` and again on every auth event, each time as a new object,
