@@ -8,6 +8,7 @@ import {
 import type { Question } from '@/types/Question';
 import { TrainingSessionService } from './TrainingSessionService';
 import { mapQuestionRow } from './questionRowMapper';
+import { fetchAllRows } from './fetchAllRows';
 
 export interface CreateUpcomingExamInput {
   title: string;
@@ -89,6 +90,78 @@ export const fetchQuestionsForExamNames = async (examNames: string[]): Promise<Q
 
   if (error) throw error;
   return (data ?? []).map(mapQuestionRow);
+};
+
+/** Which questions an exam-name list is drawn from, per tab of the selector. */
+export type ExamNameScope =
+  | { visibility: 'private'; userId: string }
+  | { visibility: 'university'; universityId: string }
+  | { visibility: 'public' };
+
+export interface ExamNameCount {
+  exam_name: string;
+  count: number;
+}
+
+/** The filters that narrow a `questions` query to the scope. */
+const scopeFilters = (
+  scope: ExamNameScope,
+): {
+  equal: Array<['user_id' | 'university_id' | 'visibility', string]>;
+  isNull: Array<'university_id'>;
+} => {
+  switch (scope.visibility) {
+    case 'private':
+      return {
+        equal: [
+          ['user_id', scope.userId],
+          ['visibility', 'private'],
+        ],
+        isNull: [],
+      };
+    case 'university':
+      return {
+        equal: [
+          ['university_id', scope.universityId],
+          ['visibility', 'university'],
+        ],
+        isNull: [],
+      };
+    case 'public':
+      return { equal: [['visibility', 'public']], isNull: ['university_id'] };
+  }
+};
+
+/**
+ * The exam names in a scope, with how many questions carry each, sorted by
+ * name -- what an exam can be linked to.
+ *
+ * Counted from the rows themselves, in one read -- this used to be one read
+ * for the names and one count per name. The read is paged, because one
+ * university has more questions with an exam name than the API returns in one
+ * response.
+ */
+export const listExamNameCounts = async (scope: ExamNameScope): Promise<ExamNameCount[]> => {
+  const { equal, isNull } = scopeFilters(scope);
+
+  const rows = await fetchAllRows((from, to) => {
+    let query = supabase
+      .from('questions')
+      .select('exam_name', { count: 'exact' })
+      .not('exam_name', 'is', null);
+    equal.forEach(([column, value]) => (query = query.eq(column, value)));
+    isNull.forEach((column) => (query = query.is(column, null)));
+    return query.order('id').range(from, to);
+  });
+
+  const counts = new Map<string, number>();
+  rows.forEach(({ exam_name }) => {
+    if (exam_name) counts.set(exam_name, (counts.get(exam_name) ?? 0) + 1);
+  });
+
+  return [...counts]
+    .map(([exam_name, count]) => ({ exam_name, count }))
+    .sort((a, b) => a.exam_name.localeCompare(b.exam_name));
 };
 
 /**

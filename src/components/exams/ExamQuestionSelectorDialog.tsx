@@ -5,20 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUpcomingExam } from '@/hooks/useUpcomingExams';
+import { listExamNameCounts } from '@/services/UpcomingExamService';
 
 interface ExamQuestionSelectorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   examId: string | null;
   onConfirm: (selectedExamNames: string[]) => Promise<void> | void;
-}
-
-interface ExamNameWithCount {
-  exam_name: string;
-  count: number;
 }
 
 const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
@@ -50,158 +45,23 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
     }
   }, [currentExam, open]);
 
-  // Fetch exam names from private questions (visibility='private')
+  // Exam names per tab, with how many questions carry each
   const { data: personalExamNames, isLoading: isLoadingPersonal } = useQuery({
     queryKey: ['exam-names', 'private', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const sb: any = supabase;
-
-      // Get all unique exam_names first
-      const { data: examNamesData, error: examNamesError } = await sb
-        .from('questions')
-        .select('exam_name')
-        .eq('user_id', user.id)
-        .eq('visibility', 'private')
-        .not('exam_name', 'is', null);
-
-      if (examNamesError) throw examNamesError;
-
-      // Get unique exam_names
-      const uniqueExamNames = new Set<string>();
-      (examNamesData || []).forEach((q: any) => {
-        if (q.exam_name) {
-          uniqueExamNames.add(q.exam_name);
-        }
-      });
-
-      // Count questions for each exam_name
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        Array.from(uniqueExamNames).map(async (examName) => {
-          const { count, error: countError } = await sb
-            .from('questions')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('visibility', 'private')
-            .eq('exam_name', examName);
-
-          if (countError) {
-            console.error(`Error counting questions for ${examName}:`, countError);
-            counts[examName] = 0;
-          } else {
-            counts[examName] = count || 0;
-          }
-        }),
-      );
-
-      return Object.entries(counts)
-        .map(([exam_name, count]) => ({ exam_name, count }))
-        .sort((a, b) => a.exam_name.localeCompare(b.exam_name)) as ExamNameWithCount[];
-    },
+    queryFn: () => (user?.id ? listExamNameCounts({ visibility: 'private', userId: user.id }) : []),
     enabled: !!user?.id && open && tab === 'personal',
   });
 
-  // Fetch exam names from university questions
   const { data: universityExamNames, isLoading: isLoadingUniversity } = useQuery({
     queryKey: ['exam-names', 'university', universityId],
-    queryFn: async () => {
-      if (!universityId) return [];
-      const sb: any = supabase;
-
-      // Get all unique exam_names first
-      const { data: examNamesData, error: examNamesError } = await sb
-        .from('questions')
-        .select('exam_name')
-        .eq('university_id', universityId)
-        .eq('visibility', 'university')
-        .not('exam_name', 'is', null);
-
-      if (examNamesError) throw examNamesError;
-
-      // Get unique exam_names
-      const uniqueExamNames = new Set<string>();
-      (examNamesData || []).forEach((q: any) => {
-        if (q.exam_name) {
-          uniqueExamNames.add(q.exam_name);
-        }
-      });
-
-      // Count questions for each exam_name
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        Array.from(uniqueExamNames).map(async (examName) => {
-          const { count, error: countError } = await sb
-            .from('questions')
-            .select('*', { count: 'exact', head: true })
-            .eq('university_id', universityId)
-            .eq('visibility', 'university')
-            .eq('exam_name', examName);
-
-          if (countError) {
-            console.error(`Error counting questions for ${examName}:`, countError);
-            counts[examName] = 0;
-          } else {
-            counts[examName] = count || 0;
-          }
-        }),
-      );
-
-      return Object.entries(counts)
-        .map(([exam_name, count]) => ({ exam_name, count }))
-        .sort((a, b) => a.exam_name.localeCompare(b.exam_name)) as ExamNameWithCount[];
-    },
+    queryFn: () =>
+      universityId ? listExamNameCounts({ visibility: 'university', universityId }) : [],
     enabled: !!universityId && open && tab === 'university',
   });
 
-  // Fetch exam names from public questions
   const { data: publicExamNames, isLoading: isLoadingPublic } = useQuery({
     queryKey: ['exam-names', 'public'],
-    queryFn: async () => {
-      const sb: any = supabase;
-
-      // Get all unique exam_names first
-      const { data: examNamesData, error: examNamesError } = await sb
-        .from('questions')
-        .select('exam_name')
-        .eq('visibility', 'public')
-        .is('university_id', null)
-        .not('exam_name', 'is', null);
-
-      if (examNamesError) throw examNamesError;
-
-      // Get unique exam_names
-      const uniqueExamNames = new Set<string>();
-      (examNamesData || []).forEach((q: any) => {
-        if (q.exam_name) {
-          uniqueExamNames.add(q.exam_name);
-        }
-      });
-
-      // Count questions for each exam_name
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        Array.from(uniqueExamNames).map(async (examName) => {
-          const { count, error: countError } = await sb
-            .from('questions')
-            .select('*', { count: 'exact', head: true })
-            .eq('visibility', 'public')
-            .is('university_id', null)
-            .eq('exam_name', examName);
-
-          if (countError) {
-            console.error(`Error counting questions for ${examName}:`, countError);
-            counts[examName] = 0;
-          } else {
-            counts[examName] = count || 0;
-          }
-        }),
-      );
-
-      return Object.entries(counts)
-        .map(([exam_name, count]) => ({ exam_name, count }))
-        .sort((a, b) => a.exam_name.localeCompare(b.exam_name)) as ExamNameWithCount[];
-    },
+    queryFn: () => listExamNameCounts({ visibility: 'public' }),
     enabled: open && tab === 'public',
   });
 
