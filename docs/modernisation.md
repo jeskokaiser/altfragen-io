@@ -255,3 +255,44 @@ the cap come down — **lower it in the same commit**, or the slack invites new
 ones. A rule that reaches zero moves from `RATCHET` to `ENFORCED` in
 `eslint.config.js` and becomes an error. `no-unused-vars` has already made that
 trip.
+
+## How a slice is verified
+
+A green `npm run verify` shows that the code compiles and the specs pass. It
+does not show that a move kept behaviour, or that the specs would notice if it
+had not. Every slice so far was checked in the ways below, and its PR said which
+applied — keep that bar.
+
+- **Specs that can fail.** Once a service's specs pass, break the service on
+  purpose, one plausible mistake at a time — `??` turned into `||`, a filter
+  dropped, a column left out of a write — and run the specs again. Each
+  mistake must fail them; one that passes means a spec is missing. Restore the
+  file after each. Watch for mutations that pass by coincidence: a spec that
+  uses today's date cannot tell a passed-in `date` from `usageDate()`.
+- **Types that are real.** With `noImplicitAny` off, a value can be `any`
+  without anything saying so, and a green typecheck proves little. Put a probe
+  where a type should hold — read a column that does not exist, assign a
+  result to the wrong type — run `npm run typecheck`, see it fail, and remove
+  the probe.
+- **Parity against production data.** When a move rewrites mapping logic, copy
+  the old logic verbatim into a throwaway spec and compare old and new over
+  every distinct combination of stored values: a `select distinct` over the
+  columns involved, not the rows themselves. Neither the spec nor the data is
+  committed.
+- **Evidence before a claim.** When a change fixes something users see, show
+  that it happens: the API logs (`query_logs` on `edge_logs`, by path, method
+  and status) show requests and failures per user to the millisecond. Report
+  counts and patterns, never the personal data around them.
+- **Database changes tried before they ship.** Run a new function or policy
+  first inside a `DO` block that switches to the `authenticated` role
+  (`set local role authenticated`, claims via
+  `set_config('request.jwt.claims', …)`), includes a control that must be
+  refused, and ends in `raise exception` so that everything rolls back. Only
+  then, and only with the owner's go-ahead, apply it as a named migration
+  (`apply_migration`), regenerate `types.ts`, and repeat the check against the
+  deployed version. The repository keeps no migration files, so the SQL goes
+  into the commit message. A frontend that calls a new function must not reach
+  `main` before the function exists: the merge deploys it.
+- **Say what was not covered.** There is no harness for React, so a change to
+  a component, hook or context is verified by reading it. Write that in the
+  PR rather than let a green run imply more.
