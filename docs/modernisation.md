@@ -107,12 +107,19 @@ says why; linking the row is the webhook's job, and today every subscribed row
 is linked. The checkout and customer-portal calls stay in the context: they
 call Edge Functions, not the database.
 
+**`user_ai_comment_usage` has a service.** `AICommentUsageService` owns the
+daily count of AI comments a free user has opened, which `useAICommentUsage`
+checks against the limit. The hook read and wrote the table itself, with the
+UTC day worked out in two places; the service has `usageDate` once, and
+documents what it means: the free allowance starts over at midnight UTC — 01:00
+or 02:00 in Germany — not at local midnight.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 137 specs cover the places where a mistake is both plausible and
+and in CI. 145 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
-AI commentary settings, the user preferences mapping, and the subscription
-read.
+AI commentary settings, the user preferences mapping, the subscription read,
+and the AI comment allowance.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -128,7 +135,7 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-10 files outside `src/services/` still query Supabase directly. This is the
+9 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
@@ -145,11 +152,10 @@ Suggested slices, roughly in order of value:
 3. ~~**`ai_commentary_settings`**~~ — done, see above.
 4. ~~**Contexts**~~ — `UserPreferencesContext` and `SubscriptionContext`,
    done, see above.
-5. **`user_ai_comment_usage`** — `useAICommentUsage`, the free AI-comment
-   allowance. Its increment reads the count and writes count + 1, so two tabs
-   can both write the same number and one view goes uncounted. An atomic
-   increment in the database would close that; moving the query is the
-   moment to do it, as its own commit.
+5. ~~**`user_ai_comment_usage`**~~ — moved, see above. Still open: the
+   increment reads the count and writes count + 1, so two tabs can both write
+   the same number and one view goes uncounted. An atomic increment in the
+   database would close that, as its own commit.
 6. **The analytics pages** — `ExamAnalytics` and `TrainingSessionAnalytics`
    read `training_sessions` and `session_question_progress`, which
    `TrainingSessionService` owns, and `upcoming_exams`, as does `Dashboard`.
@@ -216,7 +222,7 @@ tested, what they get written into is not. A Playwright smoke
 test over login → training session → answer would cover the path most likely
 to break silently, and needs a browser harness this repo does not have yet.
 
-**A real logger.** ~260 `console.*` calls.
+**A real logger.** ~255 `console.*` calls.
 
 **Finish the API key migration.** The outbound half is done. Who may _call_ an
 Edge Function is still the platform's `verify_jwt` gate, which understands
