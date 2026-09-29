@@ -107,12 +107,28 @@ says why; linking the row is the webhook's job, and today every subscribed row
 is linked. The checkout and customer-portal calls stay in the context: they
 call Edge Functions, not the database.
 
+**`user_ai_comment_usage` has a service.** `AICommentUsageService` owns the
+daily count of AI comments a free user has opened, which `useAICommentUsage`
+checks against the limit. The hook read and wrote the table itself, with the
+UTC day worked out in two places; the service has `usageDate` once, and
+documents what it means: the free allowance starts over at midnight UTC — 01:00
+or 02:00 in Germany — not at local midnight.
+
+The count is raised in the database now, by `increment_ai_comment_usage`: one
+`INSERT … ON CONFLICT DO UPDATE SET usage_count = usage_count + 1` that returns
+the new count. The hook used to read the count and write count + 1, so two tabs
+could both write the same number and lose a view. The function is
+`SECURITY INVOKER`, so the table's RLS still applies, takes the user from the
+session, and can be called by `authenticated` only. It was applied as the
+named migration `increment_ai_comment_usage`; this repository keeps no
+migration files, so the database is where it lives.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 137 specs cover the places where a mistake is both plausible and
+and in CI. 144 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
-AI commentary settings, the user preferences mapping, and the subscription
-read.
+AI commentary settings, the user preferences mapping, the subscription read,
+and the AI comment allowance.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -128,7 +144,7 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-10 files outside `src/services/` still query Supabase directly. This is the
+9 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
@@ -145,11 +161,7 @@ Suggested slices, roughly in order of value:
 3. ~~**`ai_commentary_settings`**~~ — done, see above.
 4. ~~**Contexts**~~ — `UserPreferencesContext` and `SubscriptionContext`,
    done, see above.
-5. **`user_ai_comment_usage`** — `useAICommentUsage`, the free AI-comment
-   allowance. Its increment reads the count and writes count + 1, so two tabs
-   can both write the same number and one view goes uncounted. An atomic
-   increment in the database would close that; moving the query is the
-   moment to do it, as its own commit.
+5. ~~**`user_ai_comment_usage`**~~ — done, see above.
 6. **The analytics pages** — `ExamAnalytics` and `TrainingSessionAnalytics`
    read `training_sessions` and `session_question_progress`, which
    `TrainingSessionService` owns, and `upcoming_exams`, as does `Dashboard`.
@@ -193,6 +205,16 @@ rows in both tables, 15.1k have a newer `user_progress` row, and the training
 filters report the older session result for them. Picking one rule changes
 numbers users see, so it wants a deliberate decision, not a refactor.
 
+**Decide whether the free AI-comment allowance should be enforced.** Today it
+is a courtesy gate in the browser. The count is correct now, but its owner may
+still write it — RLS lets a user insert and update their own usage rows — and
+the comments it gates are readable by every signed-in user anyway
+(`ai_answer_comments` and `ai_commentary_summaries` have a `true` read
+policy). Enforcing the limit would mean revoking those writes, leaving
+`increment_ai_comment_usage` as the only way to count, and serving the comments
+through something that checks the count. That changes what free users get, so
+it is a product decision before it is a technical one.
+
 **Stop `AuthContext` announcing the same user over and over.** It sets `user`
 from `getSession()` and again on every auth event, each time as a new object,
 so every effect keyed on `user` reruns for a user who has not changed. On a new
@@ -216,7 +238,7 @@ tested, what they get written into is not. A Playwright smoke
 test over login → training session → answer would cover the path most likely
 to break silently, and needs a browser harness this repo does not have yet.
 
-**A real logger.** ~260 `console.*` calls.
+**A real logger.** ~255 `console.*` calls.
 
 **Finish the API key migration.** The outbound half is done. Who may _call_ an
 Edge Function is still the platform's `verify_jwt` gate, which understands

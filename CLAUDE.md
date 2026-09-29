@@ -49,7 +49,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 10 files outside `src/services/` query Supabase
+rather than the finished state: 9 files outside `src/services/` query Supabase
 directly -- pages, components, hooks and contexts alike. So expect to find
 queries in components, but don't add more. When you touch one and the change is
 small, moving that query into a service is a welcome drive-by.
@@ -146,7 +146,10 @@ with `stripe-webhook` as the source of truth for entitlements. The browser reads
 its own `subscribers` row through `SubscriptionService`, by `user_id` -- RLS
 allows nothing else -- so a row the webhook has not linked to a user is
 invisible to that user, however it was paid for. Free users get a
-limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`).
+limited AI-comment allowance (`usePremiumFeatures`, `user_ai_comment_usage`),
+counted by the database function `increment_ai_comment_usage` -- never by
+reading the count and writing it back. The allowance is checked in the browser
+only; see `docs/modernisation.md` before relying on it.
 The limits themselves -- free sessions, free daily comments, whether the
 lifetime offer is showing -- are one admin-edited row, `ai_commentary_settings`.
 Read it through `useAICommentarySettings`, which shares one cached query and
@@ -161,8 +164,8 @@ and `broadcast_logs` tables.
 - **Thin test coverage.** There are specs for the Stripe entitlement decisions
   (`stripe-webhook/entitlements.ts`), `utils/cohortScoring.ts`, and the
   services that own `user_progress`, `profiles`, `universities`,
-  `ai_commentary_settings` and `user_preferences`, and the read of
-  `subscribers` -- those through the Supabase double in
+  `ai_commentary_settings`, `user_preferences` and `user_ai_comment_usage`,
+  and the read of `subscribers` -- those through the Supabase double in
   `src/test/supabaseDouble.ts`. React and
   Stripe itself are uncovered, and so is `TrainingSessionService` (progress),
   which matters most. Say what a change was actually verified against rather
@@ -171,7 +174,7 @@ and `broadcast_logs` tables.
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
   `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
   Splitting them is welcome as its own change, not smuggled into a feature.
-- **`console.*` is used for logging throughout** (~260 calls). Don't add more;
+- **`console.*` is used for logging throughout** (~255 calls). Don't add more;
   a real logger is a pending cleanup.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and
   they deploy separately from the frontend.

@@ -113,7 +113,17 @@ const createBuilder = (table: string) => {
   return builder;
 };
 
-/** Drop-in for the `supabase` client, covering the query builder only. */
+/**
+ * Drop-in for the `supabase` client, covering the query builder and `rpc`. A
+ * database function call is recorded like a query against a table of the
+ * function's name, with a single `rpc` op holding its arguments, and takes the
+ * responses queued under that name.
+ */
 export const supabaseDouble = {
   from: (table: string) => createBuilder(table),
+  rpc: (fn: string, args?: Record<string, unknown>) => {
+    recordedQueries.push({ table: fn, ops: [{ method: 'rpc', args: [args] }] });
+    const { data = null, error = null } = nextResponse(fn);
+    return Promise.resolve({ data, error });
+  },
 };

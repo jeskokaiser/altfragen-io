@@ -1516,6 +1516,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_ai_comment_usage: { Args: { p_date: string }; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       is_premium_user: { Args: { p_user_id: string }; Returns: boolean }
       is_verified_in_university: {
