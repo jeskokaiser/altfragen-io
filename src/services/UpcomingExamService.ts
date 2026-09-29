@@ -5,6 +5,7 @@ import {
   UpcomingExamWithStats,
   QuestionSource,
 } from '@/types/UpcomingExam';
+import { TrainingSessionService } from './TrainingSessionService';
 
 export interface CreateUpcomingExamInput {
   title: string;
@@ -275,90 +276,16 @@ export const getExamStatsForUser = async (
     return { total_linked: 0, answered: 0, correct: 0, percent_correct: 0 };
   }
 
-  // Fetch training sessions linked to this exam to filter session progress
-  const { data: allSessions, error: sessionsErr } = await supabase
-    .from('training_sessions')
-    .select('id, filter_settings')
-    .eq('user_id', userId);
+  // Only sessions started from this exam count, and one-off runs not at all.
+  const linkedSessionIds = await TrainingSessionService.listIdsForExam(userId, examId);
+  const results = await TrainingSessionService.fetchLatestResults(
+    userId,
+    linkedSessionIds,
+    questionIds,
+  );
 
-  if (sessionsErr) throw sessionsErr;
-
-  // Get session IDs linked to this exam
-  const linkedSessionIds = (allSessions || [])
-    .filter((s) => {
-      const fs = s.filter_settings as any;
-      return fs && fs.source === 'exam' && fs.examId === examId;
-    })
-    .map((s) => s.id);
-
-  // Fetch user progress from both tables in batches to avoid URL length limits
-  const BATCH_SIZE = 300;
-  const batches: string[][] = [];
-  for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-    batches.push(questionIds.slice(i, i + BATCH_SIZE));
-  }
-
-  // Query session progress only (no user_progress fallback)
-  const batchPromises = batches.map((batch) => {
-    // Filter session progress to only include sessions linked to this exam
-    if (linkedSessionIds.length > 0) {
-      return supabase
-        .from('session_question_progress')
-        .select('question_id, is_correct, updated_at, created_at')
-        .eq('user_id', userId)
-        .in('question_id', batch)
-        .in('session_id', linkedSessionIds);
-    } else {
-      // If no exam sessions, return empty result
-      return Promise.resolve({ data: [], error: null });
-    }
-  });
-
-  const batchResults = await Promise.allSettled(batchPromises);
-
-  // Process session_question_progress only
-  const sessionProgress: Array<{ question_id: string; is_correct: boolean | null; ts: number }> =
-    [];
-
-  batchResults.forEach((result) => {
-    if (result.status === 'fulfilled') {
-      const sessionProgressResult = result.value;
-
-      // Process session_question_progress entries (take latest per question per batch)
-      if (sessionProgressResult.data) {
-        const sessionBatchMap = new Map<string, { is_correct: boolean | null; ts: number }>();
-        // Still `any`: the batches mix a typed query with a plain Promise, and
-        // Promise.allSettled loses the row type across that union.
-        sessionProgressResult.data.forEach((p: any) => {
-          const qid = p.question_id as string;
-          if (!qid) return;
-          const ts = new Date(p.updated_at || p.created_at).getTime();
-          const existing = sessionBatchMap.get(qid);
-          if (!existing || ts > existing.ts) {
-            sessionBatchMap.set(qid, { is_correct: p.is_correct, ts });
-          }
-        });
-        sessionBatchMap.forEach((value, key) => {
-          sessionProgress.push({ question_id: key, ...value });
-        });
-      }
-    }
-  });
-
-  // Final deduplication across all batches to get the absolute latest per question
-  const latestByQuestion: Record<string, { is_correct: boolean | null; ts: number }> = {};
-
-  // Add all session progress and take the absolute latest per question
-  sessionProgress.forEach((p) => {
-    const qid = p.question_id;
-    const existing = latestByQuestion[qid];
-    if (!existing || p.ts > existing.ts) {
-      latestByQuestion[qid] = { is_correct: p.is_correct, ts: p.ts };
-    }
-  });
-
-  const answered = Object.keys(latestByQuestion).length;
-  const correct = Object.values(latestByQuestion).filter((v) => v.is_correct === true).length;
+  const answered = results.size;
+  const correct = [...results.values()].filter((isCorrect) => isCorrect === true).length;
   const percent_correct = answered > 0 ? Math.round((correct / answered) * 100) : 0;
 
   return { total_linked: totalLinked, answered, correct, percent_correct };

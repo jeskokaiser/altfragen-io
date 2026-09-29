@@ -7,8 +7,9 @@ import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ArrowLeft, Play } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { fetchQuestionDetails } from '@/services/DatabaseService';
+import { TrainingSessionService } from '@/services/TrainingSessionService';
+import { useTrainingSession } from '@/hooks/useTrainingSessions';
 import { Question } from '@/types/Question';
 
 const TrainingSessionAnalytics: React.FC = () => {
@@ -17,20 +18,7 @@ const TrainingSessionAnalytics: React.FC = () => {
   const { user } = useAuth();
   const [isSubjectStatsOpen, setIsSubjectStatsOpen] = useState(true);
 
-  // Fetch session details
-  const { data: session, isLoading: isSessionLoading } = useQuery({
-    queryKey: ['training-session', sessionId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('training_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!sessionId,
-  });
+  const { session, isLoading: isSessionLoading } = useTrainingSession(sessionId, user?.id);
 
   // Fetch questions for this session
   const { data: questions, isLoading: isQuestionsLoading } = useQuery({
@@ -47,30 +35,14 @@ const TrainingSessionAnalytics: React.FC = () => {
   const { data: userProgress, isLoading: isProgressLoading } = useQuery({
     queryKey: ['session-progress', sessionId, user?.id, questions?.length],
     queryFn: async () => {
-      if (!user?.id || !questions || questions.length === 0 || !sessionId) return [];
-
-      const questionIds = questions.map((q) => q.id);
-      const BATCH_SIZE = 300;
-      const batches: string[][] = [];
-      for (let i = 0; i < questionIds.length; i += BATCH_SIZE) {
-        batches.push(questionIds.slice(i, i + BATCH_SIZE));
+      if (!user?.id || !questions || questions.length === 0 || !sessionId) {
+        return new Map<string, boolean | null>();
       }
-
-      const batchPromises = batches.map((batch) =>
-        supabase
-          .from('session_question_progress')
-          .select('question_id, is_correct, updated_at, created_at')
-          .eq('session_id', sessionId)
-          .eq('user_id', user.id)
-          .in('question_id', batch),
+      return TrainingSessionService.fetchLatestResults(
+        user.id,
+        [sessionId],
+        questions.map((q) => q.id),
       );
-
-      const results = await Promise.allSettled(batchPromises);
-      const allProgress = results
-        .filter((r) => r.status === 'fulfilled')
-        .flatMap((r: any) => r.value.data || []);
-
-      return allProgress;
     },
     enabled: !!user?.id && !!questions && questions.length > 0 && !!sessionId,
   });
@@ -90,8 +62,10 @@ const TrainingSessionAnalytics: React.FC = () => {
     }
 
     const totalQuestions = questions.length;
-    const answeredQuestions = userProgress.length;
-    const correctAnswers = userProgress.filter((p: any) => p.is_correct === true).length;
+    const answeredQuestions = userProgress.size;
+    const correctAnswers = [...userProgress.values()].filter(
+      (isCorrect) => isCorrect === true,
+    ).length;
     const wrongAnswers = answeredQuestions - correctAnswers;
 
     const answeredPercentage = totalQuestions ? (answeredQuestions / totalQuestions) * 100 : 0;
@@ -122,11 +96,11 @@ const TrainingSessionAnalytics: React.FC = () => {
       stats[q.subject].total += 1;
     });
 
-    userProgress.forEach((progress: any) => {
-      const question = questions.find((q) => q.id === progress.question_id);
+    userProgress.forEach((isCorrect, questionId) => {
+      const question = questions.find((q) => q.id === questionId);
       if (question) {
         stats[question.subject].answered += 1;
-        if (progress.is_correct) {
+        if (isCorrect) {
           stats[question.subject].correct += 1;
         }
       }
@@ -167,10 +141,7 @@ const TrainingSessionAnalytics: React.FC = () => {
   }
 
   // Extract exam ID from filter_settings if this session is linked to an exam
-  const examId =
-    (session.filter_settings as any)?.source === 'exam'
-      ? (session.filter_settings as any)?.examId
-      : null;
+  const examId = TrainingSessionService.examIdOf(session.filter_settings);
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">

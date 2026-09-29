@@ -10,7 +10,7 @@ vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
-import { fetchUpcomingExamsByIds } from './UpcomingExamService';
+import { fetchUpcomingExamsByIds, getExamStatsForUser } from './UpcomingExamService';
 
 const exam = (id: string) => ({
   id,
@@ -57,5 +57,52 @@ describe('fetchUpcomingExamsByIds', () => {
     queueResponse('upcoming_exams', { error: { message: 'boom' } });
 
     await expect(fetchUpcomingExamsByIds(['e1'])).rejects.toEqual({ message: 'boom' });
+  });
+});
+
+describe('getExamStatsForUser', () => {
+  const progress = (questionId: string, isCorrect: boolean | null) => ({
+    question_id: questionId,
+    is_correct: isCorrect,
+    updated_at: '2026-09-01T00:00:00Z',
+  });
+
+  it("counts the latest result per question from the exam's sessions", async () => {
+    queueResponse('upcoming_exams', { data: { exam_name: 'Anatomie, Physiologie' } });
+    queueResponse('questions', { data: [{ id: 'q1' }, { id: 'q2' }, { id: 'q3' }, { id: 'q4' }] });
+    queueResponse('training_sessions', { data: [{ id: 's1' }, { id: 's2' }] });
+    queueResponse('session_question_progress', {
+      data: [progress('q1', true), progress('q2', false), progress('q3', null)],
+    });
+
+    expect(await getExamStatsForUser('e1', 'user-1')).toEqual({
+      total_linked: 4,
+      answered: 3,
+      correct: 1,
+      percent_correct: 33,
+    });
+    expect(queriesFor('questions')[0].ops).toContainEqual({
+      method: 'in',
+      args: ['exam_name', ['Anatomie', 'Physiologie']],
+    });
+    expect(queriesFor('session_question_progress')[0].ops).toContainEqual({
+      method: 'in',
+      args: ['session_id', ['s1', 's2']],
+    });
+  });
+
+  it('reports nothing answered when no session was started from the exam', async () => {
+    // Progress from other sessions or one-off runs must not count for the exam.
+    queueResponse('upcoming_exams', { data: { exam_name: 'Anatomie' } });
+    queueResponse('questions', { data: [{ id: 'q1' }] });
+    queueResponse('training_sessions', { data: [] });
+
+    expect(await getExamStatsForUser('e1', 'user-1')).toEqual({
+      total_linked: 1,
+      answered: 0,
+      correct: 0,
+      percent_correct: 0,
+    });
+    expect(queriesFor('session_question_progress')).toHaveLength(0);
   });
 });
