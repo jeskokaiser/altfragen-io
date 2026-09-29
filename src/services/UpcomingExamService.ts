@@ -53,6 +53,38 @@ export const deleteUpcomingExam = async (examId: string): Promise<void> => {
   if (error) throw error;
 };
 
+/** The exam with this ID, or null if there is none the user may read. */
+export const fetchUpcomingExam = async (examId: string): Promise<UpcomingExam | null> => {
+  const { data, error } = await supabase
+    .from('upcoming_exams')
+    .select('*')
+    .eq('id', examId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as UpcomingExam | null;
+};
+
+/**
+ * The user's exam whose `exam_name` is exactly `examName`, or null.
+ *
+ * `maybeSingle` fails when two exams match, so that case throws.
+ */
+export const findUpcomingExamByExamName = async (
+  userId: string,
+  examName: string,
+): Promise<Pick<UpcomingExam, 'id' | 'title' | 'exam_name'> | null> => {
+  const { data, error } = await supabase
+    .from('upcoming_exams')
+    .select('id, title, exam_name')
+    .eq('created_by', userId)
+    .eq('exam_name', examName)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
 /** The exams with these IDs. An ID that matches no exam is simply absent. */
 export const fetchUpcomingExamsByIds = async (examIds: string[]): Promise<UpcomingExam[]> => {
   if (examIds.length === 0) return [];

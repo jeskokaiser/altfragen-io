@@ -10,7 +10,12 @@ vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
-import { fetchUpcomingExamsByIds, getExamStatsForUser } from './UpcomingExamService';
+import {
+  fetchUpcomingExam,
+  fetchUpcomingExamsByIds,
+  findUpcomingExamByExamName,
+  getExamStatsForUser,
+} from './UpcomingExamService';
 
 const exam = (id: string) => ({
   id,
@@ -57,6 +62,61 @@ describe('fetchUpcomingExamsByIds', () => {
     queueResponse('upcoming_exams', { error: { message: 'boom' } });
 
     await expect(fetchUpcomingExamsByIds(['e1'])).rejects.toEqual({ message: 'boom' });
+  });
+});
+
+describe('fetchUpcomingExam', () => {
+  it('reads the whole row of one exam', async () => {
+    queueResponse('upcoming_exams', { data: exam('e1') });
+
+    expect(await fetchUpcomingExam('e1')).toEqual(exam('e1'));
+    const { ops } = queriesFor('upcoming_exams')[0];
+    expect(ops).toContainEqual({ method: 'select', args: ['*'] });
+    expect(ops).toContainEqual({ method: 'eq', args: ['id', 'e1'] });
+  });
+
+  it('returns null for an exam that does not exist or is not the user’s', async () => {
+    // `single` would turn a missing row into an error, and the error into
+    // retries before the page could say "Prüfung nicht gefunden".
+    queueResponse('upcoming_exams', { data: null });
+
+    expect(await fetchUpcomingExam('gone')).toBeNull();
+    expect(queriesFor('upcoming_exams')[0].ops.map((op) => op.method)).toContain('maybeSingle');
+  });
+
+  it('throws on a failed read', async () => {
+    queueResponse('upcoming_exams', { error: { message: 'boom' } });
+
+    await expect(fetchUpcomingExam('e1')).rejects.toEqual({ message: 'boom' });
+  });
+});
+
+describe('findUpcomingExamByExamName', () => {
+  it("looks among the user's own exams for that exam_name", async () => {
+    queueResponse('upcoming_exams', {
+      data: { id: 'e1', title: 'Exam e1', exam_name: 'Anatomie' },
+    });
+
+    const found = await findUpcomingExamByExamName('user-1', 'Anatomie');
+
+    expect(found?.title).toBe('Exam e1');
+    const { ops } = queriesFor('upcoming_exams')[0];
+    expect(ops).toContainEqual({ method: 'eq', args: ['created_by', 'user-1'] });
+    expect(ops).toContainEqual({ method: 'eq', args: ['exam_name', 'Anatomie'] });
+  });
+
+  it('returns null when no exam matches', async () => {
+    queueResponse('upcoming_exams', { data: null });
+
+    expect(await findUpcomingExamByExamName('user-1', 'Anatomie')).toBeNull();
+  });
+
+  it('throws on a failed read', async () => {
+    queueResponse('upcoming_exams', { error: { message: 'boom' } });
+
+    await expect(findUpcomingExamByExamName('user-1', 'Anatomie')).rejects.toEqual({
+      message: 'boom',
+    });
   });
 });
 

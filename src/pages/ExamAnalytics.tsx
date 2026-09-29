@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
+import { useUpcomingExam } from '@/hooks/useUpcomingExams';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -30,36 +31,17 @@ const ExamAnalytics: React.FC = () => {
   const [groupingMode, setGroupingMode] = useState<'semester' | 'year' | 'filename'>('semester');
 
   // Fetch exam details
-  const { data: exam, isLoading: isExamLoading } = useQuery({
-    queryKey: ['exam', examId],
-    queryFn: async () => {
-      const sb: any = supabase;
-      const { data, error } = await sb.from('upcoming_exams').select('*').eq('id', examId).single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!examId,
-  });
+  const { data: exam, isLoading: isExamLoading } = useUpcomingExam(examId);
 
-  // Fetch linked questions by exam_name
+  // Fetch linked questions by exam_name. Keyed on the exam_name too, so that
+  // relinking the exam refetches its questions.
   const { data: questions, isLoading: isQuestionsLoading } = useQuery({
-    queryKey: ['exam-questions', examId],
+    queryKey: ['exam-questions', examId, exam?.exam_name],
     queryFn: async () => {
-      if (!examId) return [];
-
-      // Get the exam to find its exam_name(s)
-      const sb: any = supabase;
-      const { data: examData, error: examError } = await sb
-        .from('upcoming_exams')
-        .select('exam_name')
-        .eq('id', examId)
-        .single();
-
-      if (examError) throw examError;
-      if (!examData?.exam_name) return [];
+      if (!exam?.exam_name) return [];
 
       // Split comma-separated exam_names
-      const examNames = examData.exam_name
+      const examNames = exam.exam_name
         .split(',')
         .map((n: string) => n.trim())
         .filter(Boolean);
@@ -103,7 +85,7 @@ const ExamAnalytics: React.FC = () => {
         case_text: q.case_text || null,
       })) as Question[];
     },
-    enabled: !!examId,
+    enabled: !!exam,
   });
 
   // Fetch training sessions for this exam (needed to filter session progress)
