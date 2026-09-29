@@ -49,7 +49,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 9 files outside `src/services/` query Supabase
+rather than the finished state: 6 files outside `src/services/` query Supabase
 directly -- pages, components and hooks alike (count them as
 `docs/modernisation.md` says: some go through an alias such as
 `const sb: any = supabase`). So expect to find
@@ -60,6 +60,11 @@ Rows coming out of `questions` are mapped to the domain type by
 `src/services/questionRowMapper.ts`. Use it rather than writing the snake_case
 to camelCase translation again -- it used to be copied by hand at ten call
 sites, each with its own subset of fields and its own defaults.
+
+**A read can be cut off silently.** The API returns at most 20,000 rows per
+response and drops the rest without an error; one university has more
+questions than that. A read that can grow that large goes through
+`fetchAllRows` (`src/services/fetchAllRows.ts`), which pages past the cap.
 
 **`src/integrations/supabase/types.ts` is generated.** Regenerate it after any
 schema change -- via the Supabase MCP server's `generate_typescript_types`, or
@@ -167,8 +172,9 @@ and `broadcast_logs` tables.
   (`stripe-webhook/entitlements.ts`), `utils/cohortScoring.ts`, and the
   services that own `user_progress`, `profiles`, `universities`,
   `ai_commentary_settings`, `user_preferences` and `user_ai_comment_usage`,
-  the read of `subscribers`, and the exam and session reads behind the
-  statistics pages -- those through the Supabase double in
+  the read of `subscribers`, the exam and session reads behind the
+  statistics pages, and the dashboard's question list -- those through the
+  Supabase double in
   `src/test/supabaseDouble.ts`. React and Stripe itself are uncovered, and so
   are the writes of `TrainingSessionService` (`recordAttempt`), which matter
   most. Say what a change was actually verified against rather

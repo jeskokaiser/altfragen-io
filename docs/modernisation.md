@@ -151,13 +151,26 @@ whole `exam_name` column, so it missed the 93 exams linked to several names and
 failed in the 49 cases of one user giving the same name to more than one
 exam, telling them to create an exam they had.
 
+**The API row cap is handled where it bites.** The API returns at most 20,000
+rows per response and cuts the rest off without an error. That had been
+losing data: the dashboard's question list read each of its three sets in one
+request, newest first, so one university's 1,003 users lost up to 3,600 of its
+23,600 shared questions, and one user 981 of their own — from the dashboard
+and from training built on it. The logs showed 5 responses of exactly 20,000
+rows in a day. `fetchAllRows` (`src/services/fetchAllRows.ts`) reads past the
+cap: its first request asks for everything with `{ count: 'exact' }`, and if
+the total says rows are missing, the response length is the cap and the rest
+loads in parallel pages of that size. A read under the cap still costs one
+request. Any read that can grow past 20,000 rows should go through it.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 172 specs cover the places where a mistake is both plausible and
+and in CI. 192 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
 AI commentary settings, the user preferences mapping, the subscription read,
-the AI comment allowance, and the exam and session reads behind the
-statistics pages.
+the AI comment allowance, the exam and session reads behind the
+statistics pages, the dashboard's question list, and the paging past the API
+row cap.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -173,7 +186,7 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-9 files outside `src/services/` still query Supabase directly. This is the
+6 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
@@ -199,14 +212,24 @@ Suggested slices, roughly in order of value:
    done, see above.
 5. ~~**`user_ai_comment_usage`**~~ — done, see above.
 6. ~~**The analytics pages**~~ — done, see above.
-7. **`questions` from components** — the PDF uploads, the two question
-   editors, `useSubjects`, `ArchivedDatasets`, `Dashboard`, one read in
-   `ExamAnalytics`, and the three exam-name lists in
-   `ExamQuestionSelectorDialog`. Nine files, the upload path among them, so
-   the largest slice and the one to take in parts. `Dashboard` and
-   `ExamAnalytics` read an exam's questions the same way, `in('exam_name', …)`
-   with a hand-written mapping each; one service function using
-   `questionRowMapper` would replace both.
+7. **`questions` from components** — in parts.
+   - ~~An exam's questions and exam names~~ — done: `Dashboard` and
+     `ExamAnalytics` read an exam's questions through
+     `fetchQuestionsForExamNames` (with `questionRowMapper`, checked against
+     the two hand-written mappings over all 135 stored value shapes: only
+     fields neither path reads differ), and `ExamQuestionSelectorDialog`'s
+     three tabs through `listExamNameCounts`, one paged read instead of one
+     read plus a count per name.
+   - **Next: `useSubjects` and `ArchivedDatasets`.** Both read every question
+     the user can see, in one request, and both are past the row cap for the
+     large university. `useSubjects` sorts by subject, so the subjects at the
+     end of the alphabet are the ones cut off the question editor's list;
+     `ArchivedDatasets` loses the oldest questions. Both want `fetchAllRows`,
+     or better, a read that does not need every row: a distinct subject list
+     does not need 23,600 of them.
+   - Then the two question editors (`EditQuestionModal`,
+     `QuestionEditorPanel`), then the uploads (`PDFUpload`,
+     `BatchPDFUpload`), which write.
 
 `no-explicit-any` was expected to fall as this proceeds. It mostly does not:
 slices 1 and 2 left it at 161, because those casts sit in the components
@@ -237,6 +260,10 @@ not survive the union — that includes the one in `UpcomingExamService` kept
 `any` on purpose, and the construction that forced it is gone. Four were casts
 on the `filter_settings` jsonb, now `examIdOf`, and four were
 `const sb: any = supabase`.
+
+The first part of slice 7 took it to 104: the hand-written row mappings'
+`(q: any)`, the exam-name dialog's `sb` aliases and callbacks, and the `any[]`
+the dashboard's question list was collected into.
 
 ## Not started
 
