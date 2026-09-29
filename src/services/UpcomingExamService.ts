@@ -66,9 +66,21 @@ export const fetchUpcomingExam = async (examId: string): Promise<UpcomingExam | 
 };
 
 /**
- * The user's exam whose `exam_name` is exactly `examName`, or null.
+ * The names in an exam's `exam_name`. An exam linked to several exam names
+ * stores them comma-separated, and links every question carrying one of them.
+ */
+export const splitExamNames = (examName: string | null): string[] =>
+  (examName ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+/**
+ * The user's exam that links questions named `examName`, or null. If several
+ * do, the one due first.
  *
- * `maybeSingle` fails when two exams match, so that case throws.
+ * Matching the whole `exam_name` column is not enough: an exam linked to
+ * several names would never match, and neither would two exams sharing a name.
  */
 export const findUpcomingExamByExamName = async (
   userId: string,
@@ -78,11 +90,11 @@ export const findUpcomingExamByExamName = async (
     .from('upcoming_exams')
     .select('id, title, exam_name')
     .eq('created_by', userId)
-    .eq('exam_name', examName)
-    .maybeSingle();
+    .not('exam_name', 'is', null)
+    .order('due_date', { ascending: true });
 
   if (error) throw error;
-  return data;
+  return (data ?? []).find((exam) => splitExamNames(exam.exam_name).includes(examName)) ?? null;
 };
 
 /** The exams with these IDs. An ID that matches no exam is simply absent. */

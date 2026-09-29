@@ -15,6 +15,7 @@ import {
   fetchUpcomingExamsByIds,
   findUpcomingExamByExamName,
   getExamStatsForUser,
+  splitExamNames,
 } from './UpcomingExamService';
 
 const exam = (id: string) => ({
@@ -91,22 +92,45 @@ describe('fetchUpcomingExam', () => {
   });
 });
 
+describe('splitExamNames', () => {
+  it('splits and trims the comma-separated names, dropping empty ones', () => {
+    expect(splitExamNames('Anatomie, Physiologie ,, ')).toEqual(['Anatomie', 'Physiologie']);
+    expect(splitExamNames(null)).toEqual([]);
+  });
+});
+
 describe('findUpcomingExamByExamName', () => {
-  it("looks among the user's own exams for that exam_name", async () => {
-    queueResponse('upcoming_exams', {
-      data: { id: 'e1', title: 'Exam e1', exam_name: 'Anatomie' },
-    });
-
-    const found = await findUpcomingExamByExamName('user-1', 'Anatomie');
-
-    expect(found?.title).toBe('Exam e1');
-    const { ops } = queriesFor('upcoming_exams')[0];
-    expect(ops).toContainEqual({ method: 'eq', args: ['created_by', 'user-1'] });
-    expect(ops).toContainEqual({ method: 'eq', args: ['exam_name', 'Anatomie'] });
+  const linked = (id: string, examName: string | null) => ({
+    id,
+    title: `Exam ${id}`,
+    exam_name: examName,
   });
 
-  it('returns null when no exam matches', async () => {
-    queueResponse('upcoming_exams', { data: null });
+  it("looks among the user's own exams, due first", async () => {
+    await findUpcomingExamByExamName('user-1', 'Anatomie');
+
+    const { ops } = queriesFor('upcoming_exams')[0];
+    expect(ops).toContainEqual({ method: 'eq', args: ['created_by', 'user-1'] });
+    expect(ops).toContainEqual({ method: 'order', args: ['due_date', { ascending: true }] });
+  });
+
+  it('finds an exam linked to several names by any one of them', async () => {
+    queueResponse('upcoming_exams', { data: [linked('e1', 'Anatomie, Physiologie')] });
+
+    expect((await findUpcomingExamByExamName('user-1', 'Physiologie'))?.id).toBe('e1');
+  });
+
+  it('finds the exam due first when two exams share the name', async () => {
+    // The old exact lookup failed on this, and told the user to create an exam.
+    queueResponse('upcoming_exams', {
+      data: [linked('e1', null), linked('e2', 'Anatomie'), linked('e3', 'Anatomie')],
+    });
+
+    expect((await findUpcomingExamByExamName('user-1', 'Anatomie'))?.id).toBe('e2');
+  });
+
+  it('matches whole names only', async () => {
+    queueResponse('upcoming_exams', { data: [linked('e1', 'Anatomie II')] });
 
     expect(await findUpcomingExamByExamName('user-1', 'Anatomie')).toBeNull();
   });
