@@ -169,7 +169,8 @@ and `broadcast_logs` tables.
   `src/test/supabaseDouble.ts`. React and
   Stripe itself are uncovered, and so is `TrainingSessionService` (progress),
   which matters most. Say what a change was actually verified against rather
-  than assuming a green run means correct.
+  than assuming a green run means correct -- "How a slice is verified" in
+  `docs/modernisation.md` lists the checks the migration slices have used.
 - **Some files are very large**: `ExamCohortComparisonSection.tsx` (~1300
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
   `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
