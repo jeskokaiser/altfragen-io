@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUpcomingExam } from '@/hooks/useUpcomingExams';
 
 interface ExamQuestionSelectorDialogProps {
   open: boolean;
@@ -33,21 +34,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch current exam's exam_name to pre-select
-  const { data: currentExam } = useQuery({
-    queryKey: ['exam', examId],
-    queryFn: async () => {
-      if (!examId) return null;
-      const sb: any = supabase;
-      const { data, error } = await sb
-        .from('upcoming_exams')
-        .select('exam_name')
-        .eq('id', examId)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!examId && open,
-  });
+  const { data: currentExam } = useUpcomingExam(examId, open);
 
   // Initialize selected exam names from current exam
   useEffect(() => {

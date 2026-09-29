@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createUpcomingExam,
   deleteUpcomingExam,
+  fetchUpcomingExam,
   listUpcomingExamsForUser,
   linkQuestionsToExam,
   unlinkQuestionFromExam,
@@ -85,3 +86,17 @@ export const useUpcomingExams = (userId: string | undefined) => {
     unlinkQuestion: unlinkMut.mutateAsync,
   };
 };
+
+/**
+ * One exam, cached under `['exam', examId]`.
+ *
+ * Every reader of that key goes through here, so they all cache the same shape:
+ * two screens once stored different column sets under it, and whichever read
+ * first decided what the other got for the next five minutes.
+ */
+export const useUpcomingExam = (examId: string | null | undefined, enabled = true) =>
+  useQuery({
+    queryKey: ['exam', examId],
+    queryFn: () => (examId ? fetchUpcomingExam(examId) : Promise.resolve(null)),
+    enabled: !!examId && enabled,
+  });

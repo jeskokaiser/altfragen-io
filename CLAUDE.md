@@ -50,7 +50,9 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 
 **Database access goes through `src/services/`.** Still the direction of travel
 rather than the finished state: 9 files outside `src/services/` query Supabase
-directly -- pages, components, hooks and contexts alike. So expect to find
+directly -- pages, components and hooks alike (count them as
+`docs/modernisation.md` says: some go through an alias such as
+`const sb: any = supabase`). So expect to find
 queries in components, but don't add more. When you touch one and the change is
 small, moving that query into a service is a welcome drive-by.
 
@@ -99,7 +101,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (137) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (114) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
@@ -165,15 +167,16 @@ and `broadcast_logs` tables.
   (`stripe-webhook/entitlements.ts`), `utils/cohortScoring.ts`, and the
   services that own `user_progress`, `profiles`, `universities`,
   `ai_commentary_settings`, `user_preferences` and `user_ai_comment_usage`,
-  and the read of `subscribers` -- those through the Supabase double in
-  `src/test/supabaseDouble.ts`. React and
-  Stripe itself are uncovered, and so is `TrainingSessionService` (progress),
-  which matters most. Say what a change was actually verified against rather
+  the read of `subscribers`, and the exam and session reads behind the
+  statistics pages -- those through the Supabase double in
+  `src/test/supabaseDouble.ts`. React and Stripe itself are uncovered, and so
+  are the writes of `TrainingSessionService` (`recordAttempt`), which matter
+  most. Say what a change was actually verified against rather
   than assuming a green run means correct -- "How a slice is verified" in
   `docs/modernisation.md` lists the checks the migration slices have used.
 - **Some files are very large**: `ExamCohortComparisonSection.tsx` (~1300
   lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
-  `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830).
+  `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~710).
   Splitting them is welcome as its own change, not smuggled into a feature.
 - **`console.*` is used for logging throughout** (~255 calls). Don't add more;
   a real logger is a pending cleanup.

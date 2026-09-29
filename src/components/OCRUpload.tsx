@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/select';
 import { showToast } from '@/utils/toast';
 import { fetchQuestionsByFilename } from '@/services/DatabaseService';
-import { supabase } from '@/integrations/supabase/client';
+import { findUpcomingExamByExamName } from '@/services/UpcomingExamService';
 
 const metadataSchema = z.object({
   examName: z.string().optional(),
@@ -214,13 +214,10 @@ const OCRUpload: React.FC<OCRUploadProps> = ({
         if (formValues.examName && formValues.examName.trim()) {
           try {
             // Check if an exam with matching exam_name exists
-            const sb: any = supabase;
-            const { data: matchingExam } = await sb
-              .from('upcoming_exams')
-              .select('id, title, exam_name')
-              .eq('created_by', user.id)
-              .eq('exam_name', formValues.examName.trim())
-              .maybeSingle();
+            const matchingExam = await findUpcomingExamByExamName(
+              user.id,
+              formValues.examName.trim(),
+            );
 
             if (matchingExam) {
               showToast.success('Fragen erfolgreich extrahiert', {

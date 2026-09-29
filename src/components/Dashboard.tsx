@@ -16,7 +16,7 @@ import UpcomingExamCreateDialog from './exams/UpcomingExamCreateDialog';
 import UpcomingExamEditDialog from './exams/UpcomingExamEditDialog';
 import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
-import { deleteUpcomingExam } from '@/services/UpcomingExamService';
+import { deleteUpcomingExam, updateUpcomingExam } from '@/services/UpcomingExamService';
 import { fetchUserDifficultiesForQuestions } from '@/services/UserProgressService';
 import { fetchIsPremium } from '@/services/ProfileService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
@@ -240,12 +240,7 @@ const Dashboard = () => {
         // Store selected exam_names in the exam's exam_name field (comma-separated if multiple)
         const examNameValue = selectedExamNames.length > 0 ? selectedExamNames.join(', ') : null;
 
-        const { error: updateError } = await supabase
-          .from('upcoming_exams')
-          .update({ exam_name: examNameValue })
-          .eq('id', examIdForLinking);
-
-        if (updateError) throw updateError;
+        await updateUpcomingExam(examIdForLinking, { exam_name: examNameValue });
 
         if (selectedExamNames.length > 0) {
           toast.success(
