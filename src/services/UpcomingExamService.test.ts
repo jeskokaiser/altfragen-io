@@ -11,6 +11,7 @@ vi.mock('@/integrations/supabase/client', async () => ({
 }));
 
 import {
+  fetchQuestionsForExamNames,
   fetchUpcomingExam,
   fetchUpcomingExamsByIds,
   findUpcomingExamByExamName,
@@ -96,6 +97,60 @@ describe('splitExamNames', () => {
   it('splits and trims the comma-separated names, dropping empty ones', () => {
     expect(splitExamNames('Anatomie, Physiologie ,, ')).toEqual(['Anatomie', 'Physiologie']);
     expect(splitExamNames(null)).toEqual([]);
+  });
+});
+
+describe('fetchQuestionsForExamNames', () => {
+  const questionRow = {
+    id: 'q1',
+    question: 'Welcher Nerv …?',
+    option_a: 'A',
+    option_b: 'B',
+    option_c: 'C',
+    option_d: 'D',
+    option_e: 'E',
+    subject: 'Anatomie',
+    correct_answer: 'A',
+    comment: null,
+    filename: 'Anatomie SS 2025.pdf',
+    difficulty: 3,
+    exam_semester: 'SS',
+    exam_year: '2025',
+    exam_name: 'Anatomie',
+    image_key: '',
+    visibility: 'university',
+  };
+
+  it('asks for nothing without exam names', async () => {
+    expect(await fetchQuestionsForExamNames([])).toEqual([]);
+    expect(recordedQueries).toHaveLength(0);
+  });
+
+  it('reads the questions carrying any of the names, mapped to the domain type', async () => {
+    queueResponse('questions', { data: [questionRow] });
+
+    const [question] = await fetchQuestionsForExamNames(['Anatomie', 'Physiologie']);
+
+    expect(queriesFor('questions')[0].ops).toContainEqual({
+      method: 'in',
+      args: ['exam_name', ['Anatomie', 'Physiologie']],
+    });
+    // Through questionRowMapper: exam_semester and exam_year are renamed.
+    expect(question).toMatchObject({
+      id: 'q1',
+      optionA: 'A',
+      correctAnswer: 'A',
+      subject: 'Anatomie',
+      semester: 'SS',
+      year: '2025',
+      visibility: 'university',
+    });
+  });
+
+  it('throws on a failed read', async () => {
+    queueResponse('questions', { error: { message: 'boom' } });
+
+    await expect(fetchQuestionsForExamNames(['Anatomie'])).rejects.toEqual({ message: 'boom' });
   });
 });
 

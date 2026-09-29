@@ -5,7 +5,9 @@ import {
   UpcomingExamWithStats,
   QuestionSource,
 } from '@/types/UpcomingExam';
+import type { Question } from '@/types/Question';
 import { TrainingSessionService } from './TrainingSessionService';
+import { mapQuestionRow } from './questionRowMapper';
 
 export interface CreateUpcomingExamInput {
   title: string;
@@ -74,6 +76,20 @@ export const splitExamNames = (examName: string | null): string[] =>
     .split(',')
     .map((name) => name.trim())
     .filter(Boolean);
+
+/**
+ * The questions an exam links: every question whose exam_name is one of
+ * `examNames` (see `splitExamNames`), whoever owns it -- RLS decides which of
+ * them the user may see.
+ */
+export const fetchQuestionsForExamNames = async (examNames: string[]): Promise<Question[]> => {
+  if (examNames.length === 0) return [];
+
+  const { data, error } = await supabase.from('questions').select('*').in('exam_name', examNames);
+
+  if (error) throw error;
+  return (data ?? []).map(mapQuestionRow);
+};
 
 /**
  * The user's exam that links questions named `examName`, or null. If several
