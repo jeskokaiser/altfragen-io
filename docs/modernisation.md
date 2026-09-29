@@ -123,12 +123,41 @@ session, and can be called by `authenticated` only. It was applied as the
 named migration `increment_ai_comment_usage`; this repository keeps no
 migration files, so the database is where it lives.
 
+**The analytics pages read through services.** `ExamAnalytics` and
+`TrainingSessionAnalytics` read `training_sessions` and
+`session_question_progress` through `TrainingSessionService` now, and every
+`upcoming_exams` query outside the service — the analytics page, the exam-name
+selector dialog, the dashboard and the OCR upload — went into
+`UpcomingExamService`. The "latest result per exam question" had been written
+out twice, in the page and in `getExamStatsForUser`, batching and dedup
+included; it is `fetchLatestResults` now, and the exam link inside the
+`filter_settings` jsonb is read in one place, `examIdOf`.
+
+The sessions of an exam are filtered in the database
+(`filter_settings->>source`, `->>examId`) instead of loading all of a user's
+sessions and filtering them in the browser; over the 9,448 sessions in
+production the two predicates pick the same 9,441. `ExamAnalytics` still reads
+all progress rows of an exam's sessions in one request, up to 5,465 for one
+user today. That is within the API's row cap — responses of 20,000 rows appear
+in the logs, so the cap is not the default 1,000 — but it is the first read to
+watch if exams grow.
+
+Two defects fell out. The page and the selector dialog both cached under
+`['exam', examId]`, one the whole row, the other only `exam_name`; with a
+five-minute `staleTime` whichever read first decided what the other got, so the
+statistics page could show no title and "Invalid Date". Both go through
+`useUpcomingExam` now. And the OCR upload's "linked to exam" toast compared the
+whole `exam_name` column, so it missed the 93 exams linked to several names and
+failed in the 49 cases of one user giving the same name to more than one
+exam, telling them to create an exam they had.
+
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 144 specs cover the places where a mistake is both plausible and
+and in CI. 172 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
 AI commentary settings, the user preferences mapping, the subscription read,
-and the AI comment allowance.
+the AI comment allowance, and the exam and session reads behind the
+statistics pages.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -148,11 +177,18 @@ sent, so writes are asserted rather than the mock.
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
-Count them with a pattern that sees through a cast: `supabase.from(` alone
-misses `(supabase as any).from(`, and a file whose only direct query is written
-that way drops out of the count while still querying. The count above uses
-`\(?supabase( as any\))?[[:space:]]*\.from\(`, which agrees with the old
-pattern on every earlier figure.
+Count them with a pattern that sees through casts and aliases, across line
+breaks:
+
+```bash
+rg -lU '\(?\b(supabase|sb)( as any\))?\s*\.from\(' src -g '!src/services/**'
+```
+
+`supabase.from(` alone misses `(supabase as any).from(`. The pattern used
+until slice 6 caught that, but not `const sb: any = supabase; sb.from(…)`, and
+two files queried only that way: `OCRUpload` and `ExamQuestionSelectorDialog`.
+The earlier figure of 9 was therefore 11. Before trusting the count, check
+that no other alias has appeared: `rg '=\s*supabase\s*;' src`.
 
 Suggested slices, roughly in order of value:
 
@@ -162,13 +198,15 @@ Suggested slices, roughly in order of value:
 4. ~~**Contexts**~~ — `UserPreferencesContext` and `SubscriptionContext`,
    done, see above.
 5. ~~**`user_ai_comment_usage`**~~ — done, see above.
-6. **The analytics pages** — `ExamAnalytics` and `TrainingSessionAnalytics`
-   read `training_sessions` and `session_question_progress`, which
-   `TrainingSessionService` owns, and `upcoming_exams`, as does `Dashboard`.
+6. ~~**The analytics pages**~~ — done, see above.
 7. **`questions` from components** — the PDF uploads, the two question
-   editors, `useSubjects`, `ArchivedDatasets`, `Dashboard`, and one read in
-   `ExamAnalytics`. Eight files, the upload path among them, so the largest
-   slice and the one to take in parts.
+   editors, `useSubjects`, `ArchivedDatasets`, `Dashboard`, one read in
+   `ExamAnalytics`, and the three exam-name lists in
+   `ExamQuestionSelectorDialog`. Nine files, the upload path among them, so
+   the largest slice and the one to take in parts. `Dashboard` and
+   `ExamAnalytics` read an exam's questions the same way, `in('exam_name', …)`
+   with a hand-written mapping each; one service function using
+   `questionRowMapper` would replace both.
 
 `no-explicit-any` was expected to fall as this proceeds. It mostly does not:
 slices 1 and 2 left it at 161, because those casts sit in the components
@@ -191,6 +229,14 @@ without looking — and one read a column that no longer exists. On the writes,
 three were needed only because `KeyboardBindings` and `StatisticsDateRange`
 were interfaces, which have no index signature and so are not assignable to
 `Json`; as type aliases they are. The other four were not needed at all.
+
+Slice 6 took it to 114. Of the 23, 15 were callbacks over session and progress
+rows annotated `any`; some were needed because the queries ran inside
+`Promise.allSettled` with a `Promise.resolve` fallback, where the row type did
+not survive the union — that includes the one in `UpcomingExamService` kept
+`any` on purpose, and the construction that forced it is gone. Four were casts
+on the `filter_settings` jsonb, now `examIdOf`, and four were
+`const sb: any = supabase`.
 
 ## Not started
 
@@ -228,12 +274,13 @@ what `USER_UPDATED` must still refresh.
 
 **Split the large files.** `ExamCohortComparisonSection.tsx` (~1300 lines),
 `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
-`admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~830). Safer
+`admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~710). Safer
 now that CI exists, but still its own change rather than part of a feature.
 
 **More tests.** The harness exists and the riskiest logic is covered (see
-Done). Still uncovered: `TrainingSessionService`, which writes session
-progress, and the webhook's persistence half — the entitlement decisions are
+Done). Still uncovered: the writes of `TrainingSessionService` —
+`recordAttempt` decides what a session answer counts as, and only its reads
+have specs — and the webhook's persistence half — the entitlement decisions are
 tested, what they get written into is not. A Playwright smoke
 test over login → training session → answer would cover the path most likely
 to break silently, and needs a browser harness this repo does not have yet.
