@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
 import { mapQuestionRow, mapQuestionRowWithStats } from './questionRowMapper';
+import { fetchAllRows } from './fetchAllRows';
 
 export const saveQuestions = async (
   questions: Question[],
@@ -164,48 +165,47 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     show_image_after_answer
   `;
 
-  const { data: personalQuestions, error: personalError } = await supabase
-    .from('questions')
-    .select(questionColumns)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (personalError) throw personalError;
-
-  let universityQuestions: any[] = [];
-  if (universityId) {
-    const { data: uniQuestions, error: uniError } = await supabase
+  // Each of the three reads can pass the API's row cap -- one university shares
+  // 23,600 questions, one user has 20,981 -- so each is paged, newest first,
+  // with the id breaking ties so that pages neither overlap nor skip.
+  const personalQuestions = await fetchAllRows((from, to) =>
+    supabase
       .from('questions')
-      .select(questionColumns)
-      .eq('university_id', universityId)
-      .eq('visibility', 'university')
-      .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
-      .order('created_at', { ascending: false });
+      .select(questionColumns, { count: 'exact' })
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(from, to),
+  );
 
-    if (uniError) {
-      throw uniError;
-    }
-
-    universityQuestions = uniQuestions || [];
-  }
+  const universityQuestions = universityId
+    ? await fetchAllRows((from, to) =>
+        supabase
+          .from('questions')
+          .select(questionColumns, { count: 'exact' })
+          .eq('university_id', universityId)
+          .eq('visibility', 'university')
+          .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
+          .order('created_at', { ascending: false })
+          .order('id')
+          .range(from, to),
+      )
+    : [];
 
   // Fetch public questions (only if user has a university_id)
-  let publicQuestions: any[] = [];
-  if (universityId) {
-    const { data: pubQuestions, error: pubError } = await supabase
-      .from('questions')
-      .select(questionColumns)
-      .eq('visibility', 'public')
-      .is('university_id', null) // Public questions have university_id = NULL
-      .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
-      .order('created_at', { ascending: false });
-
-    if (pubError) {
-      throw pubError;
-    }
-
-    publicQuestions = pubQuestions || [];
-  }
+  const publicQuestions = universityId
+    ? await fetchAllRows((from, to) =>
+        supabase
+          .from('questions')
+          .select(questionColumns, { count: 'exact' })
+          .eq('visibility', 'public')
+          .is('university_id', null) // Public questions have university_id = NULL
+          .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
+          .order('created_at', { ascending: false })
+          .order('id')
+          .range(from, to),
+      )
+    : [];
 
   // For now, skip fetching user difficulties in the dashboard to improve performance
   // User difficulties will be fetched on-demand when questions are actually displayed
