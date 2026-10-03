@@ -75,7 +75,8 @@ const toCohortStats = (row: CohortStatsRow): CohortComparisonStats => ({
 
 /**
  * The user's standing on the exam among the students of the exam's
- * university. Throws on a database error.
+ * university. Throws on a database error -- including when `userId` is not
+ * the signed-in user, which the function refuses.
  *
  * When there is nothing to compare -- the exam has no university, none of its
  * questions are shared with it, or the user has answered none -- the function

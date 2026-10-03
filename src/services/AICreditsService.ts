@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
  * runs counted against the free 30-day quota (`ai_private_quota_ledger`) and
  * the bought credits left (`ai_private_credits_ledger`). Both are database
  * functions summing a ledger; the Edge Function `ai-comment-credits-status`
- * calls the same two.
+ * calls the same two. They answer about the signed-in user only (the service
+ * role may ask about anyone), so `userId` is always the caller's own.
  *
  * Every function here throws on a database error; the caller decides what a
  * failure means for the user.

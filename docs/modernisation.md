@@ -151,6 +151,25 @@ whole `exam_name` column, so it missed the 93 exams linked to several names and
 failed in the 49 cases of one user giving the same name to more than one
 exam, telling them to create an exam they had.
 
+**Per-user database functions check who is asking.**
+`ai_private_full_used_30d`, `ai_private_credits_remaining` and
+`get_exam_cohort_stats` take the user as a parameter and run as
+`SECURITY DEFINER`, so RLS does not apply. They answered for any user, to
+anyone holding the publishable key, signed in or not — AI credit balance,
+quota use, and answered and correct counts on an exam. Each now raises
+`42501` unless the parameter is the caller (`auth.uid()`) or the caller is
+the service role, and `anon` lost `EXECUTE` (migration
+`guard_per_user_functions`). The service role has to stay allowed:
+`ai_commentary_claim_next_batch` asks about every premium user, called by the
+dispatcher with the secret key, which the API gateway turns into a
+`service_role` token. Verified in a rolled-back transaction under each role
+before applying, and again on the live database: answers about oneself
+unchanged (a non-zero credit balance and a full cohort result compared
+value for value), answers about anyone else and every signed-out call
+refused, the claim function still running under the service role. The
+dispatcher's cron job (`Process AI Comments`) has been inactive since
+1 June, so that path is proven only in the database, not by a live run.
+
 **The API row cap is handled where it bites.** The API returns at most 20,000
 rows per response and cuts the rest off without an error. That had been
 losing data: the dashboard's question list read each of its three sets in one
@@ -298,18 +317,17 @@ Slice 8 took it to 99: the cast on the cohort call.
 
 ## Not started
 
-**Make the per-user database functions check who is asking.**
-`ai_private_full_used_30d`, `ai_private_credits_remaining` and
-`get_exam_cohort_stats` take the user as a parameter, run as
-`SECURITY DEFINER` — so RLS does not apply — and are executable by `anon`.
-None compares the parameter with `auth.uid()`: anyone holding the
-publishable key, signed in or not, can ask for any user's AI credit balance
-and quota use, and for their answered and correct counts on an exam (checked
-under the `anon` role, with random ids). User ids are not secret: any
-signed-in user can read the author's on every question shared with them. The fix is a guard in each function —
-`p_user_id = auth.uid()`, or the service role, which
-`ai-comment-credits-status` calls them with — and revoking `anon`. A schema
-change, so it waits for the owner.
+**The rest of the `SECURITY DEFINER` functions.** The security advisor lists
+21 more that anyone holding the publishable key may call without signing in,
+and 24 a signed-in user may. Some change data — `ai_commentary_claim_next_batch`
+claims and requeues AI jobs, `exam_recon_merge_canonicals` and
+`exam_recon_publish_workspace` rewrite the exam reconstruction,
+`update_question_answer_stats` recomputes statistics over every answer — and
+some answer about any user, like `is_premium_user` and `has_role`. Several are
+trigger functions (`handle_new_user`, `sync_profile_email_verified`), which
+need no `EXECUTE` grant at all. Each wants the same treatment as the three
+above: find its callers first (the claim function's only caller is the
+dispatcher, with the secret key), then revoke what nobody needs, or guard it.
 
 **Enforce visibility and `university_id` in the database.** Nothing on the
 server keeps them consistent; `updateQuestion` does it in the client. A check

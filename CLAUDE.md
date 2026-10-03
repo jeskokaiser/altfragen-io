@@ -66,6 +66,15 @@ questions than that. A read that can grow that large goes through
 or asks for less: a distinct list belongs in a database function returning
 one array, as `list_question_subjects()` does.
 
+**A `SECURITY DEFINER` function bypasses RLS.** If it takes a user as a
+parameter, it must check that user against `auth.uid()` (allowing the service
+role where an Edge Function or the AI pipeline needs it), and `anon` gets no
+`EXECUTE` unless signed-out callers need it -- `ai_private_credits_remaining`
+shows the pattern. Prefer `SECURITY INVOKER`, as `list_question_subjects()`
+is, when RLS already allows what the function reads. The repository keeps no
+migration files: apply schema changes as named migrations, after a
+rolled-back trial, and put the SQL in the commit message.
+
 **`src/integrations/supabase/types.ts` is generated.** Regenerate it after any
 schema change -- via the Supabase MCP server's `generate_typescript_types`, or
 `npx supabase gen types typescript --project-id ynzxzhpivcmkpipanltd`. It had
