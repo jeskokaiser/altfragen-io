@@ -167,7 +167,7 @@ rows, and gets them from `list_question_subjects()`, a `SECURITY INVOKER`
 function that returns one array, which no row cap applies to.
 
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 197 specs cover the places where a mistake is both plausible and
+and in CI. 216 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
 AI commentary settings, the user preferences mapping, the subscription read,
@@ -189,9 +189,11 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-5 files outside `src/services/` still query Supabase directly. This is the
-root cause of the type drift above — scattered queries each grew their own
-casts and their own row mapping.
+No file outside `src/services/` queries a table directly any more — slice 7
+finished that. Scattered queries were the root cause of the type drift above:
+each grew its own casts and its own row mapping. What is left outside the
+services are three calls of database functions (slice 8 below), and calls
+of Storage and Edge Functions, which are not database access.
 
 Count them with a pattern that sees through casts and aliases, across line
 breaks:
@@ -227,12 +229,28 @@ Suggested slices, roughly in order of value:
      sorted by subject, so the large university's members lost 24 of their
      121 subjects past the cap. `list_question_subjects()` returns them as
      one array (applied as a named migration; the SQL is in the commit).
-   - **Next: `ArchivedDatasets`.** It reads every question the user can see
-     with `select *`, in one request, and loses the oldest past the cap.
-     It wants `fetchAllRows`, or a read of only the archived datasets.
-   - Then the two question editors (`EditQuestionModal`,
-     `QuestionEditorPanel`), then the uploads (`PDFUpload`,
-     `BatchPDFUpload`), which write.
+   - ~~`ArchivedDatasets`~~ — removed with the whole dataset archive, at the
+     owner's decision. The feature was dead end to end: no link to the page,
+     no way to archive anywhere in the app, and all 6 archive entries (5
+     users) were exam names while the page compared file names, so it showed
+     nothing to anyone. The `archived_datasets` column stays, unread.
+   - ~~The question editors~~ — done. `EditQuestionModal` saves through
+     `updateQuestion`; doing so showed it changed `visibility` without
+     `university_id`, which left one production question shared with no
+     one. `updateQuestion` now writes the two together. `QuestionEditorPanel`
+     lists exam names through `list_question_exam_names()`, the sibling of
+     the subjects function (its admin sees 24,059 named questions).
+   - ~~The uploads~~ — done. `PDFUpload` and `BatchPDFUpload` read the saved
+     questions through `fetchQuestionsByFilename` and save the review through
+     `updateQuestion`; the payload was compared with the old one over 1,458
+     combinations of values. Exam-name suggestions are
+     `suggestExamNames`.
+8. **Database functions from components** — `Dashboard` calls
+   `ai_private_full_used_30d` and `ai_private_credits_remaining` for the AI
+   credit overview, and `ExamCohortComparisonSection` calls
+   `get_exam_cohort_stats` through `(supabase.rpc as any)` — a stale cast,
+   the function is in the generated types. Small: three calls into a
+   service, the cast removed.
 
 `no-explicit-any` was expected to fall as this proceeds. It mostly does not:
 slices 1 and 2 left it at 161, because those casts sit in the components
@@ -266,9 +284,20 @@ on the `filter_settings` jsonb, now `examIdOf`, and four were
 
 The first part of slice 7 took it to 104: the hand-written row mappings'
 `(q: any)`, the exam-name dialog's `sb` aliases and callbacks, and the `any[]`
-the dashboard's question list was collected into.
+the dashboard's question list was collected into. The rest took it to 100:
+`updateQuestion`'s payload is `TablesUpdate<'questions'>` instead of `any`.
 
 ## Not started
+
+**Enforce visibility and `university_id` in the database.** Nothing on the
+server keeps them consistent; `updateQuestion` does it in the client. A check
+constraint — `(visibility = 'university') = (university_id is not null)` —
+would make the rule hold for every writer. One question violates it today
+(shared, without a university, from before the editor fix); it has to be
+repaired or set back to private before the constraint can be added. The
+update policy has a gap of its own worth a look at the same time: any
+verified member of a university may update any of its shared questions,
+visibility included.
 
 **`getFilterOptions` runs into the row cap.** `QuestionSearchService` builds
 the search filters' subject and exam-name lists from full reads of the

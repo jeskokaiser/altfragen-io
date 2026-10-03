@@ -48,13 +48,12 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 
 ## Rules
 
-**Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 5 files outside `src/services/` query Supabase
-directly -- pages, components and hooks alike (count them as
-`docs/modernisation.md` says: some go through an alias such as
-`const sb: any = supabase`). So expect to find
-queries in components, but don't add more. When you touch one and the change is
-small, moving that query into a service is a welcome drive-by.
+**Database access goes through `src/services/`.** No file outside it queries
+a table any more; keep it that way (count as `docs/modernisation.md` says --
+queries once hid behind aliases such as `const sb: any = supabase`). Three
+calls of database functions (`supabase.rpc`) are still in components, in
+`Dashboard` and `ExamCohortComparisonSection`; don't add more. Storage and
+Edge Function calls are not database access and may stay where they are.
 
 Rows coming out of `questions` are mapped to the domain type by
 `src/services/questionRowMapper.ts`. Use it rather than writing the snake_case
