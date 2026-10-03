@@ -317,6 +317,38 @@ Slice 8 took it to 99: the cast on the cohort call.
 
 ## Not started
 
+**The AI commentary pipeline has stood still since 1 June.** A plan for it
+is still to be made with the owner; this is where it stands (2026-10-03,
+counts only):
+
+- The dispatcher's cron job, `Process AI Comments` (every 10 minutes, calls
+  `dispatch-next-ai-commentary-batch`), is inactive. Its last run, the last AI
+  comment written and the last batch were all on 1 June; the last entry in the
+  private quota ledger is from 19 May.
+- 48,961 questions are `pending`, 402 `processing`, 1,418 `failed`, 28,405
+  `completed`. The job queue holds 142 pending and 341 processing jobs, all
+  untouched since 1 June, and 1,187 failed ones.
+- **Stuck jobs eat users' quota.** `ai_private_full_used_30d` counts a private
+  question's `processing` full job as used, with no time limit. 313 such jobs,
+  from 12 December to 16 May, all with expired leases, count against 9 users
+  for as long as they stay stuck. Recovering them is the reconciler's job
+  (`reconcile-stuck-ai-commentary-jobs`), but no cron job calls it.
+- A second cron job, `AI comments comsume` (every 7 minutes), is active: it
+  posts to `https://api.altfragen.io/ai/consume`, without authentication and
+  with a 1-second timeout, and gets 200 or 202. That service is not in this
+  repository, and what it does is unknown here.
+- `ai_commentary_batch_jobs.status` mixes the providers' own vocabularies
+  (`completed`, `failed`, `FAILED`, `JOB_STATE_FAILED`, `SUCCESS`,
+  `TIMEOUT_EXCEEDED`, `expired`), so a status check against one of them misses
+  the rest.
+- `ai_commentary_claim_next_batch` can be called by anyone, signed in or not
+  (see the next entry). Since the credit functions check their caller, the
+  call fails for anyone but the service role, but only because the claim
+  happens to ask about other users; it has no check of its own.
+- Since the guard above, the claim works only under the service role. That is
+  proven in the database, not by a live run, because the dispatcher has not
+  run since.
+
 **The rest of the `SECURITY DEFINER` functions.** The security advisor lists
 21 more that anyone holding the publishable key may call without signing in,
 and 24 a signed-in user may. Some change data — `ai_commentary_claim_next_batch`
