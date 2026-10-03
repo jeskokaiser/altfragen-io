@@ -1523,6 +1523,7 @@ export type Database = {
         Args: { p_university_id: string }
         Returns: boolean
       }
+      list_question_subjects: { Args: never; Returns: string[] }
       update_question_answer_stats: {
         Args: never
         Returns: {

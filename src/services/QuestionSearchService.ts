@@ -260,6 +260,22 @@ export const searchQuestions = async (
   };
 };
 
+/**
+ * Every subject among the questions the user may read, sorted the German way.
+ *
+ * The database function returns them as one array, so the API's row cap does
+ * not apply; reading the `subject` column instead meant reading every visible
+ * question, and the large university's members lost 24 of their 121 subjects
+ * past the cap. The empty subject that 34k questions carry is kept: the
+ * subject picker shows it as "unknown".
+ */
+export const listQuestionSubjects = async (): Promise<string[]> => {
+  const { data, error } = await supabase.rpc('list_question_subjects');
+
+  if (error) throw error;
+  return [...(data ?? [])].sort((a, b) => a.localeCompare(b, 'de'));
+};
+
 // Helper function to get distinct filter values
 export const getFilterOptions = async (userId: string, universityId?: string | null) => {
   // Get subjects
