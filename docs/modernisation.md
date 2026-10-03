@@ -170,6 +170,33 @@ refused, the claim function still running under the service role. The
 dispatcher's cron job (`Process AI Comments`) has been inactive since
 1 June, so that path is proven only in the database, not by a live run.
 
+**No `SECURITY DEFINER` function is open to the API any more without
+need.** 21 more of them bypassed RLS and were executable by anyone holding
+the publishable key, signed in or not: the AI batch claim, which claims and
+requeues jobs; `update_question_answer_stats`, which recomputes statistics
+over every answer; functions answering about any user or question
+(`is_premium_user`, `has_role`, `check_user_university_match`,
+`ai_question_content_hash`, ...); the exam reconstruction's nine (dead, see
+Not started); and four trigger functions. None is called through the API —
+no code calls them, and seven days of API logs show no call — so `EXECUTE`
+went to the service role only, and to nobody for the trigger functions
+(migration `restrict_security_definer_functions`). Their real callers run
+inside the database and need no caller's `EXECUTE`: the claim calls its
+helpers as their owner, and a trigger fires whatever the firing role may
+execute. Verified in rolled-back transactions — every signed-out and
+signed-in call refused, the service role's calls and the claim still
+working, and editing a shared question as its owner, with no `EXECUTE` on the
+trigger function, still set its AI status to `pending` — and by production
+data: the auth service has never had `EXECUTE` on
+`sync_profile_email_verified`, and all 7 email confirmations of the last 30
+days reached the profile. The security advisor now lists no function
+callable signed out, and only the three guarded ones above signed in.
+
+Default privileges still grant `EXECUTE` on every new function in `public` to
+`anon` and `authenticated`, so a new function is open until its migration
+revokes it (CLAUDE.md says so). Changing the defaults instead would close
+that for good, at the cost of a grant for every function the client calls.
+
 **The API row cap is handled where it bites.** The API returns at most 20,000
 rows per response and cuts the rest off without an error. That had been
 losing data: the dashboard's question list read each of its three sets in one
@@ -341,25 +368,15 @@ counts only):
   (`completed`, `failed`, `FAILED`, `JOB_STATE_FAILED`, `SUCCESS`,
   `TIMEOUT_EXCEEDED`, `expired`), so a status check against one of them misses
   the rest.
-- `ai_commentary_claim_next_batch` can be called by anyone, signed in or not
-  (see the next entry). Since the credit functions check their caller, the
-  call fails for anyone but the service role, but only because the claim
-  happens to ask about other users; it has no check of its own.
-- Since the guard above, the claim works only under the service role. That is
-  proven in the database, not by a live run, because the dispatcher has not
-  run since.
+- `ai_commentary_claim_next_batch` is executable by the service role only
+  (see Done). That is proven in the database, not by a live run, because the
+  dispatcher has not run since.
 
-**The rest of the `SECURITY DEFINER` functions.** The security advisor lists
-21 more that anyone holding the publishable key may call without signing in,
-and 24 a signed-in user may. Some change data — `ai_commentary_claim_next_batch`
-claims and requeues AI jobs, `exam_recon_merge_canonicals` and
-`exam_recon_publish_workspace` rewrite the exam reconstruction,
-`update_question_answer_stats` recomputes statistics over every answer — and
-some answer about any user, like `is_premium_user` and `has_role`. Several are
-trigger functions (`handle_new_user`, `sync_profile_email_verified`), which
-need no `EXECUTE` grant at all. Each wants the same treatment as the three
-above: find its callers first (the claim function's only caller is the
-dispatcher, with the secret key), then revoke what nobody needs, or guard it.
+**Remove the exam reconstruction's leftovers.** Thirteen `exam_recon_*`
+functions remain in `public`, nine of them `SECURITY DEFINER`, but the tables
+they work on exist in no schema, so every call fails. Nobody can call them any
+more (see Done); dropping them, and anything else of that feature still in
+the database, is a cleanup of its own.
 
 **Enforce visibility and `university_id` in the database.** Nothing on the
 server keeps them consistent; `updateQuestion` does it in the client. A check
