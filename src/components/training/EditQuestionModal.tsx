@@ -118,8 +118,9 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         comment: data.comment,
         subject: data.subject,
         difficulty: parseInt(data.difficulty),
-        visibility: visibility,
         show_image_after_answer: showImageAfterAnswer,
+        // Only a change: updateQuestion sets university_id along with it.
+        ...(visibility !== question.visibility && { visibility }),
       };
 
       // Handle image removal
@@ -141,7 +142,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         }
       }
 
-      const updatedQuestion = await updateQuestion(question.id, updates);
+      const updatedQuestion = await updateQuestion(question.id, updates, universityId);
       onQuestionUpdated(updatedQuestion);
       toast.info('Frage erfolgreich aktualisiert');
       onClose();

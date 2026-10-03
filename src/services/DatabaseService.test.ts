@@ -90,7 +90,6 @@ describe('updateQuestion', () => {
       optionA: 'A',
       correctAnswer: 'B',
       difficulty: 2,
-      visibility: 'university',
       show_image_after_answer: true,
       image_key: null,
     });
@@ -101,11 +100,54 @@ describe('updateQuestion', () => {
       option_a: 'A',
       correct_answer: 'B',
       difficulty: 2,
-      visibility: 'university',
       show_image_after_answer: true,
       image_key: null,
     });
     expect(query.ops).toContainEqual({ method: 'eq', args: ['id', 'q1'] });
+  });
+
+  it("shares a question with the editor's university, university_id included", async () => {
+    queueResponse('questions', { data: updatedRow });
+
+    await updateQuestion('q1', { visibility: 'university' }, 'uni-1');
+
+    expect(payloadOf(queriesFor('questions')[0], 'update')).toEqual({
+      visibility: 'university',
+      university_id: 'uni-1',
+    });
+  });
+
+  it.each(['private', 'public'] as const)(
+    'clears university_id when a question becomes %s',
+    async (visibility) => {
+      // A public question with a university_id is left out of every public list;
+      // RLS does not stop it being stored.
+      queueResponse('questions', { data: updatedRow });
+
+      await updateQuestion('q1', { visibility }, 'uni-1');
+
+      expect(payloadOf(queriesFor('questions')[0], 'update')).toEqual({
+        visibility,
+        university_id: null,
+      });
+    },
+  );
+
+  it('refuses to share with a university without one, before writing anything', async () => {
+    // The question this left behind is shared with no one: one exists.
+    await expect(updateQuestion('q1', { visibility: 'university' }, null)).rejects.toThrow(
+      'university',
+    );
+    expect(queriesFor('questions')).toHaveLength(0);
+  });
+
+  it('leaves university_id alone when the visibility is not part of the change', async () => {
+    // An admin editing another university's question must not move it.
+    queueResponse('questions', { data: updatedRow });
+
+    await updateQuestion('q1', { question: 'Neu' }, 'uni-admin');
+
+    expect(payloadOf(queriesFor('questions')[0], 'update')).toEqual({ question: 'Neu' });
   });
 
   it('returns the stored row through the shared mapper, case text included', async () => {

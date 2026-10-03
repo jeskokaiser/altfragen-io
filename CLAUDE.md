@@ -122,8 +122,11 @@ and merge conflicts an agent can resolve, which the binary one does not.
 
 **Question visibility** is `private | university | public`. `university_id` is
 set only when visibility is `university`, and cleared otherwise -- the two
-fields must stay consistent or questions leak across universities. RLS enforces
-this server-side; keep the client in step.
+fields must stay consistent, or a question ends up shared with no one, or with
+the wrong university. Nothing on the server enforces this: no constraint, no
+trigger, and the update policy checks who writes, not what. The client keeps
+them in step -- change visibility through `updateQuestion`, which sets
+`university_id` with it.
 
 **Universities** come from the user's profile (`AuthContext` exposes
 `universityId`). Shared questions and public comments are scoped to it.

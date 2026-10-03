@@ -421,9 +421,19 @@ export const fetchQuestionsByExamName = async (
   };
 };
 
+/**
+ * Writes the given fields of a question and returns it as stored.
+ *
+ * A change of `visibility` brings `university_id` with it: the university's
+ * when the question is shared with one, none otherwise. Nothing on the server
+ * keeps the two in step, so pass `visibility` only when it changes, with the
+ * editing user's `universityId` -- passing it unchanged would move another
+ * university's question to the editor's.
+ */
 export const updateQuestion = async (
   questionId: string,
   updates: Partial<Question>,
+  universityId?: string | null,
 ): Promise<Question> => {
   const updateData: TablesUpdate<'questions'> = {};
 
@@ -440,7 +450,13 @@ export const updateQuestion = async (
   if (updates.image_key !== undefined) updateData.image_key = updates.image_key;
   if (updates.question_case !== undefined) updateData.question_case = updates.question_case;
   if (updates.case_text !== undefined) updateData.case_text = updates.case_text;
-  if (updates.visibility !== undefined) updateData.visibility = updates.visibility;
+  if (updates.visibility !== undefined) {
+    if (updates.visibility === 'university' && !universityId) {
+      throw new Error('A question can only be shared with a university the user belongs to.');
+    }
+    updateData.visibility = updates.visibility;
+    updateData.university_id = updates.visibility === 'university' ? universityId : null;
+  }
   if (updates.show_image_after_answer !== undefined) {
     updateData.show_image_after_answer = updates.show_image_after_answer;
   }
