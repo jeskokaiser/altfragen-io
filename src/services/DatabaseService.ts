@@ -114,36 +114,6 @@ export const updateQuestionVisibility = async (
   return true;
 };
 
-export const updateDatasetVisibility = async (
-  filename: string,
-  userId: string,
-  visibility: 'private' | 'university' | 'public',
-  universityId?: string | null,
-) => {
-  const { data: existingQuestions } = await supabase
-    .from('questions')
-    .select('visibility')
-    .eq('filename', filename)
-    .eq('user_id', userId)
-    .in('visibility', ['university', 'public']);
-
-  if (existingQuestions && existingQuestions.length > 0 && visibility === 'private') {
-    throw new Error('Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.');
-  }
-
-  const { error } = await supabase
-    .from('questions')
-    .update({
-      visibility,
-      university_id: visibility === 'university' ? universityId : null,
-    })
-    .eq('filename', filename)
-    .eq('user_id', userId);
-
-  if (error) throw error;
-  return true;
-};
-
 export const fetchAllQuestions = async (userId: string, universityId?: string | null) => {
   // Select only the columns needed for dashboard display
   const questionColumns = `

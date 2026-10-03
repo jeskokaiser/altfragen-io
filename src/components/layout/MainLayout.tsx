@@ -14,7 +14,6 @@ import TrainingPage from '@/pages/Training';
 import SettingsPage from '@/pages/Settings';
 import SubscriptionPage from '@/pages/Subscription';
 import UnclearQuestionsPage from '@/pages/UnclearQuestions';
-import ArchivedDatasetsPage from '@/pages/ArchivedDatasets';
 import AICommentaryAdminPage from '@/pages/AICommentaryAdmin';
 import TutorialPage from '@/pages/Tutorial';
 import TrainingSessionsPage from '@/pages/TrainingSessions';
@@ -71,7 +70,6 @@ const MainLayout: React.FC = () => {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/subscription" element={<SubscriptionPage />} />
           <Route path="/unclear-questions/:filename" element={<UnclearQuestionsPage />} />
-          <Route path="/archived-datasets" element={<ArchivedDatasetsPage />} />
           <Route path="/ai-commentary" element={<AICommentaryAdminPage />} />
           <Route path="/tutorial" element={<TutorialPage />} />
           <Route path="/search" element={<QuestionSearchPage />} />
