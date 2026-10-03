@@ -49,11 +49,10 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** No file outside it queries
-a table any more; keep it that way (count as `docs/modernisation.md` says --
-queries once hid behind aliases such as `const sb: any = supabase`). Three
-calls of database functions (`supabase.rpc`) are still in components, in
-`Dashboard` and `ExamCohortComparisonSection`; don't add more. Storage and
-Edge Function calls are not database access and may stay where they are.
+a table or calls a database function (`supabase.rpc`) any more; keep it that
+way (count as `docs/modernisation.md` says -- queries once hid behind aliases
+such as `const sb: any = supabase`). Storage and Edge Function calls are not
+database access and may stay where they are.
 
 Rows coming out of `questions` are mapped to the domain type by
 `src/services/questionRowMapper.ts`. Use it rather than writing the snake_case
@@ -66,6 +65,15 @@ questions than that. A read that can grow that large goes through
 `fetchAllRows` (`src/services/fetchAllRows.ts`), which pages past the cap --
 or asks for less: a distinct list belongs in a database function returning
 one array, as `list_question_subjects()` does.
+
+**A `SECURITY DEFINER` function bypasses RLS.** If it takes a user as a
+parameter, it must check that user against `auth.uid()` (allowing the service
+role where an Edge Function or the AI pipeline needs it), and `anon` gets no
+`EXECUTE` unless signed-out callers need it -- `ai_private_credits_remaining`
+shows the pattern. Prefer `SECURITY INVOKER`, as `list_question_subjects()`
+is, when RLS already allows what the function reads. The repository keeps no
+migration files: apply schema changes as named migrations, after a
+rolled-back trial, and put the SQL in the commit message.
 
 **`src/integrations/supabase/types.ts` is generated.** Regenerate it after any
 schema change -- via the Supabase MCP server's `generate_typescript_types`, or
@@ -107,7 +115,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (100) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (99) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
@@ -177,7 +185,8 @@ and `broadcast_logs` tables.
   services that own `user_progress`, `profiles`, `universities`,
   `ai_commentary_settings`, `user_preferences` and `user_ai_comment_usage`,
   the read of `subscribers`, the exam and session reads behind the
-  statistics pages, and the dashboard's question list -- those through the
+  statistics pages, the exam cohort comparison, the AI credit reads, and the
+  dashboard's question list -- those through the
   Supabase double in
   `src/test/supabaseDouble.ts`. React and Stripe itself are uncovered, and so
   are the writes of `TrainingSessionService` (`recordAttempt`), which matter

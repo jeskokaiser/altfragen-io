@@ -24,6 +24,10 @@ import {
 } from '@/services/UpcomingExamService';
 import { fetchUserDifficultiesForQuestions } from '@/services/UserProgressService';
 import { fetchIsPremium } from '@/services/ProfileService';
+import {
+  fetchPrivateAiCreditsRemaining,
+  fetchPrivateAiUsedLast30Days,
+} from '@/services/AICreditsService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { toast } from 'sonner';
@@ -104,32 +108,22 @@ const Dashboard = () => {
           .slice(0, 10);
 
         // Get usage from quota ledger (rolling 30 days) via RPC
-        const { data: fullUsed30d, error: usedError } = await supabase.rpc(
-          'ai_private_full_used_30d',
-          { p_user_id: user.id },
-        );
-
-        if (usedError) {
+        const used = await fetchPrivateAiUsedLast30Days(user.id).catch((usedError) => {
           console.error('Fehler beim Laden der Quota-Nutzung:', usedError);
           throw new Error('Fehler beim Laden der Quota-Nutzung');
-        }
-
-        const used = Number(fullUsed30d ?? 0);
+        });
         const freeUsedCount = Math.max(0, Math.min(BASE_MONTHLY_FREE_LIMIT, used));
         const remainingFree = Math.max(0, BASE_MONTHLY_FREE_LIMIT - used);
 
         // Get remaining credits from credits ledger via RPC
-        const { data: creditsRemainingRaw, error: creditsError } = await supabase.rpc(
-          'ai_private_credits_remaining',
-          { p_user_id: user.id },
+        const creditsRemaining = await fetchPrivateAiCreditsRemaining(user.id).catch(
+          (creditsError) => {
+            console.error('Fehler beim Laden der Credits:', creditsError);
+            throw new Error('Fehler beim Laden der Credits');
+          },
         );
 
-        if (creditsError) {
-          console.error('Fehler beim Laden der Credits:', creditsError);
-          throw new Error('Fehler beim Laden der Credits');
-        }
-
-        const paidCreditsRemaining = Math.max(0, Number(creditsRemainingRaw ?? 0));
+        const paidCreditsRemaining = Math.max(0, creditsRemaining);
         const totalRemaining = remainingFree + paidCreditsRemaining;
         const processingBlocked = !isPremium || totalRemaining <= 0;
 

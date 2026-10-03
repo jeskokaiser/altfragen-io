@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronDown, Info } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  fetchExamCohortStats,
+  type CohortComparisonStats,
+  type ScoreBucket,
+} from '@/services/ExamCohortService';
 
 // Re-export scoring helpers for convenience (they're also available from @/utils/cohortScoring)
 export {
@@ -20,35 +24,7 @@ export {
   COHORT_ACTIVITY_WEIGHT,
 } from '@/utils/cohortScoring';
 
-// --- Cohort comparison types & hook ---
-
-export interface ScoreBucket {
-  bucketMin: number; // e.g., 0, 5, 10, ...
-  bucketMax: number; // e.g., 5, 10, 15, ...
-  count: number; // number of users in this bucket
-}
-
-export interface CohortComparisonStats {
-  meanScore: number;
-  stdDevScore: number;
-  sampleSize: number;
-  userScore: number;
-  userPercentile: number; // 0..100
-  userAnswered: number;
-  userCorrect: number;
-  userAnsweredPercentile?: number | null; // 0..100
-  userAccuracyPercentile?: number | null; // 0..100
-  cohortAnsweredMean: number;
-  cohortAnsweredMedian?: number | null;
-  cohortAnsweredPercentile?: number | null;
-  cohortAccuracyMean?: number | null;
-  cohortAccuracyMedian?: number | null;
-  scoreMedian?: number | null;
-  p0: number; // cohort baseline accuracy used for Bayesian prior
-  scoreDistribution?: ScoreBucket[] | null; // histogram buckets
-  answeredDistribution?: ScoreBucket[] | null; // histogram buckets for answered questions
-  accuracyDistribution?: ScoreBucket[] | null; // histogram buckets for accuracy (0-100%)
-}
+// --- Cohort comparison hook ---
 
 const useExamCohortStats = (
   examName: string | null,
@@ -58,98 +34,11 @@ const useExamCohortStats = (
 ) => {
   return useQuery<CohortComparisonStats | null>({
     queryKey: ['exam-cohort-stats', examId, examName, universityId, userId],
-    queryFn: async () => {
+    queryFn: () => {
       if (!examId || !universityId || !userId || !examName) {
         return null;
       }
-
-      // Backend-Implementierung: see SQL function public.get_exam_cohort_stats.
-      const { data, error } = await (supabase.rpc as any)('get_exam_cohort_stats', {
-        p_exam_id: examId,
-        p_user_id: userId,
-      });
-
-      if (error) {
-        console.error('get_exam_cohort_stats error', error);
-        return null;
-      }
-
-      // Supabase can return a single row or an array depending on how the
-      // function is defined (returns type vs returns table/setof).
-      const result = Array.isArray(data) ? data[0] : data;
-
-      console.log('[CohortStats] Raw RPC response:', { data, result });
-
-      if (!result) {
-        console.log('[CohortStats] No result returned from RPC');
-        return null;
-      }
-
-      // Map database column names (snake_case) to TypeScript interface (camelCase)
-      const mapped: CohortComparisonStats = {
-        meanScore: result.mean_score ?? result.meanScore ?? 0,
-        stdDevScore: result.stddev_score ?? result.stdDevScore ?? 0,
-        sampleSize: result.sample_size ?? result.sampleSize ?? 0,
-        userScore: result.user_score ?? result.userScore ?? 0,
-        userPercentile: result.user_percentile ?? result.userPercentile ?? 0,
-        userAnswered: result.user_answered ?? result.userAnswered ?? 0,
-        userCorrect: result.user_correct ?? result.userCorrect ?? 0,
-        userAnsweredPercentile:
-          result.user_answered_percentile ?? result.userAnsweredPercentile ?? null,
-        userAccuracyPercentile:
-          result.user_accuracy_percentile ?? result.userAccuracyPercentile ?? null,
-        cohortAnsweredMean: result.cohort_answered_mean ?? result.cohortAnsweredMean ?? 0,
-        cohortAnsweredMedian: result.cohort_answered_median ?? result.cohortAnsweredMedian ?? null,
-        cohortAnsweredPercentile:
-          result.cohort_answered_p80 ?? result.cohortAnsweredPercentile ?? null,
-        cohortAccuracyMean: result.cohort_accuracy_mean ?? result.cohortAccuracyMean ?? null,
-        cohortAccuracyMedian: result.cohort_accuracy_median ?? result.cohortAccuracyMedian ?? null,
-        scoreMedian: result.score_median ?? result.scoreMedian ?? null,
-        p0: result.p0 ?? 0,
-        scoreDistribution: (() => {
-          const dist = result.score_distribution ?? result.scoreDistribution;
-          if (!dist) return null;
-          // If it's already an array, use it; if it's a JSON string, parse it
-          if (Array.isArray(dist)) return dist as ScoreBucket[];
-          if (typeof dist === 'string') {
-            try {
-              return JSON.parse(dist) as ScoreBucket[];
-            } catch {
-              return null;
-            }
-          }
-          return dist as ScoreBucket[] | null;
-        })(),
-        answeredDistribution: (() => {
-          const dist = result.answered_distribution ?? result.answeredDistribution;
-          if (!dist) return null;
-          if (Array.isArray(dist)) return dist as ScoreBucket[];
-          if (typeof dist === 'string') {
-            try {
-              return JSON.parse(dist) as ScoreBucket[];
-            } catch {
-              return null;
-            }
-          }
-          return dist as ScoreBucket[] | null;
-        })(),
-        accuracyDistribution: (() => {
-          const dist = result.accuracy_distribution ?? result.accuracyDistribution;
-          if (!dist) return null;
-          if (Array.isArray(dist)) return dist as ScoreBucket[];
-          if (typeof dist === 'string') {
-            try {
-              return JSON.parse(dist) as ScoreBucket[];
-            } catch {
-              return null;
-            }
-          }
-          return dist as ScoreBucket[] | null;
-        })(),
-      };
-
-      console.log('[CohortStats] Mapped result:', mapped);
-      return mapped;
+      return fetchExamCohortStats(examId, userId);
     },
     enabled: !!examId && !!examName && !!universityId && !!userId,
   });
@@ -271,9 +160,6 @@ export const ExamCohortComparisonSection: React.FC<ExamCohortComparisonSectionPr
                       Durchschnitt der Vergleichsgruppe (Mittelwert):{' '}
                       {cohortStats.meanScore.toFixed(0)}
                     </div>
-                    {cohortStats.scoreMedian != null && (
-                      <div>Median der Vergleichsgruppe: {cohortStats.scoreMedian.toFixed(0)}</div>
-                    )}
                   </div>
                 </div>
 
