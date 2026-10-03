@@ -161,10 +161,13 @@ rows in a day. `fetchAllRows` (`src/services/fetchAllRows.ts`) reads past the
 cap: its first request asks for everything with `{ count: 'exact' }`, and if
 the total says rows are missing, the response length is the cap and the rest
 loads in parallel pages of that size. A read under the cap still costs one
-request. Any read that can grow past 20,000 rows should go through it.
+request. Any read that can grow past 20,000 rows should go through it —
+or, better, ask for less: the subject picker needs 121 names, not 24,333
+rows, and gets them from `list_question_subjects()`, a `SECURITY INVOKER`
+function that returns one array, which no row cap applies to.
 
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 192 specs cover the places where a mistake is both plausible and
+and in CI. 197 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
 AI commentary settings, the user preferences mapping, the subscription read,
@@ -186,7 +189,7 @@ sent, so writes are asserted rather than the mock.
 
 ## In progress: data access into services
 
-6 files outside `src/services/` still query Supabase directly. This is the
+5 files outside `src/services/` still query Supabase directly. This is the
 root cause of the type drift above — scattered queries each grew their own
 casts and their own row mapping.
 
@@ -220,13 +223,13 @@ Suggested slices, roughly in order of value:
      fields neither path reads differ), and `ExamQuestionSelectorDialog`'s
      three tabs through `listExamNameCounts`, one paged read instead of one
      read plus a count per name.
-   - **Next: `useSubjects` and `ArchivedDatasets`.** Both read every question
-     the user can see, in one request, and both are past the row cap for the
-     large university. `useSubjects` sorts by subject, so the subjects at the
-     end of the alphabet are the ones cut off the question editor's list;
-     `ArchivedDatasets` loses the oldest questions. Both want `fetchAllRows`,
-     or better, a read that does not need every row: a distinct subject list
-     does not need 23,600 of them.
+   - ~~`useSubjects`~~ — done: it read the subject of every visible question,
+     sorted by subject, so the large university's members lost 24 of their
+     121 subjects past the cap. `list_question_subjects()` returns them as
+     one array (applied as a named migration; the SQL is in the commit).
+   - **Next: `ArchivedDatasets`.** It reads every question the user can see
+     with `select *`, in one request, and loses the oldest past the cap.
+     It wants `fetchAllRows`, or a read of only the archived datasets.
    - Then the two question editors (`EditQuestionModal`,
      `QuestionEditorPanel`), then the uploads (`PDFUpload`,
      `BatchPDFUpload`), which write.
@@ -266,6 +269,14 @@ The first part of slice 7 took it to 104: the hand-written row mappings'
 the dashboard's question list was collected into.
 
 ## Not started
+
+**`getFilterOptions` runs into the row cap.** `QuestionSearchService` builds
+the search filters' subject and exam-name lists from full reads of the
+`subject` and `exam_name` columns, unordered, in one request each. For the
+large university those reads pass 20,000 rows, so options can go missing at
+random. `list_question_subjects()` covers the subjects as they are visible
+under RLS; the per-scope lists here want the same treatment, or
+`listExamNameCounts`'s paged read.
 
 **Decide which progress row wins.** Answers live in two tables: `user_progress`
 (one row per question, written by one-off runs) and `session_question_progress`

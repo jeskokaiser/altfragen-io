@@ -49,7 +49,7 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 6 files outside `src/services/` query Supabase
+rather than the finished state: 5 files outside `src/services/` query Supabase
 directly -- pages, components and hooks alike (count them as
 `docs/modernisation.md` says: some go through an alias such as
 `const sb: any = supabase`). So expect to find
@@ -64,7 +64,9 @@ sites, each with its own subset of fields and its own defaults.
 **A read can be cut off silently.** The API returns at most 20,000 rows per
 response and drops the rest without an error; one university has more
 questions than that. A read that can grow that large goes through
-`fetchAllRows` (`src/services/fetchAllRows.ts`), which pages past the cap.
+`fetchAllRows` (`src/services/fetchAllRows.ts`), which pages past the cap --
+or asks for less: a distinct list belongs in a database function returning
+one array, as `list_question_subjects()` does.
 
 **`src/integrations/supabase/types.ts` is generated.** Regenerate it after any
 schema change -- via the Supabase MCP server's `generate_typescript_types`, or
