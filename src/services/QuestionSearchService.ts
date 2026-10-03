@@ -276,6 +276,20 @@ export const listQuestionSubjects = async (): Promise<string[]> => {
   return [...(data ?? [])].sort((a, b) => a.localeCompare(b, 'de'));
 };
 
+/**
+ * Every exam name among the questions the user may read, sorted as the admin
+ * editor always showed them (by code unit, not by locale).
+ *
+ * One array from the database, like `listQuestionSubjects`: the admin sees
+ * more than 24,000 named questions, past the API's row cap.
+ */
+export const listQuestionExamNames = async (): Promise<string[]> => {
+  const { data, error } = await supabase.rpc('list_question_exam_names');
+
+  if (error) throw error;
+  return (data ?? []).filter(Boolean).sort();
+};
+
 // Helper function to get distinct filter values
 export const getFilterOptions = async (userId: string, universityId?: string | null) => {
   // Get subjects

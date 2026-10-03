@@ -5,7 +5,7 @@ vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
-import { listQuestionSubjects } from './QuestionSearchService';
+import { listQuestionExamNames, listQuestionSubjects } from './QuestionSearchService';
 
 beforeEach(resetSupabaseDouble);
 
@@ -47,5 +47,32 @@ describe('listQuestionSubjects', () => {
     queueResponse('list_question_subjects', { error: { message: 'boom' } });
 
     await expect(listQuestionSubjects()).rejects.toEqual({ message: 'boom' });
+  });
+});
+
+describe('listQuestionExamNames', () => {
+  it('asks the database function, not the questions table', async () => {
+    await listQuestionExamNames();
+
+    expect(queriesFor('list_question_exam_names')).toHaveLength(1);
+    expect(queriesFor('questions')).toHaveLength(0);
+  });
+
+  it('sorts as the admin editor always did, by code unit', async () => {
+    queueResponse('list_question_exam_names', { data: ['Physiologie', 'Anatomie', 'anatomie'] });
+
+    expect(await listQuestionExamNames()).toEqual(['Anatomie', 'Physiologie', 'anatomie']);
+  });
+
+  it('leaves out an empty name, as the editor did', async () => {
+    queueResponse('list_question_exam_names', { data: ['', 'Anatomie'] });
+
+    expect(await listQuestionExamNames()).toEqual(['Anatomie']);
+  });
+
+  it('throws on a failed call', async () => {
+    queueResponse('list_question_exam_names', { error: { message: 'boom' } });
+
+    await expect(listQuestionExamNames()).rejects.toEqual({ message: 'boom' });
   });
 });

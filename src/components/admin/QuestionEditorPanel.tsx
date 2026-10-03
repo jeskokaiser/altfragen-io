@@ -13,6 +13,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { fetchQuestionsByExamName, updateQuestion } from '@/services/DatabaseService';
+import { listQuestionExamNames } from '@/services/QuestionSearchService';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -49,21 +50,11 @@ const QuestionEditorPanel: React.FC = () => {
   // Fetch exam names
   useEffect(() => {
     const fetchExamNames = async () => {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('exam_name')
-        .not('exam_name', 'is', null);
-
-      if (error) {
+      try {
+        setExamNames(await listQuestionExamNames());
+      } catch (error) {
         console.error('Error fetching exam names:', error);
-        return;
       }
-
-      const uniqueExamNames = Array.from(
-        new Set(data.map((q: any) => q.exam_name).filter((name: string | null) => name)),
-      ).sort() as string[];
-
-      setExamNames(uniqueExamNames);
     };
 
     fetchExamNames();
