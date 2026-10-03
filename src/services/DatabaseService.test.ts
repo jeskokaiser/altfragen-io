@@ -5,7 +5,7 @@ vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
-import { fetchAllQuestions, updateQuestion } from './DatabaseService';
+import { fetchAllQuestions, fetchQuestionsByFilename, updateQuestion } from './DatabaseService';
 
 const row = (id: string) => ({ id, question: `Frage ${id}`, subject: 'Anatomie' });
 
@@ -150,6 +150,30 @@ describe('updateQuestion', () => {
     expect(payloadOf(queriesFor('questions')[0], 'update')).toEqual({ question: 'Neu' });
   });
 
+  it('writes semester, year and exam name to their exam_ columns', async () => {
+    // What the upload review saves for every question.
+    queueResponse('questions', { data: updatedRow });
+
+    await updateQuestion('q1', { semester: 'WS', year: '2025', exam_name: 'Anatomie' });
+
+    expect(payloadOf(queriesFor('questions')[0], 'update')).toEqual({
+      exam_semester: 'WS',
+      exam_year: '2025',
+      exam_name: 'Anatomie',
+    });
+  });
+
+  it('writes a cleared semester as null rather than leaving it out', async () => {
+    queueResponse('questions', { data: updatedRow });
+
+    await updateQuestion('q1', { semester: null, year: null });
+
+    expect(payloadOf(queriesFor('questions')[0], 'update')).toEqual({
+      exam_semester: null,
+      exam_year: null,
+    });
+  });
+
   it('returns the stored row through the shared mapper, case text included', async () => {
     // The question editor used to map the row by hand and dropped the case.
     queueResponse('questions', { data: updatedRow });
@@ -170,5 +194,29 @@ describe('updateQuestion', () => {
     queueResponse('questions', { error: { message: 'boom' } });
 
     await expect(updateQuestion('q1', { question: 'Neu' })).rejects.toEqual({ message: 'boom' });
+  });
+});
+
+describe('fetchQuestionsByFilename', () => {
+  it("reads the user's questions from one file, in upload order, mapped", async () => {
+    queueResponse('questions', {
+      data: [{ id: 'q1', question: 'Frage', exam_semester: 'SS', exam_year: '2024' }],
+    });
+
+    const [question] = await fetchQuestionsByFilename('Anatomie.pdf', 'user-1');
+
+    const { ops } = queriesFor('questions')[0];
+    expect(ops).toContainEqual({ method: 'eq', args: ['user_id', 'user-1'] });
+    expect(ops).toContainEqual({ method: 'eq', args: ['filename', 'Anatomie.pdf'] });
+    expect(ops).toContainEqual({ method: 'order', args: ['created_at', { ascending: true }] });
+    expect(question).toMatchObject({ id: 'q1', semester: 'SS', year: '2024' });
+  });
+
+  it('throws on a failed read', async () => {
+    queueResponse('questions', { error: { message: 'boom' } });
+
+    await expect(fetchQuestionsByFilename('Anatomie.pdf', 'user-1')).rejects.toEqual({
+      message: 'boom',
+    });
   });
 });

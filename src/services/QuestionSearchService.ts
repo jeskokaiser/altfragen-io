@@ -290,6 +290,27 @@ export const listQuestionExamNames = async (): Promise<string[]> => {
   return (data ?? []).filter(Boolean).sort();
 };
 
+/**
+ * Exam names containing `searchTerm`, for the upload form's suggestions: the
+ * names of the five most recently created matching questions, deduplicated.
+ *
+ * Five rows, not five names -- the newest questions usually share one exam, so
+ * this often suggests a single name.
+ */
+export const suggestExamNames = async (searchTerm: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('exam_name')
+    .ilike('exam_name', `%${searchTerm}%`)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error) throw error;
+
+  const names = (data ?? []).map((row) => row.exam_name).filter((name): name is string => !!name);
+  return [...new Set(names)];
+};
+
 // Helper function to get distinct filter values
 export const getFilterOptions = async (userId: string, universityId?: string | null) => {
   // Get subjects

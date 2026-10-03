@@ -5,7 +5,11 @@ vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
-import { listQuestionExamNames, listQuestionSubjects } from './QuestionSearchService';
+import {
+  listQuestionExamNames,
+  listQuestionSubjects,
+  suggestExamNames,
+} from './QuestionSearchService';
 
 beforeEach(resetSupabaseDouble);
 
@@ -74,5 +78,36 @@ describe('listQuestionExamNames', () => {
     queueResponse('list_question_exam_names', { error: { message: 'boom' } });
 
     await expect(listQuestionExamNames()).rejects.toEqual({ message: 'boom' });
+  });
+});
+
+describe('suggestExamNames', () => {
+  it('searches exam names containing the term, newest questions first, five rows', async () => {
+    await suggestExamNames('anat');
+
+    const { ops } = queriesFor('questions')[0];
+    expect(ops).toContainEqual({ method: 'ilike', args: ['exam_name', '%anat%'] });
+    expect(ops).toContainEqual({ method: 'order', args: ['created_at', { ascending: false }] });
+    expect(ops).toContainEqual({ method: 'limit', args: [5] });
+  });
+
+  it('deduplicates the names and drops empty ones, keeping the order', async () => {
+    queueResponse('questions', {
+      data: [
+        { exam_name: 'Anatomie II' },
+        { exam_name: 'Anatomie I' },
+        { exam_name: 'Anatomie II' },
+        { exam_name: null },
+        { exam_name: '' },
+      ],
+    });
+
+    expect(await suggestExamNames('anat')).toEqual(['Anatomie II', 'Anatomie I']);
+  });
+
+  it('throws on a failed read', async () => {
+    queueResponse('questions', { error: { message: 'boom' } });
+
+    await expect(suggestExamNames('anat')).rejects.toEqual({ message: 'boom' });
   });
 });

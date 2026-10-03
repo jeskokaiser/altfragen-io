@@ -426,8 +426,9 @@ export const fetchQuestionsByExamName = async (
  *
  * A change of `visibility` brings `university_id` with it: the university's
  * when the question is shared with one, none otherwise. Nothing on the server
- * keeps the two in step, so pass `visibility` only when it changes, with the
- * editing user's `universityId` -- passing it unchanged would move another
+ * keeps the two in step. Pass `visibility` with the editing user's
+ * `universityId`, and only when it changes or the question is the user's own
+ * -- passing it unchanged for someone else's question would move another
  * university's question to the editor's.
  */
 export const updateQuestion = async (
@@ -450,6 +451,9 @@ export const updateQuestion = async (
   if (updates.image_key !== undefined) updateData.image_key = updates.image_key;
   if (updates.question_case !== undefined) updateData.question_case = updates.question_case;
   if (updates.case_text !== undefined) updateData.case_text = updates.case_text;
+  if (updates.semester !== undefined) updateData.exam_semester = updates.semester;
+  if (updates.year !== undefined) updateData.exam_year = updates.year;
+  if (updates.exam_name !== undefined) updateData.exam_name = updates.exam_name;
   if (updates.visibility !== undefined) {
     if (updates.visibility === 'university' && !universityId) {
       throw new Error('A question can only be shared with a university the user belongs to.');
