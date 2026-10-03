@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { queriesFor, queueResponse, resetSupabaseDouble } from '@/test/supabaseDouble';
+import { payloadOf, queriesFor, queueResponse, resetSupabaseDouble } from '@/test/supabaseDouble';
 
 vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
-import { fetchAllQuestions } from './DatabaseService';
+import { fetchAllQuestions, updateQuestion } from './DatabaseService';
 
 const row = (id: string) => ({ id, question: `Frage ${id}`, subject: 'Anatomie' });
 
@@ -68,5 +68,65 @@ describe('fetchAllQuestions', () => {
     queueResponse('questions', { error: { message: 'boom' } });
 
     await expect(fetchAllQuestions('user-1', 'uni-1')).rejects.toEqual({ message: 'boom' });
+  });
+});
+
+describe('updateQuestion', () => {
+  const updatedRow = {
+    id: 'q1',
+    question: 'Neu',
+    option_a: 'A',
+    subject: 'Anatomie',
+    visibility: 'university',
+    question_case: 4,
+    case_text: 'Fall 4',
+  };
+
+  it('writes the given fields under their column names, and only those', async () => {
+    queueResponse('questions', { data: updatedRow });
+
+    await updateQuestion('q1', {
+      question: 'Neu',
+      optionA: 'A',
+      correctAnswer: 'B',
+      difficulty: 2,
+      visibility: 'university',
+      show_image_after_answer: true,
+      image_key: null,
+    });
+
+    const [query] = queriesFor('questions');
+    expect(payloadOf(query, 'update')).toEqual({
+      question: 'Neu',
+      option_a: 'A',
+      correct_answer: 'B',
+      difficulty: 2,
+      visibility: 'university',
+      show_image_after_answer: true,
+      image_key: null,
+    });
+    expect(query.ops).toContainEqual({ method: 'eq', args: ['id', 'q1'] });
+  });
+
+  it('returns the stored row through the shared mapper, case text included', async () => {
+    // The question editor used to map the row by hand and dropped the case.
+    queueResponse('questions', { data: updatedRow });
+
+    const question = await updateQuestion('q1', { question: 'Neu' });
+
+    expect(question).toMatchObject({
+      id: 'q1',
+      question: 'Neu',
+      optionA: 'A',
+      visibility: 'university',
+      question_case: 4,
+      case_text: 'Fall 4',
+    });
+  });
+
+  it('throws on a failed write', async () => {
+    queueResponse('questions', { error: { message: 'boom' } });
+
+    await expect(updateQuestion('q1', { question: 'Neu' })).rejects.toEqual({ message: 'boom' });
   });
 });

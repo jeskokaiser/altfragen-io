@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { mapQuestionRow, mapQuestionRowWithStats } from './questionRowMapper';
 import { fetchAllRows } from './fetchAllRows';
 
@@ -424,7 +425,7 @@ export const updateQuestion = async (
   questionId: string,
   updates: Partial<Question>,
 ): Promise<Question> => {
-  const updateData: any = {};
+  const updateData: TablesUpdate<'questions'> = {};
 
   if (updates.question !== undefined) updateData.question = updates.question;
   if (updates.optionA !== undefined) updateData.option_a = updates.optionA;
@@ -439,6 +440,10 @@ export const updateQuestion = async (
   if (updates.image_key !== undefined) updateData.image_key = updates.image_key;
   if (updates.question_case !== undefined) updateData.question_case = updates.question_case;
   if (updates.case_text !== undefined) updateData.case_text = updates.case_text;
+  if (updates.visibility !== undefined) updateData.visibility = updates.visibility;
+  if (updates.show_image_after_answer !== undefined) {
+    updateData.show_image_after_answer = updates.show_image_after_answer;
+  }
 
   const { data: updatedQuestion, error } = await supabase
     .from('questions')
