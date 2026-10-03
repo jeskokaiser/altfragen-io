@@ -4,7 +4,7 @@ import type { Json, Tables, TablesInsert } from '@/integrations/supabase/types';
 /**
  * Owns `user_preferences`: one row per user (`user_id` is unique) holding what
  * the app remembers between visits -- keyboard bindings, which AI models to
- * show, archived datasets, the statistics date range.
+ * show, the statistics date range.
  *
  * Every function here throws on a database error. The context decides what a
  * failure means for the user and which German message they see.
@@ -45,7 +45,6 @@ export type EnhancedAIVersion = 'none' | 'chatgpt' | 'gemini';
 
 export interface UserPreferences {
   immediateFeedback: boolean;
-  archivedDatasets: string[];
   selectedUniversityDatasets: string[];
   keyboardBindings: KeyboardBindings;
   statisticsDateRange: StatisticsDateRange;
@@ -76,7 +75,6 @@ export const DEFAULT_AI_MODELS = ['chatgpt', 'new-gemini', 'mistral', 'perplexit
 /** The preferences of a user who has not changed anything, as a fresh copy. */
 export const defaultUserPreferences = (): UserPreferences => ({
   immediateFeedback: false,
-  archivedDatasets: [],
   selectedUniversityDatasets: [],
   keyboardBindings: { ...DEFAULT_KEYBOARD_BINDINGS },
   statisticsDateRange: { preset: 'all' },
@@ -85,12 +83,11 @@ export const defaultUserPreferences = (): UserPreferences => ({
 });
 
 const PREFERENCE_COLUMNS =
-  'immediate_feedback, archived_datasets, selected_university_datasets, keyboard_bindings, statistics_date_range, selected_ai_models, enhanced_ai_version';
+  'immediate_feedback, selected_university_datasets, keyboard_bindings, statistics_date_range, selected_ai_models, enhanced_ai_version';
 
 type PreferencesRow = Pick<
   Tables<'user_preferences'>,
   | 'immediate_feedback'
-  | 'archived_datasets'
   | 'selected_university_datasets'
   | 'keyboard_bindings'
   | 'statistics_date_range'
@@ -145,7 +142,6 @@ const toEnhancedAIVersion = (stored: string | null): EnhancedAIVersion =>
 
 export const toUserPreferences = (row: PreferencesRow): UserPreferences => ({
   immediateFeedback: row.immediate_feedback ?? false,
-  archivedDatasets: row.archived_datasets ?? [],
   selectedUniversityDatasets: row.selected_university_datasets ?? [],
   keyboardBindings: toKeyboardBindings(row.keyboard_bindings),
   statisticsDateRange: toStatisticsDateRange(row.statistics_date_range),
@@ -155,7 +151,6 @@ export const toUserPreferences = (row: PreferencesRow): UserPreferences => ({
 
 const toRow = (preferences: UserPreferences): PreferencesRow => ({
   immediate_feedback: preferences.immediateFeedback,
-  archived_datasets: preferences.archivedDatasets,
   selected_university_datasets: preferences.selectedUniversityDatasets,
   keyboard_bindings: preferences.keyboardBindings,
   statistics_date_range: preferences.statisticsDateRange,
@@ -173,7 +168,6 @@ export const mergePreferences = (
   changes: Partial<UserPreferences>,
 ): UserPreferences => ({
   immediateFeedback: changes.immediateFeedback ?? current.immediateFeedback,
-  archivedDatasets: changes.archivedDatasets ?? current.archivedDatasets,
   selectedUniversityDatasets:
     changes.selectedUniversityDatasets ?? current.selectedUniversityDatasets,
   keyboardBindings: changes.keyboardBindings ?? current.keyboardBindings,

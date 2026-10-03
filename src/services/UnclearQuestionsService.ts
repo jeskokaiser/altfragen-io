@@ -161,17 +161,4 @@ export class UnclearQuestionsService {
         marked_unclear_at: row.marked_unclear_at ?? undefined,
       }));
   }
-
-  /** How many of the user's unclear questions belong to one dataset. */
-  static async countUnclearInDataset(userId: string, dataset: string): Promise<number> {
-    const { data, error } = await supabase
-      .from('user_ignored_questions')
-      .select('id, questions:question_id (filename, exam_name)')
-      .eq('user_id', userId);
-
-    if (error) throw error;
-
-    return (data ?? []).filter((row) => row.questions && belongsToDataset(row.questions, dataset))
-      .length;
-  }
 }

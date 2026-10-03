@@ -7,6 +7,8 @@ import { AlertCircle, Upload, FileText, X, ArrowRight, Search } from 'lucide-rea
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchQuestionsByFilename, updateQuestion } from '@/services/DatabaseService';
+import { suggestExamNames } from '@/services/QuestionSearchService';
 import {
   Form,
   FormControl,
@@ -103,19 +105,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({
 
     setIsFetchingSuggestions(true);
     try {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('exam_name')
-        .ilike('exam_name', `%${searchTerm}%`)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-
-      const uniqueExamNames = [
-        ...new Set(data.filter((item) => item.exam_name).map((item) => item.exam_name as string)),
-      ];
-
+      const uniqueExamNames = await suggestExamNames(searchTerm);
       setExamNameSuggestions(uniqueExamNames);
     } catch (error) {
       console.error('Error fetching exam name suggestions:', error);
@@ -226,40 +216,9 @@ const PDFUpload: React.FC<PDFUploadProps> = ({
   };
 
   const fetchSavedQuestions = async (filename: string) => {
+    if (!user?.id) return [];
     try {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('filename', filename)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      return data.map((q) => ({
-        id: q.id,
-        question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
-        optionD: q.option_d,
-        optionE: q.option_e,
-        subject: q.subject,
-        correctAnswer: q.correct_answer,
-        comment: q.comment,
-        filename: q.filename,
-        difficulty: q.difficulty,
-        is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at,
-        university_id: q.university_id,
-        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-        user_id: q.user_id,
-        semester: q.exam_semester || null,
-        year: q.exam_year || null,
-        image_key: q.image_key || null,
-        show_image_after_answer: q.show_image_after_answer || false,
-        exam_name: q.exam_name || null,
-      }));
+      return await fetchQuestionsByFilename(filename, user.id);
     } catch (error) {
       console.error('Error fetching saved questions:', error);
       return [];
@@ -449,31 +408,27 @@ const PDFUpload: React.FC<PDFUploadProps> = ({
     try {
       // Update questions in the database instead of creating new ones
       for (const question of reviewedQuestions) {
-        const { error } = await supabase
-          .from('questions')
-          .update({
+        // The uploader's own questions, so visibility goes along every time.
+        await updateQuestion(
+          question.id,
+          {
             question: question.question,
-            option_a: question.optionA,
-            option_b: question.optionB,
-            option_c: question.optionC,
-            option_d: question.optionD,
-            option_e: question.optionE,
+            optionA: question.optionA,
+            optionB: question.optionB,
+            optionC: question.optionC,
+            optionD: question.optionD,
+            optionE: question.optionE,
             subject: question.subject,
-            correct_answer: question.correctAnswer,
+            correctAnswer: question.correctAnswer,
             comment: question.comment,
             difficulty: question.difficulty,
             visibility: question.visibility,
-            university_id: question.visibility === 'university' ? universityId : null,
-            exam_semester: question.semester,
-            exam_year: question.year,
+            semester: question.semester,
+            year: question.year,
             exam_name: question.exam_name,
-          })
-          .eq('id', question.id);
-
-        if (error) {
-          console.error('Error updating question:', error);
-          throw error;
-        }
+          },
+          universityId,
+        );
       }
 
       onQuestionsLoaded(reviewedQuestions);

@@ -19,7 +19,6 @@ import {
 /** A row as production stores it, bindings included in full. */
 const storedRow = {
   immediate_feedback: true,
-  archived_datasets: ['Anatomie 2023.csv'],
   selected_university_datasets: ['Physiologie WS24'],
   keyboard_bindings: { ...DEFAULT_KEYBOARD_BINDINGS, answerA: 'a' },
   statistics_date_range: { preset: '30days' },
@@ -45,7 +44,6 @@ describe('toUserPreferences', () => {
   it('maps a stored row', () => {
     expect(toUserPreferences(storedRow)).toEqual({
       immediateFeedback: true,
-      archivedDatasets: ['Anatomie 2023.csv'],
       selectedUniversityDatasets: ['Physiologie WS24'],
       keyboardBindings: { ...DEFAULT_KEYBOARD_BINDINGS, answerA: 'a' },
       statisticsDateRange: { preset: '30days' },
@@ -139,7 +137,6 @@ describe('toUserPreferences', () => {
     expect(
       toUserPreferences({
         immediate_feedback: null,
-        archived_datasets: null,
         selected_university_datasets: null,
         keyboard_bindings: null,
         statistics_date_range: null,
@@ -173,10 +170,13 @@ describe('mergePreferences', () => {
   });
 
   it('applies false and an empty list like any other change', () => {
-    const merged = mergePreferences(current, { immediateFeedback: false, archivedDatasets: [] });
+    const merged = mergePreferences(current, {
+      immediateFeedback: false,
+      selectedUniversityDatasets: [],
+    });
 
     expect(merged.immediateFeedback).toBe(false);
-    expect(merged.archivedDatasets).toEqual([]);
+    expect(merged.selectedUniversityDatasets).toEqual([]);
   });
 
   it('keeps the current value of a field set to undefined', () => {
@@ -218,7 +218,6 @@ describe('createUserPreferences', () => {
     expect(payloadOf(queriesFor('user_preferences')[0], 'upsert')).toEqual({
       user_id: 'user-1',
       immediate_feedback: false,
-      archived_datasets: [],
       selected_university_datasets: [],
       keyboard_bindings: DEFAULT_KEYBOARD_BINDINGS,
       statistics_date_range: { preset: 'all' },

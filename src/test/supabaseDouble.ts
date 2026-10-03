@@ -19,6 +19,8 @@
 export interface SupabaseResult {
   data?: unknown;
   error?: unknown;
+  /** The total a `{ count: 'exact' }` select reports. */
+  count?: number | null;
 }
 
 export interface RecordedQuery {
@@ -66,6 +68,8 @@ const CHAIN_METHODS = [
   'eq',
   'neq',
   'in',
+  'is',
+  'ilike',
   'or',
   'gte',
   'lte',
@@ -73,6 +77,7 @@ const CHAIN_METHODS = [
   'not',
   'order',
   'limit',
+  'range',
   'update',
   'insert',
   'upsert',
@@ -87,8 +92,8 @@ const createBuilder = (table: string) => {
   recordedQueries.push(recorded);
 
   const settle = () => {
-    const { data = null, error = null } = nextResponse(table);
-    return Promise.resolve({ data, error });
+    const { data = null, error = null, count = null } = nextResponse(table);
+    return Promise.resolve({ data, error, count });
   };
 
   const builder: Record<string, unknown> = {

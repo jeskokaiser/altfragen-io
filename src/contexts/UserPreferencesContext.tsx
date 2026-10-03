@@ -16,9 +16,6 @@ interface UserPreferencesContextType {
   preferences: UserPreferences;
   isLoading: boolean;
   updatePreferences: (newPreferences: Partial<UserPreferences>) => Promise<void>;
-  archiveDataset: (filename: string) => Promise<void>;
-  restoreDataset: (filename: string) => Promise<void>;
-  isDatasetArchived: (filename: string) => boolean;
   updateSelectedUniversityDatasets: (datasets: string[]) => Promise<void>;
   isModelEnabled: (modelName: string) => boolean;
 }
@@ -67,26 +64,6 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     }
   };
 
-  const archiveDataset = async (filename: string) => {
-    if (!user || preferences.archivedDatasets.includes(filename)) return;
-
-    const newArchivedDatasets = [...preferences.archivedDatasets, filename];
-    await updatePreferences({ archivedDatasets: newArchivedDatasets });
-    toast.success('Dataset erfolgreich archiviert');
-  };
-
-  const restoreDataset = async (filename: string) => {
-    if (!user) return;
-
-    const newArchivedDatasets = preferences.archivedDatasets.filter((f) => f !== filename);
-    await updatePreferences({ archivedDatasets: newArchivedDatasets });
-    toast.success('Dataset erfolgreich wiederhergestellt');
-  };
-
-  const isDatasetArchived = (filename: string): boolean => {
-    return preferences.archivedDatasets.includes(filename);
-  };
-
   const updateSelectedUniversityDatasets = async (datasets: string[]) => {
     await updatePreferences({ selectedUniversityDatasets: datasets });
   };
@@ -101,9 +78,6 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         preferences,
         isLoading,
         updatePreferences,
-        archiveDataset,
-        restoreDataset,
-        isDatasetArchived,
         updateSelectedUniversityDatasets,
         isModelEnabled,
       }}

@@ -260,6 +260,57 @@ export const searchQuestions = async (
   };
 };
 
+/**
+ * Every subject among the questions the user may read, sorted the German way.
+ *
+ * The database function returns them as one array, so the API's row cap does
+ * not apply; reading the `subject` column instead meant reading every visible
+ * question, and the large university's members lost 24 of their 121 subjects
+ * past the cap. The empty subject that 34k questions carry is kept: the
+ * subject picker shows it as "unknown".
+ */
+export const listQuestionSubjects = async (): Promise<string[]> => {
+  const { data, error } = await supabase.rpc('list_question_subjects');
+
+  if (error) throw error;
+  return [...(data ?? [])].sort((a, b) => a.localeCompare(b, 'de'));
+};
+
+/**
+ * Every exam name among the questions the user may read, sorted as the admin
+ * editor always showed them (by code unit, not by locale).
+ *
+ * One array from the database, like `listQuestionSubjects`: the admin sees
+ * more than 24,000 named questions, past the API's row cap.
+ */
+export const listQuestionExamNames = async (): Promise<string[]> => {
+  const { data, error } = await supabase.rpc('list_question_exam_names');
+
+  if (error) throw error;
+  return (data ?? []).filter(Boolean).sort();
+};
+
+/**
+ * Exam names containing `searchTerm`, for the upload form's suggestions: the
+ * names of the five most recently created matching questions, deduplicated.
+ *
+ * Five rows, not five names -- the newest questions usually share one exam, so
+ * this often suggests a single name.
+ */
+export const suggestExamNames = async (searchTerm: string): Promise<string[]> => {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('exam_name')
+    .ilike('exam_name', `%${searchTerm}%`)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error) throw error;
+
+  const names = (data ?? []).map((row) => row.exam_name).filter((name): name is string => !!name);
+  return [...new Set(names)];
+};
+
 // Helper function to get distinct filter values
 export const getFilterOptions = async (userId: string, universityId?: string | null) => {
   // Get subjects

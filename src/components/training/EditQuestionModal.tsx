@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Question } from '@/types/Question';
 import { supabase } from '@/integrations/supabase/client';
+import { updateQuestion } from '@/services/DatabaseService';
 import { toast } from 'sonner';
 import { FormData } from './types/FormData';
 import { QuestionField } from './edit-question/QuestionField';
@@ -106,24 +107,25 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         return;
       }
 
-      const updateData: any = {
+      const updates: Partial<Question> = {
         question: data.question,
-        option_a: data.optionA,
-        option_b: data.optionB,
-        option_c: data.optionC,
-        option_d: data.optionD,
-        option_e: data.optionE,
-        correct_answer: data.correctAnswer,
+        optionA: data.optionA,
+        optionB: data.optionB,
+        optionC: data.optionC,
+        optionD: data.optionD,
+        optionE: data.optionE,
+        correctAnswer: data.correctAnswer,
         comment: data.comment,
         subject: data.subject,
         difficulty: parseInt(data.difficulty),
-        visibility: visibility,
         show_image_after_answer: showImageAfterAnswer,
+        // Only a change: updateQuestion sets university_id along with it.
+        ...(visibility !== question.visibility && { visibility }),
       };
 
       // Handle image removal
       if (imageToRemove && question.image_key) {
-        updateData.image_key = null;
+        updates.image_key = null;
 
         // Optionally delete the image from storage
         try {
@@ -140,52 +142,10 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
         }
       }
 
-      const { data: updatedQuestion, error } = await supabase
-        .from('questions')
-        .update(updateData)
-        .eq('id', question.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating question:', error);
-        throw error;
-      }
-
-      if (updatedQuestion) {
-        const mappedQuestion: Question = {
-          id: updatedQuestion.id,
-          question: updatedQuestion.question,
-          optionA: updatedQuestion.option_a,
-          optionB: updatedQuestion.option_b,
-          optionC: updatedQuestion.option_c,
-          optionD: updatedQuestion.option_d,
-          optionE: updatedQuestion.option_e,
-          correctAnswer: updatedQuestion.correct_answer,
-          comment: updatedQuestion.comment,
-          subject: updatedQuestion.subject,
-          filename: updatedQuestion.filename,
-          difficulty: updatedQuestion.difficulty,
-          university_id: updatedQuestion.university_id,
-          visibility: updatedQuestion.visibility as 'private' | 'university' | 'public',
-          image_key: updatedQuestion.image_key,
-          show_image_after_answer: updatedQuestion.show_image_after_answer,
-          semester: updatedQuestion.exam_semester,
-          year: updatedQuestion.exam_year,
-          created_at: updatedQuestion.created_at,
-          exam_name: updatedQuestion.exam_name,
-          user_id: updatedQuestion.user_id,
-          is_unclear: updatedQuestion.is_unclear,
-          marked_unclear_at: updatedQuestion.marked_unclear_at,
-          ai_commentary_status: updatedQuestion.ai_commentary_status as
-            'pending' | 'processing' | 'completed' | 'failed' | undefined,
-          ai_commentary_queued_at: updatedQuestion.ai_commentary_queued_at,
-          ai_commentary_processed_at: updatedQuestion.ai_commentary_processed_at,
-        };
-        onQuestionUpdated(mappedQuestion);
-        toast.info('Frage erfolgreich aktualisiert');
-        onClose();
-      }
+      const updatedQuestion = await updateQuestion(question.id, updates, universityId);
+      onQuestionUpdated(updatedQuestion);
+      toast.info('Frage erfolgreich aktualisiert');
+      onClose();
     } catch (error: any) {
       console.error('Error updating question:', error);
       toast.error('Fehler beim Aktualisieren der Frage');

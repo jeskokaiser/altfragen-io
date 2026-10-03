@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchQuestionsByFilename, updateQuestion } from '@/services/DatabaseService';
 import { showToast } from '@/utils/toast';
 import { Question } from '@/types/Question';
 import { FileUp, Lock, GraduationCap, Globe } from 'lucide-react';
@@ -139,40 +140,9 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({
   };
 
   const fetchSavedQuestions = async (filename: string) => {
+    if (!user?.id) return [];
     try {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('filename', filename)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-
-      return data.map((q) => ({
-        id: q.id,
-        question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
-        optionD: q.option_d,
-        optionE: q.option_e,
-        subject: q.subject,
-        correctAnswer: q.correct_answer,
-        comment: q.comment,
-        filename: q.filename,
-        difficulty: q.difficulty,
-        is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at,
-        university_id: q.university_id,
-        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-        user_id: q.user_id,
-        semester: q.exam_semester || null,
-        year: q.exam_year || null,
-        image_key: q.image_key || null,
-        show_image_after_answer: q.show_image_after_answer || false,
-        exam_name: q.exam_name || null,
-      }));
+      return await fetchQuestionsByFilename(filename, user.id);
     } catch (error) {
       console.error('Error fetching saved questions:', error);
       return [];
@@ -361,31 +331,30 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({
       // Update questions in the database with better error handling
       const updatePromises = reviewedQuestions.map(async (question, index) => {
         try {
-          const { error } = await supabase
-            .from('questions')
-            .update({
+          // The uploader's own questions, so visibility goes along every time.
+          await updateQuestion(
+            question.id,
+            {
               question: question.question,
-              option_a: question.optionA,
-              option_b: question.optionB,
-              option_c: question.optionC,
-              option_d: question.optionD,
-              option_e: question.optionE,
+              optionA: question.optionA,
+              optionB: question.optionB,
+              optionC: question.optionC,
+              optionD: question.optionD,
+              optionE: question.optionE,
               subject: question.subject,
-              correct_answer: question.correctAnswer,
+              correctAnswer: question.correctAnswer,
               comment: question.comment,
               difficulty: question.difficulty,
               visibility: question.visibility,
-              university_id: question.visibility === 'university' ? universityId : null,
-              exam_semester: question.semester,
-              exam_year: question.year,
+              semester: question.semester,
+              year: question.year,
               exam_name: question.exam_name,
-            })
-            .eq('id', question.id);
-
-          if (error) {
+            },
+            universityId,
+          ).catch((error) => {
             console.error(`Error updating question ${index + 1}:`, error);
             throw error;
-          }
+          });
 
           return { success: true, question, index };
         } catch (error) {

@@ -48,18 +48,24 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 
 ## Rules
 
-**Database access goes through `src/services/`.** Still the direction of travel
-rather than the finished state: 9 files outside `src/services/` query Supabase
-directly -- pages, components and hooks alike (count them as
-`docs/modernisation.md` says: some go through an alias such as
-`const sb: any = supabase`). So expect to find
-queries in components, but don't add more. When you touch one and the change is
-small, moving that query into a service is a welcome drive-by.
+**Database access goes through `src/services/`.** No file outside it queries
+a table any more; keep it that way (count as `docs/modernisation.md` says --
+queries once hid behind aliases such as `const sb: any = supabase`). Three
+calls of database functions (`supabase.rpc`) are still in components, in
+`Dashboard` and `ExamCohortComparisonSection`; don't add more. Storage and
+Edge Function calls are not database access and may stay where they are.
 
 Rows coming out of `questions` are mapped to the domain type by
 `src/services/questionRowMapper.ts`. Use it rather than writing the snake_case
 to camelCase translation again -- it used to be copied by hand at ten call
 sites, each with its own subset of fields and its own defaults.
+
+**A read can be cut off silently.** The API returns at most 20,000 rows per
+response and drops the rest without an error; one university has more
+questions than that. A read that can grow that large goes through
+`fetchAllRows` (`src/services/fetchAllRows.ts`), which pages past the cap --
+or asks for less: a distinct list belongs in a database function returning
+one array, as `list_question_subjects()` does.
 
 **`src/integrations/supabase/types.ts` is generated.** Regenerate it after any
 schema change -- via the Supabase MCP server's `generate_typescript_types`, or
@@ -101,7 +107,7 @@ cleanup**, otherwise the slack invites new violations. When a RATCHET rule
 reaches zero, move it to `ENFORCED` (`"error"`) so it can never come back.
 
 `no-unused-vars` has already made that trip: it is an error everywhere, with no
-exceptions. Still in RATCHET: `no-explicit-any` (114) and `ban-ts-comment` (8),
+exceptions. Still in RATCHET: `no-explicit-any` (100) and `ban-ts-comment` (8),
 plus `react-hooks/exhaustive-deps` and `react-refresh/only-export-components`,
 which warn by design.
 
@@ -115,8 +121,11 @@ and merge conflicts an agent can resolve, which the binary one does not.
 
 **Question visibility** is `private | university | public`. `university_id` is
 set only when visibility is `university`, and cleared otherwise -- the two
-fields must stay consistent or questions leak across universities. RLS enforces
-this server-side; keep the client in step.
+fields must stay consistent, or a question ends up shared with no one, or with
+the wrong university. Nothing on the server enforces this: no constraint, no
+trigger, and the update policy checks who writes, not what. The client keeps
+them in step -- change visibility through `updateQuestion`, which sets
+`university_id` with it.
 
 **Universities** come from the user's profile (`AuthContext` exposes
 `universityId`). Shared questions and public comments are scoped to it.
@@ -167,8 +176,9 @@ and `broadcast_logs` tables.
   (`stripe-webhook/entitlements.ts`), `utils/cohortScoring.ts`, and the
   services that own `user_progress`, `profiles`, `universities`,
   `ai_commentary_settings`, `user_preferences` and `user_ai_comment_usage`,
-  the read of `subscribers`, and the exam and session reads behind the
-  statistics pages -- those through the Supabase double in
+  the read of `subscribers`, the exam and session reads behind the
+  statistics pages, and the dashboard's question list -- those through the
+  Supabase double in
   `src/test/supabaseDouble.ts`. React and Stripe itself are uncovered, and so
   are the writes of `TrainingSessionService` (`recordAttempt`), which matter
   most. Say what a change was actually verified against rather

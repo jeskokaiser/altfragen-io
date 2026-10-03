@@ -1,23 +1,17 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { listQuestionSubjects } from '@/services/QuestionSearchService';
 
+/** The subjects the user's visible questions use, for the subject picker. */
 export const useSubjects = () => {
-  const [subjects, setSubjects] = useState<string[]>([]);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      const { data } = await supabase.from('questions').select('subject').order('subject');
+  // Keyed on the user: RLS decides which subjects appear.
+  const { data } = useQuery({
+    queryKey: ['question-subjects', user?.id],
+    queryFn: listQuestionSubjects,
+    enabled: !!user?.id,
+  });
 
-      if (data) {
-        const uniqueSubjects = Array.from(new Set(data.map((q) => q.subject))).sort((a, b) =>
-          a.localeCompare(b, 'de'),
-        );
-        setSubjects(uniqueSubjects);
-      }
-    };
-
-    fetchSubjects();
-  }, []);
-
-  return subjects;
+  return data ?? [];
 };

@@ -8,10 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ArrowLeft, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Question } from '@/types/Question';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
 import { useUpcomingExam } from '@/hooks/useUpcomingExams';
+import { fetchQuestionsForExamNames, splitExamNames } from '@/services/UpcomingExamService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -37,54 +36,7 @@ const ExamAnalytics: React.FC = () => {
   // relinking the exam refetches its questions.
   const { data: questions, isLoading: isQuestionsLoading } = useQuery({
     queryKey: ['exam-questions', examId, exam?.exam_name],
-    queryFn: async () => {
-      if (!exam?.exam_name) return [];
-
-      // Split comma-separated exam_names
-      const examNames = exam.exam_name
-        .split(',')
-        .map((n: string) => n.trim())
-        .filter(Boolean);
-      if (examNames.length === 0) return [];
-
-      // Query questions directly by exam_name (any of the selected exam_names)
-      const { data: questionData, error: questionsError } = await supabase
-        .from('questions')
-        .select('*')
-        .in('exam_name', examNames);
-
-      if (questionsError) throw questionsError;
-      if (!questionData || questionData.length === 0) return [];
-
-      // Map to Question type
-      return questionData.map((q: any) => ({
-        id: q.id,
-        question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
-        optionD: q.option_d,
-        optionE: q.option_e,
-        subject: q.subject,
-        correctAnswer: q.correct_answer,
-        comment: q.comment,
-        filename: q.filename,
-        difficulty: q.difficulty,
-        is_unclear: q.is_unclear,
-        marked_unclear_at: q.marked_unclear_at,
-        university_id: q.university_id,
-        visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-        user_id: q.user_id,
-        semester: q.exam_semester || null,
-        year: q.exam_year || null,
-        image_key: q.image_key || null,
-        show_image_after_answer: q.show_image_after_answer || false,
-        exam_name: q.exam_name || null,
-        created_at: q.created_at,
-        question_case: q.question_case || null,
-        case_text: q.case_text || null,
-      })) as Question[];
-    },
+    queryFn: () => fetchQuestionsForExamNames(splitExamNames(exam?.exam_name ?? null)),
     enabled: !!exam,
   });
 

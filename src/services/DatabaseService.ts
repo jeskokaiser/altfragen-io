@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Question } from '@/types/Question';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { mapQuestionRow, mapQuestionRowWithStats } from './questionRowMapper';
+import { fetchAllRows } from './fetchAllRows';
 
 export const saveQuestions = async (
   questions: Question[],
@@ -113,36 +115,6 @@ export const updateQuestionVisibility = async (
   return true;
 };
 
-export const updateDatasetVisibility = async (
-  filename: string,
-  userId: string,
-  visibility: 'private' | 'university' | 'public',
-  universityId?: string | null,
-) => {
-  const { data: existingQuestions } = await supabase
-    .from('questions')
-    .select('visibility')
-    .eq('filename', filename)
-    .eq('user_id', userId)
-    .in('visibility', ['university', 'public']);
-
-  if (existingQuestions && existingQuestions.length > 0 && visibility === 'private') {
-    throw new Error('Fragen, die geteilt wurden, können nicht zurück auf privat gesetzt werden.');
-  }
-
-  const { error } = await supabase
-    .from('questions')
-    .update({
-      visibility,
-      university_id: visibility === 'university' ? universityId : null,
-    })
-    .eq('filename', filename)
-    .eq('user_id', userId);
-
-  if (error) throw error;
-  return true;
-};
-
 export const fetchAllQuestions = async (userId: string, universityId?: string | null) => {
   // Select only the columns needed for dashboard display
   const questionColumns = `
@@ -164,48 +136,47 @@ export const fetchAllQuestions = async (userId: string, universityId?: string | 
     show_image_after_answer
   `;
 
-  const { data: personalQuestions, error: personalError } = await supabase
-    .from('questions')
-    .select(questionColumns)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (personalError) throw personalError;
-
-  let universityQuestions: any[] = [];
-  if (universityId) {
-    const { data: uniQuestions, error: uniError } = await supabase
+  // Each of the three reads can pass the API's row cap -- one university shares
+  // 23,600 questions, one user has 20,981 -- so each is paged, newest first,
+  // with the id breaking ties so that pages neither overlap nor skip.
+  const personalQuestions = await fetchAllRows((from, to) =>
+    supabase
       .from('questions')
-      .select(questionColumns)
-      .eq('university_id', universityId)
-      .eq('visibility', 'university')
-      .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
-      .order('created_at', { ascending: false });
+      .select(questionColumns, { count: 'exact' })
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(from, to),
+  );
 
-    if (uniError) {
-      throw uniError;
-    }
-
-    universityQuestions = uniQuestions || [];
-  }
+  const universityQuestions = universityId
+    ? await fetchAllRows((from, to) =>
+        supabase
+          .from('questions')
+          .select(questionColumns, { count: 'exact' })
+          .eq('university_id', universityId)
+          .eq('visibility', 'university')
+          .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
+          .order('created_at', { ascending: false })
+          .order('id')
+          .range(from, to),
+      )
+    : [];
 
   // Fetch public questions (only if user has a university_id)
-  let publicQuestions: any[] = [];
-  if (universityId) {
-    const { data: pubQuestions, error: pubError } = await supabase
-      .from('questions')
-      .select(questionColumns)
-      .eq('visibility', 'public')
-      .is('university_id', null) // Public questions have university_id = NULL
-      .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
-      .order('created_at', { ascending: false });
-
-    if (pubError) {
-      throw pubError;
-    }
-
-    publicQuestions = pubQuestions || [];
-  }
+  const publicQuestions = universityId
+    ? await fetchAllRows((from, to) =>
+        supabase
+          .from('questions')
+          .select(questionColumns, { count: 'exact' })
+          .eq('visibility', 'public')
+          .is('university_id', null) // Public questions have university_id = NULL
+          .neq('user_id', userId) // Exclude questions created by the current user to avoid duplicates
+          .order('created_at', { ascending: false })
+          .order('id')
+          .range(from, to),
+      )
+    : [];
 
   // For now, skip fetching user difficulties in the dashboard to improve performance
   // User difficulties will be fetched on-demand when questions are actually displayed
@@ -450,11 +421,22 @@ export const fetchQuestionsByExamName = async (
   };
 };
 
+/**
+ * Writes the given fields of a question and returns it as stored.
+ *
+ * A change of `visibility` brings `university_id` with it: the university's
+ * when the question is shared with one, none otherwise. Nothing on the server
+ * keeps the two in step. Pass `visibility` with the editing user's
+ * `universityId`, and only when it changes or the question is the user's own
+ * -- passing it unchanged for someone else's question would move another
+ * university's question to the editor's.
+ */
 export const updateQuestion = async (
   questionId: string,
   updates: Partial<Question>,
+  universityId?: string | null,
 ): Promise<Question> => {
-  const updateData: any = {};
+  const updateData: TablesUpdate<'questions'> = {};
 
   if (updates.question !== undefined) updateData.question = updates.question;
   if (updates.optionA !== undefined) updateData.option_a = updates.optionA;
@@ -469,6 +451,19 @@ export const updateQuestion = async (
   if (updates.image_key !== undefined) updateData.image_key = updates.image_key;
   if (updates.question_case !== undefined) updateData.question_case = updates.question_case;
   if (updates.case_text !== undefined) updateData.case_text = updates.case_text;
+  if (updates.semester !== undefined) updateData.exam_semester = updates.semester;
+  if (updates.year !== undefined) updateData.exam_year = updates.year;
+  if (updates.exam_name !== undefined) updateData.exam_name = updates.exam_name;
+  if (updates.visibility !== undefined) {
+    if (updates.visibility === 'university' && !universityId) {
+      throw new Error('A question can only be shared with a university the user belongs to.');
+    }
+    updateData.visibility = updates.visibility;
+    updateData.university_id = updates.visibility === 'university' ? universityId : null;
+  }
+  if (updates.show_image_after_answer !== undefined) {
+    updateData.show_image_after_answer = updates.show_image_after_answer;
+  }
 
   const { data: updatedQuestion, error } = await supabase
     .from('questions')

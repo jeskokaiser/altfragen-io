@@ -16,7 +16,12 @@ import UpcomingExamCreateDialog from './exams/UpcomingExamCreateDialog';
 import UpcomingExamEditDialog from './exams/UpcomingExamEditDialog';
 import UpcomingExamsList from './exams/UpcomingExamsList';
 import ExamQuestionSelectorDialog from './exams/ExamQuestionSelectorDialog';
-import { deleteUpcomingExam, updateUpcomingExam } from '@/services/UpcomingExamService';
+import {
+  deleteUpcomingExam,
+  fetchQuestionsForExamNames,
+  splitExamNames,
+  updateUpcomingExam,
+} from '@/services/UpcomingExamService';
 import { fetchUserDifficultiesForQuestions } from '@/services/UserProgressService';
 import { fetchIsPremium } from '@/services/ProfileService';
 import { TrainingSessionService } from '@/services/TrainingSessionService';
@@ -274,56 +279,17 @@ const Dashboard = () => {
           return;
         }
 
-        // Split comma-separated exam_names
-        const examNames = exam.exam_name
-          .split(',')
-          .map((n: string) => n.trim())
-          .filter(Boolean);
+        const examNames = splitExamNames(exam.exam_name);
         if (examNames.length === 0) {
           toast.error('Prüfung hat keine gültigen exam_names.');
           return;
         }
 
-        // Query questions directly by exam_name (any of the selected exam_names)
-        const { data: questionData, error: questionsError } = await supabase
-          .from('questions')
-          .select('*')
-          .in('exam_name', examNames);
-
-        if (questionsError) throw questionsError;
-        if (!questionData || questionData.length === 0) {
+        const sourceQuestions = await fetchQuestionsForExamNames(examNames);
+        if (sourceQuestions.length === 0) {
           toast.info('Keine Fragen für diese Prüfung gefunden.');
           return;
         }
-
-        // Map to Question type
-        const sourceQuestions: Question[] = questionData.map((q: any) => ({
-          id: q.id,
-          question: q.question,
-          optionA: q.option_a,
-          optionB: q.option_b,
-          optionC: q.option_c,
-          optionD: q.option_d,
-          optionE: q.option_e,
-          subject: q.subject,
-          correctAnswer: q.correct_answer,
-          comment: q.comment,
-          filename: q.filename,
-          difficulty: q.difficulty,
-          is_unclear: q.is_unclear,
-          marked_unclear_at: q.marked_unclear_at,
-          university_id: q.university_id,
-          visibility: (q.visibility as 'private' | 'university' | 'public') || 'private',
-          user_id: q.user_id,
-          semester: q.exam_semester || null,
-          year: q.exam_year || null,
-          image_key: q.image_key || null,
-          show_image_after_answer: q.show_image_after_answer || false,
-          exam_name: q.exam_name || null,
-          created_at: q.created_at,
-          question_case: q.question_case || null,
-          case_text: q.case_text || null,
-        }));
 
         const ids = sourceQuestions.map((q) => q.id);
 
