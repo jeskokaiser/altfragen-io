@@ -167,13 +167,13 @@ rows, and gets them from `list_question_subjects()`, a `SECURITY INVOKER`
 function that returns one array, which no row cap applies to.
 
 **There are tests.** vitest runs from `npm run test`, inside `npm run verify`
-and in CI. 216 specs cover the places where a mistake is both plausible and
+and in CI. 228 specs cover the places where a mistake is both plausible and
 invisible: the Stripe entitlement decisions, the user progress merge and
 answer recording, the cohort scoring, the profile and university reads, the
 AI commentary settings, the user preferences mapping, the subscription read,
-the AI comment allowance, the exam and session reads behind the
-statistics pages, the dashboard's question list, and the paging past the API
-row cap.
+the AI comment allowance and credit reads, the exam and session reads behind
+the statistics pages, the exam cohort comparison, the dashboard's question
+list, and the paging past the API row cap.
 The entitlement decisions had to be lifted out of `stripe-webhook/index.ts`
 first — the function is Deno and imports Stripe over URL, so nothing in it is
 reachable from a Node runner. They now live in
@@ -187,13 +187,13 @@ spec drives the Supabase query builder through the double in
 `src/test/supabaseDouble.ts`, which records the payload each call would have
 sent, so writes are asserted rather than the mock.
 
-## In progress: data access into services
+## Data access into services
 
-No file outside `src/services/` queries a table directly any more — slice 7
-finished that. Scattered queries were the root cause of the type drift above:
-each grew its own casts and its own row mapping. What is left outside the
-services are three calls of database functions (slice 8 below), and calls
-of Storage and Edge Functions, which are not database access.
+No file outside `src/services/` queries a table or calls a database function
+any more — slices 7 and 8 finished that. Scattered queries were the root
+cause of the type drift above: each grew its own casts and its own row
+mapping. What is left outside the services are calls of Storage and Edge
+Functions, which are not database access.
 
 Count them with a pattern that sees through casts and aliases, across line
 breaks:
@@ -206,7 +206,8 @@ rg -lU '\(?\b(supabase|sb)( as any\))?\s*\.from\(' src -g '!src/services/**'
 until slice 6 caught that, but not `const sb: any = supabase; sb.from(…)`, and
 two files queried only that way: `OCRUpload` and `ExamQuestionSelectorDialog`.
 The earlier figure of 9 was therefore 11. Before trusting the count, check
-that no other alias has appeared: `rg '=\s*supabase\s*;' src`.
+that no other alias has appeared: `rg '=\s*supabase\s*;' src`. Database
+functions: `rg -lU '\.rpc\b' src -g '!src/services/**' -g '!src/test/**'`.
 
 Suggested slices, roughly in order of value:
 
@@ -245,12 +246,19 @@ Suggested slices, roughly in order of value:
      `updateQuestion`; the payload was compared with the old one over 1,458
      combinations of values. Exam-name suggestions are
      `suggestExamNames`.
-8. **Database functions from components** — `Dashboard` calls
-   `ai_private_full_used_30d` and `ai_private_credits_remaining` for the AI
-   credit overview, and `ExamCohortComparisonSection` calls
-   `get_exam_cohort_stats` through `(supabase.rpc as any)` — a stale cast,
-   the function is in the generated types. Small: three calls into a
-   service, the cast removed.
+8. ~~**Database functions from components**~~ — done. The AI credit
+   overview in `Dashboard` reads through `AICreditsService`, the exam cohort
+   comparison through `ExamCohortService`, without the stale
+   `(supabase.rpc as any)`. Its typed mapping was compared with the old one
+   over 110 value shapes, including the two the function returns in
+   production (123 complete results and 17 rows of nulls, asking for each of
+   the 140 exams with a university and linked questions as its creator). Typing it showed that the cohort median line
+   never appeared: the mapping read `score_median`, which the function does
+   not return; the line is gone. The camelCase fallbacks and the parsing of
+   histograms sent as strings were dead too — the function returns neither.
+   `utils/cohortScoring.ts` has drifted from the function it copies
+   (`COHORT_N_REF` 3000 there, 2000 in the database), harmlessly, as nothing
+   calls it; it should go, or be brought in line, as its own change.
 
 `no-explicit-any` was expected to fall as this proceeds. It mostly does not:
 slices 1 and 2 left it at 161, because those casts sit in the components
@@ -286,8 +294,22 @@ The first part of slice 7 took it to 104: the hand-written row mappings'
 `(q: any)`, the exam-name dialog's `sb` aliases and callbacks, and the `any[]`
 the dashboard's question list was collected into. The rest took it to 100:
 `updateQuestion`'s payload is `TablesUpdate<'questions'>` instead of `any`.
+Slice 8 took it to 99: the cast on the cohort call.
 
 ## Not started
+
+**Make the per-user database functions check who is asking.**
+`ai_private_full_used_30d`, `ai_private_credits_remaining` and
+`get_exam_cohort_stats` take the user as a parameter, run as
+`SECURITY DEFINER` — so RLS does not apply — and are executable by `anon`.
+None compares the parameter with `auth.uid()`: anyone holding the
+publishable key, signed in or not, can ask for any user's AI credit balance
+and quota use, and for their answered and correct counts on an exam (checked
+under the `anon` role, with random ids). User ids are not secret: any
+signed-in user can read the author's on every question shared with them. The fix is a guard in each function —
+`p_user_id = auth.uid()`, or the service role, which
+`ai-comment-credits-status` calls them with — and revoking `anon`. A schema
+change, so it waits for the owner.
 
 **Enforce visibility and `university_id` in the database.** Nothing on the
 server keeps them consistent; `updateQuestion` does it in the client. A check

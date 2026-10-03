@@ -49,11 +49,10 @@ Routes are split: public ones in `src/App.tsx`, everything behind auth in
 ## Rules
 
 **Database access goes through `src/services/`.** No file outside it queries
-a table any more; keep it that way (count as `docs/modernisation.md` says --
-queries once hid behind aliases such as `const sb: any = supabase`). Three
-calls of database functions (`supabase.rpc`) are still in components, in
-`Dashboard` and `ExamCohortComparisonSection`; don't add more. Storage and
-Edge Function calls are not database access and may stay where they are.
+a table or calls a database function (`supabase.rpc`) any more; keep it that
+way (count as `docs/modernisation.md` says -- queries once hid behind aliases
+such as `const sb: any = supabase`). Storage and Edge Function calls are not
+database access and may stay where they are.
 
 Rows coming out of `questions` are mapped to the domain type by
 `src/services/questionRowMapper.ts`. Use it rather than writing the snake_case
@@ -177,7 +176,8 @@ and `broadcast_logs` tables.
   services that own `user_progress`, `profiles`, `universities`,
   `ai_commentary_settings`, `user_preferences` and `user_ai_comment_usage`,
   the read of `subscribers`, the exam and session reads behind the
-  statistics pages, and the dashboard's question list -- those through the
+  statistics pages, the exam cohort comparison, the AI credit reads, and the
+  dashboard's question list -- those through the
   Supabase double in
   `src/test/supabaseDouble.ts`. React and Stripe itself are uncovered, and so
   are the writes of `TrainingSessionService` (`recordAttempt`), which matter
