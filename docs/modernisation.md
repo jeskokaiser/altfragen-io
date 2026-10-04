@@ -360,7 +360,9 @@ Supabase Auth ("Confirm email", the redirect allow-list), Netlify headers,
 `verify_jwt` per function — and the VPS host itself (its `.env`, firewall,
 what actually runs).
 
-The order is the suggested order of work.
+The order is the suggested order of work. How to split it across agents in
+this repository and the backend's, and the contract between the two, is in
+`docs/cross-repo-plan.md`.
 
 ### 1. Security
 
