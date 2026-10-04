@@ -351,11 +351,14 @@ while the database was checked directly: every RLS policy, storage, grants,
 the advisors, `pg_stat_statements`. Their claims were spot-checked before going
 in here; one did not hold and was dropped (`tailwindcss-animate` is in use).
 "Verified" below means shown on the live database, with counts only; the rest
-is from reading the code, with file and line. Not reviewed: the services on
-`api.altfragen.io` (parser, OCR, subject worker, AI backend), which are not in
-this repository, and settings that live only in dashboards — Supabase Auth
-("Confirm email", the redirect allow-list), Netlify headers, `verify_jwt` per
-function.
+is from reading the code, with file and line. The backend behind
+`api.altfragen.io` — parser, OCR, subject worker and AI backend on a Hetzner
+VPS, in a repository of its own — was reviewed the same day by a separate
+agent (read-only, at its commit `6dbdeb0`); its findings are merged below and
+marked _backend review_. Not reviewed: settings that live only in dashboards —
+Supabase Auth ("Confirm email", the redirect allow-list), Netlify headers,
+`verify_jwt` per function — and the VPS host itself (its `.env`, firewall,
+what actually runs).
 
 The order is the suggested order of work.
 
@@ -408,6 +411,35 @@ by design — is enough to pass the platform's `verify_jwt` gate:
   and the cron-called two a shared secret. This is the per-function
   authorization the API key migration needs anyway (last item).
 
+**The backend's own endpoints are open as well** (_backend review_).
+Authenticating the Edge Functions is not enough, because the backend can be
+called directly, and its repository is public on GitHub and documents the
+endpoints:
+
+- **Uploads:** `POST /parser/upload` and `POST /ocr-service/process` have no
+  authentication. They take the user id, `university_id` and `visibility`
+  from the form and insert questions with a privileged key. Anyone can plant
+  questions in any account, any university's pool, or the public pool. OCR
+  also costs one or more Mistral calls per request, and it answers on
+  plain-HTTP port 8002 as well.
+- **AI runs:** `/ai/submit`, `/ai/run` and `/ai/consume` need no credential.
+  Each call starts another background run, nothing stops runs from
+  overlapping, and `/submit` and `/run` claim questions outside the queue.
+- **Subject worker:** it does whatever a `subject_jobs` row says. A job with
+  `university_id` null or `"all"` spans every university, private questions
+  included, and `available_subjects[0]` is written verbatim whenever the
+  model's answer is invalid.
+
+The fix spans both sides:
+
+- **Backend:** verify the Supabase JWT and take the user from it and the
+  university from `profiles`; require a token or secret on the `/ai/*` and
+  worker routes, compared in constant time, with a run lock; accept reassign
+  jobs only from admins.
+- **App:** `OCRUpload` and `process-pdf` send the user's token; pg_cron sends
+  its token from Vault.
+- **First step:** make the backend repository private until this ships.
+
 **A third-party script runs on every page.** `index.html:53` loads
 `https://cdn.gpteng.co/gptengineer.js` — Lovable's editor script — in
 production, unpinned, with no integrity hash. It can read the Supabase session
@@ -417,10 +449,12 @@ from `localStorage`. There is no Content-Security-Policy and no
 
 **Storage.** (verified)
 
-- The `questions` bucket is **public** and holds 42 uploaded exam PDFs under
-  plain file names (an exam name, a semester) — listing is blocked, but a
-  guessed name downloads. Nothing in the app reads from it; what writes there
-  is the external parser.
+- The `questions` bucket is **public** and holds 43 uploaded exam PDFs. OCR
+  stores each one there to hand Mistral a URL, and never deletes it. 42 are
+  named `ocr_temp_` plus 64 random bits, so they cannot be guessed, but any
+  URL that leaks downloads (_backend review_). Nothing needs the bucket
+  public: give Mistral a short-lived signed URL or the file inline, delete
+  the file after OCR, make the bucket private, and remove the stored PDFs.
 - `exam-images` (2,161 images, ~800 MB): any signed-in user may upload any
   file of any size and type, and read every image, including those of private
   questions.
@@ -438,8 +472,27 @@ finds the Stripe customer by e-mail (`customer-portal:45`); if "Confirm email"
 is off in Supabase Auth, an unverified sign-up with someone else's address
 opens their portal — check the setting.
 
-**Smaller.** A login role `Hetzner VPS` has `BYPASSRLS` (it needs only its
-storage policies) — check where its password lives. The disposable-address
+**The VPS** (_backend review_).
+
+- **Exposed ports:** Prometheus (port 9090, no authentication, lifecycle API
+  on), Grafana (port 3000; the password defaults to `admin` if it was never
+  set) and OCR (port 8002) listen on all interfaces. Docker bypasses ufw.
+- **Memory:** request bodies are read whole into memory with no size limit at
+  Caddy or in the parser, and the containers have no memory limits. One huge
+  upload can exhaust the host, and there is no restart policy to bring it
+  back.
+- **Dependencies:** the parser pins FastAPI and Starlette versions with known
+  denial-of-service CVEs (`pip-audit`: 51 advisories in 7 packages).
+- **Containers:** all services get every secret and run as root, with their
+  source mounted writable.
+- **Fixes:** bind the ports to localhost, limit the body size and memory,
+  restart unless stopped, upgrade, give each service its own env file, then
+  rotate keys.
+
+**Smaller.** A role `Hetzner VPS` has `BYPASSRLS`; nothing on the VPS logs in
+with it, but the parser's `SUPABASE_KEY` probably carries it as its role
+(inferred — decode the key's payload on the host), which would let that key
+bypass RLS everywhere, not only on `exam-images`. The disposable-address
 check runs only in the browser and fails open (`Auth.tsx:179-210`). Edge
 Functions return raw error messages and log e-mail addresses. Admin-set
 campaign URLs are opened without a scheme check (`CampaignBanner.tsx:93`).
@@ -572,19 +625,39 @@ counts only):
   question's `processing` full job as used, with no time limit. 313 such jobs,
   from 12 December to 16 May, all with expired leases, count against 9 users
   for as long as they stay stuck. Recovering them is the reconciler's job
-  (`reconcile-stuck-ai-commentary-jobs`), but no cron job calls it. A likely
-  source: the dispatcher rolls jobs back only on a non-2xx reply, not when the
-  backend call throws or times out (`dispatch:164-228`).
+  (`reconcile-stuck-ai-commentary-jobs`), but no cron job calls it.
+- **Why jobs get stuck** (_backend review_; the link to the 313 is
+  inferred): the backend answers `/process-batch` with 202 before doing any
+  work. So the dispatcher's rollback on a non-2xx reply only ever catches
+  authentication errors, and rolling back on a timeout would be unsafe,
+  because the batch may still run. Once questions are `processing`, nothing
+  resets them when a provider submit throws, a batch ends `expired`, `FAILED`
+  or `TIMEOUT_EXCEEDED`, or a model answers with an error. Every failure path
+  in the backend has to reset the job, the quota count should count only
+  live leases, and a one-off update has to release today's stuck rows.
 - The reconciler's updates have no status or lease predicate, so a job
   re-claimed between its read and its write is reset and runs twice.
 - A second cron job, `AI comments comsume` (every 7 minutes), is active: it
   posts to `https://api.altfragen.io/ai/consume`, without authentication and
-  with a 1-second timeout, and gets 200 or 202. That service is not in this
-  repository, and what it does is unknown here.
+  with a 1-second timeout, and gets 200 or 202. It polls open provider
+  batches and writes their results: comments, statuses and quota
+  (_backend review_). It answers 202 at once, so the timeout is harmless. It
+  must keep running while any batch is open, but with a token.
 - `ai_commentary_batch_jobs.status` mixes the providers' own vocabularies
   (`completed`, `failed`, `FAILED`, `JOB_STATE_FAILED`, `SUCCESS`,
   `TIMEOUT_EXCEEDED`, `expired`), so a status check against one of them misses
-  the rest.
+  the rest. The backend stores whatever state the provider reports. `SUCCESS`
+  comes from code before November 2025, which marked successful Mistral
+  batches that way without reading their results.
+- **Other backend findings** (_backend review_):
+  - Any error text containing `429`, `quota` or `billing` switches
+    `feature_enabled` off for everyone. The flag is on today, so that is not
+    why the pipeline stopped; the cron job is.
+  - Comments and quota ledger rows are written read-then-write, so
+    overlapping runs duplicate them. Unique keys are needed on
+    `ai_answer_comments(question_id)` and the ledger.
+  - The backend never writes `ai_commentary_summaries`. Its 19k rows come
+    from elsewhere or from the past.
 - `ai_commentary_claim_next_batch` is executable by the service role only
   (see Done). That is proven in the database, not by a live run, because the
   dispatcher has not run since. Both pipeline functions are callable by anyone
