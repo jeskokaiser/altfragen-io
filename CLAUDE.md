@@ -196,11 +196,11 @@ and `broadcast_logs` tables.
   most. Say what a change was actually verified against rather
   than assuming a green run means correct -- "How a slice is verified" in
   `docs/modernisation.md` lists the checks the migration slices have used.
-- **Some files are very large**: `ExamCohortComparisonSection.tsx` (~1300
-  lines), `QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
-  `admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~710).
+- **Some files are very large**: `ExamCohortComparisonSection.tsx` (~1200
+  lines), `QuestionDisplayWithAI.tsx` (~1100), `admin/CampaignManagement.tsx`
+  (~890), `pages/Auth.tsx` (~880), `pages/ExamAnalytics.tsx` (~660).
   Splitting them is welcome as its own change, not smuggled into a feature.
-- **`console.*` is used for logging throughout** (~255 calls). Don't add more;
+- **`console.*` is used for logging throughout** (244 calls). Don't add more;
   a real logger is a pending cleanup.
 - **Edge Functions are Deno**, not Node -- different globals, URL imports, and
   they deploy separately from the frontend.
