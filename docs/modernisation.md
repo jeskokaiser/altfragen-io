@@ -344,6 +344,274 @@ Slice 8 took it to 99: the cast on the cohort call.
 
 ## Not started
 
+A full review on 2026-10-04 added most of what follows. Five reviews ran in
+parallel — Edge Functions, browser security, data flows, performance (all
+four on Sonnet), and a sweep for dead code and Lovable leftovers (on Haiku) —
+while the database was checked directly: every RLS policy, storage, grants,
+the advisors, `pg_stat_statements`. Their claims were spot-checked before going
+in here; one did not hold and was dropped (`tailwindcss-animate` is in use).
+"Verified" below means shown on the live database, with counts only; the rest
+is from reading the code, with file and line. The backend behind
+`api.altfragen.io` — parser, OCR, subject worker and AI backend on a Hetzner
+VPS, in a repository of its own — was reviewed the same day by a separate
+agent (read-only, at its commit `6dbdeb0`); its findings are merged below and
+marked _backend review_. Not reviewed: settings that live only in dashboards —
+Supabase Auth ("Confirm email", the redirect allow-list), Netlify headers,
+`verify_jwt` per function — and the VPS host itself (its `.env`, firewall,
+what actually runs).
+
+The order is the suggested order of work. How to split it across agents in
+this repository and the backend's, and the contract between the two, is in
+`docs/cross-repo-plan.md`.
+
+### 1. Security
+
+**Anyone can make themselves a member of any university** (verified). The
+`profiles` policies let a user delete their own row and insert a new one, and
+the insert check pins only `is_admin` and `is_premium` — so `university_id`
+and `is_email_verified` are the user's to choose. In a rolled-back test, a user
+of another university deleted and re-inserted their profile as a verified
+member of the largest one. The `questions` policies then give them what every
+member has: read, update and **delete** on all 23,600 of its shared questions,
+and the same for the university's comments. The fix is in the database: drop
+the user INSERT and DELETE policies on `profiles` (`handle_new_user` creates
+the row; account deletion belongs in an Edge Function, below), and keep
+`university_id` and `is_email_verified` out of the user's reach — a trigger
+that derives them from `auth.users`, or column grants. Independently of that,
+a member should not be able to delete or take over other people's shared
+questions: delete for the owner (and moderators), and an update check that
+keeps `user_id`, `visibility` and `university_id` as they are for non-owners.
+This extends the visibility item in section 2.
+
+**AI commentary on private questions is readable by every signed-in user**
+(verified). `ai_answer_comments` and `ai_commentary_summaries` have a `true`
+read policy. 9,218 comments and 2,653 summaries belong to private questions,
+and 4,534 of those comments carry a regenerated copy of the private question
+text. The read policy should follow the question's own visibility (the
+`questions` predicate, through the foreign key). This is separate from the
+allowance question further down: that one is about free users, this one is
+about other people's private content.
+
+**Edge Functions that act for whoever calls them.** Six never verify the
+caller (`getUser` appears in none of them), and the publishable key — public
+by design — is enough to pass the platform's `verify_jwt` gate:
+
+- `dispatch-next-ai-commentary-batch` and `reconcile-stuck-ai-commentary-jobs`:
+  anyone can trigger paid AI batches (100 jobs per call, leases up to 24 h) or
+  dead-letter jobs. Both list an `x-cron-secret` header in CORS and never read
+  it (`dispatch:9`, `reconcile:9`).
+- `process-pdf`: takes `userId` and `visibility` from the form
+  (`process-pdf/index.ts:52`), so anyone can put questions into another user's
+  account and university pool. `OCRUpload.tsx:158-181` posts the same ids
+  straight to `api.altfragen.io` with no credential at all.
+- `assign-subjects` and `reassign-subjects`: unauthenticated job creation with
+  the service key, attributed to any user id; reassign is the admin panel's
+  action and rewrites subjects across a university.
+- `check-pdf-status`: an unencoded task id is put into the upstream URL
+  (`:64,92`), reaching other paths on `api.altfragen.io`.
+  Each needs the caller from the verified token (and `is_admin` for reassign),
+  and the cron-called two a shared secret. This is the per-function
+  authorization the API key migration needs anyway (last item).
+
+**The backend's own endpoints are open as well** (_backend review_).
+Authenticating the Edge Functions is not enough, because the backend can be
+called directly, and its repository is public on GitHub and documents the
+endpoints:
+
+- **Uploads:** `POST /parser/upload` and `POST /ocr-service/process` have no
+  authentication. They take the user id, `university_id` and `visibility`
+  from the form and insert questions with a privileged key. Anyone can plant
+  questions in any account, any university's pool, or the public pool. OCR
+  also costs one or more Mistral calls per request, and it answers on
+  plain-HTTP port 8002 as well.
+- **AI runs:** `/ai/submit`, `/ai/run` and `/ai/consume` need no credential.
+  Each call starts another background run, nothing stops runs from
+  overlapping, and `/submit` and `/run` claim questions outside the queue.
+- **Subject worker:** it does whatever a `subject_jobs` row says. A job with
+  `university_id` null or `"all"` spans every university, private questions
+  included, and `available_subjects[0]` is written verbatim whenever the
+  model's answer is invalid.
+
+The fix spans both sides:
+
+- **Backend:** verify the Supabase JWT and take the user from it and the
+  university from `profiles`; require a token or secret on the `/ai/*` and
+  worker routes, compared in constant time, with a run lock; accept reassign
+  jobs only from admins.
+- **App:** `OCRUpload` and `process-pdf` send the user's token; pg_cron sends
+  its token from Vault.
+- **First step:** make the backend repository private until this ships.
+
+**A third-party script runs on every page.** `index.html:53` loads
+`https://cdn.gpteng.co/gptengineer.js` — Lovable's editor script — in
+production, unpinned, with no integrity hash. It can read the Supabase session
+from `localStorage`. There is no Content-Security-Policy and no
+`frame-ancestors`, so the app can also be framed. Remove the script; add
+`public/_headers`.
+
+**Storage.** (verified)
+
+- The `questions` bucket is **public** and holds 43 uploaded exam PDFs. OCR
+  stores each one there to hand Mistral a URL, and never deletes it. 42 are
+  named `ocr_temp_` plus 64 random bits, so they cannot be guessed, but any
+  URL that leaks downloads (_backend review_). Nothing needs the bucket
+  public: give Mistral a short-lived signed URL or the file inline, delete
+  the file after OCR, make the bucket private, and remove the stored PDFs.
+- `exam-images` (2,161 images, ~800 MB): any signed-in user may upload any
+  file of any size and type, and read every image, including those of private
+  questions.
+- Policies grant public read and any upload on `question_attachments` and
+  `question_images`, buckets that do not exist — they would apply the moment
+  one is created. Drop them.
+
+**Stripe webhook.** It returns 200 after swallowing failed writes — the
+credit ledger (`stripe-webhook/index.ts:540-546`), the `subscribers` upsert,
+`is_premium` — so Stripe never retries and a paid purchase can go missing. It
+grants on `checkout.session.completed` without checking `payment_status`, and
+handles no refund or dispute. Subscription events are applied from the payload
+alone, so a late `active` after `deleted` re-grants access. The billing portal
+finds the Stripe customer by e-mail (`customer-portal:45`); if "Confirm email"
+is off in Supabase Auth, an unverified sign-up with someone else's address
+opens their portal — check the setting.
+
+**The VPS** (_backend review_).
+
+- **Exposed ports:** Prometheus (port 9090, no authentication, lifecycle API
+  on), Grafana (port 3000; the password defaults to `admin` if it was never
+  set) and OCR (port 8002) listen on all interfaces. Docker bypasses ufw.
+- **Memory:** request bodies are read whole into memory with no size limit at
+  Caddy or in the parser, and the containers have no memory limits. One huge
+  upload can exhaust the host, and there is no restart policy to bring it
+  back.
+- **Dependencies:** the parser pins FastAPI and Starlette versions with known
+  denial-of-service CVEs (`pip-audit`: 51 advisories in 7 packages).
+- **Containers:** all services get every secret and run as root, with their
+  source mounted writable.
+- **Fixes:** bind the ports to localhost, limit the body size and memory,
+  restart unless stopped, upgrade, give each service its own env file, then
+  rotate keys.
+
+**Smaller.** A role `Hetzner VPS` has `BYPASSRLS`; nothing on the VPS logs in
+with it, but the parser's `SUPABASE_KEY` probably carries it as its role
+(inferred — decode the key's payload on the host), which would let that key
+bypass RLS everywhere, not only on `exam-images`. The disposable-address
+check runs only in the browser and fails open (`Auth.tsx:179-210`). Edge
+Functions return raw error messages and log e-mail addresses. Admin-set
+campaign URLs are opened without a scheme check (`CampaignBanner.tsx:93`).
+Legacy anon JWTs are in the git history; they are public by design, but they
+are what keeps the functions above callable until the legacy keys go.
+
+### 2. Behaviour that is broken or loses data
+
+**Profile updates have never worked** (verified). The `profiles` UPDATE policy
+reads `profiles` in its own check, and Postgres rejects every update with
+"infinite recursion detected in policy". So the browser's writes of
+`is_email_verified` fail (harmlessly — a trigger keeps it), and so does the
+sign-up form's marketing consent: since February, 64 of 516 new users ticked
+it, and not one profile records it — it survives only in the sign-up
+metadata, without a timestamp. Fix the policy (with the first security item),
+then backfill from the metadata.
+
+**Deleting an account half-deletes it.** `AccountService.ts:44-98` deletes
+the user's questions — university-shared ones included, though the UI says
+private — then progress, preferences and the profile, and then calls
+`auth.admin.deleteUser` from the browser, which needs the service key and
+fails. The user sees an error; the account remains without a profile.
+Account deletion belongs in an Edge Function that authenticates the caller.
+
+**Answers in saved sessions can be lost.** `recordAttempt`
+(`TrainingSessionService.ts:241-327`) reads the row, then inserts or updates
+`attempts_count + 1`; two tabs or quick answers race, and the caller swallows
+every error by design (`QuestionDisplayWithAI.tsx:428-431`), so a failed save
+is invisible while the session moves on. One database function with
+`INSERT … ON CONFLICT DO UPDATE`, and a visible error. This is the write that
+CLAUDE.md already calls the one that matters most and has no spec.
+
+**The session runner loses questions.** `fetchQuestionDetails`
+(`DatabaseService.ts:322-360`) wraps query builders in `Promise.allSettled`;
+they never reject, so the 30% failure rule is dead and a failed batch drops up
+to 300 questions with a log line. The runner indexes `question_ids` but
+renders the loaded list, so after a gap it shows the wrong question and the
+session never reaches `completed`. Its load effect also refetches on every
+`updated_at` change and resets the index from a stale value, so quick clicks
+on "Weiter" can jump back (`TrainingSessionRunner.tsx:28-40`).
+
+**Rating a question's difficulty counts as answering it.** It inserts a
+`user_progress` row with `attempts_count: 0` (`UserProgressService.ts:424`),
+and the "new only" filters and dashboard counts treat any row as an answer.
+The one-off training flow that used to write `user_progress` is unreachable
+(`Training.tsx:27` reads a `localStorage` key nothing writes), so these rating
+rows are now that table's only new writes.
+
+**Uploads mix old and new.** After processing, the batch and OCR uploads
+re-read "all my questions with this file name" (`BatchPDFUpload.tsx:142-146`),
+so a re-upload of the same file shows old and new rows and the review
+overwrites the old ones. The "batches of 20" start every request at once
+(`:332-367`). After the AI subject job finishes, the review keeps the stale
+subject in memory and saves it over the job's result.
+
+**Search pages are wrong.** The same range is applied to each of three scope
+queries and the results concatenated (`QuestionSearchService.ts:190-219`): a
+page holds up to three pages' worth, the total is overstated, sorts have no
+`id` tie-breaker, a failed scope vanishes silently, and its row mapping is a
+hand copy without the case fields.
+
+**Failures that look like data.** A failed progress read becomes "never
+answered" (`UserProgressService.ts:141-146`), so a "new only" session includes
+answered questions. A failed profile read leaves `universityId` null, so the
+user silently sees only their own questions (`AuthContext.tsx:117`). A failed
+subscription read downgrades a paying user to free, and the previous user's
+entitlement survives a sign-out until the next read lands
+(`SubscriptionContext.tsx:78-82,242-246`).
+
+**Smaller.**
+
+- Deleting an exam deletes its sessions and the exam in separate requests.
+- Exams link to several exam names joined with `', '`, so a name containing a
+  comma splits.
+- Two quick preference changes overwrite each other
+  (`UserPreferencesContext.tsx:50-62`).
+- Saving a private note duplicates older notes into it
+  (`CommentsSection.tsx:51-89`).
+- "Ignore" on a question already marked unclear un-marks it.
+- Exam analytics shows "NaN%" for an exam without questions.
+- Exam days count as overdue from 02:00, because `due_date` is parsed as UTC
+  midnight; "today" on the dashboard is UTC as well.
+- Other authors' comments show as "Unbekannt", because their `profiles` rows
+  are not readable.
+- `/training/sessions` loads the whole dashboard data set for a dialog that
+  never opens.
+
+**Enforce visibility and `university_id` in the database.** Nothing on the
+server keeps them consistent; `updateQuestion` does it in the client. A check
+constraint — `(visibility = 'university') = (university_id is not null)` —
+would make the rule hold for every writer. One question violates it today
+(shared, without a university, from before the editor fix); it has to be
+repaired or set back to private before the constraint can be added.
+`process-pdf` can create more: it forwards `visibility = 'university'` without
+a university when the profile lookup fails (`process-pdf/index.ts:75-81`). The
+update policy's gap is now part of the first security item.
+
+**`getFilterOptions` runs into the row cap.** `QuestionSearchService` builds
+the search filters' subject and exam-name lists from full reads of the
+`subject` and `exam_name` columns, unordered, in one request each — twelve
+reads, ~96k rows for the large university to produce ~120 names. Past 20,000
+rows options go missing at random. `list_question_subjects()` covers the
+subjects as they are visible under RLS; the per-scope lists here want the same
+treatment, or `listExamNameCounts`'s paged read.
+
+**Decide which progress row wins.** Answers live in two tables: `user_progress`
+(one row per question, written by one-off runs) and `session_question_progress`
+(one row per session and question, written by saved sessions). A question can
+have rows in both, and the codebase carries two rules for which one counts —
+the session row always, or the most recent row. `ProgressPreference` in
+`UserProgressService` now holds both, so the disagreement sits in one place
+instead of five — but it is still a disagreement: of the 31.7k questions with
+rows in both tables, 15.1k have a newer `user_progress` row, and the training
+filters report the older session result for them. Picking one rule changes
+numbers users see, so it wants a deliberate decision, not a refactor. The
+rating rows above belong in the same decision.
+
 **The AI commentary pipeline has stood still since 1 June.** A plan for it
 is still to be made with the owner; this is where it stands (2026-10-03,
 counts only):
@@ -360,62 +628,94 @@ counts only):
   from 12 December to 16 May, all with expired leases, count against 9 users
   for as long as they stay stuck. Recovering them is the reconciler's job
   (`reconcile-stuck-ai-commentary-jobs`), but no cron job calls it.
+- **Why jobs get stuck** (_backend review_; the link to the 313 is
+  inferred): the backend answers `/process-batch` with 202 before doing any
+  work. So the dispatcher's rollback on a non-2xx reply only ever catches
+  authentication errors, and rolling back on a timeout would be unsafe,
+  because the batch may still run. Once questions are `processing`, nothing
+  resets them when a provider submit throws, a batch ends `expired`, `FAILED`
+  or `TIMEOUT_EXCEEDED`, or a model answers with an error. Every failure path
+  in the backend has to reset the job, the quota count should count only
+  live leases, and a one-off update has to release today's stuck rows.
+- The reconciler's updates have no status or lease predicate, so a job
+  re-claimed between its read and its write is reset and runs twice.
 - A second cron job, `AI comments comsume` (every 7 minutes), is active: it
   posts to `https://api.altfragen.io/ai/consume`, without authentication and
-  with a 1-second timeout, and gets 200 or 202. That service is not in this
-  repository, and what it does is unknown here.
+  with a 1-second timeout, and gets 200 or 202. It polls open provider
+  batches and writes their results: comments, statuses and quota
+  (_backend review_). It answers 202 at once, so the timeout is harmless. It
+  must keep running while any batch is open, but with a token.
 - `ai_commentary_batch_jobs.status` mixes the providers' own vocabularies
   (`completed`, `failed`, `FAILED`, `JOB_STATE_FAILED`, `SUCCESS`,
   `TIMEOUT_EXCEEDED`, `expired`), so a status check against one of them misses
-  the rest.
+  the rest. The backend stores whatever state the provider reports. `SUCCESS`
+  comes from code before November 2025, which marked successful Mistral
+  batches that way without reading their results.
+- **Other backend findings** (_backend review_):
+  - Any error text containing `429`, `quota` or `billing` switches
+    `feature_enabled` off for everyone. The flag is on today, so that is not
+    why the pipeline stopped; the cron job is.
+  - Comments and quota ledger rows are written read-then-write, so
+    overlapping runs duplicate them. Unique keys are needed on
+    `ai_answer_comments(question_id)` and the ledger.
+  - The backend never writes `ai_commentary_summaries`. Its 19k rows come
+    from elsewhere or from the past.
 - `ai_commentary_claim_next_batch` is executable by the service role only
   (see Done). That is proven in the database, not by a live run, because the
-  dispatcher has not run since.
-
-**Remove the exam reconstruction's leftovers.** Thirteen `exam_recon_*`
-functions remain in `public`, nine of them `SECURITY DEFINER`, but the tables
-they work on exist in no schema, so every call fails. Nobody can call them any
-more (see Done); dropping them, and anything else of that feature still in
-the database, is a cleanup of its own.
-
-**Enforce visibility and `university_id` in the database.** Nothing on the
-server keeps them consistent; `updateQuestion` does it in the client. A check
-constraint — `(visibility = 'university') = (university_id is not null)` —
-would make the rule hold for every writer. One question violates it today
-(shared, without a university, from before the editor fix); it has to be
-repaired or set back to private before the constraint can be added. The
-update policy has a gap of its own worth a look at the same time: any
-verified member of a university may update any of its shared questions,
-visibility included.
-
-**`getFilterOptions` runs into the row cap.** `QuestionSearchService` builds
-the search filters' subject and exam-name lists from full reads of the
-`subject` and `exam_name` columns, unordered, in one request each. For the
-large university those reads pass 20,000 rows, so options can go missing at
-random. `list_question_subjects()` covers the subjects as they are visible
-under RLS; the per-scope lists here want the same treatment, or
-`listExamNameCounts`'s paged read.
-
-**Decide which progress row wins.** Answers live in two tables: `user_progress`
-(one row per question, written by one-off runs) and `session_question_progress`
-(one row per session and question, written by saved sessions). A question can
-have rows in both, and the codebase carries two rules for which one counts —
-the session row always, or the most recent row. `ProgressPreference` in
-`UserProgressService` now holds both, so the disagreement sits in one place
-instead of five — but it is still a disagreement: of the 31.7k questions with
-rows in both tables, 15.1k have a newer `user_progress` row, and the training
-filters report the older session result for them. Picking one rule changes
-numbers users see, so it wants a deliberate decision, not a refactor.
+  dispatcher has not run since. Both pipeline functions are callable by anyone
+  (section 1).
 
 **Decide whether the free AI-comment allowance should be enforced.** Today it
 is a courtesy gate in the browser. The count is correct now, but its owner may
 still write it — RLS lets a user insert and update their own usage rows — and
-the comments it gates are readable by every signed-in user anyway
-(`ai_answer_comments` and `ai_commentary_summaries` have a `true` read
-policy). Enforcing the limit would mean revoking those writes, leaving
+the comments it gates are readable by every signed-in user anyway. Enforcing
+the limit would mean revoking those writes, leaving
 `increment_ai_comment_usage` as the only way to count, and serving the comments
 through something that checks the count. That changes what free users get, so
 it is a product decision before it is a technical one.
+
+### 3. Scaling
+
+**The dashboard downloads every visible question and uses none of them.**
+`Dashboard.tsx:84` takes only the loading and error flags from
+`useDashboardData`, and shows its skeleton until all rows — 16 columns, full
+question text, ~18–24 MB for a member of the large university — have arrived
+in two serial requests. A read of `questions` with that column list is the
+third-heaviest query in `pg_stat_statements` (35k calls, 227 ms mean) —
+very likely this one. Drop it from the dashboard; the session dialog needs
+six columns, or one database function that filters and picks ids.
+
+**Questions are fetched by id, with every column, millions of times.** The
+heaviest query in the database is `select questions.*` by id: 3.3 million
+calls, ~7.5 hours of database time since the statistics were reset. It
+matches `fetchQuestionDetails` (sessions, analytics) and the per-question
+reads in training. Narrow the columns, page the session runner (the current
+question ± a few), and stop re-downloading for the analytics page.
+
+**Progress lookups scale with the question pool, not with the user.**
+`UserProgressService.ts:127` asks by question id in 300-id batches, serially:
+for 24k questions that is 80 batches and 160 requests, rerun on filter
+changes. Read the user's progress by `user_id` instead.
+
+**One 1.4 MB bundle for every page.** No route is lazy-loaded
+(`App.tsx`, `MainLayout.tsx`): 1,397 kB raw, 398 kB gzip, admin pages
+included, for a visitor of the landing page. With lazy routes the entry chunk
+measured 105 kB gzip. Add a reload on `vite:preloadError`, since
+`_redirects` answers a missing chunk with HTML.
+
+**Smaller.**
+
+- **Dashboard statistics:** four of its ten reads duplicate others, are
+  unpaged, and are counted in the browser. One counting function would do.
+- **Exam analytics:** `includes` and `find` sit inside loops
+  (`ExamAnalytics.tsx:143,169`), about 2.7 s at 5,000 questions.
+- **Training:** each question costs about ten requests. They include a
+  network `getUser()` and a storage `list` search per image.
+- **Service worker:** it caches every bundle forever under one name, network
+  first, so it grows by ~1.4 MB per deploy and never speeds anything up.
+- **Startup:** `AuthContext` adds a network `getUser()` and `useAuthGuard` a
+  fixed 100 ms before the app renders. The context values are not memoized.
+- **Images:** the landing poster is a 505 kB PNG.
 
 **Stop `AuthContext` announcing the same user over and over.** It sets `user`
 from `getSession()` and again on every auth event, each time as a new object,
@@ -428,10 +728,61 @@ context keep its `user` while the id is unchanged, would end them — but this
 is the root of auth state, so it wants its own change and a careful look at
 what `USER_UPDATED` must still refresh.
 
-**Split the large files.** `ExamCohortComparisonSection.tsx` (~1300 lines),
-`QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~920),
-`admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~710). Safer
-now that CI exists, but still its own change rather than part of a feature.
+### 4. Lovable leftovers and maintainability
+
+**Lovable artefacts.** The `gptengineer.js` script (security, above) and the
+`lovable-tagger` dev plugin (`vite.config.ts:4,13`). The manifest and
+`index.html` reference images that do not exist (`/Screenshot_*.png`,
+`/og-image.png`).
+
+**Dead code.**
+
+- **Unreachable:** `PDFUpload.tsx` (no tab opens it, and it would send
+  the file as `pdf` where `process-pdf` reads `file`), and the one-off
+  training flow (`Training.tsx`, `recordAnswerAttempt`).
+- **Not called:** `AIAnswerCommentaryService.triggerProcessing` (it invokes a
+  function that does not exist), `getProcessingStats`,
+  `updateQuestionVisibility`, and the Edge Function
+  `ai-comment-credits-status`, which has no caller.
+- **Legacy writes:** the webhook still writes the legacy
+  `user_private_ai_quota` counter.
+
+**Unused dependencies.**
+
+- No imports at all: `@radix-ui/react-toast`, `baseline-browser-mapping` and
+  `caniuse-lite` (tooling, listed under `dependencies`), and `@types/papaparse`
+  (also under `dependencies`).
+- Reachable only from 14 unused `components/ui` files: `recharts`, `vaul`,
+  `input-otp`, `next-themes`, `react-resizable-panels`.
+
+**Remove the exam reconstruction's leftovers.** Thirteen `exam_recon_*`
+functions remain in `public`, nine of them `SECURITY DEFINER`, but the tables
+they work on exist in no schema, so every call fails. Nobody can call them any
+more (see Done); dropping them, and anything else of that feature still in
+the database, is a cleanup of its own. Twelve indexes have never been used
+(performance advisor); review them at the same time.
+
+**TypeScript is not strict.** `strict`, `strictNullChecks` and `noImplicitAny`
+are off (`tsconfig.app.json:18-21`, `tsconfig.json:9-14`). Most defects in
+section 2 are of the kind `strictNullChecks` reports — a field read from a
+response that may be null, an error that is never looked at. Turn it on per
+directory, services first, with the same ratchet as lint.
+
+**No safety nets.** No error boundary, so one render error blanks the app.
+Unknown routes silently redirect to the dashboard. No global query error
+handler. About 20 components still fetch in `useEffect` instead of TanStack
+Query.
+
+**Edge Functions on old foundations.** `supabase-js@2.7.1`, `std@0.168.0` and
+an `xhr` polyfill in `assign-subjects`, `reassign-subjects` and `process-pdf`;
+`// @ts-nocheck` on the dispatcher and the reconciler.
+
+**Split the large files.** `ExamCohortComparisonSection.tsx` (~1200 lines),
+`QuestionDisplayWithAI.tsx` (~1100), `pages/Auth.tsx` (~880),
+`admin/CampaignManagement.tsx` (~890), `pages/ExamAnalytics.tsx` (~660), and
+three upload components (`PDFUpload`, `BatchPDFUpload`, `OCRUpload`, ~1,800
+lines together) that each do the same thing their own way. Safer now that CI
+exists, but still its own change rather than part of a feature.
 
 **More tests.** The harness exists and the riskiest logic is covered (see
 Done). Still uncovered: the writes of `TrainingSessionService` —
@@ -441,14 +792,16 @@ tested, what they get written into is not. A Playwright smoke
 test over login → training session → answer would cover the path most likely
 to break silently, and needs a browser harness this repo does not have yet.
 
-**A real logger.** ~255 `console.*` calls.
+**A real logger.** 244 `console.*` calls; some log e-mail addresses and user
+objects (`Auth.tsx:193,318`).
 
 **Finish the API key migration.** The outbound half is done. Who may _call_ an
 Edge Function is still the platform's `verify_jwt` gate, which understands
 legacy JWTs only, so the legacy keys cannot be disabled yet. Doing so means
 `verify_jwt = false` plus per-function authorization — Supabase's
 `@supabase/server` SDK is built for this. It touches the checkout and webhook
-endpoints, so tests should come first.
+endpoints, so tests should come first. Section 1's unauthenticated functions
+are the same work.
 
 ## How the lint ratchet works
 
