@@ -1,1 +1,7 @@
 project_id = "ynzxzhpivcmkpipanltd"
+
+# Stripe sends no Supabase JWT; the function checks Stripe's signature instead.
+# With verify_jwt on, the gateway answers every webhook with 401 and no purchase
+# is ever recorded -- see the stripe-webhook rule in CLAUDE.md.
+[functions.stripe-webhook]
+verify_jwt = false

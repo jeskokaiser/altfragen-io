@@ -106,6 +106,15 @@ platform's `verify_jwt` gate, which understands legacy JWTs only, so callers
 each function authorizes requests itself. Disabling the legacy keys is
 therefore a separate piece of work, not a flip of a switch.
 
+**`stripe-webhook` deploys with `verify_jwt = false`**, set in
+`supabase/config.toml`. Stripe sends no JWT; the function checks Stripe's
+signature instead. The MCP server's `deploy_edge_function` ignores
+`config.toml` and defaults to `true`, so pass `verify_jwt: false` explicitly.
+A deploy that missed it blocked every webhook for five weeks in 2026: two
+lifetime purchases went ungranted and eight cancellations kept premium. After
+any deploy of it, an unsigned `POST` must answer 400 ("No stripe-signature
+header"), not 401.
+
 ## The lint ratchet
 
 `npm run lint` passes with zero errors and caps warnings at a fixed number
