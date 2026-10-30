@@ -207,10 +207,9 @@ serve(async (req) => {
     });
   }
 
-  // Supabase Edge Functions require authentication via apikey query parameter
-  // NOTE: Set "Verify JWT with legacy secret" OFF in Edge function details in Supabase
-  // The webhook URL in Stripe MUST include: ?apikey=[your-anon-key]
-  // This is required by Supabase's gateway before the request reaches our function
+  // This function must be deployed with verify_jwt = false (supabase/config.toml):
+  // Stripe sends no JWT, so with the gateway check on, every webhook is a 401 that
+  // never reaches this code. The Stripe signature check below is the auth.
   const url = new URL(req.url);
   const apikeyParam = url.searchParams.get('apikey');
   const apikeyHeader = req.headers.get('apikey');
@@ -225,14 +224,6 @@ serve(async (req) => {
     hasAuthHeader: !!authHeader,
     url: req.url,
   });
-
-  // Note: If you're still getting 401, the Supabase gateway is blocking the request
-  // BEFORE it reaches this code. This means the apikey parameter is not in the webhook URL.
-  //
-  // SOLUTION: In Stripe Dashboard → Webhooks → Your endpoint
-  // The URL MUST be: https://[project].supabase.co/functions/v1/stripe-webhook?apikey=[anon-key]
-  //
-  // Get your anon key from: Supabase Dashboard → Settings → API → anon public key
 
   const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
