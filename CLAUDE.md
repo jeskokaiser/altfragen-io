@@ -10,6 +10,8 @@ which in the commit message.
 This file is the conventions. `docs/modernisation.md` is the plan: what has been
 cleaned up, what is next, and why. Read it before starting a larger change, and
 update it when you finish one.
+`docs/architecture.md` is the map of the whole system across this repository
+and the backend.
 
 ## Commands
 

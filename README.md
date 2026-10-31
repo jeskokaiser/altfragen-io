@@ -68,7 +68,7 @@ recognisable in the dashboard.
 ```bash
 npm ci        # not npm install -- the lock file is authoritative
 npm run dev   # http://localhost:8080
-npm run verify   # typecheck + lint + format check + build
+npm run verify   # typecheck, test, lint, format check, build
 ```
 
 `npm run verify` is exactly what CI runs, so a green run locally means a green
@@ -91,11 +91,15 @@ supabase functions deploy --project-ref <project-ref>
 and the parts that carry risk. It is written for AI coding agents — Claude Code
 and Cursor both read it — but it is the fastest orientation for a human too.
 
+`docs/architecture.md` is the map of the whole system: the app, the Edge
+Functions, Supabase and the backend services in
+[altfragen-io-backend](https://github.com/jeskokaiser/altfragen-io-backend).
 `docs/modernisation.md` records what has been cleaned up and what is still
 outstanding.
 
-**There are no tests yet.** Typecheck and build passing says nothing about
-behaviour, so check changes in the browser before opening a pull request.
+**Test coverage is thin.** Vitest specs cover the services and a few pure
+modules, not React or the main write paths (see `CLAUDE.md`), so check changes
+in the browser before opening a pull request.
 
 ## Tech stack
 
