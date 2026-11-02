@@ -14,6 +14,7 @@ interface MultiModelAICommentProps {
 const newModelNames: { key: keyof AICommentaryData['models']; displayName: string }[] = [
   { key: 'chatgpt', displayName: 'ChatGPT' },
   { key: 'new-gemini', displayName: 'Gemini' },
+  { key: 'new-claude', displayName: 'Claude' },
   { key: 'mistral', displayName: 'Mistral' },
   { key: 'perplexity', displayName: 'Perplexity' },
   { key: 'deepseek', displayName: 'DeepSeek' },
@@ -39,6 +40,7 @@ export const MultiModelAIComment: React.FC<MultiModelAICommentProps> = ({
   const hasNewModels = !!(
     commentaryData.models.chatgpt ||
     commentaryData.models['new-gemini'] ||
+    commentaryData.models['new-claude'] ||
     commentaryData.models.mistral ||
     commentaryData.models.perplexity ||
     commentaryData.models.deepseek

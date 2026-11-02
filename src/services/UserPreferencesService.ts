@@ -41,7 +41,7 @@ export type StatisticsDateRange = {
   end?: string; // ISO date string
 };
 
-export type EnhancedAIVersion = 'none' | 'chatgpt' | 'gemini';
+export type EnhancedAIVersion = 'none' | 'chatgpt' | 'gemini' | 'claude';
 
 export interface UserPreferences {
   immediateFeedback: boolean;
@@ -70,7 +70,14 @@ export const DEFAULT_KEYBOARD_BINDINGS: KeyboardBindings = {
   difficulty5: 'Shift+5',
 };
 
-export const DEFAULT_AI_MODELS = ['chatgpt', 'new-gemini', 'mistral', 'perplexity', 'deepseek'];
+export const DEFAULT_AI_MODELS = [
+  'chatgpt',
+  'new-gemini',
+  'new-claude',
+  'mistral',
+  'perplexity',
+  'deepseek',
+];
 
 /** The preferences of a user who has not changed anything, as a fresh copy. */
 export const defaultUserPreferences = (): UserPreferences => ({
@@ -138,7 +145,7 @@ const toSelectedAIModels = (stored: Json): string[] =>
   Array.isArray(stored) ? stored.filter(isString) : [...DEFAULT_AI_MODELS];
 
 const toEnhancedAIVersion = (stored: string | null): EnhancedAIVersion =>
-  stored === 'chatgpt' || stored === 'gemini' ? stored : 'none';
+  stored === 'chatgpt' || stored === 'gemini' || stored === 'claude' ? stored : 'none';
 
 export const toUserPreferences = (row: PreferencesRow): UserPreferences => ({
   immediateFeedback: row.immediate_feedback ?? false,

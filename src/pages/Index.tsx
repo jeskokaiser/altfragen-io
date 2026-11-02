@@ -171,7 +171,7 @@ const Index = () => {
           <FeatureCard
             icon={<Brain className="w-6 h-6" />}
             title="Multi-Model KI"
-            description="5 KI-Modelle (ChatGPT, Gemini, Mistral, Perplexity, DeepSeek) für umfassende Erklärungen jeder Frage."
+            description="5 KI-Modelle (ChatGPT, Gemini, Claude, Mistral, Perplexity) für umfassende Erklärungen jeder Frage."
             gradient="from-emerald-500 to-teal-500"
           />
           <FeatureCard
@@ -358,14 +358,14 @@ const Index = () => {
                 </h2>
                 <p className="text-lg text-slate-600 mb-8 leading-relaxed">
                   Jede Frage wird von fünf verschiedenen KI-Modellen analysiert: ChatGPT, Gemini,
-                  Mistral, Perplexity und DeepSeek. Vergleiche ihre Erklärungen, wähle dein
+                  Claude, Mistral und Perplexity. Vergleiche ihre Erklärungen, wähle dein
                   bevorzugtes Modell und verstehe jede Antwort im Detail.
                 </p>
                 <div className="space-y-4">
                   <FeatureItem
                     icon={<Sparkles className="w-5 h-5" />}
                     title="5 KI-Modelle"
-                    description="ChatGPT, Gemini, Mistral, Perplexity und DeepSeek im Vergleich"
+                    description="ChatGPT, Gemini, Claude, Mistral und Perplexity im Vergleich"
                   />
                   <FeatureItem
                     icon={<Target className="w-5 h-5" />}

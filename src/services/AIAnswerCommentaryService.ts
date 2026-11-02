@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { AICommentarySummaryExtended, AICommentaryData } from '@/types/AIAnswerComments';
+import { AICommentarySummaryExtended, AICommentaryData, AISource } from '@/types/AIAnswerComments';
 
 // Define the expected structure for ai_answer_comments
 interface AIAnswerCommentsRow {
@@ -51,6 +51,19 @@ interface AIAnswerCommentsRow {
   gemini_regenerated_option_c?: string | null;
   gemini_regenerated_option_d?: string | null;
   gemini_regenerated_option_e?: string | null;
+  claude_chosen_answer?: string | null;
+  claude_new_general_comment?: string | null;
+  claude_new_comment_a?: string | null;
+  claude_new_comment_b?: string | null;
+  claude_new_comment_c?: string | null;
+  claude_new_comment_d?: string | null;
+  claude_new_comment_e?: string | null;
+  claude_regenerated_question?: string | null;
+  claude_regenerated_option_a?: string | null;
+  claude_regenerated_option_b?: string | null;
+  claude_regenerated_option_c?: string | null;
+  claude_regenerated_option_d?: string | null;
+  claude_regenerated_option_e?: string | null;
   mistral_chosen_answer?: string | null;
   mistral_general_comment?: string | null;
   mistral_comment_a?: string | null;
@@ -65,6 +78,7 @@ interface AIAnswerCommentsRow {
   perplexity_comment_c?: string | null;
   perplexity_comment_d?: string | null;
   perplexity_comment_e?: string | null;
+  perplexity_sources?: AISource[] | null;
   deepseek_chosen_answer?: string | null;
   deepseek_general_comment?: string | null;
   deepseek_comment_a?: string | null;
@@ -76,6 +90,19 @@ interface AIAnswerCommentsRow {
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * Until 2026-11 the pipeline wrote a failed model call into the comment columns
+ * as "Fehler: ..." (several hundred rows, mostly Perplexity). Those are not
+ * comments, so they are treated as missing.
+ */
+export const withoutErrorText = <T extends object>(row: T): T =>
+  Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [
+      key,
+      typeof value === 'string' && value.startsWith('Fehler:') ? null : value,
+    ]),
+  ) as T;
 
 export class AIAnswerCommentaryService {
   static async getCommentaryForQuestion(questionId: string): Promise<AICommentaryData | null> {
@@ -91,7 +118,7 @@ export class AIAnswerCommentaryService {
           .maybeSingle();
 
         if (!answerError && answerCommentsData) {
-          answerComments = answerCommentsData as AIAnswerCommentsRow;
+          answerComments = withoutErrorText(answerCommentsData as AIAnswerCommentsRow);
         }
       } catch (answerError) {
         console.log('Direct answer comments query failed:', answerError);
@@ -127,7 +154,8 @@ export class AIAnswerCommentaryService {
         answerComments?.mistral_general_comment ||
         answerComments?.perplexity_general_comment ||
         answerComments?.deepseek_general_comment ||
-        answerComments?.gemini_new_general_comment
+        answerComments?.gemini_new_general_comment ||
+        answerComments?.claude_new_general_comment
       );
 
       // Transform data into structured format
@@ -163,6 +191,20 @@ export class AIAnswerCommentaryService {
           };
         }
 
+        if (answerComments?.claude_new_general_comment || answerComments?.claude_new_comment_a) {
+          models['new-claude'] = {
+            general: answerComments.claude_new_general_comment || undefined,
+            chosenAnswer: answerComments.claude_chosen_answer || undefined,
+            answers: {
+              a: answerComments.claude_new_comment_a || undefined,
+              b: answerComments.claude_new_comment_b || undefined,
+              c: answerComments.claude_new_comment_c || undefined,
+              d: answerComments.claude_new_comment_d || undefined,
+              e: answerComments.claude_new_comment_e || undefined,
+            },
+          };
+        }
+
         if (answerComments?.mistral_general_comment || answerComments?.mistral_comment_a) {
           models.mistral = {
             general: answerComments.mistral_general_comment || undefined,
@@ -181,6 +223,7 @@ export class AIAnswerCommentaryService {
           models.perplexity = {
             general: answerComments.perplexity_general_comment || undefined,
             chosenAnswer: answerComments.perplexity_chosen_answer || undefined,
+            sources: answerComments.perplexity_sources || undefined,
             answers: {
               a: answerComments.perplexity_comment_a || undefined,
               b: answerComments.perplexity_comment_b || undefined,
@@ -297,6 +340,19 @@ export class AIAnswerCommentaryService {
               gemini_regenerated_option_c: answerComments.gemini_regenerated_option_c,
               gemini_regenerated_option_d: answerComments.gemini_regenerated_option_d,
               gemini_regenerated_option_e: answerComments.gemini_regenerated_option_e,
+              claude_chosen_answer: answerComments.claude_chosen_answer,
+              claude_new_general_comment: answerComments.claude_new_general_comment,
+              claude_new_comment_a: answerComments.claude_new_comment_a,
+              claude_new_comment_b: answerComments.claude_new_comment_b,
+              claude_new_comment_c: answerComments.claude_new_comment_c,
+              claude_new_comment_d: answerComments.claude_new_comment_d,
+              claude_new_comment_e: answerComments.claude_new_comment_e,
+              claude_regenerated_question: answerComments.claude_regenerated_question,
+              claude_regenerated_option_a: answerComments.claude_regenerated_option_a,
+              claude_regenerated_option_b: answerComments.claude_regenerated_option_b,
+              claude_regenerated_option_c: answerComments.claude_regenerated_option_c,
+              claude_regenerated_option_d: answerComments.claude_regenerated_option_d,
+              claude_regenerated_option_e: answerComments.claude_regenerated_option_e,
               mistral_chosen_answer: answerComments.mistral_chosen_answer,
               mistral_general_comment: answerComments.mistral_general_comment,
               mistral_comment_a: answerComments.mistral_comment_a,
@@ -311,6 +367,7 @@ export class AIAnswerCommentaryService {
               perplexity_comment_c: answerComments.perplexity_comment_c,
               perplexity_comment_d: answerComments.perplexity_comment_d,
               perplexity_comment_e: answerComments.perplexity_comment_e,
+              perplexity_sources: answerComments.perplexity_sources || undefined,
               deepseek_chosen_answer: answerComments.deepseek_chosen_answer,
               deepseek_general_comment: answerComments.deepseek_general_comment,
               deepseek_comment_a: answerComments.deepseek_comment_a,

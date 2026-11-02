@@ -1,5 +1,5 @@
 import React from 'react';
-import { AICommentaryData } from '@/types/AIAnswerComments';
+import { AICommentaryData, AISource } from '@/types/AIAnswerComments';
 import ReactMarkdown from 'react-markdown';
 import { Badge } from '@/components/ui/badge';
 import { Brain } from 'lucide-react';
@@ -14,6 +14,7 @@ interface GeneralAICommentsProps {
 const newModelNames: { key: keyof AICommentaryData['models']; displayName: string }[] = [
   { key: 'chatgpt', displayName: 'ChatGPT' },
   { key: 'new-gemini', displayName: 'Gemini' },
+  { key: 'new-claude', displayName: 'Claude' },
   { key: 'mistral', displayName: 'Mistral' },
   { key: 'perplexity', displayName: 'Perplexity' },
   { key: 'deepseek', displayName: 'DeepSeek' },
@@ -41,6 +42,7 @@ export const GeneralAIComments: React.FC<GeneralAICommentsProps> = ({
   const hasNewModels = !!(
     commentaryData.models.chatgpt ||
     commentaryData.models['new-gemini'] ||
+    commentaryData.models['new-claude'] ||
     commentaryData.models.mistral ||
     commentaryData.models.perplexity ||
     commentaryData.models.deepseek
@@ -67,10 +69,14 @@ export const GeneralAIComments: React.FC<GeneralAICommentsProps> = ({
         ? {
             modelName: model.displayName,
             comment: comment,
+            sources: modelData?.sources ?? [],
           }
         : null;
     })
-    .filter((c): c is { modelName: string; comment: string } => c !== null && !!c.comment);
+    .filter(
+      (c): c is { modelName: string; comment: string; sources: AISource[] } =>
+        c !== null && !!c.comment,
+    );
 
   if (generalComments.length === 0) {
     return null;
@@ -84,7 +90,7 @@ export const GeneralAIComments: React.FC<GeneralAICommentsProps> = ({
       </div>
 
       <div className="border rounded-lg p-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 space-y-4">
-        {generalComments.map(({ modelName, comment }) => (
+        {generalComments.map(({ modelName, comment, sources }) => (
           <div
             key={modelName}
             className="p-3 border rounded-md bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
@@ -128,6 +134,26 @@ export const GeneralAIComments: React.FC<GeneralAICommentsProps> = ({
             >
               {comment!}
             </ReactMarkdown>
+            {sources.length > 0 && (
+              <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+                <span className="font-semibold">Quellen:</span>
+                <ol className="mt-1 space-y-0.5">
+                  {sources.map((source, index) => (
+                    <li key={source.url}>
+                      [{source.id ?? index + 1}]{' '}
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:text-blue-600 dark:hover:text-blue-400 break-all"
+                      >
+                        {source.title}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </div>
         ))}
       </div>

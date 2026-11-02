@@ -13,6 +13,7 @@ import { Pencil, X, Image as ImageIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import type { EnhancedAIVersion } from '@/services/UserPreferencesService';
 import { useTrainingKeyboard, TrainingKeyboardActions } from '@/hooks/useTrainingKeyboard';
 import { AmbossAnswer } from './AmbossAnswer';
 import { MultiModelAIComment } from './MultiModelAIComment';
@@ -454,8 +455,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   // Toggle ChatGPT enhanced version: if currently chatgpt, switch to none; otherwise switch to chatgpt
   const handleToggleChatGPT = () => {
     const currentVersion = preferences?.enhancedAIVersion ?? 'none';
-    const nextVersion: 'none' | 'chatgpt' | 'gemini' =
-      currentVersion === 'chatgpt' ? 'none' : 'chatgpt';
+    const nextVersion: EnhancedAIVersion = currentVersion === 'chatgpt' ? 'none' : 'chatgpt';
 
     updatePreferences({ enhancedAIVersion: nextVersion });
   };
@@ -463,8 +463,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   // Toggle Gemini enhanced version: if currently gemini, switch to none; otherwise switch to gemini
   const handleToggleGemini = () => {
     const currentVersion = preferences?.enhancedAIVersion ?? 'none';
-    const nextVersion: 'none' | 'chatgpt' | 'gemini' =
-      currentVersion === 'gemini' ? 'none' : 'gemini';
+    const nextVersion: EnhancedAIVersion = currentVersion === 'gemini' ? 'none' : 'gemini';
 
     updatePreferences({ enhancedAIVersion: nextVersion });
   };
@@ -614,6 +613,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     canUseEnhanced &&
     enhancedVersion === 'gemini' &&
     aiCommentary?.answerComments?.gemini_regenerated_question;
+  const useClaude =
+    canUseEnhanced &&
+    enhancedVersion === 'claude' &&
+    aiCommentary?.answerComments?.claude_regenerated_question;
 
   // Show loading state if AI commentary is loading and user has enhanced AI enabled
   // This prevents showing original question/options before AI-enhanced version loads
@@ -624,7 +627,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     ? aiCommentary.answerComments.chatgpt_regenerated_question
     : useGemini
       ? aiCommentary.answerComments.gemini_regenerated_question
-      : currentQuestion.question;
+      : useClaude
+        ? aiCommentary.answerComments.claude_regenerated_question
+        : currentQuestion.question;
 
   const options = (['A', 'B', 'C', 'D', 'E'] as const)
     .map((letter) => {
@@ -637,7 +642,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
       const originalEmpty = !originalText || originalText.trim() === '';
 
       // Use enhanced option if available and enabled
-      if ((useChatGPT || useGemini) && aiCommentary?.answerComments) {
+      if ((useChatGPT || useGemini || useClaude) && aiCommentary?.answerComments) {
         const optionLower = letter.toLowerCase();
 
         if (useChatGPT) {
@@ -653,6 +658,14 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
             `gemini_regenerated_option_${optionLower}` as keyof typeof aiCommentary.answerComments;
           if (aiCommentary.answerComments[geminiKey]) {
             text = aiCommentary.answerComments[geminiKey] as string;
+            // Mark as AI-generated if original was empty
+            isAIGenerated = originalEmpty;
+          }
+        } else if (useClaude) {
+          const claudeKey =
+            `claude_regenerated_option_${optionLower}` as keyof typeof aiCommentary.answerComments;
+          if (aiCommentary.answerComments[claudeKey]) {
+            text = aiCommentary.answerComments[claudeKey] as string;
             // Mark as AI-generated if original was empty
             isAIGenerated = originalEmpty;
           }
@@ -819,6 +832,12 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                     preferences.selectedAIModels?.includes('new-gemini')
                   ) {
                     modelIcons.push('new-gemini');
+                  }
+                  if (
+                    models['new-claude']?.chosenAnswer?.toUpperCase() === letter &&
+                    preferences.selectedAIModels?.includes('new-claude')
+                  ) {
+                    modelIcons.push('new-claude');
                   }
                   if (
                     models.mistral?.chosenAnswer?.toUpperCase() === letter &&

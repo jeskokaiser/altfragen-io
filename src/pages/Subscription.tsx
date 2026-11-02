@@ -196,19 +196,11 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    ChatGPT 5.2
+                    GPT-6.1 Sol
                   </a>
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Reasoning-Model, führend im relevanten{' '}
-                  <a
-                    href="https://epoch.ai/benchmarks/gpqa-diamond"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-blue-600 dark:hover:text-blue-400"
-                  >
-                    GPQA Diamond Benchmark
-                  </a>
+                  Reasoning-Modell von OpenAI (ChatGPT)
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
@@ -219,30 +211,22 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Gemini 3 Pro Preview
+                    Gemini 4 Argon
                   </a>
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Reasoning-Model, führend im relevanten{' '}
-                  <a
-                    href="https://epoch.ai/benchmarks/gpqa-diamond"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-blue-600 dark:hover:text-blue-400"
-                  >
-                    GPQA Diamond Benchmark
-                  </a>
+                  Reasoning-Modell von Google
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                   <a
-                    href="https://mistral.ai/news/magistral"
+                    href="https://mistral.ai/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Mistral Medium 3
+                    Mistral Large 4
                   </a>
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -252,23 +236,17 @@ const Subscription = () => {
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                   <a
-                    href="https://deepseek.com/"
+                    href="https://www.anthropic.com/claude"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:underline text-blue-600 dark:hover:text-blue-400"
                   >
-                    Deepseek V3
+                    Claude Sonnet 5.5
                   </a>
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Kosteneffizientes KI-Model aus China
+                  Reasoning-Modell von Anthropic
                 </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
-                <h4 className="line-through font-semibold text-gray-900 dark:text-gray-100">
-                  Grok 4
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Aktuell ausgesetzt</p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
@@ -282,7 +260,7 @@ const Subscription = () => {
                   </a>
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  KI-Model mit integrierter Webrecherche
+                  KI-Model mit Webrecherche, nennt seine Quellen
                 </p>
               </div>
             </div>

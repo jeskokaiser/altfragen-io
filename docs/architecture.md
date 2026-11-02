@@ -13,8 +13,8 @@ map; details live in the documents it links to. Written 2026-10-31.
 | Parser, OCR, subject worker, AI backend | Hetzner VPS behind Caddy, `api.altfragen.io` (proxied by Cloudflare) | `jeskokaiser/altfragen-io-backend` | by hand on the VPS: `git pull`, `docker compose up -d --build` |
 | Prometheus and Grafana                  | same VPS, `metrics.altfragen.io`                                     | backend                            | as above                                                       |
 
-External services: Stripe (payments), OpenAI, Google Gemini, Mistral,
-Perplexity and DeepSeek (AI commentary), Mistral OCR, OpenAI (subject
+External services: Stripe (payments), OpenAI, Google Gemini, Anthropic
+Claude, Mistral and Perplexity (AI commentary), Mistral OCR, OpenAI (subject
 assignment).
 
 Merging is not deploying: each row deploys on its own, and only the owner
@@ -40,8 +40,9 @@ worker, which also polls every 60 s and writes `questions.subject`.
 1. Questions wait in `ai_commentary_job_queue`.
 2. pg_cron calls `dispatch-next-ai-commentary-batch`, which leases jobs and
    posts them to `POST /ai/process-batch`.
-3. The AI backend submits provider batches (OpenAI, Gemini, Mistral) or calls
-   providers directly (Perplexity, DeepSeek).
+3. The AI backend submits provider batches (OpenAI, Gemini, Claude, Mistral)
+   or calls Perplexity's Agent API directly (with web search; its sources
+   land in `ai_answer_comments.perplexity_sources`).
 4. pg_cron calls `POST /ai/consume` every 7 minutes; results land in
    `ai_answer_comments` and `ai_commentary_summaries`.
 5. `reconcile-stuck-ai-commentary-jobs` returns jobs whose lease expired.
