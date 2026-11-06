@@ -1,7 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export type ModelName = 'chatgpt' | 'new-gemini' | 'mistral' | 'perplexity' | 'deepseek';
+export type ModelName =
+  'chatgpt' | 'new-gemini' | 'new-claude' | 'mistral' | 'perplexity' | 'deepseek';
 
 interface ModelIconProps {
   model: ModelName;
@@ -18,6 +19,11 @@ const modelConfig: Record<ModelName, { letter: string; color: string; bgColor: s
     letter: 'G',
     color: 'text-blue-700 dark:text-blue-300',
     bgColor: 'bg-blue-100 dark:bg-blue-900/40',
+  },
+  'new-claude': {
+    letter: 'A',
+    color: 'text-amber-700 dark:text-amber-300',
+    bgColor: 'bg-amber-100 dark:bg-amber-900/40',
   },
   mistral: {
     letter: 'M',

@@ -58,6 +58,21 @@ export interface AIAnswerComments {
   gemini_regenerated_option_d?: string;
   gemini_regenerated_option_e?: string;
 
+  // New Claude Comments (new-claude; the plain claude_* fields are the 2025 ones)
+  claude_chosen_answer?: string;
+  claude_new_general_comment?: string;
+  claude_new_comment_a?: string;
+  claude_new_comment_b?: string;
+  claude_new_comment_c?: string;
+  claude_new_comment_d?: string;
+  claude_new_comment_e?: string;
+  claude_regenerated_question?: string;
+  claude_regenerated_option_a?: string;
+  claude_regenerated_option_b?: string;
+  claude_regenerated_option_c?: string;
+  claude_regenerated_option_d?: string;
+  claude_regenerated_option_e?: string;
+
   // New Mistral Comments
   mistral_chosen_answer?: string;
   mistral_general_comment?: string;
@@ -75,8 +90,9 @@ export interface AIAnswerComments {
   perplexity_comment_c?: string;
   perplexity_comment_d?: string;
   perplexity_comment_e?: string;
+  perplexity_sources?: AISource[];
 
-  // New DeepSeek Comments
+  // DeepSeek Comments (no longer generated since 2026-11; old ones stay visible)
   deepseek_chosen_answer?: string;
   deepseek_general_comment?: string;
   deepseek_comment_a?: string;
@@ -110,12 +126,28 @@ export interface AICommentarySummaryExtended {
 }
 
 export type ModelName =
-  'openai' | 'claude' | 'gemini' | 'chatgpt' | 'new-gemini' | 'mistral' | 'perplexity' | 'deepseek';
+  | 'openai'
+  | 'claude'
+  | 'gemini'
+  | 'chatgpt'
+  | 'new-gemini'
+  | 'new-claude'
+  | 'mistral'
+  | 'perplexity'
+  | 'deepseek';
 export type AnswerOption = 'a' | 'b' | 'c' | 'd' | 'e';
+
+/** A web search result Perplexity used for its comment; [n] in the text refers to id. */
+export interface AISource {
+  id?: number | string;
+  title: string;
+  url: string;
+}
 
 export interface ModelComments {
   general?: string;
   chosenAnswer?: string;
+  sources?: AISource[];
   answers: {
     a?: string;
     b?: string;
@@ -134,6 +166,7 @@ export interface AICommentaryData {
     gemini?: ModelComments;
     chatgpt?: ModelComments;
     'new-gemini'?: ModelComments;
+    'new-claude'?: ModelComments;
     mistral?: ModelComments;
     perplexity?: ModelComments;
     deepseek?: ModelComments;

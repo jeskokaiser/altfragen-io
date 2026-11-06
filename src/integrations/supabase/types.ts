@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -30,12 +30,26 @@ export type Database = {
           chatgpt_regenerated_option_d: string | null
           chatgpt_regenerated_option_e: string | null
           chatgpt_regenerated_question: string | null
+          claude_chosen_answer: string | null
           claude_comment_a: string | null
           claude_comment_b: string | null
           claude_comment_c: string | null
           claude_comment_d: string | null
           claude_comment_e: string | null
           claude_general_comment: string | null
+          claude_model_version: string | null
+          claude_new_comment_a: string | null
+          claude_new_comment_b: string | null
+          claude_new_comment_c: string | null
+          claude_new_comment_d: string | null
+          claude_new_comment_e: string | null
+          claude_new_general_comment: string | null
+          claude_regenerated_option_a: string | null
+          claude_regenerated_option_b: string | null
+          claude_regenerated_option_c: string | null
+          claude_regenerated_option_d: string | null
+          claude_regenerated_option_e: string | null
+          claude_regenerated_question: string | null
           created_at: string | null
           deepseek_chosen_answer: string | null
           deepseek_comment_a: string | null
@@ -88,6 +102,7 @@ export type Database = {
           perplexity_comment_e: string | null
           perplexity_general_comment: string | null
           perplexity_model_version: string | null
+          perplexity_sources: Json | null
           processing_status: string | null
           question_id: string | null
           updated_at: string | null
@@ -107,12 +122,26 @@ export type Database = {
           chatgpt_regenerated_option_d?: string | null
           chatgpt_regenerated_option_e?: string | null
           chatgpt_regenerated_question?: string | null
+          claude_chosen_answer?: string | null
           claude_comment_a?: string | null
           claude_comment_b?: string | null
           claude_comment_c?: string | null
           claude_comment_d?: string | null
           claude_comment_e?: string | null
           claude_general_comment?: string | null
+          claude_model_version?: string | null
+          claude_new_comment_a?: string | null
+          claude_new_comment_b?: string | null
+          claude_new_comment_c?: string | null
+          claude_new_comment_d?: string | null
+          claude_new_comment_e?: string | null
+          claude_new_general_comment?: string | null
+          claude_regenerated_option_a?: string | null
+          claude_regenerated_option_b?: string | null
+          claude_regenerated_option_c?: string | null
+          claude_regenerated_option_d?: string | null
+          claude_regenerated_option_e?: string | null
+          claude_regenerated_question?: string | null
           created_at?: string | null
           deepseek_chosen_answer?: string | null
           deepseek_comment_a?: string | null
@@ -165,6 +194,7 @@ export type Database = {
           perplexity_comment_e?: string | null
           perplexity_general_comment?: string | null
           perplexity_model_version?: string | null
+          perplexity_sources?: Json | null
           processing_status?: string | null
           question_id?: string | null
           updated_at?: string | null
@@ -184,12 +214,26 @@ export type Database = {
           chatgpt_regenerated_option_d?: string | null
           chatgpt_regenerated_option_e?: string | null
           chatgpt_regenerated_question?: string | null
+          claude_chosen_answer?: string | null
           claude_comment_a?: string | null
           claude_comment_b?: string | null
           claude_comment_c?: string | null
           claude_comment_d?: string | null
           claude_comment_e?: string | null
           claude_general_comment?: string | null
+          claude_model_version?: string | null
+          claude_new_comment_a?: string | null
+          claude_new_comment_b?: string | null
+          claude_new_comment_c?: string | null
+          claude_new_comment_d?: string | null
+          claude_new_comment_e?: string | null
+          claude_new_general_comment?: string | null
+          claude_regenerated_option_a?: string | null
+          claude_regenerated_option_b?: string | null
+          claude_regenerated_option_c?: string | null
+          claude_regenerated_option_d?: string | null
+          claude_regenerated_option_e?: string | null
+          claude_regenerated_question?: string | null
           created_at?: string | null
           deepseek_chosen_answer?: string | null
           deepseek_comment_a?: string | null
@@ -242,6 +286,7 @@ export type Database = {
           perplexity_comment_e?: string | null
           perplexity_general_comment?: string | null
           perplexity_model_version?: string | null
+          perplexity_sources?: Json | null
           processing_status?: string | null
           question_id?: string | null
           updated_at?: string | null

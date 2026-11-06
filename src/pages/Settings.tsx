@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import type { EnhancedAIVersion } from '@/services/UserPreferencesService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -89,6 +90,7 @@ const Settings = () => {
   const aiModels = [
     { key: 'chatgpt', label: 'ChatGPT' },
     { key: 'new-gemini', label: 'Gemini' },
+    { key: 'new-claude', label: 'Claude' },
     { key: 'mistral', label: 'Mistral' },
     { key: 'perplexity', label: 'Perplexity' },
     { key: 'deepseek', label: 'DeepSeek' },
@@ -196,7 +198,7 @@ const Settings = () => {
           </div>
           <Select
             value={preferences.enhancedAIVersion ?? 'none'}
-            onValueChange={(value: 'none' | 'chatgpt' | 'gemini') =>
+            onValueChange={(value: EnhancedAIVersion) =>
               updatePreferences({ enhancedAIVersion: value })
             }
           >
@@ -207,6 +209,7 @@ const Settings = () => {
               <SelectItem value="none">Original</SelectItem>
               <SelectItem value="chatgpt">ChatGPT verbessert</SelectItem>
               <SelectItem value="gemini">Gemini verbessert</SelectItem>
+              <SelectItem value="claude">Claude verbessert</SelectItem>
             </SelectContent>
           </Select>
         </div>

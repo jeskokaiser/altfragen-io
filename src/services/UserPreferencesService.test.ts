@@ -108,7 +108,13 @@ describe('toUserPreferences', () => {
     ).toEqual(DEFAULT_AI_MODELS);
   });
 
-  it('reads anything but chatgpt or gemini as no enhanced version', () => {
+  it('reads anything but chatgpt, gemini or claude as no enhanced version', () => {
+    expect(
+      toUserPreferences({ ...storedRow, enhanced_ai_version: 'claude' }).enhancedAIVersion,
+    ).toBe('claude');
+    expect(
+      toUserPreferences({ ...storedRow, enhanced_ai_version: 'deepseek' }).enhancedAIVersion,
+    ).toBe('none');
     expect(toUserPreferences({ ...storedRow, enhanced_ai_version: 'none' }).enhancedAIVersion).toBe(
       'none',
     );

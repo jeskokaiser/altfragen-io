@@ -589,8 +589,8 @@ const Dashboard = () => {
                           <p className="text-xs text-muted-foreground mt-2">
                             Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit
                             allen aktivierten KI-Modellen kommentiert. Alle weiteren privaten Fragen
-                            werden im Hintergrund von Mistral und DeepSeek bearbeitet; sobald ein
-                            neuer 30-Tage-Zeitraum beginnt, werden zunächst die ältesten teilweise
+                            werden im Hintergrund von Mistral bearbeitet; sobald ein neuer
+                            30-Tage-Zeitraum beginnt, werden zunächst die ältesten teilweise
                             kommentierten Fragen mit den fehlenden Modellen ergänzt, bis das neue
                             Kontingent ausgeschöpft ist.
                           </p>

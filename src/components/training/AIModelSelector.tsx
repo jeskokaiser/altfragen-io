@@ -12,10 +12,12 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { Brain, Sparkles } from 'lucide-react';
+import type { EnhancedAIVersion } from '@/services/UserPreferencesService';
 
 const aiModels = [
   { key: 'chatgpt', label: 'ChatGPT' },
   { key: 'new-gemini', label: 'Gemini' },
+  { key: 'new-claude', label: 'Claude' },
   { key: 'mistral', label: 'Mistral' },
   { key: 'perplexity', label: 'Perplexity' },
   { key: 'deepseek', label: 'DeepSeek' },
@@ -72,12 +74,13 @@ export const AIModelSelector: React.FC = () => {
           <DropdownMenuRadioGroup
             value={enhancedVersion}
             onValueChange={(value) =>
-              updatePreferences({ enhancedAIVersion: value as 'none' | 'chatgpt' | 'gemini' })
+              updatePreferences({ enhancedAIVersion: value as EnhancedAIVersion })
             }
           >
             <DropdownMenuRadioItem value="none">Original</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="chatgpt">ChatGPT verbessert</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="gemini">Gemini verbessert</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="claude">Claude verbessert</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
