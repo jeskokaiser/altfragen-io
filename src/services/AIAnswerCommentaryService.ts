@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { AICommentarySummaryExtended, AICommentaryData, AISource } from '@/types/AIAnswerComments';
 
 // Define the expected structure for ai_answer_comments
@@ -78,7 +79,7 @@ interface AIAnswerCommentsRow {
   perplexity_comment_c?: string | null;
   perplexity_comment_d?: string | null;
   perplexity_comment_e?: string | null;
-  perplexity_sources?: AISource[] | null;
+  perplexity_sources?: Json | null;
   deepseek_chosen_answer?: string | null;
   deepseek_general_comment?: string | null;
   deepseek_comment_a?: string | null;
@@ -103,6 +104,27 @@ export const withoutErrorText = <T extends object>(row: T): T =>
       typeof value === 'string' && value.startsWith('Fehler:') ? null : value,
     ]),
   ) as T;
+
+/**
+ * The stored search results, as far as they are usable links. They come from the
+ * web, and a link is rendered from each, so only http(s) URLs pass.
+ */
+export const toAISources = (stored: Json | null | undefined): AISource[] => {
+  if (!Array.isArray(stored)) return [];
+
+  return stored.flatMap((item) => {
+    if (typeof item !== 'object' || item === null || Array.isArray(item)) return [];
+    const { id, title, url } = item;
+    if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) return [];
+    return [
+      {
+        id: typeof id === 'number' || typeof id === 'string' ? id : undefined,
+        title: typeof title === 'string' && title ? title : url,
+        url,
+      },
+    ];
+  });
+};
 
 export class AIAnswerCommentaryService {
   static async getCommentaryForQuestion(questionId: string): Promise<AICommentaryData | null> {
@@ -223,7 +245,7 @@ export class AIAnswerCommentaryService {
           models.perplexity = {
             general: answerComments.perplexity_general_comment || undefined,
             chosenAnswer: answerComments.perplexity_chosen_answer || undefined,
-            sources: answerComments.perplexity_sources || undefined,
+            sources: toAISources(answerComments.perplexity_sources),
             answers: {
               a: answerComments.perplexity_comment_a || undefined,
               b: answerComments.perplexity_comment_b || undefined,
@@ -367,7 +389,7 @@ export class AIAnswerCommentaryService {
               perplexity_comment_c: answerComments.perplexity_comment_c,
               perplexity_comment_d: answerComments.perplexity_comment_d,
               perplexity_comment_e: answerComments.perplexity_comment_e,
-              perplexity_sources: answerComments.perplexity_sources || undefined,
+              perplexity_sources: toAISources(answerComments.perplexity_sources),
               deepseek_chosen_answer: answerComments.deepseek_chosen_answer,
               deepseek_general_comment: answerComments.deepseek_general_comment,
               deepseek_comment_a: answerComments.deepseek_comment_a,

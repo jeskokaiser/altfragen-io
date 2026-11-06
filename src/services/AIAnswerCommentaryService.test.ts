@@ -4,7 +4,34 @@ vi.mock('@/integrations/supabase/client', async () => ({
   supabase: (await import('@/test/supabaseDouble')).supabaseDouble,
 }));
 
-import { withoutErrorText } from './AIAnswerCommentaryService';
+import { toAISources, withoutErrorText } from './AIAnswerCommentaryService';
+
+describe('toAISources', () => {
+  it('keeps http(s) links and falls back to the URL as title', () => {
+    expect(
+      toAISources([
+        { id: 1, title: 'AWMF', url: 'https://register.awmf.org/' },
+        { url: 'http://example.org/a' },
+      ]),
+    ).toEqual([
+      { id: 1, title: 'AWMF', url: 'https://register.awmf.org/' },
+      { id: undefined, title: 'http://example.org/a', url: 'http://example.org/a' },
+    ]);
+  });
+
+  it('drops anything that could not be a safe link', () => {
+    expect(
+      toAISources([
+        { title: 'Skript', url: 'javascript:alert(1)' },
+        { title: 'ohne URL' },
+        'kein Objekt',
+        null,
+      ]),
+    ).toEqual([]);
+    expect(toAISources(null)).toEqual([]);
+    expect(toAISources({ url: 'https://example.org/' })).toEqual([]);
+  });
+});
 
 describe('withoutErrorText', () => {
   it('treats a stored "Fehler: ..." as a missing comment and keeps everything else', () => {
