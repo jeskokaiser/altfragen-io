@@ -55,6 +55,12 @@ for entitlements in `subscribers`. It must deploy with `verify_jwt = false`.
 **Sign-up.** `validate-email` rejects disposable addresses. The university
 comes from an exact match of the email domain.
 
+**Account deletion.** The browser calls `delete-account`, which checks the
+user, cancels their Stripe subscriptions (the customer stays) and calls the
+database function `delete_user_account`. That removes the account and private
+questions in one transaction and strips the owner from shared questions. The
+function then removes the files the database function returned from Storage.
+
 ## Who calls whom, and with what
 
 The interface between the app and the backend — headers, tokens, job

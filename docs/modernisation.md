@@ -233,6 +233,12 @@ spec drives the Supabase query builder through the double in
 `src/test/supabaseDouble.ts`, which records the payload each call would have
 sent, so writes are asserted rather than the mock.
 
+**Deleting an account deletes it.** The browser used to delete rows itself and
+then call `auth.admin.deleteUser`, which needs the service key and always
+failed: the user saw an error and kept a login without a profile, 35 of them by
+2026-11-06. `delete-account` now authenticates the caller and cancels the Stripe
+subscription, and `delete_user_account` removes everything in one transaction.
+
 ## Data access into services
 
 No file outside `src/services/` queries a table or calls a database function
@@ -375,7 +381,7 @@ member of the largest one. The `questions` policies then give them what every
 member has: read, update and **delete** on all 23,600 of its shared questions,
 and the same for the university's comments. The fix is in the database: drop
 the user INSERT and DELETE policies on `profiles` (`handle_new_user` creates
-the row; account deletion belongs in an Edge Function, below), and keep
+the row; account deletion runs in the `delete-account` Edge Function), and keep
 `university_id` and `is_email_verified` out of the user's reach — a trigger
 that derives them from `auth.users`, or column grants. Independently of that,
 a member should not be able to delete or take over other people's shared
@@ -511,13 +517,6 @@ sign-up form's marketing consent: since February, 64 of 516 new users ticked
 it, and not one profile records it — it survives only in the sign-up
 metadata, without a timestamp. Fix the policy (with the first security item),
 then backfill from the metadata.
-
-**Deleting an account half-deletes it.** `AccountService.ts:44-98` deletes
-the user's questions — university-shared ones included, though the UI says
-private — then progress, preferences and the profile, and then calls
-`auth.admin.deleteUser` from the browser, which needs the service key and
-fails. The user sees an error; the account remains without a profile.
-Account deletion belongs in an Edge Function that authenticates the caller.
 
 **Answers in saved sessions can be lost.** `recordAttempt`
 (`TrainingSessionService.ts:241-327`) reads the row, then inserts or updates
