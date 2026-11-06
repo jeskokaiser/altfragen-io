@@ -9,6 +9,7 @@ import {
   quotaMonthStart,
   resolveLifetimeEntitlement,
   resolveSubscriptionEntitlement,
+  shouldRecordSubscriptionEvent,
 } from './entitlements.ts';
 
 const log = (step: string, details?: unknown) => {
@@ -129,6 +130,21 @@ async function syncSubscriptionState(
     } catch (assocError) {
       log('Unexpected error while associating user_id', { error: assocError });
     }
+  }
+
+  if (
+    !shouldRecordSubscriptionEvent({
+      subscribed: hasActiveSub,
+      // A failed lookup says nothing about the row, so it does not count as absent.
+      hasSubscriberRow: Boolean(existingSubscriber || subscriberLookupError),
+      hasUser: Boolean(userId),
+    })
+  ) {
+    log('Ignoring ended subscription without subscriber or user', {
+      subscriptionId: subscription.id,
+      customerId,
+    });
+    return;
   }
 
   if (!userId) {

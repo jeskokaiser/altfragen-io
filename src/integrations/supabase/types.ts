@@ -1438,6 +1438,13 @@ export type Database = {
         Args: { university_uuid: string; user_uuid: string }
         Returns: boolean
       }
+      delete_user_account: {
+        Args: { p_user_id: string }
+        Returns: {
+          bucket_id: string
+          object_name: string
+        }[]
+      }
       exam_recon_assign_tasks: {
         Args: { p_seed?: string; p_workspace_id: string }
         Returns: string

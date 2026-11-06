@@ -32,7 +32,7 @@ const DeleteAccountSection: React.FC = () => {
 
     setIsDeleting(true);
     try {
-      const result = await deleteUserAccount(user.id);
+      const result = await deleteUserAccount();
 
       if (result.success) {
         toast.success('Ihr Konto wurde erfolgreich gelöscht');
@@ -68,20 +68,25 @@ const DeleteAccountSection: React.FC = () => {
           <h3 className="font-medium text-red-700">Konto löschen</h3>
           <p className="text-sm text-red-600">
             Diese Aktion kann nicht rückgängig gemacht werden. Alle deine privaten Fragen und
-            persönlichen Daten werden permanent gelöscht. Öffentliche Fragen bleiben erhalten, um
-            die Community zu unterstützen.
+            persönlichen Daten werden permanent gelöscht. Geteilte Fragen bleiben erhalten, um die
+            Community zu unterstützen.
           </p>
           <p className="text-sm text-red-600 font-medium">Folgende Daten werden gelöscht:</p>
           <ul className="text-sm text-red-600 list-disc list-inside space-y-1">
             <li>Alle privaten Fragen</li>
-            <li>Dein Lernfortschritt</li>
+            <li>Dein Lernfortschritt und deine Lernsitzungen</li>
+            <li>Deine Kommentare und Prüfungstermine</li>
             <li>Deine Einstellungen</li>
             <li>Dein Benutzerprofil</li>
           </ul>
           <p className="text-sm text-red-600 font-medium">Folgende Daten bleiben erhalten:</p>
           <ul className="text-sm text-red-600 list-disc list-inside">
-            <li>Öffentliche Fragen (anonymisiert)</li>
+            <li>Mit deiner Universität geteilte und öffentliche Fragen (anonymisiert)</li>
           </ul>
+          <p className="text-sm text-red-600 font-medium">
+            Ein laufendes Abo endet sofort, ohne automatische Erstattung. Auch der Zugang zu
+            Lifetime Premium endet.
+          </p>
           <p className="text-sm text-red-600">
             Bei Problemen kontaktiere uns unter: hallo@altfragen.io
           </p>

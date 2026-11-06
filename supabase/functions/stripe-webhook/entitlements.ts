@@ -135,6 +135,18 @@ export const applySubscriptionEvent = (
 };
 
 /**
+ * Whether a subscription event should be written to `subscribers`. A paid
+ * subscription is recorded even before an account exists, but an ended one with
+ * neither a row nor an account has nothing to update: it is what cancelling on
+ * account deletion reports, and writing it would bring the email back.
+ */
+export const shouldRecordSubscriptionEvent = (state: {
+  subscribed: boolean;
+  hasSubscriberRow: boolean;
+  hasUser: boolean;
+}): boolean => state.subscribed || state.hasSubscriberRow || state.hasUser;
+
+/**
  * Whether a subscription event is the transient state Stripe reports before the
  * first payment goes through.
  *
