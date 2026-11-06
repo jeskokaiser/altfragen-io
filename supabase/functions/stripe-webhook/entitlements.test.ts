@@ -8,6 +8,7 @@ import {
   quotaMonthStart,
   resolveLifetimeEntitlement,
   resolveSubscriptionEntitlement,
+  shouldRecordSubscriptionEvent,
 } from './entitlements.ts';
 
 const PRICES = { monthly: 'price_monthly', semester: 'price_semester' };
@@ -116,6 +117,29 @@ describe('resolveSubscriptionEntitlement', () => {
       resolveSubscriptionEntitlement({ status: 'active', currentPeriodEnd: null }, PRICES)
         .subscriptionEnd,
     ).toBeNull();
+  });
+});
+
+describe('shouldRecordSubscriptionEvent', () => {
+  it('ignores an ended subscription of a deleted account', () => {
+    expect(
+      shouldRecordSubscriptionEvent({ subscribed: false, hasSubscriberRow: false, hasUser: false }),
+    ).toBe(false);
+  });
+
+  it('records a paid subscription before any account exists', () => {
+    expect(
+      shouldRecordSubscriptionEvent({ subscribed: true, hasSubscriberRow: false, hasUser: false }),
+    ).toBe(true);
+  });
+
+  it('records a cancellation for a known row or account', () => {
+    expect(
+      shouldRecordSubscriptionEvent({ subscribed: false, hasSubscriberRow: true, hasUser: false }),
+    ).toBe(true);
+    expect(
+      shouldRecordSubscriptionEvent({ subscribed: false, hasSubscriberRow: false, hasUser: true }),
+    ).toBe(true);
   });
 });
 
