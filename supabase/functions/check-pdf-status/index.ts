@@ -1,4 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { getSecretKey } from '../_shared/supabaseKeys.ts';
+import { bearerToken, isTaskId } from '../_shared/callerAuth.ts';
 
 // Define expected types for more safety
 interface BackendStatusResponse {
@@ -41,6 +44,21 @@ serve(async (req) => {
       );
     }
 
+    // Contract C1: verify the caller; the parser shows a task only to the
+    // user who created it, so it gets the same Authorization header.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = bearerToken(authHeader);
+    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
+    const {
+      data: { user },
+    } = token ? await supabase.auth.getUser(token) : { data: { user: null } };
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Extract task_id from the URL query parameters
     const url = new URL(req.url);
     const taskId = url.searchParams.get('task_id');
@@ -61,17 +79,17 @@ serve(async (req) => {
 
     // Correct backend status endpoint
     const BASE_API_URL = 'https://api.altfragen.io';
-    const statusEndpoint = `${BASE_API_URL}/parser/status/${taskId}`;
+    const statusEndpoint = `${BASE_API_URL}/parser/status/${encodeURIComponent(taskId)}`;
 
-    // Add safeguard for empty or "undefined" taskId string
-    if (taskId === 'undefined' || taskId.trim() === '') {
+    // Only the parser's own task ids, so the id cannot reach another path
+    if (!isTaskId(taskId)) {
       console.error(`Invalid task_id parameter: "${taskId}"`);
       return new Response(
         JSON.stringify({
           success: false,
           status: 'error',
           error: 'Invalid task_id parameter',
-          details: 'The task_id cannot be "undefined" or empty',
+          details: 'The task_id must be a task id from process-pdf',
         }),
         {
           status: 400,
@@ -94,6 +112,7 @@ serve(async (req) => {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: authHeader,
         },
       });
       console.log(`Status check response from ${statusEndpoint}:`, statusResponse.status);
