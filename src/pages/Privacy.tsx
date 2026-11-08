@@ -75,6 +75,11 @@ const Privacy = () => {
                   <strong>Wenn Sie uns schreiben:</strong> Ihre E-Mail-Adresse und der Inhalt Ihrer
                   Nachricht.
                 </li>
+                <li>
+                  <strong>Wenn Sie über „Verträge hier kündigen“ kündigen:</strong> E-Mail-Adresse,
+                  ggf. Name, gekündigter Vertrag, Art und ggf. Grund der Kündigung, gewünschtes
+                  Vertragsende sowie Datum und Uhrzeit des Eingangs.
+                </li>
               </ul>
               <p>
                 Ohne E-Mail-Adresse und Passwort können wir kein Konto anlegen. Alle weiteren
@@ -166,7 +171,9 @@ const Privacy = () => {
                 </li>
                 <li>
                   <strong>Brevo</strong> (EU): Versand von Marketing-E-Mails, nur wenn Sie
-                  eingewilligt haben. Verarbeitet Ihre E-Mail-Adresse.
+                  eingewilligt haben, und Versand der Bestätigung, wenn Sie über „Verträge hier
+                  kündigen“ kündigen (§ 312k BGB). Verarbeitet Ihre E-Mail-Adresse und bei der
+                  Kündigungsbestätigung deren Inhalt.
                 </li>
                 <li>
                   <strong>Zoho Mail</strong>: unsere E-Mail-Postfächer. Verarbeitet E-Mails, die Sie
@@ -247,6 +254,10 @@ const Privacy = () => {
                 <li>
                   Für Marketing-E-Mails speichern wir Ihre E-Mail-Adresse, bis Sie die Einwilligung
                   widerrufen.
+                </li>
+                <li>
+                  Kündigungen speichern wir drei Jahre ab Ende des Jahres, in dem sie eingegangen
+                  sind, um ihren Eingang nachweisen zu können (Art. 6 Abs. 1 lit. c und f DSGVO).
                 </li>
                 <li>
                   Technische Daten beim Aufruf speichern die Hosting-Anbieter nur so lange, wie es

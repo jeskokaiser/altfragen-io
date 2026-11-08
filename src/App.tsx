@@ -16,6 +16,8 @@ import ImpressumPage from '@/pages/Impressum';
 import PrivacyPage from '@/pages/Privacy';
 import AGBPage from '@/pages/AGB';
 import WiderrufPage from '@/pages/Widerruf';
+import KuendigungPage from '@/pages/Kuendigung';
+import PublicLayout from '@/components/layout/PublicLayout';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,12 +47,15 @@ function App() {
                 <div className="min-h-screen bg-background">
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/terms" element={<TermsPage />} />
-                    <Route path="/impressum" element={<ImpressumPage />} />
-                    <Route path="/privacy" element={<PrivacyPage />} />
-                    <Route path="/agb" element={<AGBPage />} />
-                    <Route path="/widerruf" element={<WiderrufPage />} />
+                    <Route element={<PublicLayout />}>
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/terms" element={<TermsPage />} />
+                      <Route path="/impressum" element={<ImpressumPage />} />
+                      <Route path="/privacy" element={<PrivacyPage />} />
+                      <Route path="/agb" element={<AGBPage />} />
+                      <Route path="/widerruf" element={<WiderrufPage />} />
+                      <Route path="/kuendigen" element={<KuendigungPage />} />
+                    </Route>
                     <Route path="/*" element={<MainLayout />} />
                   </Routes>
                   <Toaster />

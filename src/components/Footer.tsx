@@ -21,6 +21,9 @@ const Footer = () => {
           <Link to="/widerruf" className="hover:text-foreground transition-colors">
             Widerrufsrecht
           </Link>
+          <Link to="/kuendigen" className="hover:text-foreground transition-colors">
+            Verträge hier kündigen
+          </Link>
 
           <a
             href="https://github.com/jeskokaiser/altfragen-io"

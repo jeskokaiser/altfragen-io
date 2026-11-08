@@ -123,8 +123,9 @@ const AGB = () => {
                 gezahlte Beträge erstattet der Anbieter anteilig.
               </p>
               <p>
-                Die Kündigung kann jederzeit über das Kundenportal in Ihrem Benutzerkonto oder per
-                E-Mail an premium@altfragen.io erfolgen.
+                Die Kündigung kann jederzeit über die Schaltfläche „Verträge hier kündigen“ unten
+                auf jeder Seite (auch ohne Login), über das Kundenportal in Ihrem Benutzerkonto oder
+                per E-Mail an premium@altfragen.io erfolgen.
               </p>
               <p>
                 <strong>Lifetime Premium Abonnement:</strong> Das Lifetime Premium Abonnement
