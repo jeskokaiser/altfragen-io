@@ -37,9 +37,15 @@ worker, which also polls every 60 s and writes `questions.subject`.
 
 **AI commentary** is a batch pipeline:
 
-1. Questions wait in `ai_commentary_job_queue`.
+1. Questions wait in `ai_commentary_job_queue`. `ai_commentary_claim_next_batch`
+   picks them: first the ranked list in `ai_commentary_priority` (reopening
+   entries that already have comments; an entry is done once
+   `ai_commentary_state.last_full_processed_at >= requested_at`, and dropped
+   after 3 claims), then university questions, then premium users' private
+   ones. `select * from ai_commentary_pipeline_status` shows what is open.
 2. pg_cron calls `dispatch-next-ai-commentary-batch`, which leases jobs and
-   posts them to `POST /ai/process-batch`.
+   posts them to `POST /ai/process-batch`. A question new to the queue is
+   inserted on one run and claimed on the next.
 3. The AI backend submits provider batches (OpenAI, Gemini, Claude, Mistral)
    or calls Perplexity's Agent API directly (with web search; its sources
    land in `ai_answer_comments.perplexity_sources`).
