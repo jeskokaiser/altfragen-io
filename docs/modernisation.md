@@ -618,7 +618,10 @@ which also frees the quota they held. A ranked priority list,
 `ai_commentary_priority`, now goes first: 1,761 university questions without
 any comment, then 4,826 of the 5,000 most answered university questions (12
 months, January and February 2026 counted double; questions with an image
-left out), re-commented with the new models. Progress:
+left out), re-commented with the new models. `feature_enabled` is on again
+too: it gates generation in the backend only (the app never reads it and shows
+whatever comments exist), and the backend accepts a claimed batch and skips it
+while the flag is off, leaving the jobs leased. Progress:
 `ai_commentary_pipeline_status`. Still open from the list below: backend
 failure paths that leave questions `processing` (a priority entry stuck there
 shows as `in_arbeit` and is never retried), and the reconciler, which still
