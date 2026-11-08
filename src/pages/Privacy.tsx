@@ -152,10 +152,10 @@ const Privacy = () => {
                   api.altfragen.io. Verarbeitet die technischen Daten beim Aufruf.
                 </li>
                 <li>
-                  <strong>Stripe</strong> (Stripe Payments Europe, Irland; Konzernmutter in den
-                  USA): Zahlungsabwicklung. Verarbeitet E-Mail-Adresse, ggf. Name, Zahlungsdaten und
-                  Käufe. Stripe verarbeitet Zahlungsdaten teilweise in eigener Verantwortung, etwa
-                  zur Betrugsprävention.{' '}
+                  <strong>Stripe</strong> (Stripe Payments Europe, Limited, Dublin, Irland;
+                  Konzernmutter in den USA): Zahlungsabwicklung. Verarbeitet E-Mail-Adresse, ggf.
+                  Name, Zahlungsdaten und Käufe. Stripe verarbeitet Zahlungsdaten teilweise in
+                  eigener Verantwortung, etwa zur Betrugsprävention.{' '}
                   <a href="https://stripe.com/de/privacy" className="text-blue-600 hover:underline">
                     Datenschutzerklärung von Stripe
                   </a>
@@ -176,8 +176,8 @@ const Privacy = () => {
                   Kündigungsbestätigung deren Inhalt.
                 </li>
                 <li>
-                  <strong>Zoho Mail</strong>: unsere E-Mail-Postfächer. Verarbeitet E-Mails, die Sie
-                  uns schicken, und unsere Antworten.
+                  <strong>Zoho Mail</strong> (EU): unsere E-Mail-Postfächer. Verarbeitet E-Mails,
+                  die Sie uns schicken, und unsere Antworten.
                 </li>
               </ul>
               <p>
