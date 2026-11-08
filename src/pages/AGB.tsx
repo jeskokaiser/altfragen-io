@@ -16,7 +16,12 @@ const AGB = () => {
                 Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") gelten für alle Verträge
                 zwischen Altfragen.io, angeboten von KSR Labs, Jesko Kaiser (nachfolgend "Anbieter")
                 und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen
-                Premium-Dienste.
+                Premium-Dienste (Abonnements, Lifetime Premium und KI-Credits). Für die Nutzung der
+                Plattform im Übrigen gelten die{' '}
+                <a href="/terms" className="text-blue-600 hover:underline">
+                  Nutzungsbedingungen
+                </a>
+                ; soweit sie sich widersprechen, gehen für Premium-Dienste diese AGB vor.
               </p>
               <p>
                 Anbieter:
@@ -41,9 +46,18 @@ const AGB = () => {
                 Altfragen.io mit folgenden Leistungen:
               </p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>Zugriff auf unbegrenzte KI-kommentierte Fragen und Antworten</li>
-                <li>Premium Support unter premium@altfragen.io</li>
+                <li>Unbegrenzte Trainings-Sessions</li>
+                <li>Unbegrenzte KI-Kommentare zu geteilten Fragen</li>
+                <li>
+                  KI-Kommentare zu privaten Fragen im Rahmen des in der App angezeigten Kontingents,
+                  erweiterbar durch KI-Credits (§ 4)
+                </li>
+                <li>KI-verbesserte Fragen und Antworten</li>
+                <li>Texterkennung (OCR) in PDF-Dateien</li>
+                <li>Ausführliche Statistiken</li>
+                <li>Premium-Support unter premium@altfragen.io</li>
               </ul>
+              <p>Die Einschränkungen bei KI-Kommentaren nach § 6 gelten auch hier.</p>
             </section>
 
             {/* 3. Vertragsschluss */}
@@ -65,7 +79,19 @@ const AGB = () => {
               <p>
                 Die Preise werden nach §19 UStG versteuert, daher fällt keine Mehrwertsteuer an.
               </p>
-              <p>Die Zahlung erfolgt monatlich über unseren Zahlungsdienstleister Stripe.</p>
+              <p>
+                Es gelten die beim Kauf angezeigten Preise. Abonnements werden je nach gewähltem
+                Tarif monatlich oder pro Semester im Voraus abgerechnet; Lifetime Premium und
+                KI-Credits werden einmalig bezahlt. Die Zahlung erfolgt über unseren
+                Zahlungsdienstleister Stripe.
+              </p>
+              <p>
+                <strong>KI-Credits:</strong> Nutzer mit Premium-Zugang können zusätzliche Credits
+                für KI-Kommentare zu privaten Fragen in Paketen kaufen. Der Umfang eines Pakets wird
+                vor dem Kauf angezeigt. Credits können nur genutzt werden, solange ein
+                Premium-Zugang besteht, sind an das Nutzerkonto gebunden, nicht übertragbar und
+                werden nicht ausgezahlt.
+              </p>
               <p>
                 <strong>Lifetime Premium Abonnement:</strong> Neben den wiederkehrenden Abonnements
                 (monatlich/semestral) bietet der Anbieter optional ein "Lifetime Premium" Abonnement
@@ -218,13 +244,17 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 12 Änderungen der AGB</h2>
               <p>
-                Änderungen dieser AGB werden Ihnen mindestens vier Wochen vor Inkrafttreten per
-                E-Mail mitgeteilt. Widersprechen Sie nicht innerhalb von vier Wochen nach Zugang der
-                Mitteilung, gelten die geänderten AGB als angenommen.
+                Der Anbieter kann diese AGB mit Wirkung für die Zukunft ändern, wenn dies wegen
+                geänderter Gesetze oder Rechtsprechung, wegen neuer oder geänderter Funktionen oder
+                zur Beseitigung von Unklarheiten nötig ist. Preise und der Umfang der
+                Premium-Leistungen nach § 2 werden auf diesem Weg nicht geändert.
               </p>
               <p>
-                Auf Ihr Widerspruchsrecht und die Rechtsfolgen werden wir Sie in der Mitteilung
-                hinweisen.
+                Der Anbieter teilt Ihnen die Änderungen mindestens sechs Wochen vor dem geplanten
+                Inkrafttreten per E-Mail mit. Widersprechen Sie nicht bis zum Inkrafttreten, gelten
+                die geänderten AGB als angenommen. Bis zum Inkrafttreten können Sie ein Abonnement
+                außerdem kostenfrei kündigen. Auf diese Folgen weist der Anbieter in der Mitteilung
+                gesondert hin. Widersprechen Sie, gelten die bisherigen AGB weiter.
               </p>
             </section>
 
@@ -233,28 +263,25 @@ const AGB = () => {
               <h2 className="text-xl font-semibold">§ 13 Schlussbestimmungen</h2>
               <p>
                 Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts.
+                Zwingende Verbraucherschutzvorschriften des Staates, in dem Sie Ihren gewöhnlichen
+                Aufenthalt haben, bleiben unberührt.
               </p>
-              <p>Für Streitigkeiten aus diesem Vertrag ist der Gerichtsstand Hamburg.</p>
               <p>
-                Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, berührt dies
-                die Wirksamkeit der übrigen Bestimmungen nicht.
+                Sind Sie Kaufmann, juristische Person des öffentlichen Rechts oder
+                öffentlich-rechtliches Sondervermögen, ist Gerichtsstand für alle Streitigkeiten aus
+                diesem Vertrag Hamburg.
               </p>
-              <p>Stand: Dezember 2024</p>
+              <p>
+                Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt der
+                Vertrag im Übrigen wirksam. An die Stelle der unwirksamen Bestimmung treten die
+                gesetzlichen Vorschriften (§ 306 BGB).
+              </p>
+              <p>Stand: November 2026</p>
             </section>
 
-            {/* Online-Streitbeilegung */}
+            {/* Verbraucherstreitbeilegung */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">Hinweis zur Online-Streitbeilegung</h2>
-              <p>
-                Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS)
-                bereit:
-                <a
-                  href="https://ec.europa.eu/consumers/odr/"
-                  className="text-blue-600 hover:underline ml-1"
-                >
-                  https://ec.europa.eu/consumers/odr/
-                </a>
-              </p>
+              <h2 className="text-xl font-semibold">Hinweis zur Verbraucherstreitbeilegung</h2>
               <p>
                 Wir sind nicht verpflichtet und grundsätzlich nicht bereit, an
                 Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.

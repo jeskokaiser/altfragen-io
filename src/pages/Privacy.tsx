@@ -14,8 +14,13 @@ const Privacy = () => {
               <h2 className="text-xl font-semibold">1. Datenschutz auf einen Blick</h2>
               <p>
                 Diese Datenschutzerklärung informiert Sie darüber, welche personenbezogenen Daten
-                wir im Rahmen der Registrierung und Nutzung dieser Plattform erheben, verarbeiten
-                und speichern.
+                wir bei der Registrierung und Nutzung von Altfragen.io verarbeiten, wofür, an wen
+                wir sie weitergeben und wie lange wir sie speichern.
+              </p>
+              <p>
+                Kurz gesagt: Wir verkaufen keine Daten und setzen keine Analyse-, Werbe- oder
+                Tracking-Dienste ein. An KI-Anbieter geben wir Fragetexte weiter, aber keine Angaben
+                zu Ihrer Person.
               </p>
             </section>
 
@@ -24,7 +29,7 @@ const Privacy = () => {
               <h2 className="text-xl font-semibold">2. Verantwortlicher</h2>
               <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
               <p>
-                Jesko Kaiser
+                KSR Labs, Jesko Kaiser
                 <br />
                 Kegelhofstr. 17
                 <br />
@@ -36,180 +41,269 @@ const Privacy = () => {
 
             {/* 3. Erhobene Daten */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">3. Erhobene Daten</h2>
-              <p>
-                Bei der Erstellung eines Benutzerkontos speichern wir folgende personenbezogene
-                Daten:
-              </p>
+              <h2 className="text-xl font-semibold">3. Welche Daten wir verarbeiten</h2>
               <ul className="list-disc pl-6 space-y-1">
-                <li>E-Mail-Adresse</li>
-                <li>Passwort (verschlüsselt gespeichert, nicht im Klartext einsehbar)</li>
-                <li>Abonnement-Status und Zahlungsinformationen (verarbeitet durch Stripe)</li>
-                <li>Nutzungsverhalten der Plattform (Sessions, bearbeitete Fragen)</li>
-                <li>Einwilligung zum Erhalt von Marketing-E-Mails (falls erteilt)</li>
+                <li>
+                  <strong>Kontodaten:</strong> E-Mail-Adresse, Benutzername (falls angegeben),
+                  Passwort (nur als Hash gespeichert, nicht im Klartext einsehbar) und Ihre
+                  Universität, die wir aus der Domain Ihrer E-Mail-Adresse ableiten.
+                </li>
+                <li>
+                  <strong>Einwilligungen und Zustimmungen</strong> mit Zeitpunkt, z. B. zu
+                  Marketing-E-Mails oder zum Beginn der Vertragsausführung vor Ablauf der
+                  Widerrufsfrist.
+                </li>
+                <li>
+                  <strong>Ihre Inhalte:</strong> Fragen, Antworten und Erklärungen, die Sie anlegen
+                  oder hochladen, sowie hochgeladene CSV- und PDF-Dateien.
+                </li>
+                <li>
+                  <strong>Nutzungsdaten:</strong> Trainings-Sessions, Ihre Antworten, Ihre
+                  Lernstatistik und Einstellungen.
+                </li>
+                <li>
+                  <strong>Vertrags- und Zahlungsdaten:</strong> Premium-Status, Abonnement und
+                  gekaufte KI-Credits. Karten- oder Kontodaten gibt es nur bei Stripe, wir sehen sie
+                  nicht.
+                </li>
+                <li>
+                  <strong>Technische Daten beim Aufruf:</strong> IP-Adresse, Zeitpunkt, aufgerufene
+                  Adresse und Angaben zu Ihrem Browser. Sie fallen bei unseren Hosting-Anbietern an
+                  (Abschnitt 5).
+                </li>
+                <li>
+                  <strong>Wenn Sie uns schreiben:</strong> Ihre E-Mail-Adresse und der Inhalt Ihrer
+                  Nachricht.
+                </li>
               </ul>
-            </section>
-
-            {/* 4. Stripe Zahlungsabwicklung */}
-            <section className="space-y-2">
-              <h2 className="text-xl font-semibold">4. Zahlungsabwicklung durch Stripe</h2>
               <p>
-                Für die Abwicklung von Zahlungen nutzen wir den Zahlungsdienstleister Stripe.
-                Stripe, Inc., 510 Townsend Street, San Francisco, CA 94103, USA.
-              </p>
-              <p>
-                Bei Zahlungsvorgängen werden Ihre Zahlungsdaten direkt an Stripe übermittelt. Wir
-                erhalten keine Kreditkartendaten oder andere sensible Zahlungsinformationen.
-              </p>
-              <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</p>
-              <p>
-                Da Stripe ein US-amerikanisches Unternehmen ist, werden Daten in die USA
-                übermittelt. Die EU-Kommission hat die USA als Land mit einem angemessenen
-                Datenschutzniveau eingestuft (Angemessenheitsbeschluss). Die Datenübermittlung
-                erfolgt auf Grundlage von Standardvertragsklauseln (SCC), um die Einhaltung
-                europäischer Datenschutzstandards zu gewährleisten.
-              </p>
-              <p>
-                Datenschutzerklärung von Stripe:{' '}
-                <a href="https://stripe.com/de/privacy" className="text-blue-600 hover:underline">
-                  https://stripe.com/de/privacy
-                </a>
+                Ohne E-Mail-Adresse und Passwort können wir kein Konto anlegen. Alle weiteren
+                Angaben sind freiwillig oder ergeben sich aus Ihrer Nutzung.
               </p>
             </section>
 
-            {/* 5. Supabase Hosting */}
-            <section className="space-y-2">
-              <h2 className="text-xl font-semibold">5. Hosting und Datenspeicherung</h2>
-              <p>
-                Unsere Website wird über Supabase gehostet. Supabase Inc., 970 Toa Payoh North
-                #07-04, Singapore 318992.
-              </p>
-              <p>Ihre Daten werden in sicheren Rechenzentren innerhalb der EU gespeichert.</p>
-              <p>
-                Datenschutzerklärung von Supabase:{' '}
-                <a href="https://supabase.com/privacy" className="text-blue-600 hover:underline">
-                  https://supabase.com/privacy
-                </a>
-              </p>
-            </section>
-
-            {/* 6. Zweck und Rechtsgrundlage */}
+            {/* 4. Zweck und Rechtsgrundlage */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">
-                6. Zweck und Rechtsgrundlage der Verarbeitung
+                4. Zwecke und Rechtsgrundlagen der Verarbeitung
               </h2>
-              <p>Die Verarbeitung Ihrer Daten erfolgt zu folgenden Zwecken:</p>
               <ul className="list-disc pl-6 space-y-1">
                 <li>
-                  Bereitstellung und Verwaltung Ihres Benutzerkontos (Art. 6 Abs. 1 lit. b DSGVO)
+                  Bereitstellung der Plattform: Konto, Training, Statistik, KI-Kommentare, Zuordnung
+                  von Fragen zu Fächern und Texterkennung in PDF-Dateien (Art. 6 Abs. 1 lit. b
+                  DSGVO, Vertragserfüllung)
                 </li>
                 <li>
-                  Abwicklung von Zahlungen für Premium-Abonnements (Art. 6 Abs. 1 lit. b DSGVO)
+                  Abwicklung von Zahlungen, Abonnements und Kündigungen (Art. 6 Abs. 1 lit. b DSGVO)
                 </li>
                 <li>
-                  Verbesserung unserer Dienstleistungen auf Basis von Nutzungsanalysen (Art. 6 Abs.
-                  1 lit. f DSGVO). Sie haben das Recht, dieser Verarbeitung jederzeit zu
-                  widersprechen.
+                  Aufbewahrung nach Steuer- und Handelsrecht (Art. 6 Abs. 1 lit. c DSGVO, rechtliche
+                  Verpflichtung)
                 </li>
-                <li>Erfüllung rechtlicher Verpflichtungen (Art. 6 Abs. 1 lit. c DSGVO)</li>
+                <li>
+                  Sicherheit, Schutz vor Missbrauch, Fehleranalyse, Datensicherung und die
+                  Auswertung der Nutzung in zusammengefasster Form, um die Plattform zu verbessern
+                  (Art. 6 Abs. 1 lit. f DSGVO). Unser berechtigtes Interesse ist ein sicherer,
+                  stabiler und sich weiterentwickelnder Betrieb. Sie können dieser Verarbeitung
+                  widersprechen (Abschnitt 11).
+                </li>
+                <li>Marketing-E-Mails, nur mit Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO)</li>
+                <li>
+                  Beantwortung Ihrer Anfragen (Art. 6 Abs. 1 lit. b DSGVO, wenn sie Ihr Konto oder
+                  Ihren Vertrag betreffen, sonst lit. f)
+                </li>
               </ul>
+            </section>
+
+            {/* 5. Empfänger */}
+            <section className="space-y-2">
+              <h2 className="text-xl font-semibold">
+                5. Dienstleister, an die wir Daten weitergeben
+              </h2>
+              <p>
+                Wir geben Daten nur an die folgenden Dienstleister weiter und nur, soweit das für
+                den jeweiligen Zweck nötig ist:
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>
+                  <strong>Netlify</strong> (USA): Auslieferung der Web-App. Verarbeitet die
+                  technischen Daten beim Aufruf.
+                </li>
+                <li>
+                  <strong>Supabase</strong> (Server in Frankfurt am Main): Datenbank, Anmeldung,
+                  Dateispeicher und Serverfunktionen. Verarbeitet Kontodaten, Inhalte und
+                  Nutzungsdaten.{' '}
+                  <a href="https://supabase.com/privacy" className="text-blue-600 hover:underline">
+                    Datenschutzerklärung von Supabase
+                  </a>
+                </li>
+                <li>
+                  <strong>Hetzner Online</strong> (Deutschland): Server für PDF-Verarbeitung,
+                  Texterkennung und KI-Kommentare sowie für die tägliche Sicherung der gespeicherten
+                  Dateien.
+                </li>
+                <li>
+                  <strong>Cloudflare</strong> (USA): Netzwerkschutz vor unserem Server
+                  api.altfragen.io. Verarbeitet die technischen Daten beim Aufruf.
+                </li>
+                <li>
+                  <strong>Stripe</strong> (Stripe Payments Europe, Irland; Konzernmutter in den
+                  USA): Zahlungsabwicklung. Verarbeitet E-Mail-Adresse, ggf. Name, Zahlungsdaten und
+                  Käufe. Stripe verarbeitet Zahlungsdaten teilweise in eigener Verantwortung, etwa
+                  zur Betrugsprävention.{' '}
+                  <a href="https://stripe.com/de/privacy" className="text-blue-600 hover:underline">
+                    Datenschutzerklärung von Stripe
+                  </a>
+                </li>
+                <li>
+                  <strong>KI-Anbieter:</strong> OpenAI (USA), Google (Gemini, USA), Anthropic (USA),
+                  Mistral AI (Frankreich) und Perplexity (USA) erstellen die KI-Kommentare. OpenAI
+                  ordnet außerdem Fragen Fächern zu, Mistral AI erkennt Text in hochgeladenen
+                  PDF-Dateien. Übermittelt werden der Fragetext mit den Antwortoptionen bzw. der
+                  Inhalt der PDF-Datei, aber keine Angaben zu Ihrer Person (keine E-Mail-Adresse,
+                  kein Name, keine Nutzerkennung). Wir selbst trainieren keine KI-Modelle mit Ihren
+                  Inhalten. Bitte laden Sie keine Inhalte mit personenbezogenen Daten hoch.
+                </li>
+                <li>
+                  <strong>Brevo</strong> (EU): Versand von Marketing-E-Mails, nur wenn Sie
+                  eingewilligt haben. Verarbeitet Ihre E-Mail-Adresse.
+                </li>
+                <li>
+                  <strong>Zoho Mail</strong>: unsere E-Mail-Postfächer. Verarbeitet E-Mails, die Sie
+                  uns schicken, und unsere Antworten.
+                </li>
+              </ul>
+              <p>
+                Darüber hinaus geben wir Daten nur weiter, wenn wir gesetzlich dazu verpflichtet
+                sind.
+              </p>
+            </section>
+
+            {/* 6. Drittländer */}
+            <section className="space-y-2">
+              <h2 className="text-xl font-semibold">6. Übermittlung in Länder außerhalb der EU</h2>
+              <p>
+                Einige der genannten Dienstleister sitzen in den USA oder gehören zu Unternehmen mit
+                Sitz in den USA. Für Übermittlungen in die USA stützen wir uns auf den
+                Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework (Art. 45
+                DSGVO), soweit der Anbieter danach zertifiziert ist, und im Übrigen auf
+                Standardvertragsklauseln der EU-Kommission (Art. 46 Abs. 2 lit. c DSGVO).
+              </p>
             </section>
 
             {/* 7. Newsletter und Marketingkommunikation */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">7. Newsletter und Marketingkommunikation</h2>
+              <h2 className="text-xl font-semibold">7. Marketing-E-Mails</h2>
               <p>
-                Sofern Sie uns Ihre ausdrückliche Einwilligung erteilt haben (Art. 6 Abs. 1 lit. a
-                DSGVO), verwenden wir Ihre E-Mail-Adresse, um Sie regelmäßig über Neuigkeiten,
-                Angebote und Produktupdates zu informieren.
+                Sofern Sie ausdrücklich eingewilligt haben (Art. 6 Abs. 1 lit. a DSGVO), verwenden
+                wir Ihre E-Mail-Adresse, um Sie über Neuigkeiten, Angebote und Produktupdates zu
+                informieren. Für den Versand nutzen wir Brevo.
               </p>
               <p>
-                Ihre Einwilligung können Sie jederzeit widerrufen. In jeder Marketing-E-Mail finden
-                Sie einen Abmeldelink. Alternativ können Sie uns auch per E-Mail unter
-                hallo@altfragen.io kontaktieren.
-              </p>
-              <p>
-                Der Widerruf der Einwilligung berührt nicht die Rechtmäßigkeit der bis zum Widerruf
-                erfolgten Verarbeitung.
+                Ihre Einwilligung können Sie jederzeit widerrufen: über den Abmeldelink in jeder
+                Marketing-E-Mail oder per E-Mail an hallo@altfragen.io. Der Widerruf berührt nicht
+                die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung.
               </p>
             </section>
 
             {/* 8. Cookies */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">8. Cookies</h2>
+              <h2 className="text-xl font-semibold">8. Cookies und Speicherung im Browser</h2>
               <p>
-                Unsere Website verwendet ausschließlich technisch notwendige Cookies, die für die
-                Grundfunktionen der Plattform (z.B. Login-Status) unerlässlich sind. Diese Cookies
-                speichern keine personenbezogenen Daten, die eine Identifizierung ermöglichen.
+                Wir speichern Ihren Anmeldestatus und Ihre Einstellungen im lokalen Speicher Ihres
+                Browsers. Das ist für den von Ihnen gewünschten Dienst unbedingt erforderlich (§ 25
+                Abs. 2 Nr. 2 TDDDG) und braucht daher keine Einwilligung.
               </p>
               <p>
-                Wir verwenden keine optionalen Analyse- oder Marketing-Cookies von Drittanbietern.
-                Daher ist kein Cookie-Einwilligungsbanner erforderlich.
+                Wir verwenden keine Analyse-, Werbe- oder Tracking-Cookies und binden keine
+                Drittanbieter ein, die Sie seitenübergreifend verfolgen. Deshalb gibt es kein
+                Cookie-Banner.
               </p>
             </section>
 
-            {/* 9. Weitergabe von Daten */}
+            {/* 9. Speicherdauer */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">9. Weitergabe von Daten</h2>
-              <p>Ihre Daten werden nur in folgenden Fällen an Dritte weitergegeben:</p>
+              <h2 className="text-xl font-semibold">9. Speicherdauer</h2>
               <ul className="list-disc pl-6 space-y-1">
-                <li>An Stripe zur Zahlungsabwicklung</li>
-                <li>Wenn dies gesetzlich vorgeschrieben ist</li>
-                <li>Zur Erfüllung rechtlicher Verpflichtungen</li>
+                <li>
+                  Kontodaten, Inhalte und Nutzungsdaten speichern wir, bis Sie Ihr Konto löschen.
+                </li>
+                <li>
+                  Wenn Sie Ihr Konto löschen, löschen wir Ihr Konto, Ihre privaten Fragen und Ihre
+                  Nutzungsdaten. Kopien in Datensicherungen werden nach spätestens 7 Tagen
+                  überschrieben.
+                </li>
+                <li>
+                  Fragen, die Sie mit Ihrer Universität oder öffentlich geteilt haben, bleiben ohne
+                  Zuordnung zu Ihnen erhalten, weil sie Teil des gemeinsamen Fragenbestands sind
+                  (Nutzungsbedingungen, Abschnitt 6.3).
+                </li>
+                <li>
+                  Laufende Abonnements werden mit der Kontolöschung beendet. Ihr Kundendatensatz bei
+                  Stripe (E-Mail-Adresse, ggf. Name, Zahlungsverlauf) bleibt bestehen, weil wir
+                  Zahlungs- und Rechnungsdaten nach Steuer- und Handelsrecht bis zu 10 Jahre
+                  aufbewahren müssen (§ 147 AO, § 257 HGB).
+                </li>
+                <li>
+                  Für Marketing-E-Mails speichern wir Ihre E-Mail-Adresse, bis Sie die Einwilligung
+                  widerrufen.
+                </li>
+                <li>
+                  Technische Daten beim Aufruf speichern die Hosting-Anbieter nur so lange, wie es
+                  für Betrieb und Sicherheit nötig ist.
+                </li>
               </ul>
             </section>
 
             {/* 10. Datensicherheit */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">10. Datensicherheit</h2>
-              <p>Wir verwenden branchenübliche Sicherheitsmaßnahmen zum Schutz Ihrer Daten:</p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>SSL-Verschlüsselung für alle Datenübertragungen</li>
-                <li>Verschlüsselte Speicherung von Passwörtern</li>
-                <li>Regelmäßige Sicherheitsupdates</li>
-                <li>Beschränkter Zugriff auf personenbezogene Daten</li>
+                <li>Verschlüsselte Übertragung (TLS) für alle Verbindungen</li>
+                <li>Passwörter nur als Hash gespeichert</li>
+                <li>
+                  Zugriffsregeln in der Datenbank: Sie sehen nur Ihre und für Sie geteilte Daten
+                </li>
+                <li>Regelmäßige Sicherheitsupdates und tägliche Datensicherung</li>
               </ul>
             </section>
 
-            {/* 11. Speicherdauer */}
+            {/* 11. Ihre Rechte */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">11. Speicherdauer</h2>
-              <p>Ihre Daten werden so lange gespeichert, wie:</p>
-              <ul className="list-disc pl-6 space-y-1">
-                <li>Ihr Benutzerkonto aktiv ist</li>
-                <li>Gesetzliche Aufbewahrungspflichten bestehen</li>
-                <li>Zur Erfüllung vertraglicher Verpflichtungen erforderlich</li>
-              </ul>
-              <p>
-                Nach Löschung Ihres Kontos werden Ihre Daten innerhalb von 30 Tagen vollständig
-                entfernt.
-              </p>
-            </section>
-
-            {/* 12. Ihre Rechte */}
-            <section className="space-y-2">
-              <h2 className="text-xl font-semibold">12. Ihre Rechte</h2>
+              <h2 className="text-xl font-semibold">11. Ihre Rechte</h2>
               <p>Sie haben folgende Rechte bezüglich Ihrer personenbezogenen Daten:</p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>Recht auf Auskunft (Art. 15 DSGVO)</li>
-                <li>Recht auf Berichtigung (Art. 16 DSGVO)</li>
-                <li>Recht auf Löschung (Art. 17 DSGVO)</li>
-                <li>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
-                <li>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</li>
-                <li>Recht auf Widerspruch (Art. 21 DSGVO)</li>
-                <li>Recht auf Beschwerde bei einer Aufsichtsbehörde (Art. 77 DSGVO)</li>
+                <li>Auskunft (Art. 15 DSGVO)</li>
+                <li>Berichtigung (Art. 16 DSGVO)</li>
+                <li>Löschung (Art. 17 DSGVO)</li>
+                <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+                <li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
+                <li>
+                  Widerruf einer Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO)
+                </li>
+                <li>Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO)</li>
               </ul>
-              <p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter: hallo@altfragen.io</p>
+              <p>
+                <strong>Widerspruchsrecht (Art. 21 DSGVO):</strong> Verarbeiten wir Daten auf
+                Grundlage unseres berechtigten Interesses (Art. 6 Abs. 1 lit. f DSGVO), können Sie
+                aus Gründen, die sich aus Ihrer besonderen Situation ergeben, jederzeit
+                widersprechen.
+              </p>
+              <p>Zur Ausübung Ihrer Rechte schreiben Sie uns an: hallo@altfragen.io</p>
+              <p>
+                Eine automatisierte Entscheidungsfindung im Sinne von Art. 22 DSGVO findet nicht
+                statt.
+              </p>
             </section>
 
-            {/* 13. Änderungen */}
+            {/* 12. Änderungen */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">13. Änderungen dieser Datenschutzerklärung</h2>
+              <h2 className="text-xl font-semibold">12. Änderungen dieser Datenschutzerklärung</h2>
               <p>
-                Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren. Die
-                aktuelle Version ist stets auf unserer Website verfügbar.
+                Wir passen diese Datenschutzerklärung an, wenn sich unsere Verarbeitung oder die
+                Rechtslage ändert. Die aktuelle Version finden Sie stets auf dieser Seite.
               </p>
-              <p>Stand: Juni 2025</p>
+              <p>Stand: November 2026</p>
             </section>
           </CardContent>
         </Card>
