@@ -2,6 +2,7 @@ import 'https://deno.land/x/xhr@0.1.0/mod.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getSecretKey } from '../_shared/supabaseKeys.ts';
+import { bearerToken, parseAssignRequest } from '../_shared/callerAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,10 +10,25 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
 };
 
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
+
+  // Contract C4: the caller comes from the verified access token.
+  const token = bearerToken(req.headers.get('Authorization'));
+  const {
+    data: { user },
+  } = token ? await supabase.auth.getUser(token) : { data: { user: null } };
+  if (!user) return json({ error: 'Unauthorized' }, 401);
 
   // Handle status check requests
   if (req.method === 'GET') {
@@ -26,12 +42,12 @@ serve(async (req) => {
       });
     }
 
-    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
-
+    // Only the caller's own jobs
     const { data: job, error } = await supabase
       .from('subject_jobs')
       .select('*')
       .eq('id', jobId)
+      .eq('user_id', user.id)
       .single();
 
     if (error) {
@@ -47,16 +63,30 @@ serve(async (req) => {
   }
 
   try {
-    const { questions, availableSubjects, userId } = await req.json();
+    const parsed = parseAssignRequest(await req.json().catch(() => null));
+    if (!parsed.ok) return json({ error: parsed.error }, 400);
+    const { questions, availableSubjects, questionIds } = parsed;
+    // A userId in the body is ignored: the job belongs to the caller.
+    const userId = user.id;
 
-    if (!questions || !availableSubjects || !userId) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: questions, availableSubjects, userId' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+    // Contract C4: every question must be the caller's own. Checked in chunks
+    // so the id list stays well inside the request URL limit.
+    let ownedCount = 0;
+    for (let i = 0; i < questionIds.length; i += 100) {
+      const { data: owned, error: ownedError } = await supabase
+        .from('questions')
+        .select('id')
+        .in('id', questionIds.slice(i, i + 100))
+        .eq('user_id', userId);
+      if (ownedError) {
+        console.error('Error checking question ownership:', ownedError.message);
+        return json({ error: 'Failed to check questions' }, 500);
+      }
+      ownedCount += (owned ?? []).length;
     }
-
-    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
+    if (ownedCount !== questionIds.length) {
+      return json({ error: 'Subjects can only be assigned to your own questions' }, 403);
+    }
 
     const totalQuestions = questions.length;
     const jobId = crypto.randomUUID();
@@ -101,9 +131,13 @@ serve(async (req) => {
     console.log(`Triggering worker at: ${triggerUrl}`);
 
     // Fire and forget - don't await to avoid blocking
+    // Contract C2: the worker checks AI_COMMENTARY_BACKEND_TOKEN.
     fetch(triggerUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${Deno.env.get('AI_COMMENTARY_BACKEND_TOKEN') ?? ''}`,
+      },
     })
       .then(async (response) => {
         console.log(`Worker trigger response status: ${response.status}`);

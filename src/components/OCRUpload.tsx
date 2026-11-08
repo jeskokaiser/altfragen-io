@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { showToast } from '@/utils/toast';
+import { supabase } from '@/integrations/supabase/client';
 import { fetchQuestionsByFilename } from '@/services/DatabaseService';
 import { findUpcomingExamByExamName } from '@/services/UpcomingExamService';
 
@@ -177,9 +178,18 @@ const OCRUpload: React.FC<OCRUploadProps> = ({
 
       setUploadProgress(30);
 
+      // Contract C1: the OCR service takes the user from this token.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Sitzung abgelaufen. Bitte melde dich erneut an.');
+      }
+
       // Call OCR service
       const response = await fetch('https://api.altfragen.io/ocr-service/process', {
         method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: formData,
       });
 

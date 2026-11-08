@@ -117,6 +117,14 @@ lifetime purchases went ungranted and eight cancellations kept premium. After
 any deploy of it, an unsigned `POST` must answer 400 ("No stripe-signature
 header"), not 401.
 
+**`dispatch-next-ai-commentary-batch` and `reconcile-stuck-ai-commentary-jobs`
+also deploy with `verify_jwt = false`** (`config.toml`): pg_cron sends no JWT.
+They check `x-cron-secret` against the `CRON_SECRET` secret instead and refuse
+every call while it is unset. The worker calls (`assign-subjects`,
+`reassign-subjects` to the subject worker) send `AI_COMMENTARY_BACKEND_TOKEN`;
+the uploads (`process-pdf`, `check-pdf-status`, `OCRUpload.tsx`) send the
+user's access token. Contract C1-C4 in `docs/cross-repo-plan.md`.
+
 ## The lint ratchet
 
 `npm run lint` passes with zero errors and caps warnings at a fixed number

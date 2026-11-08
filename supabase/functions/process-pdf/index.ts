@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getSecretKey } from '../_shared/supabaseKeys.ts';
+import { bearerToken } from '../_shared/callerAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,6 +18,21 @@ serve(async (req) => {
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Contract C1: the caller is the user of the access token, never a form
+    // field. The parser gets the same Authorization header and checks it too.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = bearerToken(authHeader);
+    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
+    const {
+      data: { user },
+    } = token ? await supabase.auth.getUser(token) : { data: { user: null } };
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -49,7 +65,8 @@ serve(async (req) => {
     const examYear = formData.get('examYear')?.toString();
     const examSemester = formData.get('examSemester')?.toString();
     const subject = formData.get('subject')?.toString();
-    const userId = formData.get('userId')?.toString();
+    // Step 2 still sends userId to the parser, but only the verified one.
+    const userId = user.id;
     const visibility = formData.get('visibility')?.toString();
 
     console.log('Extracted form data:', {
@@ -63,9 +80,7 @@ serve(async (req) => {
 
     // Get user's university_id from Supabase if visibility is 'university'
     let universityId = null;
-    if (visibility === 'university' && userId) {
-      const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
-
+    if (visibility === 'university') {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('university_id')
@@ -127,6 +142,7 @@ serve(async (req) => {
     // Forward the request to the external API
     const apiResponse = await fetch(UPLOAD_ENDPOINT, {
       method: 'POST',
+      headers: { Authorization: authHeader },
       body: apiFormData,
     });
 

@@ -5,3 +5,12 @@ project_id = "ynzxzhpivcmkpipanltd"
 # is ever recorded -- see the stripe-webhook rule in CLAUDE.md.
 [functions.stripe-webhook]
 verify_jwt = false
+
+# pg_cron sends no JWT; both functions check x-cron-secret against CRON_SECRET
+# instead (contract C3). The legacy anon key would pass verify_jwt anyway, so
+# the gate added no protection. Deploy with verify_jwt false, as stripe-webhook.
+[functions.dispatch-next-ai-commentary-batch]
+verify_jwt = false
+
+[functions.reconcile-stuck-ai-commentary-jobs]
+verify_jwt = false

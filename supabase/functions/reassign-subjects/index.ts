@@ -2,6 +2,7 @@ import 'https://deno.land/x/xhr@0.1.0/mod.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getSecretKey } from '../_shared/supabaseKeys.ts';
+import { bearerToken, parseReassignRequest } from '../_shared/callerAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,10 +10,33 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
 };
 
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
+
+  // Contract C4: the caller comes from the verified access token.
+  const token = bearerToken(req.headers.get('Authorization'));
+  const {
+    data: { user },
+  } = token ? await supabase.auth.getUser(token) : { data: { user: null } };
+  if (!user) return json({ error: 'Unauthorized' }, 401);
+
+  // Contract C4: reassigning touches every question of an exam, so admins only.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!profile?.is_admin) return json({ error: 'Forbidden' }, 403);
 
   // Handle status check requests
   if (req.method === 'GET') {
@@ -25,8 +49,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
 
     const { data: job, error } = await supabase
       .from('subject_jobs')
@@ -47,26 +69,16 @@ serve(async (req) => {
   }
 
   try {
-    const { examName, universityId, onlyNullSubjects, availableSubjects } = await req.json();
+    const parsed = parseReassignRequest(await req.json().catch(() => null));
+    if (!parsed.ok) return json({ error: parsed.error }, 400);
+    const { examName, universityId, onlyNullSubjects, availableSubjects } = parsed;
 
-    console.log('Request body:', { examName, universityId, onlyNullSubjects, availableSubjects });
-
-    if (
-      !examName ||
-      !availableSubjects ||
-      !Array.isArray(availableSubjects) ||
-      availableSubjects.length === 0
-    ) {
-      console.error('Missing or invalid required fields');
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields: examName, availableSubjects (must be non-empty array)',
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
-
-    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', getSecretKey() ?? '');
+    const { data: university } = await supabase
+      .from('universities')
+      .select('id')
+      .eq('id', universityId)
+      .maybeSingle();
+    if (!university) return json({ error: 'Unknown university' }, 400);
 
     // Generate unique job ID
     const jobId = crypto.randomUUID();
@@ -76,8 +88,8 @@ serve(async (req) => {
       type: 'reassign',
       status: 'pending',
       exam_name: examName,
-      university_id: universityId ?? null,
-      only_null_subjects: !!onlyNullSubjects,
+      university_id: universityId,
+      only_null_subjects: onlyNullSubjects,
       available_subjects: availableSubjects,
       progress: 0,
       total: 0,
@@ -107,9 +119,13 @@ serve(async (req) => {
     console.log(`Triggering worker at: ${triggerUrl}`);
 
     // Fire and forget - don't await to avoid blocking
+    // Contract C2: the worker checks AI_COMMENTARY_BACKEND_TOKEN.
     fetch(triggerUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${Deno.env.get('AI_COMMENTARY_BACKEND_TOKEN') ?? ''}`,
+      },
     })
       .then(async (response) => {
         console.log(`Worker trigger response status: ${response.status}`);

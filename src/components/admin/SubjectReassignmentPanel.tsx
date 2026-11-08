@@ -32,7 +32,7 @@ interface ProcessingResult {
 
 const SubjectReassignmentPanel: React.FC = () => {
   const [examName, setExamName] = useState('');
-  const [universityId, setUniversityId] = useState<string>('all');
+  const [universityId, setUniversityId] = useState<string>('');
   const [onlyNullSubjects, setOnlyNullSubjects] = useState<string>('all');
   const [subjects, setSubjects] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -63,8 +63,8 @@ const SubjectReassignmentPanel: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!examName.trim() || !subjects.trim()) {
-      toast.error('Please fill in exam name and subjects');
+    if (!examName.trim() || !subjects.trim() || !universityId) {
+      toast.error('Please fill in exam name, university and subjects');
       return;
     }
 
@@ -92,7 +92,7 @@ const SubjectReassignmentPanel: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('reassign-subjects', {
         body: {
           examName: examName.trim(),
-          universityId: universityId === 'all' ? null : universityId,
+          universityId,
           onlyNullSubjects: onlyNullSubjects === 'null-only',
           availableSubjects: subjectList,
         },
@@ -205,7 +205,7 @@ const SubjectReassignmentPanel: React.FC = () => {
 
   const resetForm = () => {
     setExamName('');
-    setUniversityId('all');
+    setUniversityId('');
     setOnlyNullSubjects('all');
     setSubjects('');
     setResult(null);
@@ -232,13 +232,12 @@ const SubjectReassignmentPanel: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="university">University (Optional)</Label>
+              <Label htmlFor="university">University *</Label>
               <Select value={universityId} onValueChange={setUniversityId} disabled={isProcessing}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select university (leave empty for all)" />
+                  <SelectValue placeholder="Select university" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Universities</SelectItem>
                   {universities?.map((uni) => (
                     <SelectItem key={uni.id} value={uni.id}>
                       {uni.name}
@@ -285,7 +284,7 @@ const SubjectReassignmentPanel: React.FC = () => {
             <div className="flex gap-2">
               <Button
                 type="submit"
-                disabled={isProcessing || !examName.trim() || !subjects.trim()}
+                disabled={isProcessing || !examName.trim() || !subjects.trim() || !universityId}
                 className="flex items-center gap-2"
               >
                 {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
