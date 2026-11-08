@@ -390,6 +390,41 @@ export type Database = {
           },
         ]
       }
+      ai_commentary_priority: {
+        Row: {
+          attempts: number
+          last_claimed_at: string | null
+          question_id: string
+          rank: number
+          reason: string
+          requested_at: string
+        }
+        Insert: {
+          attempts?: number
+          last_claimed_at?: string | null
+          question_id: string
+          rank: number
+          reason: string
+          requested_at?: string
+        }
+        Update: {
+          attempts?: number
+          last_claimed_at?: string | null
+          question_id?: string
+          rank?: number
+          reason?: string
+          requested_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_commentary_priority_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_commentary_settings: {
         Row: {
           auto_trigger_enabled: boolean | null
@@ -1445,7 +1480,34 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ai_commentary_pipeline_status: {
+        Row: {
+          aufgegeben: number | null
+          fertig: number | null
+          gesamt: number | null
+          gruppe: string | null
+          in_arbeit: number | null
+          offen: number | null
+          reihenfolge: number | null
+        }
+        Relationships: []
+      }
+      ai_commentary_priority_open: {
+        Row: {
+          question_id: string | null
+          rank: number | null
+          reason: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_commentary_priority_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       ai_commentary_claim_next_batch: {

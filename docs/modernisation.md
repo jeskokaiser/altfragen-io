@@ -611,9 +611,18 @@ filters report the older session result for them. Picking one rule changes
 numbers users see, so it wants a deliberate decision, not a refactor. The
 rating rows above belong in the same decision.
 
-**The AI commentary pipeline has stood still since 1 June.** A plan for it
-is still to be made with the owner; this is where it stands (2026-10-03,
-counts only):
+**The AI commentary pipeline restarted on 2026-11-08.** `Process AI Comments`
+is active again. Before it, the 341 queue jobs and 409 questions stuck in
+`processing` since June were reset to `pending` (no provider batch was open),
+which also frees the quota they held. A ranked priority list,
+`ai_commentary_priority`, now goes first: 1,761 university questions without
+any comment, then 4,826 of the 5,000 most answered university questions (12
+months, January and February 2026 counted double; questions with an image
+left out), re-commented with the new models. Progress:
+`ai_commentary_pipeline_status`. Still open from the list below: backend
+failure paths that leave questions `processing` (a priority entry stuck there
+shows as `in_arbeit` and is never retried), and the reconciler, which still
+has no cron job. The state before the restart (2026-10-03, counts only):
 
 - The dispatcher's cron job, `Process AI Comments` (every 10 minutes, calls
   `dispatch-next-ai-commentary-batch`), is inactive. Its last run, the last AI
