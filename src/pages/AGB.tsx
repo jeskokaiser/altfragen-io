@@ -16,7 +16,12 @@ const AGB = () => {
                 Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") gelten für alle Verträge
                 zwischen Altfragen.io, angeboten von KSR Labs, Jesko Kaiser (nachfolgend "Anbieter")
                 und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen
-                Premium-Dienste.
+                Premium-Dienste (Abonnements, Lifetime Premium und KI-Credits). Für die Nutzung der
+                Plattform im Übrigen gelten die{' '}
+                <a href="/terms" className="text-blue-600 hover:underline">
+                  Nutzungsbedingungen
+                </a>
+                ; soweit sie sich widersprechen, gehen für Premium-Dienste diese AGB vor.
               </p>
               <p>
                 Anbieter:
@@ -41,8 +46,19 @@ const AGB = () => {
                 Altfragen.io mit folgenden Leistungen:
               </p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>Zugriff auf unbegrenzte KI-kommentierte Fragen und Antworten</li>
-                <li>Premium Support unter premium@altfragen.io</li>
+                <li>Unbegrenzte Trainings-Sessions</li>
+                <li>
+                  KI-Kommentare zu geteilten Fragen ohne Tageslimit, soweit für die Frage
+                  KI-Kommentare vorliegen
+                </li>
+                <li>
+                  KI-Kommentare zu privaten Fragen im Rahmen des in der App angezeigten Kontingents,
+                  erweiterbar durch KI-Credits (§ 4)
+                </li>
+                <li>KI-verbesserte Fragen und Antworten</li>
+                <li>Texterkennung (OCR) in PDF-Dateien</li>
+                <li>Ausführliche Statistiken</li>
+                <li>Premium-Support unter premium@altfragen.io</li>
               </ul>
             </section>
 
@@ -62,19 +78,35 @@ const AGB = () => {
             {/* 4. Preise und Zahlungsbedingungen */}
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 4 Preise und Zahlungsbedingungen</h2>
+              <p>Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</p>
               <p>
-                Die Preise werden nach §19 UStG versteuert, daher fällt keine Mehrwertsteuer an.
+                Es gelten die beim Kauf angezeigten Preise. Abonnements werden je nach gewähltem
+                Tarif monatlich oder pro Semester im Voraus abgerechnet; Lifetime Premium und
+                KI-Credits werden einmalig bezahlt. Die Zahlung erfolgt über unseren
+                Zahlungsdienstleister Stripe.
               </p>
-              <p>Die Zahlung erfolgt monatlich über unseren Zahlungsdienstleister Stripe.</p>
+              <p>
+                <strong>KI-Credits:</strong> Nutzer mit Premium-Zugang können zusätzliche Credits
+                für KI-Kommentare zu privaten Fragen in Paketen kaufen; der Umfang eines Pakets wird
+                vor dem Kauf angezeigt. Gekaufte Credits verfallen nicht. Sie können nur genutzt
+                werden, solange ein Premium-Zugang besteht; endet er, bleiben sie erhalten und sind
+                mit einem neuen Premium-Zugang wieder nutzbar. Credits sind an das Nutzerkonto
+                gebunden, nicht übertragbar und erlöschen mit der Löschung des Nutzerkontos.
+                Gekaufte, noch nicht genutzte Credits erstattet der Anbieter anteilig zum Kaufpreis,
+                wenn er die Plattform einstellt, den Vertrag ohne wichtigen Grund kündigt oder Sie
+                nach einer Leistungsänderung (§ 6) kündigen. Bei der Nutzung werden zuerst kostenlos
+                gewährte, dann gekaufte Credits angerechnet. Kostenlos gewährte Credits werden nicht
+                erstattet. Eine weitergehende Auszahlung ist ausgeschlossen.
+              </p>
               <p>
                 <strong>Lifetime Premium Abonnement:</strong> Neben den wiederkehrenden Abonnements
                 (monatlich/semestral) bietet der Anbieter optional ein "Lifetime Premium" Abonnement
                 an. Dieses wird durch eine einmalige Zahlung erworben und gewährt dauerhaften Zugang
-                zu den Premium-Funktionen der Plattform. Die einmalige Zahlung ist nach Ablauf der
-                gesetzlichen Widerrufsfrist endgültig und nicht erstattungsfähig. Das Lifetime
-                Premium Abonnement ist an das jeweilige Nutzerkonto gebunden und nicht übertragbar.
-                Der Anbieter behält sich vor, das Lifetime Premium Abonnement zu bestimmten Zeiten
-                als zeitlich begrenzte Promotion anzubieten.
+                zu den Premium-Funktionen der Plattform. Nach Ablauf der gesetzlichen Widerrufsfrist
+                wird die einmalige Zahlung nur nach § 6 anteilig erstattet. Das Lifetime Premium
+                Abonnement ist an das jeweilige Nutzerkonto gebunden und nicht übertragbar. Der
+                Anbieter behält sich vor, das Lifetime Premium Abonnement zu bestimmten Zeiten als
+                zeitlich begrenzte Promotion anzubieten.
               </p>
             </section>
 
@@ -82,12 +114,19 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 5 Laufzeit und Kündigung</h2>
               <p>
-                Wiederkehrende Abonnements (monatlich/semestral) laufen auf unbestimmte Zeit und
-                sind jederzeit zum Ablauf des Abrechnungszeitraums kündbar.
+                Monatsabonnements laufen auf unbestimmte Zeit und sind jederzeit zum Ende des
+                laufenden Abrechnungsmonats kündbar.
               </p>
               <p>
-                Die Kündigung kann jederzeit über das Stripe Customer Portal in Ihrem Benutzerkonto
-                oder per E-Mail an premium@altfragen.io erfolgen.
+                Semesterabonnements haben eine erste Laufzeit von sechs Monaten und sind zu deren
+                Ende kündbar. Danach laufen sie auf unbestimmte Zeit weiter und sind jederzeit mit
+                einer Frist von einem Monat kündbar. Für die Zeit nach dem Vertragsende bereits
+                gezahlte Beträge erstattet der Anbieter anteilig.
+              </p>
+              <p>
+                Die Kündigung kann jederzeit über die Schaltfläche „Verträge hier kündigen“ unten
+                auf jeder Seite (auch ohne Login), über das Kundenportal in Ihrem Benutzerkonto oder
+                per E-Mail an premium@altfragen.io erfolgen.
               </p>
               <p>
                 <strong>Lifetime Premium Abonnement:</strong> Das Lifetime Premium Abonnement
@@ -95,7 +134,7 @@ const AGB = () => {
                 Premium Abonnements ist nicht erforderlich, da keine wiederkehrenden Zahlungen
                 anfallen. Bei Löschung des Nutzerkontos endet auch der Zugang zum Lifetime Premium
                 Abonnement. Eine Rückerstattung der einmaligen Zahlung ist nach Ablauf der
-                gesetzlichen Widerrufsfrist ausgeschlossen.
+                gesetzlichen Widerrufsfrist ausgeschlossen, soweit § 6 nichts anderes bestimmt.
               </p>
               <p>Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.</p>
             </section>
@@ -123,16 +162,28 @@ const AGB = () => {
                 premium@altfragen.io zu richten.
               </p>
               <p>
+                <strong>Änderungen der Premium-Dienste:</strong> Der Anbieter darf die
+                Premium-Dienste über das zur Vertragsmäßigkeit Erforderliche hinaus nur ändern, wenn
+                dafür ein triftiger Grund besteht, insbesondere die Anpassung an technische
+                Entwicklungen (z. B. wenn ein KI-Anbieter ein Modell einstellt), an geänderte
+                Gesetze oder an Sicherheitsanforderungen. Ihnen entstehen dadurch keine zusätzlichen
+                Kosten, und der Anbieter informiert Sie klar und verständlich über die Änderung.
+                Beeinträchtigt eine Änderung Ihren Zugang oder die Nutzbarkeit mehr als nur
+                unerheblich, informiert der Anbieter Sie rechtzeitig vorher per E-Mail. Sie können
+                den Vertrag dann innerhalb von 30 Tagen nach Zugang dieser Information oder, falls
+                die Änderung später erfolgt, nach der Änderung unentgeltlich kündigen. Für die Zeit
+                nach dem Vertragsende bereits gezahlte Beträge erstattet der Anbieter anteilig.
+              </p>
+              <p>
                 <strong>Lifetime Premium Abonnement:</strong> Der Zugang zu den Premium-Funktionen
-                im Rahmen des Lifetime Premium Abonnements besteht dauerhaft, solange die Plattform
-                betrieben wird und das Nutzerkonto besteht. Der Anbieter behält sich vor, die
-                Plattform, einzelne Funktionen oder die Art der Leistungserbringung
-                weiterzuentwickeln oder anzupassen, soweit dies technisch erforderlich oder zumutbar
-                ist. Der Anbieter verpflichtet sich jedoch, Lifetime Premium Nutzern dauerhaft
-                Zugang zu den Premium-Funktionen zu gewähren, auch wenn sich die Preise für
-                wiederkehrende Abonnements ändern sollten. Sollte der Anbieter die Plattform
-                vollständig einstellen, endet auch der Zugang zum Lifetime Premium Abonnement ohne
-                Anspruch auf Rückerstattung.
+                im Rahmen des Lifetime Premium Abonnements besteht, solange die Plattform betrieben
+                wird und das Nutzerkonto besteht, auch wenn sich die Preise für wiederkehrende
+                Abonnements ändern. Stellt der Anbieter die Plattform vollständig ein, kündigt er
+                dies mindestens drei Monate vorher per E-Mail an und stellt Ihnen auf Anfrage Ihre
+                eigenen Fragen als Datei bereit. Erfolgt die Einstellung innerhalb von 36 Monaten
+                nach dem Kauf, erstattet der Anbieter für jeden vollen Monat, der bis zum Ablauf
+                dieser 36 Monate fehlt, 1/36 des Kaufpreises. Danach besteht kein Anspruch auf
+                Erstattung.
               </p>
             </section>
 
@@ -159,9 +210,11 @@ const AGB = () => {
                 Produkthaftungsgesetz.
               </p>
               <p>
-                Für sonstige Schäden haftet der Anbieter nur bei der Verletzung wesentlicher
-                Vertragspflichten (Kardinalpflichten). In diesem Fall ist die Haftung auf den
-                typischen, vorhersehbaren Schaden begrenzt.
+                Im Übrigen haftet der Anbieter bei einfacher Fahrlässigkeit nur für die Verletzung
+                einer wesentlichen Vertragspflicht, also einer Pflicht, deren Erfüllung die
+                ordnungsgemäße Durchführung des Vertrags überhaupt erst ermöglicht und auf deren
+                Einhaltung Sie regelmäßig vertrauen dürfen. In diesem Fall ist die Haftung auf den
+                vertragstypischen, vorhersehbaren Schaden begrenzt.
               </p>
               <p>
                 Die KI-generierten Inhalte dienen ausschließlich Lernzwecken. Der Anbieter übernimmt
@@ -177,9 +230,9 @@ const AGB = () => {
                 Sie in unserer Widerrufsbelehrung.
               </p>
               <p>
-                <strong>Wichtiger Hinweis:</strong> Das Widerrufsrecht erlischt bei digitalen
-                Inhalten, wenn Sie der sofortigen Ausführung zugestimmt haben und zur Kenntnis
-                genommen haben, dass Sie dadurch Ihr Widerrufsrecht verlieren.
+                <strong>Wichtiger Hinweis:</strong> Haben Sie verlangt, dass der Anbieter vor Ablauf
+                der Widerrufsfrist mit der Leistung beginnt, und widerrufen Sie danach, zahlen Sie
+                einen angemessenen Betrag für die bis zum Widerruf erbrachte Leistung (Wertersatz).
               </p>
             </section>
 
@@ -218,13 +271,17 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 12 Änderungen der AGB</h2>
               <p>
-                Änderungen dieser AGB werden Ihnen mindestens vier Wochen vor Inkrafttreten per
-                E-Mail mitgeteilt. Widersprechen Sie nicht innerhalb von vier Wochen nach Zugang der
-                Mitteilung, gelten die geänderten AGB als angenommen.
+                Der Anbieter kann diese AGB mit Wirkung für die Zukunft ändern, wenn dies wegen
+                geänderter Gesetze oder Rechtsprechung, wegen neuer oder geänderter Funktionen oder
+                zur Beseitigung von Unklarheiten nötig ist. Preise und der Umfang der
+                Premium-Leistungen nach § 2 werden auf diesem Weg nicht geändert.
               </p>
               <p>
-                Auf Ihr Widerspruchsrecht und die Rechtsfolgen werden wir Sie in der Mitteilung
-                hinweisen.
+                Der Anbieter teilt Ihnen die Änderungen mindestens sechs Wochen vor dem geplanten
+                Inkrafttreten per E-Mail mit. Widersprechen Sie nicht bis zum Inkrafttreten, gelten
+                die geänderten AGB als angenommen. Bis zum Inkrafttreten können Sie ein Abonnement
+                außerdem kostenfrei kündigen. Auf diese Folgen weist der Anbieter in der Mitteilung
+                gesondert hin. Widersprechen Sie, gelten die bisherigen AGB weiter.
               </p>
             </section>
 
@@ -233,28 +290,25 @@ const AGB = () => {
               <h2 className="text-xl font-semibold">§ 13 Schlussbestimmungen</h2>
               <p>
                 Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts.
+                Zwingende Verbraucherschutzvorschriften des Staates, in dem Sie Ihren gewöhnlichen
+                Aufenthalt haben, bleiben unberührt.
               </p>
-              <p>Für Streitigkeiten aus diesem Vertrag ist der Gerichtsstand Hamburg.</p>
               <p>
-                Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, berührt dies
-                die Wirksamkeit der übrigen Bestimmungen nicht.
+                Sind Sie Kaufmann, juristische Person des öffentlichen Rechts oder
+                öffentlich-rechtliches Sondervermögen, ist Gerichtsstand für alle Streitigkeiten aus
+                diesem Vertrag Hamburg.
               </p>
-              <p>Stand: Dezember 2024</p>
+              <p>
+                Sollten einzelne Bestimmungen dieser AGB unwirksam sein oder werden, bleibt der
+                Vertrag im Übrigen wirksam. An die Stelle der unwirksamen Bestimmung treten die
+                gesetzlichen Vorschriften (§ 306 BGB).
+              </p>
+              <p>Stand: November 2026</p>
             </section>
 
-            {/* Online-Streitbeilegung */}
+            {/* Verbraucherstreitbeilegung */}
             <section className="space-y-2">
-              <h2 className="text-xl font-semibold">Hinweis zur Online-Streitbeilegung</h2>
-              <p>
-                Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS)
-                bereit:
-                <a
-                  href="https://ec.europa.eu/consumers/odr/"
-                  className="text-blue-600 hover:underline ml-1"
-                >
-                  https://ec.europa.eu/consumers/odr/
-                </a>
-              </p>
+              <h2 className="text-xl font-semibold">Hinweis zur Verbraucherstreitbeilegung</h2>
               <p>
                 Wir sind nicht verpflichtet und grundsätzlich nicht bereit, an
                 Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.

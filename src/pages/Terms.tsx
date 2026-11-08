@@ -2,7 +2,7 @@ const Terms = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl text-left">
       <h1 className="text-3xl font-bold mb-2">Nutzungsbedingungen für Altfragen.io</h1>
-      <p className="text-sm text-slate-500 mb-6">Stand: 26. November 2025</p>
+      <p className="text-sm text-slate-500 mb-6">Stand: November 2026</p>
 
       {/* Inhaltsverzeichnis */}
       <div className="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
@@ -89,13 +89,18 @@ const Terms = () => {
           <strong>1.1 </strong>
           Diese Nutzungsbedingungen regeln die Nutzung der Online-Plattform{' '}
           <strong>Altfragen.io</strong> (nachfolgend „Altfragen.io“ oder „Plattform“).
-          Vertragspartner des Nutzers ist der im Impressum von Altfragen.io benannte Anbieter
-          Betreiber KSR Labs (nachfolgend „Betreiber“).
+          Vertragspartner des Nutzers ist der im Impressum von Altfragen.io benannte Betreiber KSR
+          Labs, Jesko Kaiser (nachfolgend „Betreiber“).
         </p>
         <p>
           <strong>1.2 </strong>
-          Mit der Registrierung bzw. Nutzung der Plattform erkennen Sie diese Nutzungsbedingungen in
-          ihrer jeweils gültigen Fassung an.
+          Mit der Registrierung erkennen Sie diese Nutzungsbedingungen an. Für Änderungen gilt
+          Abschnitt 12. Für kostenpflichtige Premium-Zugänge (Abonnements, Lifetime Premium und
+          KI-Credits) gelten ergänzend die{' '}
+          <a href="/agb" className="text-blue-600 hover:underline">
+            AGB
+          </a>
+          .
         </p>
         <br />
         <h2 id="section-2" className="text-xl font-semibold mt-8 mb-3">
@@ -167,7 +172,8 @@ const Terms = () => {
           <strong>4.1 </strong>
           Der Betreiber räumt Ihnen ein einfaches, nicht ausschließliches, nicht übertragbares Recht
           ein, Altfragen.io im Rahmen dieser Nutzungsbedingungen zu nutzen. Eine Unterlizenzierung
-          ist ausgeschlossen.
+          ist ausgeschlossen. Der Quellcode von Altfragen.io ist unter der Lizenz GPL-3.0
+          veröffentlicht; Ihre Rechte aus dieser Lizenz bleiben von Abschnitt 4 unberührt.
         </p>
         <p>
           <strong>4.2 </strong>
@@ -194,8 +200,8 @@ const Terms = () => {
         <p>
           <strong>4.3 </strong>
           Die Weitergabe Ihres Zugangs (Account-Sharing) ist nicht gestattet. Bei Verstößen ist der
-          Betreiber berechtigt, den Zugang zu sperren oder den Nutzungsvertrag außerordentlich zu
-          kündigen.
+          Betreiber nach vorheriger Abmahnung, bei schwerwiegenden Verstößen auch ohne Abmahnung,
+          berechtigt, den Zugang zu sperren oder den Nutzungsvertrag außerordentlich zu kündigen.
         </p>
         <br />
         <h2 id="section-5" className="text-xl font-semibold mt-8 mb-3">
@@ -256,14 +262,12 @@ const Terms = () => {
             Datenbanken vorzuhalten,
           </li>
           <li>
-            Ihre Nutzerinhalte zum Betrieb, zur Verbesserung und zum Training von Funktionen der
-            Plattform zu verwenden, insbesondere von KI-gestützten Funktionen, soweit keine
-            entgegenstehenden datenschutzrechtlichen Vorgaben bestehen,
+            Ihre Nutzerinhalte zum Betrieb der Plattform zu verwenden, insbesondere für
+            KI-Kommentare, die Zuordnung zu Fächern und die Texterkennung,
           </li>
           <li>
-            die genannten Rechte an technische Dienstleister (z.B. Hosting-, KI- oder
-            Analysedienstleister) unterzulizenzieren, soweit dies zur Leistungserbringung
-            erforderlich ist.
+            die genannten Rechte an technische Dienstleister (z.B. Hosting- oder KI-Anbieter)
+            unterzulizenzieren, soweit dies zur Leistungserbringung erforderlich ist.
           </li>
         </ul>
         <p>
@@ -281,14 +285,15 @@ const Terms = () => {
         </p>
         <p>
           <strong>6.4 </strong>
-          Zur Bereitstellung von KI-Funktionen werden Ihre Nutzerinhalte an verschiedene KI-Provider
-          (z.B. OpenAI, Anthropic, Google, Mistral) übermittelt. Diese Provider können Ihre Daten
-          gemäß ihren eigenen Nutzungsbedingungen verwenden, einschließlich der möglichen Nutzung
-          für das Training ihrer KI-Modelle. Der Betreiber gibt den KI-Providern keine explizite
-          Freigabe zur Nutzung Ihrer Daten für Trainingszwecke, kann jedoch nicht ausschließen, dass
-          die Provider Ihre Daten entsprechend ihren eigenen Richtlinien für solche Zwecke
-          verwenden. Durch die Nutzung von Altfragen.io und insbesondere der KI-Funktionen stimmen
-          Sie dieser Weitergabe und möglichen Nutzung zu.
+          Für die KI-Funktionen übermittelt der Betreiber den Fragetext mit den Antwortoptionen bzw.
+          den Inhalt hochgeladener PDF-Dateien an KI-Anbieter (derzeit OpenAI, Google, Anthropic,
+          Mistral AI und Perplexity), aber keine Angaben zu Ihrer Person. Der Betreiber trainiert
+          selbst keine KI-Modelle mit Ihren Nutzerinhalten und gibt sie auch nicht zum Training
+          frei. Welche Anbieter welche Daten erhalten, steht in der{' '}
+          <a href="/privacy" className="text-blue-600 hover:underline">
+            Datenschutzerklärung
+          </a>
+          .
         </p>
         <br />
         <h2 id="section-7" className="text-xl font-semibold mt-8 mb-3">
@@ -316,7 +321,26 @@ const Terms = () => {
           <strong>7.2 </strong>
           Mögliche Maßnahmen sind insbesondere das Löschen oder Sperren einzelner Inhalte,
           Warnungen, die Einschränkung von Funktionen, die Sperrung des Nutzerkontos oder die
-          außerordentliche Kündigung des Nutzungsvertrags.
+          außerordentliche Kündigung des Nutzungsvertrags. Der Betreiber wählt die mildeste
+          geeignete Maßnahme. Entscheidungen trifft ein Mensch; automatisierte Moderation setzt der
+          Betreiber nicht ein.
+        </p>
+        <p>
+          <strong>7.3 </strong>
+          Rechtswidrige Inhalte können Sie per E-Mail an hallo@altfragen.io melden. Die Meldung
+          sollte begründen, warum der Inhalt rechtswidrig ist, die Fundstelle genau angeben (z.B.
+          Link oder Fragetext), Ihren Namen und Ihre E-Mail-Adresse enthalten und erklären, dass Sie
+          die Angaben in gutem Glauben machen. Der Betreiber bestätigt den Eingang, prüft die
+          Meldung zeitnah, sorgfältig und objektiv und teilt Ihnen seine Entscheidung mit.
+        </p>
+        <p>
+          <strong>7.4 </strong>
+          Ergreift der Betreiber eine Maßnahme nach 7.2 gegen Ihre Inhalte oder Ihr Nutzerkonto,
+          teilt er Ihnen dies mit einer klaren und spezifischen Begründung mit: welche Maßnahme, auf
+          welcher Grundlage (Gesetz oder Bestimmung dieser Nutzungsbedingungen) und aufgrund welcher
+          Tatsachen. Sie können sich dagegen per E-Mail an hallo@altfragen.io beschweren; der
+          Betreiber prüft die Beschwerde erneut und teilt Ihnen das Ergebnis mit. Der Rechtsweg
+          bleibt Ihnen unbenommen.
         </p>
         <br />
         <h2 id="section-8" className="text-xl font-semibold mt-8 mb-3">
@@ -374,12 +398,7 @@ const Terms = () => {
         </p>
         <p>
           <strong>9.3 </strong>
-          Zur Bereitstellung der KI-Funktionen werden Ihre Nutzerinhalte (Fragen, Antworten,
-          Kommentare etc.) an externe KI-Provider übermittelt. Diese Provider können Ihre Daten
-          gemäß ihren eigenen Nutzungsbedingungen verwenden, einschließlich der möglichen Nutzung
-          für das Training ihrer KI-Modelle, auch wenn der Betreiber den Providern eine solche
-          Nutzung nicht explizit freigibt. Nähere Informationen hierzu finden Sie auch in Abschnitt
-          6.4 dieser Nutzungsbedingungen.
+          Welche Inhalte für KI-Funktionen an KI-Anbieter übermittelt werden, regelt Abschnitt 6.4.
         </p>
         <br />
         <h2 id="section-10" className="text-xl font-semibold mt-8 mb-3">
@@ -401,21 +420,23 @@ const Terms = () => {
         </h2>
         <p>
           <strong>11.1 </strong>
-          Die Nutzung von Altfragen.io erfolgt auf eigene Gefahr. Der Betreiber übernimmt keine
-          Garantie für die inhaltliche Richtigkeit, Vollständigkeit oder Aktualität der auf der
-          Plattform verfügbaren Inhalte (einschließlich Nutzerinhalten und KI-Ausgaben).
+          Der Betreiber übernimmt keine Garantie für die inhaltliche Richtigkeit, Vollständigkeit
+          oder Aktualität der auf der Plattform verfügbaren Inhalte (einschließlich Nutzerinhalten
+          und KI-Ausgaben).
         </p>
         <p>
           <strong>11.2 </strong>
           Der Betreiber haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers
-          oder der Gesundheit, die auf einer vorsätzlichen oder grob fahrlässigen Pflichtverletzung
-          beruhen, sowie für sonstige Schäden, die auf Vorsatz oder grober Fahrlässigkeit beruhen.
+          oder der Gesundheit, für Schäden aus Vorsatz und grober Fahrlässigkeit sowie nach dem
+          Produkthaftungsgesetz.
         </p>
         <p>
           <strong>11.3 </strong>
-          Bei einfacher Fahrlässigkeit haftet der Betreiber nur für Schäden aus der Verletzung einer
-          wesentlichen Vertragspflicht (Kardinalpflicht), jedoch begrenzt auf den typischerweise
-          vorhersehbaren Schaden. Eine weitergehende Haftung ist ausgeschlossen.
+          Im Übrigen haftet der Betreiber bei einfacher Fahrlässigkeit nur für die Verletzung einer
+          wesentlichen Vertragspflicht, also einer Pflicht, deren Erfüllung die ordnungsgemäße
+          Durchführung des Vertrags überhaupt erst ermöglicht und auf deren Einhaltung Sie
+          regelmäßig vertrauen dürfen. In diesem Fall ist die Haftung auf den vertragstypischen,
+          vorhersehbaren Schaden begrenzt.
         </p>
         <p>
           <strong>11.4 </strong>
@@ -429,15 +450,19 @@ const Terms = () => {
         <p>
           <strong>12.1 </strong>
           Der Betreiber ist berechtigt, die Plattform weiterzuentwickeln, Funktionen zu ändern,
-          hinzuzufügen oder einzustellen, soweit dies für den Nutzer zumutbar ist.
+          hinzuzufügen oder einzustellen, soweit dies für den Nutzer zumutbar ist. Für
+          kostenpflichtige Premium-Dienste gilt stattdessen § 6 der AGB.
         </p>
         <p>
           <strong>12.2 </strong>
-          Der Betreiber kann diese Nutzungsbedingungen mit Wirkung für die Zukunft anpassen. Über
-          wesentliche Änderungen werden Nutzer in geeigneter Weise (z.B. per E-Mail oder Hinweis in
-          der App) informiert. Widersprechen Sie den Änderungen nicht innerhalb einer angemessenen
-          Frist und nutzen Sie die Plattform weiterhin, gelten die Änderungen als akzeptiert.
-          Hierauf wird gesondert hingewiesen.
+          Der Betreiber kann diese Nutzungsbedingungen mit Wirkung für die Zukunft ändern, wenn dies
+          wegen geänderter Gesetze oder Rechtsprechung, wegen neuer oder geänderter Funktionen oder
+          zur Beseitigung von Unklarheiten nötig ist. Leistungsumfang und Preise werden auf diesem
+          Weg nicht geändert. Der Betreiber teilt Ihnen die Änderungen mindestens sechs Wochen vor
+          dem geplanten Inkrafttreten in Textform (z.B. per E-Mail) mit. Widersprechen Sie nicht bis
+          zum Inkrafttreten, gelten die Änderungen als angenommen; darauf weist der Betreiber in der
+          Mitteilung gesondert hin. Widersprechen Sie, gelten die bisherigen Nutzungsbedingungen
+          weiter; der Betreiber kann den Nutzungsvertrag dann nach Abschnitt 13.2 kündigen.
         </p>
         <br />
         <h2 id="section-13" className="text-xl font-semibold mt-8 mb-3">
@@ -452,50 +477,19 @@ const Terms = () => {
           <strong>13.2 </strong>
           Der Betreiber kann den Nutzungsvertrag mit angemessener Frist kündigen oder aus wichtigem
           Grund außerordentlich kündigen, insbesondere bei wiederholten oder schwerwiegenden
-          Verstößen gegen diese Nutzungsbedingungen.
+          Verstößen gegen diese Nutzungsbedingungen. Besteht ein bezahlter Premium-Zugang, ist eine
+          ordentliche Kündigung durch den Betreiber frühestens zum Ende des bezahlten Zeitraums
+          möglich, bei Lifetime Premium nur bei Einstellung der Plattform nach § 6 der AGB.
         </p>
         <p>
-          <strong>13.3 Lifetime Premium Abonnement</strong>
+          <strong>13.3 </strong>
+          Laufzeit, Kündigung und Ende kostenpflichtiger Premium-Zugänge (Abonnements und Lifetime
+          Premium) regeln die{' '}
+          <a href="/agb" className="text-blue-600 hover:underline">
+            AGB
+          </a>
+          .
         </p>
-        <p>
-          Neben wiederkehrenden Premium-Abonnements (monatlich/semestral) kann der Betreiber
-          optional ein "Lifetime Premium" Abonnement anbieten. Dieses wird durch eine einmalige
-          Zahlung erworben und gewährt dauerhaften Zugang zu den Premium-Funktionen der Plattform
-          für die Lebensdauer des Nutzerkontos.
-        </p>
-        <ul className="list-disc list-inside space-y-1">
-          <li>
-            Die einmalige Zahlung ist nach Ablauf der gesetzlichen Widerrufsfrist endgültig und
-            nicht erstattungsfähig. Eine Rückerstattung erfolgt nur im Rahmen des gesetzlichen
-            Widerrufsrechts innerhalb der Widerrufsfrist.
-          </li>
-          <li>
-            Das Lifetime Premium Abonnement ist an das jeweilige Nutzerkonto gebunden und nicht auf
-            andere Konten übertragbar. Bei Löschung des Nutzerkontos endet auch der Zugang zum
-            Lifetime Premium Abonnement.
-          </li>
-          <li>
-            Der Betreiber verpflichtet sich, Lifetime Premium Nutzern dauerhaft Zugang zu den
-            Premium-Funktionen zu gewähren, solange die Plattform betrieben wird und das Nutzerkonto
-            besteht. Dies gilt auch bei späteren Preiserhöhungen für wiederkehrende Abonnements.
-          </li>
-          <li>
-            Der Betreiber behält sich vor, die Plattform, einzelne Funktionen oder die Art der
-            Leistungserbringung weiterzuentwickeln oder technisch anzupassen, soweit dies
-            erforderlich oder zumutbar ist. Lifetime Premium Nutzer behalten jedoch ihren Zugang zu
-            den Premium-Funktionen.
-          </li>
-          <li>
-            Sollte der Betreiber die Plattform vollständig einstellen oder den Betrieb dauerhaft
-            beenden, endet auch der Zugang zum Lifetime Premium Abonnement. In diesem Fall besteht
-            kein Anspruch auf Rückerstattung der einmaligen Zahlung.
-          </li>
-          <li>
-            Der Betreiber kann das Lifetime Premium Abonnement zu bestimmten Zeiten als zeitlich
-            begrenzte Promotion anbieten. Die Verfügbarkeit ist nicht garantiert und kann jederzeit
-            eingestellt werden.
-          </li>
-        </ul>
         <br />
         <h2 id="section-14" className="text-xl font-semibold mt-8 mb-3">
           14. Rechtswahl, Gerichtsstand und Schlussbestimmungen
@@ -516,14 +510,8 @@ const Terms = () => {
         <p>
           <strong>14.3 </strong>
           Sollten einzelne Bestimmungen dieser Nutzungsbedingungen unwirksam sein oder werden,
-          bleibt die Wirksamkeit der übrigen Bestimmungen unberührt. Anstelle der unwirksamen
-          Bestimmung gilt diejenige Regelung als vereinbart, die dem wirtschaftlichen Zweck der
-          unwirksamen Bestimmung am nächsten kommt.
-        </p>
-        <p>
-          <strong>14.4 </strong>
-          Änderungen und Ergänzungen dieser Nutzungsbedingungen bedürfen der Textform, soweit nicht
-          gesetzlich eine strengere Form vorgeschrieben ist.
+          bleibt der Vertrag im Übrigen wirksam. An die Stelle der unwirksamen Bestimmung treten die
+          gesetzlichen Vorschriften (§ 306 BGB).
         </p>
       </div>
     </div>

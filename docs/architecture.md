@@ -58,6 +58,12 @@ and `create-ai-credits-checkout` open Stripe Checkout; `customer-portal` opens
 the Stripe portal. Stripe reports back to `stripe-webhook`, the source of truth
 for entitlements in `subscribers`. It must deploy with `verify_jwt = false`.
 
+**Cancellation (§ 312k BGB).** The footer's "Verträge hier kündigen" opens
+`/kuendigen`, which needs no login. `submit-cancellation` stores the request in
+`contract_cancellations` and mails a confirmation through Brevo
+(`BREVO_API_KEY`) plus a copy to premium@altfragen.io. It never cancels in
+Stripe; the operator does that by hand.
+
 **Sign-up.** `validate-email` rejects disposable addresses. The university
 comes from an exact match of the email domain.
 
