@@ -94,7 +94,8 @@ const AGB = () => {
                 gebunden, nicht übertragbar und erlöschen mit der Löschung des Nutzerkontos.
                 Gekaufte, noch nicht genutzte Credits erstattet der Anbieter anteilig zum Kaufpreis,
                 wenn er die Plattform einstellt, den Vertrag ohne wichtigen Grund kündigt oder Sie
-                nach einer Leistungsänderung (§ 6) kündigen. Kostenlos gewährte Credits werden nicht
+                nach einer Leistungsänderung (§ 6) kündigen. Bei der Nutzung werden zuerst kostenlos
+                gewährte, dann gekaufte Credits angerechnet. Kostenlos gewährte Credits werden nicht
                 erstattet. Eine weitergehende Auszahlung ist ausgeschlossen.
               </p>
               <p>
