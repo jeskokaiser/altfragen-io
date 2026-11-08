@@ -200,8 +200,8 @@ const Terms = () => {
         <p>
           <strong>4.3 </strong>
           Die Weitergabe Ihres Zugangs (Account-Sharing) ist nicht gestattet. Bei Verstößen ist der
-          Betreiber berechtigt, den Zugang zu sperren oder den Nutzungsvertrag außerordentlich zu
-          kündigen.
+          Betreiber nach vorheriger Abmahnung, bei schwerwiegenden Verstößen auch ohne Abmahnung,
+          berechtigt, den Zugang zu sperren oder den Nutzungsvertrag außerordentlich zu kündigen.
         </p>
         <br />
         <h2 id="section-5" className="text-xl font-semibold mt-8 mb-3">
@@ -321,7 +321,26 @@ const Terms = () => {
           <strong>7.2 </strong>
           Mögliche Maßnahmen sind insbesondere das Löschen oder Sperren einzelner Inhalte,
           Warnungen, die Einschränkung von Funktionen, die Sperrung des Nutzerkontos oder die
-          außerordentliche Kündigung des Nutzungsvertrags.
+          außerordentliche Kündigung des Nutzungsvertrags. Der Betreiber wählt die mildeste
+          geeignete Maßnahme. Entscheidungen trifft ein Mensch; automatisierte Moderation setzt der
+          Betreiber nicht ein.
+        </p>
+        <p>
+          <strong>7.3 </strong>
+          Rechtswidrige Inhalte können Sie per E-Mail an hallo@altfragen.io melden. Die Meldung
+          sollte begründen, warum der Inhalt rechtswidrig ist, die Fundstelle genau angeben (z.B.
+          Link oder Fragetext), Ihren Namen und Ihre E-Mail-Adresse enthalten und erklären, dass Sie
+          die Angaben in gutem Glauben machen. Der Betreiber bestätigt den Eingang, prüft die
+          Meldung zeitnah, sorgfältig und objektiv und teilt Ihnen seine Entscheidung mit.
+        </p>
+        <p>
+          <strong>7.4 </strong>
+          Ergreift der Betreiber eine Maßnahme nach 7.2 gegen Ihre Inhalte oder Ihr Nutzerkonto,
+          teilt er Ihnen dies mit einer klaren und spezifischen Begründung mit: welche Maßnahme, auf
+          welcher Grundlage (Gesetz oder Bestimmung dieser Nutzungsbedingungen) und aufgrund welcher
+          Tatsachen. Sie können sich dagegen per E-Mail an hallo@altfragen.io beschweren; der
+          Betreiber prüft die Beschwerde erneut und teilt Ihnen das Ergebnis mit. Der Rechtsweg
+          bleibt Ihnen unbenommen.
         </p>
         <br />
         <h2 id="section-8" className="text-xl font-semibold mt-8 mb-3">
@@ -431,7 +450,8 @@ const Terms = () => {
         <p>
           <strong>12.1 </strong>
           Der Betreiber ist berechtigt, die Plattform weiterzuentwickeln, Funktionen zu ändern,
-          hinzuzufügen oder einzustellen, soweit dies für den Nutzer zumutbar ist.
+          hinzuzufügen oder einzustellen, soweit dies für den Nutzer zumutbar ist. Für
+          kostenpflichtige Premium-Dienste gilt stattdessen § 6 der AGB.
         </p>
         <p>
           <strong>12.2 </strong>
@@ -457,7 +477,9 @@ const Terms = () => {
           <strong>13.2 </strong>
           Der Betreiber kann den Nutzungsvertrag mit angemessener Frist kündigen oder aus wichtigem
           Grund außerordentlich kündigen, insbesondere bei wiederholten oder schwerwiegenden
-          Verstößen gegen diese Nutzungsbedingungen.
+          Verstößen gegen diese Nutzungsbedingungen. Besteht ein bezahlter Premium-Zugang, ist eine
+          ordentliche Kündigung durch den Betreiber frühestens zum Ende des bezahlten Zeitraums
+          möglich, bei Lifetime Premium nur bei Einstellung der Plattform nach § 6 der AGB.
         </p>
         <p>
           <strong>13.3 </strong>

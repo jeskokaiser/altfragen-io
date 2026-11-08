@@ -537,17 +537,18 @@ const Subscription = () => {
                 >
                   <span className="font-medium">Wichtiger Hinweis:</span>
                   <br />
-                  Ich stimme ausdrücklich zu, dass mit der Ausführung des Vertrags vor Ablauf der
-                  Widerrufsfrist begonnen wird und mir bekannt ist, dass ich dadurch mein{' '}
+                  Ich verlange ausdrücklich, dass ihr vor Ablauf der Widerrufsfrist mit der Leistung
+                  beginnt. Mir ist bekannt, dass ich bei einem{' '}
                   <Link
                     to="/widerruf"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
                   >
-                    Widerrufsrecht
+                    Widerruf
                   </Link>{' '}
-                  verliere. Weiterhin erkläre ich, dass ich die{' '}
+                  Wertersatz für die bis dahin erbrachte Leistung zahle. Weiterhin erkläre ich, dass
+                  ich die{' '}
                   <Link
                     to="/privacy"
                     target="_blank"
@@ -630,17 +631,18 @@ const Subscription = () => {
                 >
                   <span className="font-medium">Wichtiger Hinweis:</span>
                   <br />
-                  Ich stimme ausdrücklich zu, dass mit der Ausführung des Vertrags vor Ablauf der
-                  Widerrufsfrist begonnen wird und mir bekannt ist, dass ich dadurch mein{' '}
+                  Ich verlange ausdrücklich, dass ihr vor Ablauf der Widerrufsfrist mit der Leistung
+                  beginnt. Mir ist bekannt, dass ich bei einem{' '}
                   <Link
                     to="/widerruf"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
                   >
-                    Widerrufsrecht
+                    Widerruf
                   </Link>{' '}
-                  verliere. Weiterhin erkläre ich, dass ich die{' '}
+                  Wertersatz für die bis dahin erbrachte Leistung zahle. Weiterhin erkläre ich, dass
+                  ich die{' '}
                   <Link
                     to="/privacy"
                     target="_blank"

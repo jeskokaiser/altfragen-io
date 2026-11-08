@@ -54,19 +54,14 @@ const Widerruf = () => {
               </div>
 
               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                <h3 className="text-lg font-semibold mb-3">
-                  Besonderheiten bei digitalen Inhalten
-                </h3>
-                <p className="mb-3">
-                  <strong>Wichtiger Hinweis:</strong> Wenn Sie ausdrücklich zugestimmt haben, dass
-                  wir mit der Ausführung der Dienstleistung vor Ablauf der Widerrufsfrist beginnen,
-                  und Sie zur Kenntnis genommen haben, dass Sie durch Ihre Zustimmung mit Beginn der
-                  Ausführung der Dienstleistung Ihr Widerrufsrecht verlieren, erlischt Ihr
-                  Widerrufsrecht.
-                </p>
+                <h3 className="text-lg font-semibold mb-3">Wertersatz</h3>
                 <p>
-                  Dies gilt insbesondere für die Nutzung unserer Premium-KI-Funktionen nach
-                  Vertragsabschluss.
+                  Haben Sie verlangt, dass die Dienstleistungen während der Widerrufsfrist beginnen
+                  sollen, so haben Sie uns einen angemessenen Betrag zu zahlen, der dem Anteil der
+                  bis zu dem Zeitpunkt, zu dem Sie uns von der Ausübung des Widerrufsrechts
+                  hinsichtlich dieses Vertrags unterrichten, bereits erbrachten Dienstleistungen im
+                  Vergleich zum Gesamtumfang der im Vertrag vorgesehenen Dienstleistungen
+                  entspricht.
                 </p>
               </div>
             </section>

@@ -789,19 +789,19 @@ const Auth = () => {
                     htmlFor="terms"
                     className="text-sm text-slate-600 leading-relaxed cursor-pointer"
                   >
-                    Ich habe die{' '}
+                    Ich akzeptiere die{' '}
                     <Link to="/agb" className="text-blue-600 hover:underline" target="_blank">
                       AGB
-                    </Link>
-                    ,{' '}
+                    </Link>{' '}
+                    und die{' '}
                     <Link to="/terms" className="text-blue-600 hover:underline" target="_blank">
                       Nutzungsbedingungen
-                    </Link>{' '}
-                    und{' '}
+                    </Link>
+                    . Die{' '}
                     <Link to="/privacy" className="text-blue-600 hover:underline" target="_blank">
                       Datenschutzerklärung
                     </Link>{' '}
-                    gelesen und akzeptiere diese.
+                    habe ich zur Kenntnis genommen.
                   </label>
                 </div>
 
