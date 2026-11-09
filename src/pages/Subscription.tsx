@@ -277,7 +277,7 @@ const Subscription = () => {
               type="button"
               onClick={() => setBillingCycle('monthly')}
               aria-pressed={billingCycle === 'monthly'}
-              className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${
+              className={`min-h-9 rounded-full px-3 sm:px-4 text-sm font-semibold transition-colors ${
                 billingCycle === 'monthly'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground'
@@ -290,7 +290,7 @@ const Subscription = () => {
                 type="button"
                 onClick={() => setBillingCycle('semester')}
                 aria-pressed={billingCycle === 'semester'}
-                className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${
+                className={`min-h-9 rounded-full px-3 sm:px-4 text-sm font-semibold transition-colors ${
                   billingCycle === 'semester'
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground'
@@ -308,7 +308,7 @@ const Subscription = () => {
                   type="button"
                   onClick={() => setBillingCycle('lifetime')}
                   aria-pressed={billingCycle === 'lifetime'}
-                  className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors flex items-center gap-1 ${
+                  className={`min-h-9 rounded-full px-3 sm:px-4 text-sm font-semibold transition-colors flex items-center gap-1 ${
                     billingCycle === 'lifetime'
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground'
@@ -323,7 +323,7 @@ const Subscription = () => {
             )}
           </div>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Free Plan */}
           <Card className="p-6">
             <div className="text-center space-y-4">
@@ -358,7 +358,7 @@ const Subscription = () => {
           {/* Premium Plan mit Monats-/Semester-/Lifetime-Wahl */}
           <Card className="relative border-2 border-primary p-6">
             <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <h3 className="text-xl font-semibold">Premium</h3>
               </div>
               <div className="space-y-2">

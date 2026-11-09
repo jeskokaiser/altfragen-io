@@ -179,7 +179,7 @@ const QuestionSearch: React.FC = () => {
                   ? 'Keine Ergebnisse gefunden'
                   : `${searchResults.totalCount} Frage${searchResults.totalCount !== 1 ? 'n' : ''} gefunden`}
               </p>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 {isLoading && (
                   <div
                     role="status"
@@ -190,7 +190,7 @@ const QuestionSearch: React.FC = () => {
                   </div>
                 )}
                 {/* Sort Options */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Label htmlFor="sort-by" className="text-sm whitespace-nowrap">
                     Sortieren nach:
                   </Label>

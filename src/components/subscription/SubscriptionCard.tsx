@@ -100,7 +100,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
               <div className="text-xs text-warning-strong mb-2">
                 Der Status wird automatisch aktualisiert, sobald die Zahlung verarbeitet wurde.
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap justify-center gap-2">
                 <Button
                   onClick={handleRefreshStatus}
                   size="sm"
@@ -141,7 +141,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
               </div>
             )}
             <div className="flex items-center justify-center gap-2">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap justify-center gap-2">
                 {subscriptionTier !== 'Lifetime' && (
                   <Button onClick={openCustomerPortal} variant="outline" className="flex-1">
                     Abonnement verwalten
