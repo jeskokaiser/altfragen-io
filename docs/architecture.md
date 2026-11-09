@@ -45,7 +45,9 @@ worker, which also polls every 60 s and writes `questions.subject`.
    ones. `select * from ai_commentary_pipeline_status` shows what is open.
 2. pg_cron calls `dispatch-next-ai-commentary-batch`, which leases jobs and
    posts them to `POST /ai/process-batch`. A question new to the queue is
-   inserted on one run and claimed on the next.
+   inserted on one run and claimed on the next. Jobs still under lease are
+   skipped before the batch limit, so held jobs cannot block the queue; with
+   the feature off, the backend hands claimed jobs back to `pending`.
 3. The AI backend submits provider batches (OpenAI, Gemini, Claude, Mistral)
    or calls Perplexity's Agent API directly (with web search; its sources
    land in `ai_answer_comments.perplexity_sources`).
