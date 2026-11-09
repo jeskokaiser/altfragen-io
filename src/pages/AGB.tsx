@@ -144,6 +144,13 @@ const AGB = () => {
                 per E-Mail an premium@altfragen.io erfolgen.
               </p>
               <p>
+                <strong>Löschung des Nutzerkontos:</strong> Löschen Sie Ihr Nutzerkonto, endet ein
+                laufendes Abonnement abweichend von den vorstehenden Absätzen sofort; für den
+                bereits bezahlten Zeitraum erfolgt keine Erstattung. Darauf weist die App vor der
+                Löschung hin. Wer den bezahlten Zeitraum noch nutzen möchte, kann stattdessen
+                kündigen und das Konto nach dem Ende des Abonnements löschen.
+              </p>
+              <p>
                 <strong>Lifetime Premium Abonnement:</strong> Das Lifetime Premium Abonnement
                 besteht dauerhaft für die Lebensdauer des Nutzerkontos. Eine Kündigung des Lifetime
                 Premium Abonnements ist nicht erforderlich, da keine wiederkehrenden Zahlungen
@@ -247,7 +254,11 @@ const AGB = () => {
               <h2 className="text-xl font-semibold">§ 9 Widerrufsrecht</h2>
               <p>
                 Als Verbraucher haben Sie ein gesetzliches Widerrufsrecht. Die Einzelheiten finden
-                Sie in unserer Widerrufsbelehrung.
+                Sie in unserer{' '}
+                <a href="/widerruf" className="text-blue-600 hover:underline">
+                  Widerrufsbelehrung
+                </a>
+                .
               </p>
               <p>
                 <strong>Wichtiger Hinweis:</strong> Haben Sie verlangt, dass der Anbieter vor Ablauf
@@ -260,11 +271,11 @@ const AGB = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">§ 10 Datenschutz</h2>
               <p>
-                Die Verarbeitung personenbezogener Daten erfolgt gemäß unserer{' '}
+                Informationen zur Verarbeitung personenbezogener Daten finden Sie in unserer{' '}
                 <a href="/privacy" className="text-blue-600 hover:underline">
                   Datenschutzerklärung
                 </a>
-                .
+                . Sie ist nicht Bestandteil dieser AGB.
               </p>
             </section>
 

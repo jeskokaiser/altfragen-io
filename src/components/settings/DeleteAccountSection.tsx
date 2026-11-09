@@ -84,8 +84,10 @@ const DeleteAccountSection: React.FC = () => {
             <li>Mit deiner Universität geteilte und öffentliche Fragen (anonymisiert)</li>
           </ul>
           <p className="text-sm text-red-600 font-medium">
-            Ein laufendes Abo endet sofort, ohne automatische Erstattung. Auch der Zugang zu
-            Lifetime Premium endet.
+            Ein laufendes Abo endet sofort, ohne Erstattung für den bereits bezahlten Zeitraum (AGB
+            § 5). Willst du den Zeitraum noch nutzen, kündige zuerst und lösche das Konto danach.
+            Auch der Zugang zu Lifetime Premium endet. Ungenutzte gekaufte KI-Credits erstatten wir
+            nur, wenn du das vor der Löschung per E-Mail an premium@altfragen.io verlangst.
           </p>
           <p className="text-sm text-red-600">
             Bei Problemen kontaktiere uns unter: hallo@altfragen.io
@@ -105,7 +107,8 @@ const DeleteAccountSection: React.FC = () => {
               <AlertDialogDescription className="space-y-3">
                 <p>
                   Diese Aktion kann nicht rückgängig gemacht werden. Dein Konto und alle privaten
-                  Daten werden permanent gelöscht.
+                  Daten werden permanent gelöscht. Ein laufendes Abo endet sofort, ohne Erstattung
+                  für den bereits bezahlten Zeitraum.
                 </p>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-delete">Gib "DELETE" ein, um zu bestätigen:</Label>

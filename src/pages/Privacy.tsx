@@ -255,10 +255,10 @@ const Privacy = () => {
                   (Nutzungsbedingungen, Abschnitt 6.3).
                 </li>
                 <li>
-                  Laufende Abonnements werden mit der Kontolöschung beendet. Ihr Kundendatensatz bei
-                  Stripe (E-Mail-Adresse, ggf. Name, Zahlungsverlauf) bleibt bestehen, weil wir
-                  Zahlungs- und Rechnungsdaten nach Steuer- und Handelsrecht bis zu 10 Jahre
-                  aufbewahren müssen (§ 147 AO, § 257 HGB).
+                  Laufende Abonnements werden mit der Kontolöschung beendet (AGB § 5). Ihr
+                  Kundendatensatz bei Stripe (E-Mail-Adresse, ggf. Name, Zahlungsverlauf) bleibt
+                  bestehen, weil wir Zahlungs- und Rechnungsdaten nach Steuer- und Handelsrecht bis
+                  zu 10 Jahre aufbewahren müssen (§ 147 AO, § 257 HGB).
                 </li>
                 <li>
                   Für Marketing-E-Mails speichern wir Ihre E-Mail-Adresse, bis Sie die Einwilligung

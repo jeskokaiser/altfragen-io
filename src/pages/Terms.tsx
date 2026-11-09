@@ -100,7 +100,7 @@ const Terms = () => {
           <a href="/agb" className="text-blue-600 hover:underline">
             AGB
           </a>
-          .
+          ; soweit sie sich widersprechen, gehen für Premium-Dienste die AGB vor.
         </p>
         <br />
         <h2 id="section-2" className="text-xl font-semibold mt-8 mb-3">
@@ -507,8 +507,7 @@ const Terms = () => {
           <strong>14.2 </strong>
           Sind Sie Kaufmann im Sinne des Handelsgesetzbuchs, juristische Person des öffentlichen
           Rechts oder öffentlich-rechtliches Sondervermögen, ist Gerichtsstand für alle
-          Streitigkeiten aus oder im Zusammenhang mit diesen Nutzungsbedingungen der Sitz des
-          Betreibers.
+          Streitigkeiten aus oder im Zusammenhang mit diesen Nutzungsbedingungen Hamburg.
         </p>
         <p>
           <strong>14.3 </strong>
