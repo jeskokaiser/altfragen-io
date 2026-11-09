@@ -173,10 +173,11 @@ const Privacy = () => {
                   Inhalten. Bitte laden Sie keine Inhalte mit personenbezogenen Daten hoch.
                 </li>
                 <li>
-                  <strong>Brevo</strong> (EU): Versand von Marketing-E-Mails, nur wenn Sie
-                  eingewilligt haben, und Versand der Bestätigung, wenn Sie über „Verträge hier
-                  kündigen“ kündigen (§ 312k BGB). Verarbeitet Ihre E-Mail-Adresse und bei der
-                  Kündigungsbestätigung deren Inhalt.
+                  <strong>Brevo</strong> (EU): Versand der E-Mails zu Ihrem Konto (z. B. Bestätigung
+                  der E-Mail-Adresse, Zurücksetzen des Passworts), der Bestätigung, wenn Sie über
+                  „Verträge hier kündigen“ kündigen (§ 312k BGB), und von Marketing-E-Mails, nur
+                  wenn Sie eingewilligt haben. Verarbeitet Ihre E-Mail-Adresse und den Inhalt der
+                  jeweiligen E-Mail.
                 </li>
                 <li>
                   <strong>Zoho Mail</strong> (EU): unsere E-Mail-Postfächer. Verarbeitet E-Mails,
