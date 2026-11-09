@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const Terms = () => {
   return (
     <div className="mx-auto max-w-reading px-4 py-8 text-left md:px-6 md:py-12">
@@ -99,9 +101,9 @@ const Terms = () => {
           Mit der Registrierung erkennen Sie diese Nutzungsbedingungen an. Für Änderungen gilt
           Abschnitt 12. Für kostenpflichtige Premium-Zugänge (Abonnements, Lifetime Premium und
           KI-Credits) gelten ergänzend die{' '}
-          <a href="/agb" className="text-primary hover:underline">
+          <Link to="/agb" className="text-primary hover:underline">
             AGB
-          </a>
+          </Link>
           ; soweit sie sich widersprechen, gehen für Premium-Dienste die AGB vor.
         </p>
         <br />
@@ -292,9 +294,9 @@ const Terms = () => {
           Mistral AI und Perplexity), aber keine Angaben zu Ihrer Person. Der Betreiber trainiert
           selbst keine KI-Modelle mit Ihren Nutzerinhalten und gibt sie auch nicht zum Training
           frei. Welche Anbieter welche Daten erhalten, steht in der{' '}
-          <a href="/privacy" className="text-primary hover:underline">
+          <Link to="/privacy" className="text-primary hover:underline">
             Datenschutzerklärung
-          </a>
+          </Link>
           .
         </p>
         <br />
@@ -410,9 +412,9 @@ const Terms = () => {
           <strong>10.1 </strong>
           Informationen zur Verarbeitung personenbezogener Daten bei der Nutzung von Altfragen.io
           finden Sie in unserer{' '}
-          <a href="/privacy" className="text-primary hover:underline">
+          <Link to="/privacy" className="text-primary hover:underline">
             Datenschutzerklärung
-          </a>
+          </Link>
           . Diese ist nicht Bestandteil dieser Nutzungsbedingungen, ergänzt diese jedoch in
           datenschutzrechtlicher Hinsicht.
         </p>
@@ -490,9 +492,9 @@ const Terms = () => {
           <strong>13.3 </strong>
           Laufzeit, Kündigung und Ende kostenpflichtiger Premium-Zugänge (Abonnements und Lifetime
           Premium) regeln die{' '}
-          <a href="/agb" className="text-primary hover:underline">
+          <Link to="/agb" className="text-primary hover:underline">
             AGB
-          </a>
+          </Link>
           .
         </p>
         <br />

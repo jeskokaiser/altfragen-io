@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /training
+Disallow: /exam/
+Disallow: /settings
+Disallow: /subscription
+Disallow: /search
+Disallow: /tutorial
+Disallow: /ai-commentary
+Disallow: /unclear-questions/
+
+Sitemap: https://altfragen.io/sitemap.xml

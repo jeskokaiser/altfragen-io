@@ -3,6 +3,7 @@ const CACHE_NAME = 'altfragen-io-v1';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/favicon.svg',
   '/favicon.ico',
   '/pwa-icon.png',
 ];
