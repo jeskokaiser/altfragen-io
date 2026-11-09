@@ -52,8 +52,8 @@ const AGB = () => {
                   KI-Kommentare vorliegen
                 </li>
                 <li>
-                  KI-Kommentare zu privaten Fragen im Rahmen des in der App angezeigten Kontingents,
-                  erweiterbar durch KI-Credits (§ 4)
+                  KI-Kommentare zu privaten Fragen bis zu dem in der App angezeigten Kontingent
+                  (Höchstgrenze), erweiterbar durch KI-Credits (§ 4)
                 </li>
                 <li>KI-verbesserte Fragen und Antworten</li>
                 <li>Texterkennung (OCR) in PDF-Dateien</li>
@@ -72,6 +72,18 @@ const AGB = () => {
               <p>
                 Die Darstellung der Premium-Dienste auf unserer Website stellt kein rechtlich
                 bindendes Angebot, sondern eine Aufforderung zur Abgabe einer Bestellung dar.
+              </p>
+              <p>
+                Bestellablauf: Sie wählen auf der Seite „Premium“ einen Tarif oder im Dashboard die
+                Anzahl der Credit-Pakete und bestätigen die Hinweise zum Widerrufsrecht. Danach
+                werden Sie zu Stripe weitergeleitet. Dort geben Sie Ihre Zahlungsdaten ein, können
+                alle Eingaben vor dem Absenden prüfen und korrigieren oder den Vorgang abbrechen.
+                Mit dem Klick auf den Bezahl-Button geben Sie eine verbindliche Bestellung ab.
+              </p>
+              <p>
+                Der Anbieter speichert den Vertragstext nicht gesondert für Sie. Die jeweils
+                geltenden AGB können Sie jederzeit unter altfragen.io/agb abrufen, speichern und
+                ausdrucken. Vertragssprache ist Deutsch.
               </p>
             </section>
 
@@ -94,9 +106,12 @@ const AGB = () => {
                 gebunden, nicht übertragbar und erlöschen mit der Löschung des Nutzerkontos.
                 Gekaufte, noch nicht genutzte Credits erstattet der Anbieter anteilig zum Kaufpreis,
                 wenn er die Plattform einstellt, den Vertrag ohne wichtigen Grund kündigt oder Sie
-                nach einer Leistungsänderung (§ 6) kündigen. Bei der Nutzung werden zuerst kostenlos
-                gewährte, dann gekaufte Credits angerechnet. Kostenlos gewährte Credits werden nicht
-                erstattet. Eine weitergehende Auszahlung ist ausgeschlossen.
+                nach einer Leistungsänderung (§ 6) kündigen. Löschen Sie Ihr Nutzerkonto, erstattet
+                der Anbieter diese Credits ebenso, wenn Sie das vor der Löschung per E-Mail an
+                premium@altfragen.io verlangen. Ein Credit wird nur angerechnet, wenn für eine
+                private Frage tatsächlich KI-Kommentare erstellt wurden; dabei werden zuerst
+                kostenlos gewährte, dann gekaufte Credits angerechnet. Kostenlos gewährte Credits
+                werden nicht erstattet. Eine weitergehende Auszahlung ist ausgeschlossen.
               </p>
               <p>
                 <strong>Lifetime Premium Abonnement:</strong> Neben den wiederkehrenden Abonnements
@@ -156,9 +171,11 @@ const AGB = () => {
                 unterliegt technischen Beschränkungen und einer Fair-Use-Policy, die durch
                 Ratenbegrenzungen umgesetzt wird. Der Anbieter kann daher nicht garantieren, dass
                 sämtliche Fragen, insbesondere private Fragen des Nutzers, mit KI-Kommentaren
-                versehen werden. Dies gilt auch im Rahmen eines Premium-Abonnements. Nutzern mit
-                einem Bedarf an garantierter und vollständiger Verarbeitung ihrer privaten Fragen
-                bietet der Anbieter individuelle Vereinbarungen an. Anfragen hierzu sind an
+                versehen werden. Dies gilt auch im Rahmen eines Premium-Abonnements. Das in der App
+                angezeigte Kontingent ist eine Höchstgrenze; Kontingent und Credits werden nur für
+                tatsächlich erstellte KI-Kommentare angerechnet (§ 4). Nutzern mit einem Bedarf an
+                garantierter und vollständiger Verarbeitung ihrer privaten Fragen bietet der
+                Anbieter individuelle Vereinbarungen an. Anfragen hierzu sind an
                 premium@altfragen.io zu richten.
               </p>
               <p>
@@ -172,7 +189,9 @@ const AGB = () => {
                 unerheblich, informiert der Anbieter Sie rechtzeitig vorher per E-Mail. Sie können
                 den Vertrag dann innerhalb von 30 Tagen nach Zugang dieser Information oder, falls
                 die Änderung später erfolgt, nach der Änderung unentgeltlich kündigen. Für die Zeit
-                nach dem Vertragsende bereits gezahlte Beträge erstattet der Anbieter anteilig.
+                nach dem Vertragsende bereits gezahlte Beträge erstattet der Anbieter anteilig. Bei
+                Lifetime Premium gilt dafür die Erstattungsregel bei Einstellung der Plattform
+                (nächster Absatz) entsprechend, gerechnet ab dem Vertragsende.
               </p>
               <p>
                 <strong>Lifetime Premium Abonnement:</strong> Der Zugang zu den Premium-Funktionen
@@ -217,8 +236,9 @@ const AGB = () => {
                 vertragstypischen, vorhersehbaren Schaden begrenzt.
               </p>
               <p>
-                Die KI-generierten Inhalte dienen ausschließlich Lernzwecken. Der Anbieter übernimmt
-                keine Gewähr für die Richtigkeit oder Vollständigkeit der KI-Kommentare.
+                KI-Kommentare werden automatisch erstellt und dienen ausschließlich Lernzwecken. Sie
+                können fehlerhaft oder unvollständig sein und sind keine geprüfte Fachinformation.
+                Ihre gesetzlichen Rechte bei Mängeln bleiben unberührt.
               </p>
             </section>
 
@@ -274,7 +294,10 @@ const AGB = () => {
                 Der Anbieter kann diese AGB mit Wirkung für die Zukunft ändern, wenn dies wegen
                 geänderter Gesetze oder Rechtsprechung, wegen neuer oder geänderter Funktionen oder
                 zur Beseitigung von Unklarheiten nötig ist. Preise und der Umfang der
-                Premium-Leistungen nach § 2 werden auf diesem Weg nicht geändert.
+                Premium-Leistungen nach § 2 werden auf diesem Weg nicht geändert. Auch sonst werden
+                auf diesem Weg nur Änderungen wirksam, die Ihre Rechte nicht einschränken und Ihre
+                Pflichten nicht erweitern; andere Änderungen gelten nur mit Ihrer ausdrücklichen
+                Zustimmung.
               </p>
               <p>
                 Der Anbieter teilt Ihnen die Änderungen mindestens sechs Wochen vor dem geplanten
