@@ -54,8 +54,11 @@ const Privacy = () => {
                   Widerrufsfrist.
                 </li>
                 <li>
-                  <strong>Ihre Inhalte:</strong> Fragen, Antworten und Erklärungen, die Sie anlegen
-                  oder hochladen, sowie hochgeladene CSV- und PDF-Dateien.
+                  <strong>Ihre Inhalte:</strong> Fragen, Antworten, Erklärungen und Kommentare, die
+                  Sie anlegen oder hochladen, sowie hochgeladene CSV- und PDF-Dateien. Fragen, die
+                  Sie mit Ihrer Universität teilen, und Ihre öffentlichen Kommentare dazu sehen
+                  andere Nutzer Ihrer Universität mit bestätigter E-Mail-Adresse. Ihr Name und Ihre
+                  E-Mail-Adresse werden ihnen dabei nicht angezeigt.
                 </li>
                 <li>
                   <strong>Nutzungsdaten:</strong> Trainings-Sessions, Ihre Antworten, Ihre
@@ -135,9 +138,9 @@ const Privacy = () => {
                   technischen Daten beim Aufruf.
                 </li>
                 <li>
-                  <strong>Supabase</strong> (Server in Frankfurt am Main): Datenbank, Anmeldung,
-                  Dateispeicher und Serverfunktionen. Verarbeitet Kontodaten, Inhalte und
-                  Nutzungsdaten.{' '}
+                  <strong>Supabase</strong> (Supabase Inc., USA; Server in Frankfurt am Main):
+                  Datenbank, Anmeldung, Dateispeicher und Serverfunktionen. Verarbeitet Kontodaten,
+                  Inhalte und Nutzungsdaten.{' '}
                   <a href="https://supabase.com/privacy" className="text-blue-600 hover:underline">
                     Datenschutzerklärung von Supabase
                   </a>
@@ -170,10 +173,11 @@ const Privacy = () => {
                   Inhalten. Bitte laden Sie keine Inhalte mit personenbezogenen Daten hoch.
                 </li>
                 <li>
-                  <strong>Brevo</strong> (EU): Versand von Marketing-E-Mails, nur wenn Sie
-                  eingewilligt haben, und Versand der Bestätigung, wenn Sie über „Verträge hier
-                  kündigen“ kündigen (§ 312k BGB). Verarbeitet Ihre E-Mail-Adresse und bei der
-                  Kündigungsbestätigung deren Inhalt.
+                  <strong>Brevo</strong> (EU): Versand der E-Mails zu Ihrem Konto (z. B. Bestätigung
+                  der E-Mail-Adresse, Zurücksetzen des Passworts), der Bestätigung, wenn Sie über
+                  „Verträge hier kündigen“ kündigen (§ 312k BGB), und von Marketing-E-Mails, nur
+                  wenn Sie eingewilligt haben. Verarbeitet Ihre E-Mail-Adresse und den Inhalt der
+                  jeweiligen E-Mail.
                 </li>
                 <li>
                   <strong>Zoho Mail</strong> (EU): unsere E-Mail-Postfächer. Verarbeitet E-Mails,
@@ -190,11 +194,16 @@ const Privacy = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">6. Übermittlung in Länder außerhalb der EU</h2>
               <p>
-                Einige der genannten Dienstleister sitzen in den USA oder gehören zu Unternehmen mit
-                Sitz in den USA. Für Übermittlungen in die USA stützen wir uns auf den
-                Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework (Art. 45
-                DSGVO), soweit der Anbieter danach zertifiziert ist, und im Übrigen auf
-                Standardvertragsklauseln der EU-Kommission (Art. 46 Abs. 2 lit. c DSGVO).
+                Netlify, Supabase, Cloudflare, Stripe (Konzernmutter), OpenAI, Google, Anthropic und
+                Perplexity sitzen in den USA oder gehören zu Unternehmen mit Sitz in den USA. Für
+                Übermittlungen in die USA stützen wir uns auf den Angemessenheitsbeschluss der
+                EU-Kommission zum EU-US Data Privacy Framework (Art. 45 DSGVO), soweit der Anbieter
+                danach zertifiziert ist, und im Übrigen auf Standardvertragsklauseln der
+                EU-Kommission (Art. 46 Abs. 2 lit. c DSGVO).
+              </p>
+              <p>
+                Eine Kopie der Standardvertragsklauseln erhalten Sie auf Anfrage an
+                hallo@altfragen.io.
               </p>
             </section>
 
@@ -246,14 +255,22 @@ const Privacy = () => {
                   (Nutzungsbedingungen, Abschnitt 6.3).
                 </li>
                 <li>
-                  Laufende Abonnements werden mit der Kontolöschung beendet. Ihr Kundendatensatz bei
-                  Stripe (E-Mail-Adresse, ggf. Name, Zahlungsverlauf) bleibt bestehen, weil wir
-                  Zahlungs- und Rechnungsdaten nach Steuer- und Handelsrecht bis zu 10 Jahre
-                  aufbewahren müssen (§ 147 AO, § 257 HGB).
+                  Laufende Abonnements werden mit der Kontolöschung beendet (AGB § 5). Ihr
+                  Kundendatensatz bei Stripe (E-Mail-Adresse, ggf. Name, Zahlungsverlauf) bleibt
+                  bestehen, weil wir Zahlungs- und Rechnungsdaten nach Steuer- und Handelsrecht bis
+                  zu 10 Jahre aufbewahren müssen (§ 147 AO, § 257 HGB).
                 </li>
                 <li>
                   Für Marketing-E-Mails speichern wir Ihre E-Mail-Adresse, bis Sie die Einwilligung
                   widerrufen.
+                </li>
+                <li>
+                  Einwilligungen und Zustimmungen mit Zeitpunkt speichern wir, solange sie gelten,
+                  und danach drei Jahre, um sie nachweisen zu können (Art. 7 Abs. 1 DSGVO).
+                </li>
+                <li>
+                  E-Mails, die Sie uns schicken, löschen wir, wenn Ihr Anliegen erledigt ist,
+                  spätestens nach drei Jahren, soweit keine Aufbewahrungspflicht besteht.
                 </li>
                 <li>
                   Kündigungen speichern wir drei Jahre ab Ende des Jahres, in dem sie eingegangen
@@ -292,7 +309,11 @@ const Privacy = () => {
                 <li>
                   Widerruf einer Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO)
                 </li>
-                <li>Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO)</li>
+                <li>
+                  Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO), z. B. bei der
+                  für uns zuständigen Hamburgischen Beauftragten für Datenschutz und
+                  Informationsfreiheit
+                </li>
               </ul>
               <p>
                 <strong>Widerspruchsrecht (Art. 21 DSGVO):</strong> Verarbeiten wir Daten auf

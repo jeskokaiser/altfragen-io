@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import FileUpload from './FileUpload';
 import DashboardHeader from './datasets/DashboardHeader';
@@ -57,6 +58,7 @@ const Dashboard = () => {
   const [createSessionExamId, setCreateSessionExamId] = useState<string | null>(null);
 
   // Private AI commentary quota & credits
+  const [aiCreditsConsent, setAiCreditsConsent] = useState(false);
   const [aiCreditsLoading, setAiCreditsLoading] = useState(true);
   const [aiCreditsError, setAiCreditsError] = useState<string | null>(null);
   const [aiCredits, setAiCredits] = useState<{
@@ -153,7 +155,7 @@ const Dashboard = () => {
   }, [user?.id]);
 
   const handleBuyAiCredits = useCallback(async () => {
-    if (!user || isCreatingCreditsCheckout) return;
+    if (!user || isCreatingCreditsCheckout || !aiCreditsConsent) return;
 
     try {
       setIsCreatingCreditsCheckout(true);
@@ -192,7 +194,7 @@ const Dashboard = () => {
     } finally {
       setIsCreatingCreditsCheckout(false);
     }
-  }, [user, isCreatingCreditsCheckout, aiCreditsPacks]);
+  }, [user, isCreatingCreditsCheckout, aiCreditsPacks, aiCreditsConsent]);
 
   // Filter questions for personal datasets
 
@@ -629,7 +631,7 @@ const Dashboard = () => {
                                 </p>
                                 <Button
                                   onClick={handleBuyAiCredits}
-                                  disabled={isCreatingCreditsCheckout}
+                                  disabled={isCreatingCreditsCheckout || !aiCreditsConsent}
                                 >
                                   {isCreatingCreditsCheckout
                                     ? 'Weiterleitung zum Checkout …'
@@ -639,6 +641,30 @@ const Dashboard = () => {
                                 </Button>
                               </div>
                             </div>
+                          </div>
+                          <div className="flex items-start gap-2 mt-3">
+                            <Checkbox
+                              id="ai-credits-consent"
+                              checked={aiCreditsConsent}
+                              onCheckedChange={(checked) => setAiCreditsConsent(checked === true)}
+                              className="mt-0.5"
+                            />
+                            <label
+                              htmlFor="ai-credits-consent"
+                              className="text-xs text-muted-foreground leading-relaxed cursor-pointer"
+                            >
+                              Ich verlange ausdrücklich, dass ihr vor Ablauf der Widerrufsfrist mit
+                              der Leistung beginnt. Mir ist bekannt, dass ich bei einem{' '}
+                              <Link to="/widerruf" target="_blank" className="underline">
+                                Widerruf
+                              </Link>{' '}
+                              Wertersatz für bis dahin genutzte Credits zahle. Credits sind nur mit
+                              Premium nutzbar, verfallen aber nicht. Es gelten die{' '}
+                              <Link to="/agb" target="_blank" className="underline">
+                                AGB
+                              </Link>
+                              .
+                            </label>
                           </div>
                         </>
                       )}
