@@ -96,7 +96,7 @@ tabular-nums`, keys `font-mono text-xs`.
 - Touch targets: `touch:` variant (coarse pointer) raises buttons to 44 px;
   answer rows are at least 48 px.
 - Motion: 150 ms for hover/focus, 200 ms for expanding. `prefers-reduced-motion`
-  turns animation off globally (`index.css`).
+  turns animation off globally (`index.css`). See "Motion" below.
 
 ## Theme
 
@@ -145,3 +145,26 @@ dashboard).
   fields, editable text, menus or dialogs, and leave Space/Enter on a focused
   button to that button (answer rows excepted). `isShortcutBlocked` has a spec.
 - Icon-only buttons carry an `aria-label`.
+
+## Motion
+
+Calm in the app, a little more on the landing page. Nothing loops, floats or
+hijacks scrolling, and nothing ever stays hidden: every effect is wrapped in
+`prefers-reduced-motion: no-preference`, and scroll-driven effects sit behind
+`@supports (animation-timeline: view())`, so browsers without them simply show
+the content.
+
+| Where                                      | What                                                  | How                                                   |
+| ------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------- |
+| App pages                                  | fade in over 200 ms                                   | `Page` (`animate-in fade-in-0`)                       |
+| Answer comments, dashboard sections        | expand smoothly                                       | `animate-in`; `animate-collapsible-down/up`           |
+| Landing: hero                              | staggered rise on load, the cross in the box is drawn | `.enter` with `--delay`; `.draw` on `CrossBox`        |
+| Landing: headings, steps, features, prices | fade up while scrolling into view                     | `.reveal` (CSS view timeline)                         |
+| Landing: header                            | shadow once the page has scrolled                     | `.scroll-lift` (CSS scroll timeline)                  |
+| Landing: numbers                           | count up once visible                                 | `useInView` + `useCountUp`                            |
+| Landing: answer sheet, keys                | marks and keys appear one after another               | `useInView` sets `data-reveal`; `.stagger` with `--i` |
+| Landing: demo quiz                         | next question fades in, result slides in              | `animate-in`                                          |
+
+`useInView` (`src/hooks/useInView.ts`) hides only after mounting, before the
+first paint, and returns nothing without IntersectionObserver or with reduced
+motion — then everything is visible from the start.

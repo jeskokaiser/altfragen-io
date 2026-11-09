@@ -242,7 +242,10 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
       </button>
       {isExpanded && (
         // Clicking the open comments folds them again, as before; the button above is the keyboard path.
-        <div onClick={toggleExpand} className="border-t bg-muted/60 text-sm">
+        <div
+          onClick={toggleExpand}
+          className="border-t bg-muted/60 text-sm duration-200 animate-in fade-in-0 slide-in-from-top-1"
+        >
           <div className="py-3 pl-12 pr-5">
             {hasCommentsContent && !showUpgradePrompt ? (
               <div className="space-y-4">

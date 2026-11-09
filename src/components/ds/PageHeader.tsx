@@ -40,6 +40,13 @@ export function Page({
 }: React.HTMLAttributes<HTMLDivElement> & { width?: 'page' | 'reading' | 'narrow' }) {
   const max = { page: 'max-w-page', reading: 'max-w-reading', narrow: 'max-w-2xl' }[width];
   return (
-    <div className={cn('mx-auto w-full px-4 py-6 md:px-6 md:py-8', max, className)} {...props} />
+    <div
+      className={cn(
+        'mx-auto w-full px-4 py-6 duration-200 animate-in fade-in-0 md:px-6 md:py-8',
+        max,
+        className,
+      )}
+      {...props}
+    />
   );
 }

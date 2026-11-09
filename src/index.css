@@ -173,3 +173,77 @@
     }
   }
 }
+
+/* Motion. Everything below runs only when the device allows motion; without support for
+   scroll-driven animations (animation-timeline) content is simply shown, never hidden. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lift {
+  to {
+    box-shadow: 0 8px 24px -16px hsl(var(--foreground) / 0.35);
+  }
+}
+
+@layer utilities {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Load-in, staggered by --delay (hero only). */
+    .enter {
+      animation: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    /* The cross in a box is drawn stroke by stroke; paths carry pathLength="1". */
+    .draw path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw 420ms ease-out forwards;
+      animation-delay: var(--delay, 0ms);
+    }
+    .draw path + path {
+      animation-delay: calc(var(--delay, 0ms) + 180ms);
+    }
+
+    @supports (animation-timeline: view()) {
+      /* Fades up as it scrolls into view; scrolling back reverses it. */
+      .reveal {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 30%;
+      }
+      /* A shadow under a sticky header once the page has scrolled. */
+      .scroll-lift {
+        animation: lift linear both;
+        animation-timeline: scroll();
+        animation-range: 0 120px;
+      }
+    }
+
+    /* Children of [data-reveal] appear one after another once the parent is in view
+       (useInView sets the attribute; --i is the child's position). */
+    [data-reveal='out'] .stagger {
+      opacity: 0;
+      transform: translateY(8px) scale(0.92);
+    }
+    [data-reveal='in'] .stagger {
+      transition:
+        opacity 300ms ease-out,
+        transform 300ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      transition-delay: calc(var(--i, 0) * 90ms + 150ms);
+    }
+  }
+}

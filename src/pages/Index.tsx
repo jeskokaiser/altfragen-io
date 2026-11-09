@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
 import { isLifetimePromotionActive } from '@/services/AICommentarySettingsService';
 import { fetchLandingStats } from '@/services/LandingStatsService';
+import { useCountUp, useInView } from '@/hooks/useInView';
 import { cn } from '@/lib/utils';
 
 // Example questions written for this page. Distributions and model choices are illustrative,
@@ -136,8 +137,8 @@ const QUIZ: DemoQuestion[] = [
 ];
 
 /** The answer-sheet box with a cross: the page's one motif. */
-const CrossBox = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 32 32" aria-hidden="true" className={className}>
+const CrossBox = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+  <svg viewBox="0 0 32 32" aria-hidden="true" className={className} style={style}>
     <rect
       x="2.5"
       y="2.5"
@@ -148,21 +149,27 @@ const CrossBox = ({ className }: { className?: string }) => (
       stroke="currentColor"
       strokeWidth="3"
     />
-    <path
-      d="M9.5 9.5l13 13M22.5 9.5l-13 13"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3.6"
-      strokeLinecap="round"
-    />
+    {/* Two strokes with pathLength 1, so .draw can draw them one after the other. */}
+    {['M9.5 9.5l13 13', 'M22.5 9.5l-13 13'].map((d) => (
+      <path
+        key={d}
+        d={d}
+        pathLength={1}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3.6"
+        strokeLinecap="round"
+      />
+    ))}
   </svg>
 );
 
+// `className` replaces the scroll reveal (e.g. with the hero's load-in).
 const Eyebrow = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <p
     className={cn(
       'font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground md:text-sm',
-      className,
+      className ?? 'reveal',
     )}
   >
     {children}
@@ -172,7 +179,7 @@ const Eyebrow = ({ children, className }: { children: React.ReactNode; className
 const SectionTitle = ({ id, children }: { id?: string; children: React.ReactNode }) => (
   <h2
     id={id}
-    className="text-balance text-3xl font-bold leading-tight tracking-tight md:text-5xl md:leading-[1.08]"
+    className="reveal text-balance text-3xl font-bold leading-tight tracking-tight md:text-5xl md:leading-[1.08]"
   >
     {children}
   </h2>
@@ -239,7 +246,7 @@ function DemoQuiz() {
       </div>
 
       {!done ? (
-        <>
+        <div key={index} className="duration-300 animate-in fade-in-0">
           <p className="px-4 pt-3 font-mono text-xs text-muted-foreground md:px-5">{q.subject}</p>
           <p className="px-4 pb-4 pt-2 text-base leading-relaxed md:px-5 md:text-lg">{q.text}</p>
           <div role="group" aria-label="Antwortmöglichkeiten" className="border-t">
@@ -318,7 +325,7 @@ function DemoQuiz() {
               Antwort anklicken. In der App kreuzt du mit den Tasten 1 bis 5.
             </p>
           ) : (
-            <div className="space-y-4 px-4 py-5 md:px-5">
+            <div className="space-y-4 px-4 py-5 duration-300 animate-in fade-in-0 slide-in-from-top-2 md:px-5">
               <div className="space-y-1">
                 <p
                   className={cn(
@@ -364,9 +371,9 @@ function DemoQuiz() {
               </div>
             </div>
           )}
-        </>
+        </div>
       ) : (
-        <div className="space-y-4 px-4 py-5 md:px-5">
+        <div className="space-y-4 px-4 py-5 duration-300 animate-in fade-in-0 md:px-5">
           <div>
             <p className="font-mono text-xs text-muted-foreground">Auswertung</p>
             <p className="text-4xl font-bold tracking-tight">
@@ -415,13 +422,19 @@ function StatsBar() {
     queryFn: fetchLandingStats,
     staleTime: 10 * 60 * 1000,
   });
+  const [ref, reveal] = useInView<HTMLElement>(0.4);
+  const users = useCountUp(stats?.users, reveal !== 'out');
+  const questions = useCountUp(stats?.questions, reveal !== 'out');
   const tiles = [
-    { value: stats ? nf.format(stats.users) : '–', label: 'registrierte Studierende' },
-    { value: stats ? nf.format(stats.questions) : '–', label: 'hochgeladene Altfragen' },
+    { value: users !== undefined ? nf.format(users) : '–', label: 'registrierte Studierende' },
+    {
+      value: questions !== undefined ? nf.format(questions) : '–',
+      label: 'hochgeladene Altfragen',
+    },
     { value: '5', label: 'KI-Modelle erklären jede Frage' },
   ];
   return (
-    <section aria-label="Altfragen.io in Zahlen" className="border-b bg-card">
+    <section ref={ref} aria-label="Altfragen.io in Zahlen" className="border-b bg-card">
       <div className="mx-auto max-w-page px-4 md:px-10">
         <dl className="grid grid-cols-1 gap-px border-x bg-border sm:grid-cols-3">
           {tiles.map((t) => (
@@ -534,7 +547,7 @@ function PriceCard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-5 rounded-xl border bg-card p-7',
+        'reveal flex flex-col gap-5 rounded-xl border bg-card p-7',
         featured && 'border-2 border-primary p-[27px]',
       )}
     >
@@ -575,7 +588,7 @@ const Index = () => {
   return (
     <div className="min-h-dvh overflow-x-hidden bg-background">
       <SkipLink />
-      <header className="sticky top-0 z-nav border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <header className="scroll-lift sticky top-0 z-nav border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4 md:px-10">
           <Link
             to="/"
@@ -617,18 +630,30 @@ const Index = () => {
         <section className="border-b">
           <div className="mx-auto grid max-w-page items-center gap-10 px-4 py-12 md:px-10 md:py-24 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
             <div className="flex min-w-0 flex-col gap-6">
-              <Eyebrow className="text-primary">Altfragen für Medizinstudierende</Eyebrow>
-              <h1 className="text-balance text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl">
+              <Eyebrow className="enter text-primary">Altfragen für Medizinstudierende</Eyebrow>
+              <h1
+                style={{ '--delay': '80ms' } as React.CSSProperties}
+                className="enter text-balance text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl"
+              >
                 Klausur auswählen,{' '}
-                <CrossBox className="inline-block size-[0.78em] align-[-0.04em] text-primary" />{' '}
+                <CrossBox
+                  className="draw inline-block size-[0.78em] align-[-0.04em] text-primary"
+                  style={{ '--delay': '650ms' } as React.CSSProperties}
+                />{' '}
                 loskreuzen.
               </h1>
-              <p className="max-w-[34em] text-lg leading-relaxed text-muted-foreground md:text-xl">
+              <p
+                style={{ '--delay': '160ms' } as React.CSSProperties}
+                className="enter max-w-[34em] text-lg leading-relaxed text-muted-foreground md:text-xl"
+              >
                 Altfragen.io sammelt die Altfragen deiner Uni an einem Ort. Du kreuzt, siehst, was
                 die anderen gekreuzt haben, und liest zu jeder Antwort, was fünf KI-Modelle dazu
                 sagen. Ohne Karteikarten anzulegen.
               </p>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div
+                style={{ '--delay': '240ms' } as React.CSSProperties}
+                className="enter flex flex-wrap items-center gap-x-6 gap-y-3"
+              >
                 <Button asChild size="lg" className="h-[52px] px-6 text-base">
                   <Link to={start}>
                     {startLabel}
@@ -642,11 +667,14 @@ const Index = () => {
                   Preise ansehen
                 </a>
               </div>
-              <p className="max-w-[34em] text-sm text-muted-foreground">
+              <p
+                style={{ '--delay': '300ms' } as React.CSSProperties}
+                className="enter max-w-[34em] text-sm text-muted-foreground"
+              >
                 Mit deiner Uni-Mail siehst du sofort die Fragen, die an deiner Uni geteilt wurden.
               </p>
             </div>
-            <div className="min-w-0">
+            <div style={{ '--delay': '200ms' } as React.CSSProperties} className="enter min-w-0">
               <DemoQuiz />
             </div>
           </div>
@@ -665,7 +693,7 @@ const Index = () => {
             {STEPS.map((step, i) => (
               <li
                 key={step.title}
-                className="flex flex-col gap-3 border-t-2 border-foreground pt-5"
+                className="reveal flex flex-col gap-3 border-t-2 border-foreground pt-5"
               >
                 <p className="font-mono text-sm text-muted-foreground">Schritt {i + 1}</p>
                 <h3 className="text-xl font-bold leading-snug">{step.title}</h3>
@@ -724,7 +752,10 @@ const Index = () => {
           </div>
           <div className="grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
             {MORE.map((m) => (
-              <div key={m.title} className="flex flex-col gap-2 border-t border-input/60 pt-4">
+              <div
+                key={m.title}
+                className="reveal flex flex-col gap-2 border-t border-input/60 pt-4"
+              >
                 <h3 className="text-lg font-bold">{m.title}</h3>
                 <p className="text-muted-foreground">{m.text}</p>
               </div>
@@ -746,20 +777,7 @@ const Index = () => {
                 Frage. Die Belegung kannst du in den Einstellungen ändern.
               </p>
             </div>
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-wrap gap-2.5">
-                {LETTERS.map((l, i) => (
-                  <Key key={l} label={String(i + 1)} caption={l} active={l === 'C'} />
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-2.5">
-                <Key label="Leertaste" caption="weiter" wide />
-                <Key label="S" caption="Lösung" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Mit Umschalt und 1 bis 5 setzt du die Schwierigkeit. Am Handy tippst du einfach.
-              </p>
-            </div>
+            <KeyRows />
           </div>
         </section>
 
@@ -866,7 +884,9 @@ const Index = () => {
                     className="size-5 shrink-0 transition-transform duration-200 group-open:rotate-45"
                   />
                 </summary>
-                <p className="max-w-[62ch] pb-5 leading-relaxed text-muted-foreground">{f.a}</p>
+                <p className="max-w-[62ch] pb-5 leading-relaxed text-muted-foreground duration-200 animate-in fade-in-0 slide-in-from-top-1">
+                  {f.a}
+                </p>
               </details>
             ))}
             <details className="group border-b border-input/60">
@@ -877,7 +897,7 @@ const Index = () => {
                   className="size-5 shrink-0 transition-transform duration-200 group-open:rotate-45"
                 />
               </summary>
-              <p className="max-w-[62ch] pb-5 leading-relaxed text-muted-foreground">
+              <p className="max-w-[62ch] pb-5 leading-relaxed text-muted-foreground duration-200 animate-in fade-in-0 slide-in-from-top-1">
                 Ja. Der Code steht unter GPL-3.0 auf{' '}
                 <a
                   href="https://github.com/jeskokaiser/altfragen-io"
@@ -935,19 +955,45 @@ const Index = () => {
   );
 };
 
+/** The keyboard band's keys; they appear one after another the first time they scroll into view. */
+function KeyRows() {
+  const [ref, reveal] = useInView<HTMLDivElement>();
+  return (
+    <div ref={ref} data-reveal={reveal} className="flex flex-col gap-6">
+      <div className="flex flex-wrap gap-2.5">
+        {LETTERS.map((l, i) => (
+          <Key key={l} index={i} label={String(i + 1)} caption={l} active={l === 'C'} />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-2.5">
+        <Key index={5} label="Leertaste" caption="weiter" wide />
+        <Key index={6} label="S" caption="Lösung" />
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Mit Umschalt und 1 bis 5 setzt du die Schwierigkeit. Am Handy tippst du einfach.
+      </p>
+    </div>
+  );
+}
+
 function Key({
   label,
   caption,
   active,
   wide,
+  index,
 }: {
   label: string;
   caption: string;
   active?: boolean;
   wide?: boolean;
+  index: number;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div
+      style={{ '--i': index } as React.CSSProperties}
+      className="stagger flex flex-col items-center gap-2"
+    >
       <kbd
         className={cn(
           'grid h-14 place-items-center rounded-lg border font-mono text-xl',
@@ -969,8 +1015,9 @@ function Key({
 /** Answer-sheet grid: which option each model ticks for demo question 1. */
 function AnswerSheet() {
   const q = QUIZ[0];
+  const [ref, reveal] = useInView<HTMLElement>(0.5);
   return (
-    <figure className="overflow-hidden rounded-xl border bg-card">
+    <figure ref={ref} data-reveal={reveal} className="overflow-hidden rounded-xl border bg-card">
       <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-4 py-3 font-mono text-xs text-muted-foreground md:px-5">
         <span>Antwortbogen · Beispielfrage 1</span>
         <span>protokolliert: {q.correct}</span>
@@ -1001,7 +1048,7 @@ function AnswerSheet() {
           </tr>
         </thead>
         <tbody>
-          {q.models.map(([model, name, choice]) => (
+          {q.models.map(([model, name, choice], row) => (
             <tr key={model} className="border-b border-border/60">
               <th scope="row" className="py-2 pl-4 font-semibold md:pl-5">
                 {name}
@@ -1016,7 +1063,12 @@ function AnswerSheet() {
                   >
                     {l === choice && (
                       <>
-                        <X aria-hidden="true" className="size-4" strokeWidth={3} />
+                        <X
+                          aria-hidden="true"
+                          style={{ '--i': row } as React.CSSProperties}
+                          className="stagger size-4"
+                          strokeWidth={3}
+                        />
                         <span className="sr-only">gewählt</span>
                       </>
                     )}

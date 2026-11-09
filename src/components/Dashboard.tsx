@@ -526,12 +526,14 @@ const Dashboard = () => {
                   className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180"
                 />
               </CollapsibleTrigger>
-              <CollapsibleContent className="border-t px-4 py-3 text-sm text-muted-foreground">
-                Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit allen
-                aktivierten KI-Modellen kommentiert. Alle weiteren privaten Fragen werden im
-                Hintergrund von Mistral bearbeitet; sobald ein neuer 30-Tage-Zeitraum beginnt,
-                werden zunächst die ältesten teilweise kommentierten Fragen mit den fehlenden
-                Modellen ergänzt, bis das neue Kontingent ausgeschöpft ist.
+              <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                <div className="border-t px-4 py-3 text-sm text-muted-foreground">
+                  Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit allen
+                  aktivierten KI-Modellen kommentiert. Alle weiteren privaten Fragen werden im
+                  Hintergrund von Mistral bearbeitet; sobald ein neuer 30-Tage-Zeitraum beginnt,
+                  werden zunächst die ältesten teilweise kommentierten Fragen mit den fehlenden
+                  Modellen ergänzt, bis das neue Kontingent ausgeschöpft ist.
+                </div>
               </CollapsibleContent>
             </Collapsible>
 
@@ -543,67 +545,69 @@ const Dashboard = () => {
                   className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180"
                 />
               </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-4 border-t px-4 py-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <label htmlFor="ai-credits-packs" className="text-sm text-muted-foreground">
-                    Anzahl Pakete mit 100 Credits:
-                  </label>
-                  <Input
-                    id="ai-credits-packs"
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={aiCreditsPacks}
-                    onChange={(e) =>
-                      setAiCreditsPacks(
-                        Math.max(
-                          1,
-                          Math.min(
-                            20,
-                            Number.isNaN(Number(e.target.value)) ? 1 : Number(e.target.value),
+              <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                <div className="space-y-4 border-t px-4 py-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <label htmlFor="ai-credits-packs" className="text-sm text-muted-foreground">
+                      Anzahl Pakete mit 100 Credits:
+                    </label>
+                    <Input
+                      id="ai-credits-packs"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={aiCreditsPacks}
+                      onChange={(e) =>
+                        setAiCreditsPacks(
+                          Math.max(
+                            1,
+                            Math.min(
+                              20,
+                              Number.isNaN(Number(e.target.value)) ? 1 : Number(e.target.value),
+                            ),
                           ),
-                        ),
-                      )
-                    }
-                    className="w-24"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    entspricht {aiCreditsPacks * 100} zusätzlichen privaten KI-Kommentaren mit
-                    voller Modellabdeckung für {aiCreditsPacks * 2} €.
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Checkbox
-                    id="ai-credits-consent"
-                    checked={aiCreditsConsent}
-                    onCheckedChange={(checked) => setAiCreditsConsent(checked === true)}
-                    className="mt-0.5"
-                  />
-                  <label
-                    htmlFor="ai-credits-consent"
-                    className="cursor-pointer text-sm leading-relaxed text-muted-foreground"
+                        )
+                      }
+                      className="w-24"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      entspricht {aiCreditsPacks * 100} zusätzlichen privaten KI-Kommentaren mit
+                      voller Modellabdeckung für {aiCreditsPacks * 2} €.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="ai-credits-consent"
+                      checked={aiCreditsConsent}
+                      onCheckedChange={(checked) => setAiCreditsConsent(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <label
+                      htmlFor="ai-credits-consent"
+                      className="cursor-pointer text-sm leading-relaxed text-muted-foreground"
+                    >
+                      Ich verlange ausdrücklich, dass ihr vor Ablauf der Widerrufsfrist mit der
+                      Leistung beginnt. Mir ist bekannt, dass ich bei einem{' '}
+                      <Link to="/widerruf" target="_blank" className="underline underline-offset-4">
+                        Widerruf
+                      </Link>{' '}
+                      Wertersatz für bis dahin genutzte Credits zahle. Credits sind nur mit Premium
+                      nutzbar, verfallen aber nicht. Es gelten die{' '}
+                      <Link to="/agb" target="_blank" className="underline underline-offset-4">
+                        AGB
+                      </Link>
+                      .
+                    </label>
+                  </div>
+                  <Button
+                    onClick={handleBuyAiCredits}
+                    disabled={isCreatingCreditsCheckout || !aiCreditsConsent}
                   >
-                    Ich verlange ausdrücklich, dass ihr vor Ablauf der Widerrufsfrist mit der
-                    Leistung beginnt. Mir ist bekannt, dass ich bei einem{' '}
-                    <Link to="/widerruf" target="_blank" className="underline underline-offset-4">
-                      Widerruf
-                    </Link>{' '}
-                    Wertersatz für bis dahin genutzte Credits zahle. Credits sind nur mit Premium
-                    nutzbar, verfallen aber nicht. Es gelten die{' '}
-                    <Link to="/agb" target="_blank" className="underline underline-offset-4">
-                      AGB
-                    </Link>
-                    .
-                  </label>
+                    {isCreatingCreditsCheckout
+                      ? 'Weiterleitung zum Checkout …'
+                      : `${aiCreditsPacks * 100} private KI-Kommentare für ${aiCreditsPacks * 2} € kaufen`}
+                  </Button>
                 </div>
-                <Button
-                  onClick={handleBuyAiCredits}
-                  disabled={isCreatingCreditsCheckout || !aiCreditsConsent}
-                >
-                  {isCreatingCreditsCheckout
-                    ? 'Weiterleitung zum Checkout …'
-                    : `${aiCreditsPacks * 100} private KI-Kommentare für ${aiCreditsPacks * 2} € kaufen`}
-                </Button>
               </CollapsibleContent>
             </Collapsible>
           </div>
