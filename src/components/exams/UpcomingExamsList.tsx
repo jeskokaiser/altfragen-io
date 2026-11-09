@@ -152,7 +152,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
               <div className="space-y-2">
                 <p>
                   Du hast bereits {totalSessions} von {maxFreeSessions} kostenlosen
-                  Trainingssessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.
+                  Trainings-Sessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.
                 </p>
                 <Button size="sm" variant="outline" onClick={() => navigate('/subscription')}>
                   <Crown className="h-4 w-4 mr-2" />
@@ -192,7 +192,12 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost" title="Einstellungen">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Einstellungen"
+                        aria-label={`Einstellungen für ${exam.title}`}
+                      >
                         <Settings className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -255,9 +260,9 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
                   <Link
                     to="/training/sessions"
                     className="mb-1 inline-block font-medium underline-offset-4 hover:text-primary hover:underline"
-                    title="Alle Trainingssessions anzeigen"
+                    title="Alle Trainings-Sessions anzeigen"
                   >
-                    Trainingssessions
+                    Trainings-Sessions
                   </Link>
                   {sessionsForExam.length > 0 ? (
                     <div className="space-y-2">

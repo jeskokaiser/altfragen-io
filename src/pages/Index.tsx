@@ -402,7 +402,7 @@ function DemoQuiz() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link to="/auth">Kostenlos starten</Link>
+              <Link to="/auth?mode=signup">Kostenlos starten</Link>
             </Button>
             <Button variant="outline" size="lg" onClick={restart}>
               Nochmal von vorn
@@ -582,7 +582,7 @@ const Index = () => {
   const { user } = useAuth();
   const { settings } = useAICommentarySettings();
   const showLifetime = isLifetimePromotionActive(settings, new Date());
-  const start = user ? '/dashboard' : '/auth';
+  const start = user ? '/dashboard' : '/auth?mode=signup';
   const startLabel = user ? 'Zum Dashboard' : 'Kostenlos starten';
 
   return (
@@ -672,6 +672,18 @@ const Index = () => {
                 className="enter max-w-[34em] text-sm text-muted-foreground"
               >
                 Mit deiner Uni-Mail siehst du sofort die Fragen, die an deiner Uni geteilt wurden.
+                {!user && (
+                  <>
+                    {' '}
+                    Schon ein Konto?{' '}
+                    <Link
+                      to="/auth"
+                      className="font-semibold text-foreground underline underline-offset-4"
+                    >
+                      Anmelden
+                    </Link>
+                  </>
+                )}
               </p>
             </div>
             <div style={{ '--delay': '200ms' } as React.CSSProperties} className="enter min-w-0">

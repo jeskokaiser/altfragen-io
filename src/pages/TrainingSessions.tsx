@@ -55,7 +55,7 @@ const TrainingSessionsPage: React.FC = () => {
           </Link>
         }
         title="Meine Trainings-Sessions"
-        description="Verwalte deine Trainingssessions und verfolge deinen Lernfortschritt. Sessions können für spezifische Prüfungen oder zum allgemeinen Training erstellt werden."
+        description="Verwalte deine Trainings-Sessions und verfolge deinen Lernfortschritt. Sessions können für spezifische Prüfungen oder zum allgemeinen Training erstellt werden."
         actions={newSessionButton}
       />
 

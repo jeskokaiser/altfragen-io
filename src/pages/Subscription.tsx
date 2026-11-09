@@ -228,7 +228,7 @@ const Subscription = () => {
                     Mistral Large 4
                   </a>
                 </h4>
-                <p className="text-sm text-muted-foreground">Führendes KI-Model aus Europa</p>
+                <p className="text-sm text-muted-foreground">Führendes KI-Modell aus Europa</p>
               </div>
               <div className="bg-card p-4 rounded-lg border">
                 <h4 className="font-semibold text-foreground">
@@ -255,7 +255,7 @@ const Subscription = () => {
                   </a>
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  KI-Model mit Webrecherche, nennt seine Quellen
+                  KI-Modell mit Webrecherche, nennt seine Quellen
                 </p>
               </div>
             </div>

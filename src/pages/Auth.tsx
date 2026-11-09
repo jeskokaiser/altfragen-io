@@ -19,7 +19,11 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  // the landing page's "Kostenlos starten" links here with ?mode=signup
+  const [isSignUp, setIsSignUp] = useState(
+    () => new URLSearchParams(window.location.search).get('mode') === 'signup',
+  );
+  const [showPassword, setShowPassword] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [universityInfo, setUniversityInfo] = useState<{
@@ -627,6 +631,7 @@ const Auth = () => {
               <Input
                 id="new-password"
                 type="password"
+                autoComplete="new-password"
                 placeholder="Neues Passwort eingeben"
                 value={password}
                 onChange={(e) => {
@@ -680,6 +685,7 @@ const Auth = () => {
               <Input
                 id="reset-email"
                 type="email"
+                autoComplete="email"
                 placeholder="E-Mail-Adresse eingeben"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -703,7 +709,7 @@ const Auth = () => {
           <div className="space-y-2 text-center">
             <h1 className="text-2xl font-semibold">Willkommen bei Altfragen.io!</h1>
             <p className="text-sm text-muted-foreground">
-              {isSignUp ? 'Erstelle ein neues Konto' : 'Melde Dich mit deinem Konto an'}
+              {isSignUp ? 'Erstelle ein neues Konto' : 'Melde dich mit deinem Konto an'}
             </p>
           </div>
 
@@ -714,6 +720,7 @@ const Auth = () => {
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="E-Mail-Adresse eingeben"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -741,6 +748,12 @@ const Auth = () => {
                   </div>
                 )}
               </div>
+              {isSignUp && !email.includes('@') && (
+                <p className="text-xs text-muted-foreground">
+                  Nimm deine Uni-Mail: Über sie siehst du die Fragen, die an deiner Uni geteilt
+                  wurden.
+                </p>
+              )}
               {isSignUp && email && email.includes('@') && (
                 <div className="text-xs mt-1 text-muted-foreground">
                   {universityInfo ? (
@@ -758,10 +771,21 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Passwort</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Passwort</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-pressed={showPassword}
+                  className="rounded-sm text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  {showPassword ? 'Verbergen' : 'Anzeigen'}
+                </button>
+              </div>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete={isSignUp ? 'new-password' : 'current-password'}
                 placeholder="Passwort eingeben"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

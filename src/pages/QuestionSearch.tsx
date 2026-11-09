@@ -177,7 +177,7 @@ const QuestionSearch: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 {searchResults.totalCount === 0
                   ? 'Keine Ergebnisse gefunden'
-                  : `${searchResults.totalCount} Frage${searchResults.totalCount !== 1 ? 'n' : ''} gefunden`}
+                  : `${searchResults.totalCount.toLocaleString('de-DE')} Frage${searchResults.totalCount !== 1 ? 'n' : ''} gefunden`}
               </p>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 {isLoading && (

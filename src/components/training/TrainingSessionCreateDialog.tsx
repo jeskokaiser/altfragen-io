@@ -288,7 +288,7 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    Alle Fragensätze ({sourceQuestions.length} Fragen)
+                    Alle Fragensätze ({sourceQuestions.length.toLocaleString('de-DE')} Fragen)
                   </SelectItem>
                   {examNames.map((name) => (
                     <SelectItem key={name} value={name}>

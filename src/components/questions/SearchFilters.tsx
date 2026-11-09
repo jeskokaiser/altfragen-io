@@ -202,7 +202,13 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                   : [3]
               }
               onValueChange={(value) => handleFilterChange('difficulty', value[0])}
-              className="flex-1"
+              aria-label="Schwierigkeit"
+              // without a chosen difficulty the track stays empty instead of showing "3"
+              className={
+                filters.difficulty === null || filters.difficulty === undefined
+                  ? 'flex-1 opacity-50'
+                  : 'flex-1'
+              }
             />
             <Button
               type="button"
@@ -211,7 +217,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
               onClick={() => handleFilterChange('difficulty', null)}
               className="w-20"
             >
-              Reset
+              Alle
             </Button>
           </div>
         </div>

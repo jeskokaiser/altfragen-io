@@ -73,7 +73,7 @@ const PUBLIC_ROUTE_META: Record<string, PageMeta> = {
 
 const APP_ROUTE_TITLES: Array<[RegExp, string]> = [
   [/^\/dashboard$/, 'Dashboard – Altfragen.io'],
-  [/^\/training(?:\/sessions)?$/, 'Training-Sessions – Altfragen.io'],
+  [/^\/training(?:\/sessions)?$/, 'Trainings-Sessions – Altfragen.io'],
   [/^\/training\/session\/[^/]+\/analytics$/, 'Session-Auswertung – Altfragen.io'],
   [/^\/training\/(?:session\/[^/]+|one-off)$/, 'Training – Altfragen.io'],
   [/^\/exam\/[^/]+\/analytics$/, 'Prüfungs-Statistik – Altfragen.io'],

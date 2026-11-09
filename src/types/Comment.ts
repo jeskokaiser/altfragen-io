@@ -10,8 +10,7 @@ export interface Comment {
 }
 
 export interface CommentWithUser extends Comment {
-  user_email: string | null;
-  user_name?: string; // Can be derived from email or profile
+  user_name?: string; // the profile's username, if the author set one
 }
 
 export interface CommentWithReplies extends CommentWithUser {

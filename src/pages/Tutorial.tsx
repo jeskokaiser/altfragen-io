@@ -132,7 +132,7 @@ const Tutorial = () => {
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>
                   <strong className="font-semibold">Neue Session erstellen:</strong> Starte eine
-                  neue Trainingssession mit allen verknüpften Fragen
+                  neue Trainings-Session mit allen verknüpften Fragen
                 </li>
                 <li>
                   <strong className="font-semibold">Sessions verfolgen:</strong> Siehe alle
@@ -255,7 +255,7 @@ const Tutorial = () => {
                 </li>
                 <li>
                   <strong className="font-semibold">Session-Statistiken:</strong> Detaillierte
-                  Auswertung jeder Trainingssession mit Erfolgsquote und Zeitaufwand
+                  Auswertung jeder Trainings-Session mit Erfolgsquote und Zeitaufwand
                 </li>
                 <li>
                   <strong className="font-semibold">Prüfungs-Analytics:</strong> Analysiere deine

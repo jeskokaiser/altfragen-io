@@ -109,7 +109,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   const displayName = comment.is_private
     ? 'Du'
-    : comment.user_name || comment.user_email?.split('@')[0] || 'Unbekannt';
+    : comment.user_name || (isAuthor ? 'Du' : 'Unbekannt');
 
   return (
     <div className="space-y-2">
