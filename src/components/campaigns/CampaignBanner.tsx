@@ -215,12 +215,12 @@ const CampaignBanner: React.FC = () => {
       <div className={`relative ${styling.containerClass} border-b shadow-sm`}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 flex-1">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2">
               <div className="flex-shrink-0">
                 <IconComponent className={`h-5 w-5 ${styling.iconColor}`} />
               </div>
 
-              <div className="flex-1">
+              <div className="min-w-0 flex-1 basis-48">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={`font-semibold ${
@@ -316,7 +316,7 @@ const CampaignBanner: React.FC = () => {
                   <Button
                     size="sm"
                     onClick={() => handleActionClick(currentCampaign)}
-                    className={`${styling.buttonClass} font-medium flex items-center gap-1 shadow`}
+                    className={`${styling.buttonClass} h-auto min-h-8 whitespace-normal text-left font-medium flex items-center gap-1 shadow`}
                   >
                     {getActionButtonText(currentCampaign)}
                     <ActionIcon className="h-3 w-3" />
@@ -329,7 +329,8 @@ const CampaignBanner: React.FC = () => {
               size="sm"
               variant="ghost"
               onClick={() => handleDismiss(currentCampaign.id)}
-              className={`h-8 w-8 p-0 hover:bg-foreground/10 ${
+              aria-label="Hinweis schließen"
+              className={`h-8 w-8 shrink-0 p-0 hover:bg-foreground/10 ${
                 stylingVariant === 'default'
                   ? 'text-primary hover:text-primary '
                   : stylingVariant === 'warning'
@@ -360,6 +361,7 @@ const CampaignBanner: React.FC = () => {
             size="sm"
             variant="ghost"
             onClick={() => handleDismiss(currentCampaign.id)}
+            aria-label="Hinweis schließen"
             className="absolute top-2 right-2 h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />

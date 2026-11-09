@@ -9,6 +9,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 import { Question } from '@/types/Question';
@@ -30,7 +37,7 @@ interface TrainingSessionCreateDialogProps {
 const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = ({
   open,
   onOpenChange,
-  questions,
+  questions: sourceQuestions,
   defaultTitle,
   onCreated,
   context,
@@ -44,6 +51,24 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
   const [progressDataLoaded, setProgressDataLoaded] = useState(false);
   const formRef = useRef<FilterFormRef>(null);
   const calculationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // 'all' or one exam_name ("B1", "C2" ...): the question set a user picks before the filters
+  const [examName, setExamName] = useState('all');
+
+  const examNames = useMemo(
+    () =>
+      Array.from(
+        new Set(sourceQuestions.map((q) => q.exam_name).filter((n): n is string => !!n)),
+      ).sort((a, b) => a.localeCompare(b, 'de', { numeric: true })),
+    [sourceQuestions],
+  );
+
+  const questions = useMemo(
+    () =>
+      examName === 'all'
+        ? sourceQuestions
+        : sourceQuestions.filter((q) => q.exam_name === examName),
+    [sourceQuestions, examName],
+  );
   const questionResultsRef = useRef<Map<string, boolean>>(new Map());
   const attemptsCountRef = useRef<Map<string, number>>(new Map());
 
@@ -54,13 +79,17 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
     }
   }, [open, defaultTitle]);
 
+  useEffect(() => {
+    if (open) setExamName('all');
+  }, [open]);
+
   const loadUserProgress = useCallback(async () => {
     if (!user?.id) return;
 
     try {
       const { results, attempts } = await fetchTrainingProgressMaps(
         user.id,
-        questions.map((q) => q.id),
+        sourceQuestions.map((q) => q.id),
       );
 
       questionResultsRef.current = results;
@@ -71,7 +100,7 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
       // Set even on error, so the count calculation is not blocked forever.
       setProgressDataLoaded(true);
     }
-  }, [user?.id, questions]);
+  }, [user?.id, sourceQuestions]);
 
   const subjects = useMemo(
     () => Array.from(new Set(questions.map((q) => q.subject).filter(Boolean))),
@@ -208,7 +237,11 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
 
       const session = await createSession({
         title: title,
-        filter_settings: { ...values, ...(context || {}) },
+        filter_settings: {
+          ...values,
+          ...(examName !== 'all' ? { examName } : {}),
+          ...(context || {}),
+        },
         question_ids: prioritized.map((q) => q.id),
       });
 
@@ -246,7 +279,30 @@ const TrainingSessionCreateDialog: React.FC<TrainingSessionCreateDialogProps> = 
             />
           </div>
 
+          {examNames.length > 1 && (
+            <div className="space-y-2">
+              <Label htmlFor="exam-name">Fragensatz</Label>
+              <Select value={examName} onValueChange={setExamName}>
+                <SelectTrigger id="exam-name">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    Alle Fragensätze ({sourceQuestions.length} Fragen)
+                  </SelectItem>
+                  {examNames.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <FilterForm
+            // remount per question set so the year range starts at that set's years
+            key={examName}
             ref={formRef}
             subjects={subjects}
             years={years}

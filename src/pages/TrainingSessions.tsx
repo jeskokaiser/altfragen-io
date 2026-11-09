@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Page, PageHeader } from '@/components/ds/PageHeader';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import TrainingSessionsList from '@/components/training/TrainingSessionsList';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +12,8 @@ import { useTrainingSessions } from '@/hooks/useTrainingSessions';
 const TrainingSessionsPage: React.FC = () => {
   const { user, universityId } = useAuth();
   const location = useLocation();
-  const { questions } = useDashboardData(user?.id, universityId);
+  const navigate = useNavigate();
+  const { questions, isQuestionsLoading } = useDashboardData(user?.id, universityId);
   const { refetch } = useTrainingSessions(user?.id);
   const [open, setOpen] = useState(false);
 
@@ -33,6 +36,13 @@ const TrainingSessionsPage: React.FC = () => {
     return '';
   }, [open]);
 
+  const newSessionButton = (
+    <Button onClick={() => setOpen(true)} disabled={isQuestionsLoading}>
+      <Plus aria-hidden="true" className="h-4 w-4" />
+      Neue Session
+    </Button>
+  );
+
   return (
     <Page width="reading">
       <PageHeader
@@ -46,15 +56,17 @@ const TrainingSessionsPage: React.FC = () => {
         }
         title="Meine Trainings-Sessions"
         description="Verwalte deine Trainingssessions und verfolge deinen Lernfortschritt. Sessions können für spezifische Prüfungen oder zum allgemeinen Training erstellt werden."
+        actions={newSessionButton}
       />
 
-      <TrainingSessionsList />
+      <TrainingSessionsList emptyAction={newSessionButton} />
 
       <TrainingSessionCreateDialog
         open={open}
         onOpenChange={setOpen}
         questions={availableQuestions}
         defaultTitle={defaultTitle}
+        onCreated={(sessionId) => navigate(`/training/session/${sessionId}`)}
       />
     </Page>
   );

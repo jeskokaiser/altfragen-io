@@ -39,7 +39,12 @@ interface SessionWithExam {
   examDaysLeft?: number;
 }
 
-const TrainingSessionsList: React.FC = () => {
+interface TrainingSessionsListProps {
+  /** Shown in the empty state, e.g. the page's "Neue Session" button. */
+  emptyAction?: React.ReactNode;
+}
+
+const TrainingSessionsList: React.FC<TrainingSessionsListProps> = ({ emptyAction }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { subscribed } = useSubscription();
@@ -384,6 +389,7 @@ const TrainingSessionsList: React.FC = () => {
             <p className="text-xs text-muted-foreground mt-1">
               Erstelle eine neue Session, um zu starten.
             </p>
+            {emptyAction && <div className="mt-4">{emptyAction}</div>}
           </CardContent>
         </Card>
       )}

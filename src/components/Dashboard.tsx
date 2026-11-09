@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import FileUpload from './FileUpload';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { Calendar, ChevronDown, ListPlus } from 'lucide-react';
+import { Calendar, ChevronDown, ListPlus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useUpcomingExams } from '@/hooks/useUpcomingExams';
@@ -79,6 +79,7 @@ const Dashboard = () => {
 
   // Fetch all dashboard data
   const {
+    questions,
     isQuestionsLoading,
     questionsError,
     todayNewCount,
@@ -212,6 +213,16 @@ const Dashboard = () => {
   const handleQuestionsLoaded = useCallback(() => {
     window.location.reload();
   }, []);
+
+  // A session over all questions the user can see (own and the university's), without an exam
+  const handleOpenNewSession = useCallback(() => {
+    setCreateSessionQuestions(questions || []);
+    setCreateSessionExamId(null);
+    setCreateSessionDefaultTitle(
+      `${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} – Training`,
+    );
+    setIsCreateTrainingSessionOpen(true);
+  }, [questions]);
 
   const handleOpenCreateExam = useCallback(() => {
     setIsCreateExamOpen(true);
@@ -391,7 +402,16 @@ const Dashboard = () => {
 
   return (
     <Page className="space-y-8">
-      <PageHeader title="Dashboard" className="mb-0 md:mb-0" />
+      <PageHeader
+        title="Dashboard"
+        className="mb-0 md:mb-0"
+        actions={
+          <Button onClick={handleOpenNewSession} disabled={isQuestionsLoading}>
+            <Plus aria-hidden="true" className="h-4 w-4" />
+            Neue Session
+          </Button>
+        }
+      />
 
       <ResumeSessionRow userId={user.id} />
 
@@ -638,7 +658,7 @@ const Dashboard = () => {
         onOpenChange={setIsCreateTrainingSessionOpen}
         questions={createSessionQuestions}
         defaultTitle={createSessionDefaultTitle}
-        context={{ source: 'exam', examId: createSessionExamId || undefined }}
+        context={createSessionExamId ? { source: 'exam', examId: createSessionExamId } : undefined}
         onCreated={(sessionId) => navigate(`/training/session/${sessionId}`)}
       />
     </Page>

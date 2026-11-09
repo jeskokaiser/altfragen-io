@@ -28,6 +28,11 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
   const [selectedExamNames, setSelectedExamNames] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Most people link their university's sets, so open there; the private tab is usually empty
+  useEffect(() => {
+    if (open) setTab(universityId ? 'university' : 'personal');
+  }, [open, universityId]);
+
   // Fetch current exam's exam_name to pre-select
   const { data: currentExam } = useUpcomingExam(examId, open);
 
