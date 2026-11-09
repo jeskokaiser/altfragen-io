@@ -23,15 +23,19 @@ import TrainingSessionOneOffPage from '@/pages/TrainingSessionOneOff';
 import ExamAnalyticsPage from '@/pages/ExamAnalytics';
 import TrainingSessionAnalyticsPage from '@/pages/TrainingSessionAnalytics';
 import QuestionSearchPage from '@/pages/QuestionSearch';
+import NotFoundPage from '@/pages/NotFound';
+import PublicHeader from '@/components/layout/PublicHeader';
+import { isProtectedRoute } from '@/lib/seo';
 
 const MainLayout: React.FC = () => {
   const { isReady, isAuthenticated } = useAuthGuard();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const protectedPath = isProtectedRoute(location.pathname);
 
   useEffect(() => {
-    if (isAuthenticated && user && location.pathname !== '/tutorial') {
+    if (protectedPath && isAuthenticated && user && location.pathname !== '/tutorial') {
       const hasSeenTutorialKey = `hasSeenTutorial_${user.id}`;
       const hasSeenTutorial = localStorage.getItem(hasSeenTutorialKey);
 
@@ -40,7 +44,20 @@ const MainLayout: React.FC = () => {
         navigate('/tutorial', { replace: true });
       }
     }
-  }, [isAuthenticated, user, navigate, location.pathname]);
+  }, [protectedPath, isAuthenticated, user, navigate, location.pathname]);
+
+  if (!protectedPath && !isAuthenticated) {
+    return (
+      <div className="flex min-h-dvh flex-col">
+        <SkipLink />
+        <PublicHeader />
+        <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+          <NotFoundPage />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!isReady) {
     return <LoadingState className="min-h-dvh" />;
@@ -75,7 +92,7 @@ const MainLayout: React.FC = () => {
           <Route path="/ai-commentary" element={<AICommentaryAdminPage />} />
           <Route path="/tutorial" element={<TutorialPage />} />
           <Route path="/search" element={<QuestionSearchPage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <Footer />

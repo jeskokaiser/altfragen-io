@@ -2,54 +2,197 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Altfragen.io</title>
+    <title>Altfragen.io – Altfragen kreuzen im Medizinstudium</title>
     <meta
       name="description"
-      content="Die intelligente Plattform für die Klausurvorbereitung mit Altfragen. Lade deine Altfragensammlung hoch und trainiere mit einer intuitiven Nutzeroberfläche."
+      content="Kreuz die Altfragen deiner Uni online: mit Antwortverteilung deiner Kommiliton:innen, Erklärungen von 5 KI-Modellen und Klausur-Statistik. Kostenlos starten."
     />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://altfragen.io/" />
+
+    <!-- Favicons & App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Theme & PWA -->
     <meta name="theme-color" content="#F7F6F3" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#14161B" media="(prefers-color-scheme: dark)" />
-
-    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
-
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="/pwa-icon.png" />
-
-    <!-- iOS PWA Support -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Altfragen.io" />
+    <meta name="application-name" content="Altfragen.io" />
     <meta name="format-detection" content="telephone=no" />
-
-    <!-- Microsoft Tiles -->
     <meta name="msapplication-TileColor" content="#24429F" />
-    <meta name="msapplication-TileImage" content="/pwa-icon.png" />
+    <meta name="msapplication-TileImage" content="/apple-touch-icon.png" />
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://altfragen.io" />
-    <meta property="og:title" content="Altfragen.io" />
+    <meta property="og:site_name" content="Altfragen.io" />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:url" content="https://altfragen.io/" />
+    <meta property="og:title" content="Altfragen.io – Altfragen kreuzen im Medizinstudium" />
     <meta
       property="og:description"
-      content="Die intelligente Plattform für die Klausurvorbereitung mit Altfragen"
+      content="Kreuz die Altfragen deiner Uni online: mit Antwortverteilung deiner Kommiliton:innen, Erklärungen von 5 KI-Modellen und Klausur-Statistik. Kostenlos starten."
     />
-    <meta property="og:image" content="/og-image.png" />
-
-    <!-- Additional PWA Meta Tags -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="application-name" content="Altfragen.io" />
+    <meta property="og:image" content="https://altfragen.io/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Altfragen.io – Klausur auswählen, loskreuzen. Altfragen für Medizinstudierende mit Erklärungen von 5 KI-Modellen."
+    />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Altfragen.io" />
+    <meta name="twitter:title" content="Altfragen.io – Altfragen kreuzen im Medizinstudium" />
     <meta
       name="twitter:description"
-      content="Die intelligente Plattform für die Klausurvorbereitung mit Altfragen"
+      content="Kreuz die Altfragen deiner Uni online: mit Antwortverteilung deiner Kommiliton:innen, Erklärungen von 5 KI-Modellen und Klausur-Statistik. Kostenlos starten."
     />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:image" content="https://altfragen.io/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="Altfragen.io – Klausur auswählen, loskreuzen. Altfragen für Medizinstudierende mit Erklärungen von 5 KI-Modellen."
+    />
+
+    <!-- Structured Data (Schema.org) -->
+    <script type="application/ld+json" id="schema-org-ld-json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://altfragen.io/#organization",
+            "name": "Altfragen.io",
+            "legalName": "KSR Labs, Jesko Kaiser",
+            "url": "https://altfragen.io/",
+            "email": "hallo@altfragen.io",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://altfragen.io/web-app-manifest-512x512.png",
+              "width": 512,
+              "height": 512
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Kegelhofstr. 17",
+              "postalCode": "20251",
+              "addressLocality": "Hamburg",
+              "addressCountry": "DE"
+            },
+            "sameAs": ["https://github.com/jeskokaiser/altfragen-io"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://altfragen.io/#website",
+            "url": "https://altfragen.io/",
+            "name": "Altfragen.io",
+            "inLanguage": "de-DE",
+            "publisher": {
+              "@id": "https://altfragen.io/#organization"
+            }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://altfragen.io/#app",
+            "name": "Altfragen.io",
+            "url": "https://altfragen.io/",
+            "inLanguage": "de-DE",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "description": "Lernplattform für Medizinstudierende in Deutschland: Altfragen der eigenen Universität kreuzen, Antwortverteilung vergleichen und Erklärungen von fünf KI-Modellen (ChatGPT, Claude, Gemini, Mistral, Perplexity) zu jeder Antwortoption lesen.",
+            "image": "https://altfragen.io/og-image.png",
+            "publisher": {
+              "@id": "https://altfragen.io/#organization"
+            },
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Kostenlos",
+                "price": "0",
+                "priceCurrency": "EUR",
+                "description": "Altfragen deiner Uni kreuzen, eigene Fragen hochladen (CSV, PDF), begrenzte Sessions und KI-Kommentare pro Tag."
+              },
+              {
+                "@type": "Offer",
+                "name": "Premium monatlich",
+                "price": "9",
+                "priceCurrency": "EUR",
+                "description": "Unbegrenzte Sessions, alle KI-Kommentare zu geteilten Fragen, KI-Kommentare zu eigenen Fragen, OCR für gescannte PDFs und ausführliche Statistik."
+              },
+              {
+                "@type": "Offer",
+                "name": "Premium pro Semester",
+                "price": "29",
+                "priceCurrency": "EUR",
+                "description": "Alle Premium-Funktionen für ein ganzes Semester."
+              }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://altfragen.io/#faq",
+            "inLanguage": "de-DE",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Woher kommen die Fragen?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Studierende laden Altfragen hoch und teilen sie privat, mit ihrer Uni oder mit allen. Die größte Sammlung hat bisher die Uni Hamburg; für andere Unis wächst sie mit jeder hochgeladenen Klausur."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Gibt es Fragen für meine Uni?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Deine Uni ergibt sich aus der Domain deiner Uni-Mail. Sind für sie noch keine Fragen geteilt, lädst du eigene hoch: als CSV, PDF oder Scan."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Wie verlässlich sind die KI-Erklärungen?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sie sind eine Lernhilfe, keine Lehrmeinung. Deshalb stehen fünf Modelle nebeneinander, dazu die protokollierte Antwort und was die anderen gekreuzt haben."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Wie kündige ich Premium?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Jederzeit über „Verträge hier kündigen“ unten auf jeder Seite, im Kundenportal unter Premium oder per Mail an premium@altfragen.io."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Was passiert mit meinen Daten?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Konto und Fragen liegen bei Supabase auf Servern in Frankfurt am Main, Zahlungen laufen über Stripe. Es gibt keine Analyse-, Werbe- oder Tracking-Cookies. Alles Weitere steht in der Datenschutzerklärung."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Ist Altfragen.io Open Source?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Ja. Der Code steht unter GPL-3.0 auf GitHub."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

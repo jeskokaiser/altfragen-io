@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const AGB = () => {
@@ -20,9 +21,9 @@ const AGB = () => {
                 und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen
                 Premium-Dienste (Abonnements, Lifetime Premium und KI-Credits). Für die Nutzung der
                 Plattform im Übrigen gelten die{' '}
-                <a href="/terms" className="text-primary hover:underline">
+                <Link to="/terms" className="text-primary hover:underline">
                   Nutzungsbedingungen
-                </a>
+                </Link>
                 ; soweit sie sich widersprechen, gehen für Premium-Dienste diese AGB vor.
               </p>
               <p>
@@ -257,9 +258,9 @@ const AGB = () => {
               <p>
                 Als Verbraucher haben Sie ein gesetzliches Widerrufsrecht. Die Einzelheiten finden
                 Sie in unserer{' '}
-                <a href="/widerruf" className="text-primary hover:underline">
+                <Link to="/widerruf" className="text-primary hover:underline">
                   Widerrufsbelehrung
-                </a>
+                </Link>
                 .
               </p>
               <p>
@@ -274,9 +275,9 @@ const AGB = () => {
               <h2 className="text-xl font-semibold">§ 10 Datenschutz</h2>
               <p>
                 Informationen zur Verarbeitung personenbezogener Daten finden Sie in unserer{' '}
-                <a href="/privacy" className="text-primary hover:underline">
+                <Link to="/privacy" className="text-primary hover:underline">
                   Datenschutzerklärung
-                </a>
+                </Link>
                 . Sie ist nicht Bestandteil dieser AGB.
               </p>
             </section>
@@ -293,9 +294,9 @@ const AGB = () => {
                 Sofern der Nutzer seine gesonderte Einwilligung erteilt hat, erhält er zudem
                 Marketing-E-Mails mit Informationen zu neuen Produkten, Angeboten und Neuigkeiten.
                 Diese Einwilligung kann jederzeit widerrufen werden. Näheres regelt unsere{' '}
-                <a href="/privacy" className="text-primary hover:underline">
+                <Link to="/privacy" className="text-primary hover:underline">
                   Datenschutzerklärung
-                </a>
+                </Link>
                 .
               </p>
             </section>

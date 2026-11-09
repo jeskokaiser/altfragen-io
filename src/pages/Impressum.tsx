@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const Impressum = () => {
@@ -34,9 +35,9 @@ const Impressum = () => {
               <h2 className="text-xl font-semibold">Datenschutz</h2>
               <p>
                 Ausführliche Informationen zum Datenschutz finden Sie in unserer{' '}
-                <a href="/privacy" className="text-primary hover:underline">
+                <Link to="/privacy" className="text-primary hover:underline">
                   Datenschutzerklärung
-                </a>
+                </Link>
                 .
               </p>
             </section>

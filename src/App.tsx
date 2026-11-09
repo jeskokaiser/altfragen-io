@@ -18,6 +18,7 @@ import AGBPage from '@/pages/AGB';
 import WiderrufPage from '@/pages/Widerruf';
 import KuendigungPage from '@/pages/Kuendigung';
 import PublicLayout from '@/components/layout/PublicLayout';
+import { RouteMeta } from '@/lib/seo';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +46,7 @@ function App() {
           <SubscriptionProvider>
             <UserPreferencesProvider>
               <QueryClientProvider client={queryClient}>
+                <RouteMeta />
                 <div className="min-h-dvh bg-background">
                   <Routes>
                     <Route path="/" element={<Index />} />
