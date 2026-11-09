@@ -100,7 +100,7 @@ const Terms = () => {
           <a href="/agb" className="text-blue-600 hover:underline">
             AGB
           </a>
-          .
+          ; soweit sie sich widersprechen, gehen für Premium-Dienste die AGB vor.
         </p>
         <br />
         <h2 id="section-2" className="text-xl font-semibold mt-8 mb-3">
@@ -458,11 +458,14 @@ const Terms = () => {
           Der Betreiber kann diese Nutzungsbedingungen mit Wirkung für die Zukunft ändern, wenn dies
           wegen geänderter Gesetze oder Rechtsprechung, wegen neuer oder geänderter Funktionen oder
           zur Beseitigung von Unklarheiten nötig ist. Leistungsumfang und Preise werden auf diesem
-          Weg nicht geändert. Der Betreiber teilt Ihnen die Änderungen mindestens sechs Wochen vor
-          dem geplanten Inkrafttreten in Textform (z.B. per E-Mail) mit. Widersprechen Sie nicht bis
-          zum Inkrafttreten, gelten die Änderungen als angenommen; darauf weist der Betreiber in der
-          Mitteilung gesondert hin. Widersprechen Sie, gelten die bisherigen Nutzungsbedingungen
-          weiter; der Betreiber kann den Nutzungsvertrag dann nach Abschnitt 13.2 kündigen.
+          Weg nicht geändert; auch sonst werden auf diesem Weg nur Änderungen wirksam, die Ihre
+          Rechte nicht einschränken und Ihre Pflichten nicht erweitern. Andere Änderungen gelten nur
+          mit Ihrer ausdrücklichen Zustimmung. Der Betreiber teilt Ihnen die Änderungen mindestens
+          sechs Wochen vor dem geplanten Inkrafttreten in Textform (z.B. per E-Mail) mit.
+          Widersprechen Sie nicht bis zum Inkrafttreten, gelten die Änderungen als angenommen;
+          darauf weist der Betreiber in der Mitteilung gesondert hin. Widersprechen Sie, gelten die
+          bisherigen Nutzungsbedingungen weiter; der Betreiber kann den Nutzungsvertrag dann nach
+          Abschnitt 13.2 kündigen.
         </p>
         <br />
         <h2 id="section-13" className="text-xl font-semibold mt-8 mb-3">
@@ -504,8 +507,7 @@ const Terms = () => {
           <strong>14.2 </strong>
           Sind Sie Kaufmann im Sinne des Handelsgesetzbuchs, juristische Person des öffentlichen
           Rechts oder öffentlich-rechtliches Sondervermögen, ist Gerichtsstand für alle
-          Streitigkeiten aus oder im Zusammenhang mit diesen Nutzungsbedingungen der Sitz des
-          Betreibers.
+          Streitigkeiten aus oder im Zusammenhang mit diesen Nutzungsbedingungen Hamburg.
         </p>
         <p>
           <strong>14.3 </strong>

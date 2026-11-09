@@ -547,8 +547,7 @@ const Subscription = () => {
                   >
                     Widerruf
                   </Link>{' '}
-                  Wertersatz für die bis dahin erbrachte Leistung zahle. Weiterhin erkläre ich, dass
-                  ich die{' '}
+                  Wertersatz für die bis dahin erbrachte Leistung zahle. Es gelten die{' '}
                   <Link
                     to="/privacy"
                     target="_blank"
@@ -573,9 +572,9 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
                   >
-                    AGBs
-                  </Link>{' '}
-                  gelesen und verstanden habe.
+                    AGB
+                  </Link>
+                  .
                 </label>
               </div>
             </div>
@@ -641,8 +640,7 @@ const Subscription = () => {
                   >
                     Widerruf
                   </Link>{' '}
-                  Wertersatz für die bis dahin erbrachte Leistung zahle. Weiterhin erkläre ich, dass
-                  ich die{' '}
+                  Wertersatz für die bis dahin erbrachte Leistung zahle. Es gelten die{' '}
                   <Link
                     to="/privacy"
                     target="_blank"
@@ -667,9 +665,9 @@ const Subscription = () => {
                     rel="noopener noreferrer"
                     className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
                   >
-                    AGBs
-                  </Link>{' '}
-                  gelesen und verstanden habe.
+                    AGB
+                  </Link>
+                  .
                 </label>
               </div>
             </div>
