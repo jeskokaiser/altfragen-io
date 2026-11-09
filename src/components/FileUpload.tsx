@@ -115,10 +115,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h2 className="text-2xl font-semibold text-slate-800 dark:text-zinc-50">
-        Lade deine Fragen hoch
-      </h2>
-      <p className="text-slate-600 dark:text-zinc-300 mb-4">
+      <h2 className="text-2xl font-semibold text-foreground">Lade deine Fragen hoch</h2>
+      <p className="text-muted-foreground mb-4">
         Bitte wähle ein Format und lade deine Fragen hoch
       </p>
 
@@ -191,7 +189,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onQuestionsLoaded }) => {
                   <label htmlFor="csv-upload">
                     <Button
                       variant="outline"
-                      className="cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800"
+                      className="cursor-pointer hover:bg-muted"
                       onClick={() => document.getElementById('csv-upload')?.click()}
                     >
                       CSV-Datei auswählen

@@ -225,16 +225,16 @@ const CampaignBanner: React.FC = () => {
                   <span
                     className={`font-semibold ${
                       stylingVariant === 'default'
-                        ? 'text-blue-800 dark:text-blue-100'
+                        ? 'text-primary-strong '
                         : stylingVariant === 'warning'
-                          ? 'text-yellow-800 dark:text-yellow-100'
+                          ? 'text-warning-strong '
                           : stylingVariant === 'info'
-                            ? 'text-cyan-800 dark:text-cyan-100'
+                            ? 'text-primary-strong '
                             : stylingVariant === 'success'
-                              ? 'text-green-800 dark:text-green-100'
+                              ? 'text-success-strong '
                               : stylingVariant === 'error'
-                                ? 'text-red-800 dark:text-red-100'
-                                : 'text-gray-800 dark:text-gray-100'
+                                ? 'text-danger-strong '
+                                : 'text-foreground '
                     }`}
                   >
                     {currentCampaign.title}
@@ -242,16 +242,16 @@ const CampaignBanner: React.FC = () => {
                   <span
                     className={`${
                       stylingVariant === 'default'
-                        ? 'text-blue-700 dark:text-blue-200'
+                        ? 'text-primary-strong '
                         : stylingVariant === 'warning'
-                          ? 'text-yellow-700 dark:text-yellow-200'
+                          ? 'text-warning-strong '
                           : stylingVariant === 'info'
-                            ? 'text-cyan-700 dark:text-cyan-200'
+                            ? 'text-primary-strong '
                             : stylingVariant === 'success'
-                              ? 'text-green-700 dark:text-green-200'
+                              ? 'text-success-strong '
                               : stylingVariant === 'error'
-                                ? 'text-red-700 dark:text-red-200'
-                                : 'text-gray-700 dark:text-gray-200'
+                                ? 'text-danger-strong '
+                                : 'text-foreground '
                     }`}
                   >
                     {currentCampaign.description}
@@ -268,16 +268,16 @@ const CampaignBanner: React.FC = () => {
                       variant="outline"
                       className={`ml-2 flex items-center gap-1 ${
                         stylingVariant === 'default'
-                          ? 'bg-blue-100/80 text-blue-800 border-blue-400 dark:bg-blue-900/60 dark:text-blue-100 dark:border-blue-600'
+                          ? 'bg-primary-subtle/80 text-primary-strong border-primary/40 '
                           : stylingVariant === 'warning'
-                            ? 'bg-yellow-100/80 text-yellow-800 border-yellow-400 dark:bg-yellow-900/60 dark:text-yellow-100 dark:border-yellow-600'
+                            ? 'bg-warning-subtle/80 text-warning-strong border-warning-border '
                             : stylingVariant === 'info'
-                              ? 'bg-cyan-100/80 text-cyan-800 border-cyan-400 dark:bg-cyan-900/60 dark:text-cyan-100 dark:border-cyan-600'
+                              ? 'bg-primary-subtle/80 text-primary-strong border-primary/40 '
                               : stylingVariant === 'success'
-                                ? 'bg-green-100/80 text-green-800 border-green-400 dark:bg-green-900/60 dark:text-green-100 dark:border-green-600'
+                                ? 'bg-success-subtle/80 text-success-strong border-success-border '
                                 : stylingVariant === 'error'
-                                  ? 'bg-red-100/80 text-red-800 border-red-400 dark:bg-red-900/60 dark:text-red-100 dark:border-red-600'
-                                  : 'bg-gray-100/80 text-gray-800 border-gray-400 dark:bg-gray-900/60 dark:text-gray-100 dark:border-gray-600'
+                                  ? 'bg-danger-subtle/80 text-danger-strong border-danger-border '
+                                  : 'bg-muted/80 text-foreground border-input '
                       }`}
                     >
                       <Clock className={`h-3 w-3 ${styling.iconColor}`} />
@@ -295,16 +295,16 @@ const CampaignBanner: React.FC = () => {
                     onClick={() => handleCopyCode(currentCampaign.code!)}
                     className={`flex items-center gap-1 ${
                       stylingVariant === 'default'
-                        ? 'bg-blue-200/60 hover:bg-blue-200/90 text-blue-800 border-blue-300 dark:bg-blue-800/60 dark:hover:bg-blue-800/80 dark:text-blue-100 dark:border-blue-600'
+                        ? 'bg-primary-subtle/60 hover:bg-primary-subtle/90 text-primary-strong border-primary/40 '
                         : stylingVariant === 'warning'
-                          ? 'bg-yellow-200/60 hover:bg-yellow-200/90 text-yellow-800 border-yellow-300 dark:bg-yellow-800/60 dark:hover:bg-yellow-800/80 dark:text-yellow-100 dark:border-yellow-600'
+                          ? 'bg-warning-subtle/60 hover:bg-warning-subtle/90 text-warning-strong border-warning-border '
                           : stylingVariant === 'info'
-                            ? 'bg-cyan-200/60 hover:bg-cyan-200/90 text-cyan-800 border-cyan-300 dark:bg-cyan-800/60 dark:hover:bg-cyan-800/80 dark:text-cyan-100 dark:border-cyan-600'
+                            ? 'bg-primary-subtle/60 hover:bg-primary-subtle/90 text-primary-strong border-primary/40 '
                             : stylingVariant === 'success'
-                              ? 'bg-green-200/60 hover:bg-green-200/90 text-green-800 border-green-300 dark:bg-green-800/60 dark:hover:bg-green-800/80 dark:text-green-100 dark:border-green-600'
+                              ? 'bg-success-subtle/60 hover:bg-success-subtle/90 text-success-strong border-success-border '
                               : stylingVariant === 'error'
-                                ? 'bg-red-200/60 hover:bg-red-200/90 text-red-800 border-red-300 dark:bg-red-800/60 dark:hover:bg-red-800/80 dark:text-red-100 dark:border-red-600'
-                                : 'bg-gray-200/60 hover:bg-gray-200/90 text-gray-800 border-gray-300 dark:bg-gray-800/60 dark:hover:bg-gray-800/80 dark:text-gray-100 dark:border-gray-600'
+                                ? 'bg-danger-subtle/60 hover:bg-danger-subtle/90 text-danger-strong border-danger-border '
+                                : 'bg-muted/60 hover:bg-muted/90 text-foreground border-border '
                     }`}
                   >
                     <Tag className={`h-3 w-3 ${styling.iconColor}`} />
@@ -329,18 +329,18 @@ const CampaignBanner: React.FC = () => {
               size="sm"
               variant="ghost"
               onClick={() => handleDismiss(currentCampaign.id)}
-              className={`h-8 w-8 p-0 hover:bg-black/10 dark:hover:bg-white/10 ${
+              className={`h-8 w-8 p-0 hover:bg-foreground/10 ${
                 stylingVariant === 'default'
-                  ? 'text-blue-300 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-200'
+                  ? 'text-primary hover:text-primary '
                   : stylingVariant === 'warning'
-                    ? 'text-yellow-300 hover:text-yellow-600 dark:text-yellow-500 dark:hover:text-yellow-200'
+                    ? 'text-warning-strong hover:text-warning-strong '
                     : stylingVariant === 'info'
-                      ? 'text-cyan-300 hover:text-cyan-600 dark:text-cyan-500 dark:hover:text-cyan-200'
+                      ? 'text-primary hover:text-primary '
                       : stylingVariant === 'success'
-                        ? 'text-green-300 hover:text-green-600 dark:text-green-500 dark:hover:text-green-200'
+                        ? 'text-success hover:text-success '
                         : stylingVariant === 'error'
-                          ? 'text-red-300 hover:text-red-600 dark:text-red-500 dark:hover:text-red-200'
-                          : 'text-gray-300 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-200'
+                          ? 'text-danger hover:text-danger '
+                          : 'text-muted-foreground hover:text-muted-foreground '
               }`}
             >
               <X className="h-4 w-4" />
@@ -354,7 +354,7 @@ const CampaignBanner: React.FC = () => {
   // For modal display type, render as a card
   if (currentCampaign.display_type === 'modal') {
     return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-dialog flex items-center justify-center bg-foreground/60 p-4 dark:bg-background/80">
         <Card className="max-w-md w-full p-6 relative">
           <Button
             size="sm"

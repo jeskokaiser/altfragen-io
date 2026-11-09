@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -75,11 +75,13 @@ const Kuendigung = () => {
 
   if (receipt) {
     return (
-      <div className="min-h-screen bg-background p-4 md:p-8">
-        <div className="container mx-auto max-w-2xl">
+      <div className="bg-background px-4 py-8 md:px-6 md:py-12">
+        <div className="mx-auto max-w-2xl">
           <Card>
             <CardHeader>
-              <CardTitle>Deine Kündigung ist eingegangen</CardTitle>
+              <h1 className="text-2xl font-semibold leading-tight md:text-3xl">
+                Deine Kündigung ist eingegangen
+              </h1>
             </CardHeader>
             <CardContent className="space-y-4">
               <p>Abgegeben über die Schaltfläche „jetzt kündigen“ auf altfragen.io.</p>
@@ -104,11 +106,11 @@ const Kuendigung = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="container mx-auto max-w-2xl">
+    <div className="bg-background px-4 py-8 md:px-6 md:py-12">
+      <div className="mx-auto max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle>Verträge kündigen</CardTitle>
+            <h1 className="text-2xl font-semibold leading-tight md:text-3xl">Verträge kündigen</h1>
           </CardHeader>
           <CardContent>
             <form onSubmit={submit} className="space-y-6" noValidate>

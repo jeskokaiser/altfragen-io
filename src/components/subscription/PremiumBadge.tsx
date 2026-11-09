@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Brain } from 'lucide-react';
+import { Crown } from 'lucide-react';
 
 interface PremiumBadgeProps {
   className?: string;
@@ -8,8 +8,8 @@ interface PremiumBadgeProps {
 
 const PremiumBadge: React.FC<PremiumBadgeProps> = ({ className = '' }) => {
   return (
-    <Badge variant="secondary" className={`bg-blue-100 text-blue-800 border-blue-300 ${className}`}>
-      <Brain className="h-3 w-3 mr-1" />
+    <Badge variant="premium" className={className}>
+      <Crown aria-hidden="true" className="text-premium" />
       Premium
     </Badge>
   );

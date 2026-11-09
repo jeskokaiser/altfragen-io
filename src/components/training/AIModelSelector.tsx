@@ -11,7 +11,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
-import { Brain, Sparkles } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import type { EnhancedAIVersion } from '@/services/UserPreferencesService';
 
 const aiModels = [
@@ -23,7 +23,7 @@ const aiModels = [
   { key: 'deepseek', label: 'DeepSeek' },
 ];
 
-export const AIModelSelector: React.FC = () => {
+function useModelChoice() {
   const { preferences, updatePreferences } = useUserPreferences();
 
   const handleModelToggle = (modelName: string, checked: boolean) => {
@@ -37,53 +37,66 @@ export const AIModelSelector: React.FC = () => {
     });
   };
 
-  const enabledCount = preferences.selectedAIModels?.length || 0;
+  return {
+    preferences,
+    updatePreferences,
+    handleModelToggle,
+    enabledCount: preferences.selectedAIModels?.length || 0,
+    enhancedVersion: preferences.enhancedAIVersion ?? 'none',
+  };
+}
 
-  const enhancedVersion = preferences.enhancedAIVersion ?? 'none';
+/** The model choice as menu items; used by the selector and by the phone "⋯" menu. */
+export const AIModelMenuItems: React.FC = () => {
+  const { preferences, updatePreferences, handleModelToggle, enhancedVersion } = useModelChoice();
+  return (
+    <>
+      <DropdownMenuLabel>KI-Modelle auswählen</DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      {aiModels.map((model) => {
+        const isChecked = preferences.selectedAIModels?.includes(model.key) ?? true;
+        return (
+          <DropdownMenuCheckboxItem
+            key={model.key}
+            checked={isChecked}
+            onCheckedChange={(checked) => handleModelToggle(model.key, checked)}
+          >
+            {model.label}
+          </DropdownMenuCheckboxItem>
+        );
+      })}
+      <DropdownMenuSeparator />
+      <DropdownMenuLabel>Erweiterte Version</DropdownMenuLabel>
+      <DropdownMenuRadioGroup
+        value={enhancedVersion}
+        onValueChange={(value) =>
+          updatePreferences({ enhancedAIVersion: value as EnhancedAIVersion })
+        }
+      >
+        <DropdownMenuRadioItem value="none">Original</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="chatgpt">ChatGPT verbessert</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="gemini">Gemini verbessert</DropdownMenuRadioItem>
+        <DropdownMenuRadioItem value="claude">Claude verbessert</DropdownMenuRadioItem>
+      </DropdownMenuRadioGroup>
+    </>
+  );
+};
+
+export const AIModelSelector: React.FC = () => {
+  const { enabledCount } = useModelChoice();
 
   return (
-    <div className="flex items-center gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
-            <Brain className="h-4 w-4" />
-            <span className="hidden sm:inline">KI-Modelle</span>
-            <span className="text-xs text-muted-foreground">({enabledCount})</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>KI-Modelle auswählen</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {aiModels.map((model) => {
-            const isChecked = preferences.selectedAIModels?.includes(model.key) ?? true;
-            return (
-              <DropdownMenuCheckboxItem
-                key={model.key}
-                checked={isChecked}
-                onCheckedChange={(checked) => handleModelToggle(model.key, checked)}
-              >
-                {model.label}
-              </DropdownMenuCheckboxItem>
-            );
-          })}
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" />
-            Erweiterte Version
-          </DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={enhancedVersion}
-            onValueChange={(value) =>
-              updatePreferences({ enhancedAIVersion: value as EnhancedAIVersion })
-            }
-          >
-            <DropdownMenuRadioItem value="none">Original</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="chatgpt">ChatGPT verbessert</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="gemini">Gemini verbessert</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="claude">Claude verbessert</DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Brain aria-hidden="true" />
+          KI-Modelle
+          <span className="text-xs tabular-nums text-muted-foreground">({enabledCount})</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <AIModelMenuItems />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

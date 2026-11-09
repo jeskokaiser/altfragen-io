@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { EmptyState, LoadingState } from '@/components/ds/States';
+import { Page } from '@/components/ds/PageHeader';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -246,36 +248,33 @@ const ExamAnalytics: React.FC = () => {
   }, [questions, mergedProgress, groupingMode]);
 
   if (isExamLoading || isQuestionsLoading || isProgressLoading) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div>Lade Statistiken...</div>
-      </div>
-    );
+    return <LoadingState label="Statistiken werden geladen …" />;
   }
 
   if (!exam) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p>Prüfung nicht gefunden</p>
-            <Button onClick={() => navigate('/dashboard')} className="mt-4">
-              Zurück zum Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <Page>
+        <EmptyState
+          title="Prüfung nicht gefunden"
+          action={<Button onClick={() => navigate('/dashboard')}>Zurück zum Dashboard</Button>}
+        />
+      </Page>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
+    <Page className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/dashboard')}
+          aria-label="Zurück zum Dashboard"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">{exam.title}</h1>
+          <h1 className="text-2xl font-semibold md:text-3xl">{exam.title}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
             <Calendar className="h-4 w-4" />
             <span>Prüfung am {new Date(exam.due_date).toLocaleDateString()}</span>
@@ -285,7 +284,7 @@ const ExamAnalytics: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overall" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid h-auto w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="overall">Gesamtstatistik</TabsTrigger>
           <TabsTrigger value="sessions">Nach Sessions</TabsTrigger>
           <TabsTrigger value="grouped">Nach Semester/Jahr/Klausur</TabsTrigger>
@@ -300,15 +299,7 @@ const ExamAnalytics: React.FC = () => {
                 <CardTitle className="text-lg font-semibold">Gesamtfortschritt</CardTitle>
               </CardHeader>
               <CardContent>
-                <Progress
-                  value={overallStats.answeredPercentage}
-                  className="h-2 mb-2 dark:bg-zinc-800"
-                >
-                  <div
-                    className="h-full bg-primary transition-all"
-                    style={{ width: `${overallStats.answeredPercentage}%` }}
-                  />
-                </Progress>
+                <Progress value={overallStats.answeredPercentage} className="h-2 mb-2" />
                 <p className="text-sm text-muted-foreground">
                   {overallStats.answeredQuestions} von {overallStats.totalQuestions} Fragen
                   beantwortet ({overallStats.answeredPercentage.toFixed(0)}%)
@@ -318,22 +309,16 @@ const ExamAnalytics: React.FC = () => {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold text-green-600">
+                <CardTitle className="text-lg font-semibold text-success-strong">
                   Richtige Antworten
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Progress
                   value={(overallStats.correctAnswers / overallStats.totalQuestions) * 100}
-                  className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
-                >
-                  <div
-                    className="h-full bg-green-600 transition-all"
-                    style={{
-                      width: `${(overallStats.correctAnswers / overallStats.totalQuestions) * 100}%`,
-                    }}
-                  />
-                </Progress>
+                  className="mb-2"
+                  indicatorClassName="bg-success"
+                />
                 <p className="text-sm text-muted-foreground">
                   {overallStats.correctAnswers} von {overallStats.totalQuestions} Fragen richtig (
                   {((overallStats.correctAnswers / overallStats.totalQuestions) * 100).toFixed(0)}%)
@@ -345,22 +330,16 @@ const ExamAnalytics: React.FC = () => {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold text-red-600">
+                <CardTitle className="text-lg font-semibold text-danger-strong">
                   Falsche Antworten
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Progress
                   value={(overallStats.wrongAnswers / overallStats.totalQuestions) * 100}
-                  className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
-                >
-                  <div
-                    className="h-full bg-red-600 transition-all"
-                    style={{
-                      width: `${(overallStats.wrongAnswers / overallStats.totalQuestions) * 100}%`,
-                    }}
-                  />
-                </Progress>
+                  className="mb-2"
+                  indicatorClassName="bg-danger"
+                />
                 <p className="text-sm text-muted-foreground">
                   {overallStats.wrongAnswers} von {overallStats.totalQuestions} Fragen falsch (
                   {((overallStats.wrongAnswers / overallStats.totalQuestions) * 100).toFixed(0)}%)
@@ -396,10 +375,9 @@ const ExamAnalytics: React.FC = () => {
                               <div className="flex gap-2">
                                 <Progress
                                   value={(stats.correct / stats.total) * 100}
-                                  className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
-                                >
-                                  <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
-                                </Progress>
+                                  className="flex-1 h-2 bg-muted"
+                                  indicatorClassName="bg-success"
+                                />
                                 <span className="text-sm text-muted-foreground w-20 text-right">
                                   {stats.correct} richtig
                                 </span>
@@ -442,10 +420,9 @@ const ExamAnalytics: React.FC = () => {
                         <div className="flex gap-2">
                           <Progress
                             value={(stats.correct / stats.total) * 100}
-                            className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
-                          >
-                            <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
-                          </Progress>
+                            className="flex-1 h-2 bg-muted"
+                            indicatorClassName="bg-success"
+                          />
                           <span className="text-sm text-muted-foreground w-20 text-right">
                             {stats.correct} richtig
                           </span>
@@ -479,21 +456,21 @@ const ExamAnalytics: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <div className="text-sm text-muted-foreground">Fortschritt</div>
-                      <Progress value={stat.answeredPercentage} className="h-2 dark:bg-zinc-800" />
+                      <Progress value={stat.answeredPercentage} className="h-2" />
                       <div className="text-sm">
                         {stat.answered} / {stat.total} ({stat.answeredPercentage.toFixed(0)}%)
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="text-sm text-muted-foreground">Richtig</div>
-                      <div className="text-2xl font-bold text-green-600">{stat.correct}</div>
+                      <div className="text-2xl font-bold text-success">{stat.correct}</div>
                       <div className="text-sm text-muted-foreground">
                         {stat.correctPercentage.toFixed(0)}% der beantworteten
                       </div>
                     </div>
                     <div className="space-y-2">
                       <div className="text-sm text-muted-foreground">Falsch</div>
-                      <div className="text-2xl font-bold text-red-600">{stat.wrong}</div>
+                      <div className="text-2xl font-bold text-danger">{stat.wrong}</div>
                       <div className="text-sm text-muted-foreground">
                         {stat.answered > 0 ? ((stat.wrong / stat.answered) * 100).toFixed(0) : 0}%
                         der beantworteten
@@ -573,10 +550,7 @@ const ExamAnalytics: React.FC = () => {
                                 {group.answered} / {group.total} beantwortet
                               </span>
                             </div>
-                            <Progress
-                              value={answeredPercentage}
-                              className="h-1.5 bg-zinc-100 dark:bg-zinc-800"
-                            />
+                            <Progress value={answeredPercentage} className="h-1.5 bg-muted" />
                             <div className="flex justify-between text-xs text-muted-foreground">
                               <span>Trefferquote: {correctPercentage.toFixed(0)}%</span>
                             </div>
@@ -630,10 +604,7 @@ const ExamAnalytics: React.FC = () => {
                                 {group.answered} / {group.total} beantwortet
                               </span>
                             </div>
-                            <Progress
-                              value={answeredPercentage}
-                              className="h-1.5 bg-zinc-100 dark:bg-zinc-800"
-                            />
+                            <Progress value={answeredPercentage} className="h-1.5 bg-muted" />
                             <div className="flex justify-between text-xs text-muted-foreground">
                               <span>Trefferquote: {correctPercentage.toFixed(0)}%</span>
                             </div>
@@ -656,7 +627,7 @@ const ExamAnalytics: React.FC = () => {
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </Page>
   );
 };
 

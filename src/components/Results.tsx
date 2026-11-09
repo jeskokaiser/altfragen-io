@@ -52,23 +52,23 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
   };
 
   const getAnswerStatusColor = (answer: AnswerState | undefined, correctLetter: string) => {
-    if (!answer) return 'text-red-600';
+    if (!answer) return 'text-danger';
 
     const userAnswerLetter = (answer.originalAnswer || answer.value).trim()[0]?.toUpperCase();
     const isCorrectAnswer = userAnswerLetter === correctLetter;
 
     // In immediate feedback mode, use simple correct/incorrect coloring
     if (preferences?.immediateFeedback) {
-      return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
+      return isCorrectAnswer ? 'text-success' : 'text-danger';
     }
 
     // In normal mode, show red for non-first attempts or viewed solutions, even if eventually correct
     if (answer.viewedSolution || !answer.isFirstAttempt) {
-      return 'text-red-600';
+      return 'text-danger';
     }
 
     // First attempt without viewing solution: color by correctness
-    return isCorrectAnswer ? 'text-green-600' : 'text-red-600';
+    return isCorrectAnswer ? 'text-success' : 'text-danger';
   };
 
   const renderUserAnswer = (answer: AnswerState | undefined, question: Question) => {
@@ -115,7 +115,7 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
 
   return (
     <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'px-2' : ''}`}>
-      <h2 className="text-xl md:text-2xl font-semibold mb-4 text-slate-800">Deine Ergebnisse</h2>
+      <h2 className="text-xl md:text-2xl font-semibold mb-4 text-foreground">Deine Ergebnisse</h2>
       <div className="mb-4">
         <p className="text-base md:text-lg">
           Gesamtpunktzahl: {calculateScore()} von {answeredQuestions.length} (
@@ -132,14 +132,12 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
 
           return (
             <Card key={index} className={`${isMobile ? 'p-3' : 'p-4'}`}>
-              <h3 className="font-medium text-slate-800 mb-2 text-sm md:text-base dark:text-white">
+              <h3 className="font-medium text-foreground mb-2 text-sm md:text-base">
                 Frage {index + 1}: {q.question}
               </h3>
               <div className="grid gap-3">
                 <div>
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">
-                    Deine Antwort:
-                  </p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Deine Antwort:</p>
                   <p
                     className={`mt-1 text-sm md:text-base ${getAnswerStatusColor(answer, correctAnswerLetter)}`}
                   >
@@ -147,16 +145,14 @@ const Results: React.FC<ResultsProps> = ({ questions, userAnswers, onRestart }) 
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-white">
-                    Richtige Antwort:
-                  </p>
-                  <p className="mt-1 text-sm md:text-base text-green-600 dark:text-white">
+                  <p className="text-xs md:text-sm text-muted-foreground">Richtige Antwort:</p>
+                  <p className="mt-1 text-sm md:text-base text-success">
                     {`${correctAnswerLetter}: ${q[`option${correctAnswerLetter}` as keyof Question]}`}
                   </p>
                 </div>
                 {q.comment && (
                   <div>
-                    <p className="text-xs md:text-sm text-slate-600">Kommentar:</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Kommentar:</p>
                     <p className="mt-1 text-sm md:text-base">{q.comment}</p>
                   </div>
                 )}

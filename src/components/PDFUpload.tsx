@@ -482,10 +482,8 @@ const PDFUpload: React.FC<PDFUploadProps> = ({
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-4xl mx-auto">
       <>
-        <h2 className="text-2xl font-semibold text-slate-800 dark:text-zinc-50">
-          Lade deine PDF-Datei hoch
-        </h2>
-        <p className="text-slate-600 dark:text-zinc-300 text-center">
+        <h2 className="text-2xl font-semibold text-foreground">Lade deine PDF-Datei hoch</h2>
+        <p className="text-muted-foreground text-center">
           Lade eine PDF-Datei mit Fragen hoch. Unsere API extrahiert automatisch die Fragen, die du
           anschließend überprüfen kannst.
         </p>
@@ -647,7 +645,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({
                 {selectedFile ? (
                   <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
                     <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-blue-500" />
+                      <FileText className="h-5 w-5 text-primary" />
                       <div>
                         <p className="font-medium text-sm">{selectedFile.name}</p>
                         <p className="text-xs text-muted-foreground">

@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Question } from '@/types/Question';
 import { Link, useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import FileUpload from './FileUpload';
-import DashboardHeader from './datasets/DashboardHeader';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { Calendar, ListPlus } from 'lucide-react';
+import { Calendar, ChevronDown, ListPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useUpcomingExams } from '@/hooks/useUpcomingExams';
@@ -35,11 +32,17 @@ import { toast } from 'sonner';
 import StatisticsDateRangeSelector from './datasets/StatisticsDateRangeSelector';
 import { StatisticsDateRange } from '@/contexts/UserPreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
+import { ErrorState, LoadingState } from '@/components/ds/States';
+import { Page, PageHeader } from '@/components/ds/PageHeader';
+import { StatTile } from '@/components/ds/StatTile';
+import { Callout } from '@/components/ds/Callout';
+import { Input } from '@/components/ui/input';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import ResumeSessionRow from '@/components/training/ResumeSessionRow';
 
 const Dashboard = () => {
   const { user, universityId } = useAuth();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { preferences, updatePreferences } = useUserPreferences();
   const { exams, isLoading: isExamsLoading } = useUpcomingExams(user?.id);
@@ -362,111 +365,72 @@ const Dashboard = () => {
   // Memoized computed values
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <LoadingState variant="skeleton" className="mx-auto max-w-page px-4 py-8 md:px-6" />;
   }
 
   // Show loading while preferences are being fetched
   if (!preferences) {
-    return (
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          </div>
-          <div className="h-60 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
+    return <LoadingState variant="skeleton" className="mx-auto max-w-page px-4 py-8 md:px-6" />;
   }
 
   if (isQuestionsLoading || isExamsLoading) {
-    return (
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          </div>
-          <div className="h-60 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
+    return <LoadingState variant="skeleton" className="mx-auto max-w-page px-4 py-8 md:px-6" />;
   }
 
   if (questionsError) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <Card className="p-6">
-          <CardTitle className="text-red-500 mb-2">Fehler beim Laden der Daten</CardTitle>
-          <p>Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.</p>
-        </Card>
-      </div>
+      <Page>
+        <ErrorState
+          title="Fehler beim Laden der Daten"
+          description="Es ist ein Fehler aufgetreten. Bitte versuche es später erneut."
+          onRetry={() => window.location.reload()}
+        />
+      </Page>
     );
   }
 
   return (
-    <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-6 space-y-6 max-w-7xl`}>
-      <DashboardHeader />
+    <Page className="space-y-8">
+      <PageHeader title="Dashboard" className="mb-0 md:mb-0" />
 
-      {/* Statistics Section - Moved to Top */}
+      <ResumeSessionRow userId={user.id} />
+
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Heute</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <span className="text-sm text-muted-foreground">Neu</span>
-                <p className="text-2xl font-bold">{todayNewCount ?? 0}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-sm text-muted-foreground">Wiederholt</span>
-                <p className="text-2xl font-bold">{todayRepeatedCount ?? 0}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-sm text-muted-foreground">Gesamt</span>
-                <p className="text-2xl font-bold">{todayPracticeCount ?? 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <section aria-labelledby="stats-today" className="space-y-3">
+          <h2 id="stats-today" className="text-base font-semibold">
+            Heute
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <StatTile label="Neu" value={todayNewCount ?? 0} />
+            <StatTile label="Wiederholt" value={todayRepeatedCount ?? 0} />
+            <StatTile label="Gesamt" value={todayPracticeCount ?? 0} />
+          </div>
+        </section>
 
-        <Card>
-          <CardHeader className="pb-2 space-y-2">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <CardTitle className="text-lg font-medium">Insgesamt</CardTitle>
-              {preferences && (
-                <StatisticsDateRangeSelector
-                  value={preferences.statisticsDateRange}
-                  onChange={handleDateRangeChange}
-                />
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Fragen</span>
-              <p className="text-2xl font-bold">{totalAnsweredCount ?? 0}</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-sm text-muted-foreground">Versuche</span>
-              <p className="text-2xl font-bold">{totalAttemptsCount ?? 0}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <section aria-labelledby="stats-total" className="space-y-3">
+          <div className="flex min-h-6 flex-wrap items-center justify-between gap-2">
+            <h2 id="stats-total" className="text-base font-semibold">
+              Insgesamt
+            </h2>
+            {preferences && (
+              <StatisticsDateRangeSelector
+                value={preferences.statisticsDateRange}
+                onChange={handleDateRangeChange}
+              />
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <StatTile label="Fragen" value={totalAnsweredCount ?? 0} />
+            <StatTile label="Versuche" value={totalAttemptsCount ?? 0} />
+          </div>
+        </section>
       </div>
 
       {/* Upcoming Exams Section */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50 flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+      <section aria-labelledby="exams-heading" className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="exams-heading" className="flex items-center gap-2 text-xl font-semibold">
+            <Calendar aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
             Bevorstehende Prüfungen
           </h2>
           <Button onClick={handleOpenCreateExam}>Neue Prüfung</Button>
@@ -482,199 +446,168 @@ const Dashboard = () => {
         />
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-800 dark:text-zinc-50">
-            Datensatz hochladen
-          </h2>
-        </div>
+      <section aria-labelledby="upload-heading" className="space-y-4">
+        <h2 id="upload-heading" className="text-xl font-semibold">
+          Datensatz hochladen
+        </h2>
         <FileUpload onQuestionsLoaded={handleQuestionsLoaded} />
       </section>
 
       {/* Private AI commentary quota / credits */}
-      <section className="space-y-4">
-        <Card>
-          <CardHeader className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-            <CardTitle className="text-lg font-medium flex items-center gap-2">
-              <ListPlus className="h-5 w-5" />
-              Private KI-Kommentare
-            </CardTitle>
-            {aiCredits && (
-              <span className="text-xs md:text-sm text-muted-foreground">
-                30-Tage-Zeitraum ab{' '}
-                {new Date(aiCredits.monthStart).toLocaleDateString('de-DE', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                })}
-              </span>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {aiCreditsLoading && (
-              <p className="text-sm text-muted-foreground">
-                Lade Status der privaten KI-Kommentare …
-              </p>
-            )}
+      <section aria-labelledby="private-ai-heading" className="space-y-4">
+        <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+          <h2 id="private-ai-heading" className="flex items-center gap-2 text-xl font-semibold">
+            <ListPlus aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+            Private KI-Kommentare
+          </h2>
+          {aiCredits?.isPremium && (
+            <span className="text-sm text-muted-foreground">
+              30-Tage-Zeitraum ab{' '}
+              {new Date(aiCredits.monthStart).toLocaleDateString('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
+            </span>
+          )}
+        </div>
 
-            {aiCreditsError && !aiCreditsLoading && (
-              <p className="text-sm text-red-500">{aiCreditsError}</p>
-            )}
+        {aiCreditsLoading && <LoadingState variant="skeleton" label="Status wird geladen …" />}
 
-            {!aiCreditsLoading && !aiCreditsError && aiCredits && (
-              <>
-                {/** Der Block passt Anzeige klar an: Non-Premium sieht 0/0 und eindeutig "Nur für Premium" */}
-                {(() => {
-                  const isPremium = aiCredits.isPremium;
-                  const baseLimit = isPremium ? aiCredits.baseMonthlyFreeLimit : 0;
-                  const usedFree = isPremium
-                    ? aiCredits.baseMonthlyFreeLimit - aiCredits.remainingFree
-                    : 0;
-                  const remainingFreeDisplay = isPremium ? aiCredits.remainingFree : 0;
-                  const availabilityLabel = !isPremium
-                    ? 'Nur für Premium'
-                    : aiCredits.processingBlocked
-                      ? 'Pausiert'
-                      : 'Aktiv';
-                  const availabilityColorClass = !isPremium
-                    ? 'text-yellow-500'
-                    : aiCredits.processingBlocked
-                      ? 'text-red-500'
-                      : 'text-emerald-500';
-                  const availabilityDescription = !isPremium
-                    ? 'Private KI-Kommentare stehen nur Premium-Nutzern zur Verfügung.'
-                    : aiCredits.processingBlocked
-                      ? 'Du hast dein Kontingent für private Fragen ausgeschöpft.'
-                      : 'Private Fragen werden bevorzugt verarbeitet, solange Kontingent verfügbar ist.';
+        {aiCreditsError && !aiCreditsLoading && (
+          <ErrorState title="Status nicht verfügbar" description={aiCreditsError} />
+        )}
 
-                  return (
-                    <>
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <div className="space-y-1">
-                          <span className="text-sm text-muted-foreground">
-                            Kostenlose private Fragen (letzte 30 Tage)
-                          </span>
-                          <p className="text-2xl font-bold">
-                            {usedFree}/{baseLimit}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Verbleibend im aktuellen 30-Tage-Zeitraum: {remainingFreeDisplay}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-sm text-muted-foreground">Gekaufte Credits</span>
-                          <p className="text-2xl font-bold">
-                            {isPremium ? aiCredits.paidCreditsRemaining : 0}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            1 Credit = 1 zusätzlicher privater KI-Kommentar
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-sm text-muted-foreground">Verfügbarkeit</span>
-                          <p className={`text-2xl font-bold ${availabilityColorClass}`}>
-                            {availabilityLabel}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{availabilityDescription}</p>
-                        </div>
-                      </div>
+        {!aiCreditsLoading && !aiCreditsError && aiCredits && !aiCredits.isPremium && (
+          <Callout
+            variant="premium"
+            title="Private KI-Kommentare gibt es mit Premium"
+            action={
+              <Button asChild variant="outline" size="sm">
+                <Link to="/subscription">Premium ansehen</Link>
+              </Button>
+            }
+          >
+            Mit Premium werden auch deine privaten Fragen von allen aktivierten KI-Modellen
+            kommentiert.
+          </Callout>
+        )}
 
-                      {!isPremium && (
-                        <p className="text-sm text-muted-foreground">
-                          Upgrade auf eine Premium-Mitgliedschaft, um private Fragen mit
-                          KI-Kommentaren verarbeiten zu lassen.
-                        </p>
-                      )}
+        {!aiCreditsLoading && !aiCreditsError && aiCredits?.isPremium && (
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <StatTile
+                label="Kostenlose private Fragen (letzte 30 Tage)"
+                value={`${aiCredits.baseMonthlyFreeLimit - aiCredits.remainingFree}/${aiCredits.baseMonthlyFreeLimit}`}
+                hint={`Verbleibend im aktuellen 30-Tage-Zeitraum: ${aiCredits.remainingFree}`}
+              />
+              <StatTile
+                label="Gekaufte Credits"
+                value={aiCredits.paidCreditsRemaining}
+                hint="1 Credit = 1 zusätzlicher privater KI-Kommentar"
+              />
+              <StatTile
+                label="Verfügbarkeit"
+                value={aiCredits.processingBlocked ? 'Pausiert' : 'Aktiv'}
+                tone={aiCredits.processingBlocked ? 'danger' : 'success'}
+                hint={
+                  aiCredits.processingBlocked
+                    ? 'Du hast dein Kontingent für private Fragen ausgeschöpft.'
+                    : 'Private Fragen werden bevorzugt verarbeitet, solange Kontingent verfügbar ist.'
+                }
+              />
+            </div>
 
-                      {isPremium && (
-                        <>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit
-                            allen aktivierten KI-Modellen kommentiert. Alle weiteren privaten Fragen
-                            werden im Hintergrund von Mistral bearbeitet; sobald ein neuer
-                            30-Tage-Zeitraum beginnt, werden zunächst die ältesten teilweise
-                            kommentierten Fragen mit den fehlenden Modellen ergänzt, bis das neue
-                            Kontingent ausgeschöpft ist.
-                          </p>
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">
-                                  Anzahl Pakete mit 100 Credits:
-                                </span>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={20}
-                                  value={aiCreditsPacks}
-                                  onChange={(e) =>
-                                    setAiCreditsPacks(
-                                      Math.max(
-                                        1,
-                                        Math.min(
-                                          20,
-                                          Number.isNaN(Number(e.target.value))
-                                            ? 1
-                                            : Number(e.target.value),
-                                        ),
-                                      ),
-                                    )
-                                  }
-                                  className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
-                                />
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <p className="text-sm text-muted-foreground">
-                                  entspricht {aiCreditsPacks * 100} zusätzlichen privaten
-                                  KI-Kommentaren mit voller Modellabdeckung für {aiCreditsPacks * 2}
-                                  €.
-                                </p>
-                                <Button
-                                  onClick={handleBuyAiCredits}
-                                  disabled={isCreatingCreditsCheckout || !aiCreditsConsent}
-                                >
-                                  {isCreatingCreditsCheckout
-                                    ? 'Weiterleitung zum Checkout …'
-                                    : `${aiCreditsPacks * 100} private KI-Kommentare für ${
-                                        aiCreditsPacks * 2
-                                      }€ kaufen`}
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-2 mt-3">
-                            <Checkbox
-                              id="ai-credits-consent"
-                              checked={aiCreditsConsent}
-                              onCheckedChange={(checked) => setAiCreditsConsent(checked === true)}
-                              className="mt-0.5"
-                            />
-                            <label
-                              htmlFor="ai-credits-consent"
-                              className="text-xs text-muted-foreground leading-relaxed cursor-pointer"
-                            >
-                              Ich verlange ausdrücklich, dass ihr vor Ablauf der Widerrufsfrist mit
-                              der Leistung beginnt. Mir ist bekannt, dass ich bei einem{' '}
-                              <Link to="/widerruf" target="_blank" className="underline">
-                                Widerruf
-                              </Link>{' '}
-                              Wertersatz für bis dahin genutzte Credits zahle. Credits sind nur mit
-                              Premium nutzbar, verfallen aber nicht. Es gelten die{' '}
-                              <Link to="/agb" target="_blank" className="underline">
-                                AGB
-                              </Link>
-                              .
-                            </label>
-                          </div>
-                        </>
-                      )}
-                    </>
-                  );
-                })()}
-              </>
-            )}
-          </CardContent>
-        </Card>
+            <Collapsible className="rounded-lg border bg-card">
+              <CollapsibleTrigger className="group flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold">
+                So funktioniert’s
+                <ChevronDown
+                  aria-hidden="true"
+                  className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180"
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="border-t px-4 py-3 text-sm text-muted-foreground">
+                Bis zu 100 private Fragen pro gleitendem 30-Tage-Zeitraum werden mit allen
+                aktivierten KI-Modellen kommentiert. Alle weiteren privaten Fragen werden im
+                Hintergrund von Mistral bearbeitet; sobald ein neuer 30-Tage-Zeitraum beginnt,
+                werden zunächst die ältesten teilweise kommentierten Fragen mit den fehlenden
+                Modellen ergänzt, bis das neue Kontingent ausgeschöpft ist.
+              </CollapsibleContent>
+            </Collapsible>
+
+            <Collapsible className="rounded-lg border bg-card">
+              <CollapsibleTrigger className="group flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold">
+                Credits kaufen
+                <ChevronDown
+                  aria-hidden="true"
+                  className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180"
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 border-t px-4 py-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label htmlFor="ai-credits-packs" className="text-sm text-muted-foreground">
+                    Anzahl Pakete mit 100 Credits:
+                  </label>
+                  <Input
+                    id="ai-credits-packs"
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={aiCreditsPacks}
+                    onChange={(e) =>
+                      setAiCreditsPacks(
+                        Math.max(
+                          1,
+                          Math.min(
+                            20,
+                            Number.isNaN(Number(e.target.value)) ? 1 : Number(e.target.value),
+                          ),
+                        ),
+                      )
+                    }
+                    className="w-24"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    entspricht {aiCreditsPacks * 100} zusätzlichen privaten KI-Kommentaren mit
+                    voller Modellabdeckung für {aiCreditsPacks * 2} €.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="ai-credits-consent"
+                    checked={aiCreditsConsent}
+                    onCheckedChange={(checked) => setAiCreditsConsent(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <label
+                    htmlFor="ai-credits-consent"
+                    className="cursor-pointer text-sm leading-relaxed text-muted-foreground"
+                  >
+                    Ich verlange ausdrücklich, dass ihr vor Ablauf der Widerrufsfrist mit der
+                    Leistung beginnt. Mir ist bekannt, dass ich bei einem{' '}
+                    <Link to="/widerruf" target="_blank" className="underline underline-offset-4">
+                      Widerruf
+                    </Link>{' '}
+                    Wertersatz für bis dahin genutzte Credits zahle. Credits sind nur mit Premium
+                    nutzbar, verfallen aber nicht. Es gelten die{' '}
+                    <Link to="/agb" target="_blank" className="underline underline-offset-4">
+                      AGB
+                    </Link>
+                    .
+                  </label>
+                </div>
+                <Button
+                  onClick={handleBuyAiCredits}
+                  disabled={isCreatingCreditsCheckout || !aiCreditsConsent}
+                >
+                  {isCreatingCreditsCheckout
+                    ? 'Weiterleitung zum Checkout …'
+                    : `${aiCreditsPacks * 100} private KI-Kommentare für ${aiCreditsPacks * 2} € kaufen`}
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
       </section>
 
       {/* Dialogs */}
@@ -704,7 +637,7 @@ const Dashboard = () => {
         context={{ source: 'exam', examId: createSessionExamId || undefined }}
         onCreated={(sessionId) => navigate(`/training/session/${sessionId}`)}
       />
-    </div>
+    </Page>
   );
 };
 

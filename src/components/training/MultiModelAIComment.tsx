@@ -78,50 +78,42 @@ export const MultiModelAIComment: React.FC<MultiModelAICommentProps> = ({
 
   return (
     <div className="space-y-2 mt-2">
-      <h4 className="font-semibold text-sm flex items-center gap-2 text-slate-900 dark:text-slate-100">
-        <Brain className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+      <h4 className="font-semibold text-sm flex items-center gap-2 text-foreground">
+        <Brain className="h-4 w-4 text-foreground" />
         KI-Kommentare
       </h4>
       {comments.map(({ modelName, comment }) => (
-        <div
-          key={modelName}
-          className="p-2 border rounded-md bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-        >
+        <div key={modelName} className="p-2 border rounded-md bg-card border-border">
           <Badge variant="secondary" className="mb-1">
             {modelName}
           </Badge>
           <ReactMarkdown
             components={{
               p: ({ node, ...props }) => (
-                <p
-                  {...props}
-                  className="prose prose-sm max-w-none dark:prose-invert text-slate-800 dark:text-slate-200"
-                />
+                <p {...props} className="mb-2 leading-relaxed text-foreground last:mb-0" />
               ),
               ul: ({ node, ...props }) => (
                 <ul
                   {...props}
-                  className="prose prose-sm max-w-none list-disc ml-5 dark:prose-invert text-slate-800 dark:text-slate-200"
+                  className="mb-2 ml-5 list-disc space-y-1 text-foreground last:mb-0"
                 />
               ),
               ol: ({ node, ...props }) => (
                 <ol
                   {...props}
-                  className="prose prose-sm max-w-none list-decimal ml-5 dark:prose-invert text-slate-800 dark:text-slate-200"
+                  className="mb-2 ml-5 list-decimal space-y-1 text-foreground last:mb-0"
                 />
               ),
               code: ({ node, ...props }) => (
                 <code
                   {...props}
-                  className={`rounded bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-1 py-0.5 ${props.className || ''}`.trim()}
+                  className={`rounded bg-muted text-foreground px-1 py-0.5 ${props.className || ''}`.trim()}
                 />
               ),
               strong: ({ node, ...props }) => (
-                <strong {...props} className="font-semibold text-slate-900 dark:text-slate-100" />
+                <strong {...props} className="font-semibold text-foreground" />
               ),
-              em: ({ node, ...props }) => (
-                <em {...props} className="italic text-slate-800 dark:text-slate-200" />
-              ),
+              em: ({ node, ...props }) => <em {...props} className="italic text-foreground" />,
             }}
           >
             {comment!}

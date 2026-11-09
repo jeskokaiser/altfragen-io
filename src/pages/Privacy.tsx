@@ -1,12 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const Privacy = () => {
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="container mx-auto max-w-4xl space-y-8">
+    <div className="bg-background px-4 py-8 md:px-6 md:py-12">
+      <div className="mx-auto max-w-reading space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Datenschutzerklärung</CardTitle>
+            <h1 className="text-2xl font-semibold leading-tight md:text-3xl">
+              Datenschutzerklärung
+            </h1>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* 1. Überblick */}
@@ -141,7 +143,7 @@ const Privacy = () => {
                   <strong>Supabase</strong> (Supabase Inc., USA; Server in Frankfurt am Main):
                   Datenbank, Anmeldung, Dateispeicher und Serverfunktionen. Verarbeitet Kontodaten,
                   Inhalte und Nutzungsdaten.{' '}
-                  <a href="https://supabase.com/privacy" className="text-blue-600 hover:underline">
+                  <a href="https://supabase.com/privacy" className="text-primary hover:underline">
                     Datenschutzerklärung von Supabase
                   </a>
                 </li>
@@ -159,7 +161,7 @@ const Privacy = () => {
                   Konzernmutter in den USA): Zahlungsabwicklung. Verarbeitet E-Mail-Adresse, ggf.
                   Name, Zahlungsdaten und Käufe. Stripe verarbeitet Zahlungsdaten teilweise in
                   eigener Verantwortung, etwa zur Betrugsprävention.{' '}
-                  <a href="https://stripe.com/de/privacy" className="text-blue-600 hover:underline">
+                  <a href="https://stripe.com/de/privacy" className="text-primary hover:underline">
                     Datenschutzerklärung von Stripe
                   </a>
                 </li>

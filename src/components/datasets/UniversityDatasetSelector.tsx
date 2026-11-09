@@ -140,7 +140,7 @@ const UniversityDatasetSelector: React.FC<UniversityDatasetSelectorProps> = ({
                     key={filename}
                     className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-primary/5 border-primary/20 shadow-sm'
+                        ? 'bg-primary/5 border-primary/20'
                         : 'hover:bg-muted/50 border-border'
                     } ${hasChanged ? 'ring-2 ring-primary/30' : ''}`}
                     onClick={() => handleToggleDataset(filename)}

@@ -9,6 +9,7 @@ import { FormValues } from '@/components/training/types/FormValues';
 import { fetchQuestionDetails } from '@/services/DatabaseService';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { LoadingState } from '@/components/ds/States';
 
 const Training: React.FC = () => {
   const navigate = useNavigate();
@@ -226,7 +227,7 @@ const Training: React.FC = () => {
   const currentQuestion = getCurrentQuestion();
 
   if (allQuestions.length === 0) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return <LoadingState />;
   }
 
   if (!configurationComplete) {
@@ -265,7 +266,7 @@ const Training: React.FC = () => {
     .filter((q) => !ignoredQuestions.has(q.id)).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background">
+    <div className="min-h-dvh bg-background pt-2">
       <div className="py-8">
         <QuestionDisplayWithAI
           questionData={currentQuestion}

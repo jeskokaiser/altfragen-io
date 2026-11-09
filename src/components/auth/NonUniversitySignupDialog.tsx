@@ -28,7 +28,7 @@ export const NonUniversitySignupDialog = ({
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <AlertTriangle className="h-5 w-5 text-warning-strong" />
             <AlertDialogTitle>Standard-Konto erstellen</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="text-left space-y-3">
@@ -36,20 +36,20 @@ export const NonUniversitySignupDialog = ({
               Die E-Mail-Adresse <strong>{email}</strong> ist keiner Universität in unserer
               Datenbank zugeordnet. Wenn wir deine Universität in unser System aufnehmen sollen,
               melde dich bitte unter{' '}
-              <a href="mailto:hallo@altfragen.io" className="text-blue-500 hover:text-blue-600">
+              <a href="mailto:hallo@altfragen.io" className="text-primary hover:text-primary">
                 hallo@altfragen.io
               </a>
               .
             </p>
             <p>Mit einem Standard-Konto hast du nur Zugriff auf:</p>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600">
+            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
               <li>Deine selbst hochgeladenen Fragen</li>
               <li>Grundlegende Lernfunktionen</li>
             </ul>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               <strong>Hinweis:</strong> <br />
               Um Zugriff auf
-              <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600">
+              <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
                 <li>fortlaufend studentisch gepflegte, geteilte Universitätsfragen</li>
                 <li>KI-Kommentare zu den Fragen und Antworten</li>
                 <li>Kommentare zu den Fragen von deinen Kommiliton:innen</li>

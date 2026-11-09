@@ -467,7 +467,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({
             href="https://www.altfragen.io/images/example-batch-upload.png"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
+            className="text-primary hover:underline"
           >
             diesem Beispiel
           </a>{' '}

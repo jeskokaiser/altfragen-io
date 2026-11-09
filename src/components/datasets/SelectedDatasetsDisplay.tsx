@@ -22,9 +22,7 @@ const SelectedDatasetsDisplay: React.FC<SelectedDatasetsDisplayProps> = ({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-          <p className="text-lg text-slate-600 dark:text-zinc-300 mb-2">
-            Keine Datensätze ausgewählt
-          </p>
+          <p className="text-lg text-muted-foreground mb-2">Keine Datensätze ausgewählt</p>
           <p className="text-sm text-muted-foreground">
             Wähle Datensätze aus, um sie hier anzuzeigen
           </p>

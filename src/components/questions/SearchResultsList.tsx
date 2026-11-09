@@ -59,9 +59,9 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
       case 'private':
         return <Lock className="h-4 w-4 text-muted-foreground" />;
       case 'university':
-        return <GraduationCap className="h-4 w-4 text-blue-500" />;
+        return <GraduationCap aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
       case 'public':
-        return <Globe className="h-4 w-4 text-green-500" />;
+        return <Globe aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
       default:
         return <Lock className="h-4 w-4 text-muted-foreground" />;
     }

@@ -1,80 +1,82 @@
 const Terms = () => {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl text-left">
-      <h1 className="text-3xl font-bold mb-2">Nutzungsbedingungen für Altfragen.io</h1>
-      <p className="text-sm text-slate-500 mb-6">Stand: November 2026</p>
+    <div className="mx-auto max-w-reading px-4 py-8 text-left md:px-6 md:py-12">
+      <h1 className="text-2xl font-semibold md:text-3xl mb-2">
+        Nutzungsbedingungen für Altfragen.io
+      </h1>
+      <p className="text-sm text-muted-foreground mb-6">Stand: November 2026</p>
 
       {/* Inhaltsverzeichnis */}
-      <div className="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+      <div className="mb-8 rounded-lg border border-border bg-muted p-4 text-sm">
         <h2 className="text-base font-semibold mb-2">Inhaltsverzeichnis</h2>
         <ul className="list-decimal list-inside space-y-1">
           <li>
-            <a href="#section-1" className="text-blue-600 hover:underline">
+            <a href="#section-1" className="text-primary hover:underline">
               Geltungsbereich und Vertragsparteien
             </a>
           </li>
           <li>
-            <a href="#section-2" className="text-blue-600 hover:underline">
+            <a href="#section-2" className="text-primary hover:underline">
               Vertragsgegenstand und Leistungsbeschreibung
             </a>
           </li>
           <li>
-            <a href="#section-3" className="text-blue-600 hover:underline">
+            <a href="#section-3" className="text-primary hover:underline">
               Registrierung, Nutzerkonto und Vertragsschluss
             </a>
           </li>
           <li>
-            <a href="#section-4" className="text-blue-600 hover:underline">
+            <a href="#section-4" className="text-primary hover:underline">
               Nutzungsrechte an der Plattform
             </a>
           </li>
           <li>
-            <a href="#section-5" className="text-blue-600 hover:underline">
+            <a href="#section-5" className="text-primary hover:underline">
               Inhaltliche Verantwortung der Nutzer und Urheberrechte
             </a>
           </li>
           <li>
-            <a href="#section-6" className="text-blue-600 hover:underline">
+            <a href="#section-6" className="text-primary hover:underline">
               Rechte an nutzergenerierten Inhalten
             </a>
           </li>
           <li>
-            <a href="#section-7" className="text-blue-600 hover:underline">
+            <a href="#section-7" className="text-primary hover:underline">
               Überwachung und Moderation von Inhalten
             </a>
           </li>
           <li>
-            <a href="#section-8" className="text-blue-600 hover:underline">
+            <a href="#section-8" className="text-primary hover:underline">
               Pflichten der Nutzer und zulässige Nutzung
             </a>
           </li>
           <li>
-            <a href="#section-9" className="text-blue-600 hover:underline">
+            <a href="#section-9" className="text-primary hover:underline">
               KI-Funktionen (z.B. KI-Kommentare)
             </a>
           </li>
           <li>
-            <a href="#section-10" className="text-blue-600 hover:underline">
+            <a href="#section-10" className="text-primary hover:underline">
               Datenschutz
             </a>
           </li>
           <li>
-            <a href="#section-11" className="text-blue-600 hover:underline">
+            <a href="#section-11" className="text-primary hover:underline">
               Haftung
             </a>
           </li>
           <li>
-            <a href="#section-12" className="text-blue-600 hover:underline">
+            <a href="#section-12" className="text-primary hover:underline">
               Änderungen der Leistungen und der Nutzungsbedingungen
             </a>
           </li>
           <li>
-            <a href="#section-13" className="text-blue-600 hover:underline">
+            <a href="#section-13" className="text-primary hover:underline">
               Laufzeit und Beendigung des Nutzungsvertrags
             </a>
           </li>
           <li>
-            <a href="#section-14" className="text-blue-600 hover:underline">
+            <a href="#section-14" className="text-primary hover:underline">
               Rechtswahl, Gerichtsstand und Schlussbestimmungen
             </a>
           </li>
@@ -97,7 +99,7 @@ const Terms = () => {
           Mit der Registrierung erkennen Sie diese Nutzungsbedingungen an. Für Änderungen gilt
           Abschnitt 12. Für kostenpflichtige Premium-Zugänge (Abonnements, Lifetime Premium und
           KI-Credits) gelten ergänzend die{' '}
-          <a href="/agb" className="text-blue-600 hover:underline">
+          <a href="/agb" className="text-primary hover:underline">
             AGB
           </a>
           ; soweit sie sich widersprechen, gehen für Premium-Dienste die AGB vor.
@@ -290,7 +292,7 @@ const Terms = () => {
           Mistral AI und Perplexity), aber keine Angaben zu Ihrer Person. Der Betreiber trainiert
           selbst keine KI-Modelle mit Ihren Nutzerinhalten und gibt sie auch nicht zum Training
           frei. Welche Anbieter welche Daten erhalten, steht in der{' '}
-          <a href="/privacy" className="text-blue-600 hover:underline">
+          <a href="/privacy" className="text-primary hover:underline">
             Datenschutzerklärung
           </a>
           .
@@ -408,7 +410,7 @@ const Terms = () => {
           <strong>10.1 </strong>
           Informationen zur Verarbeitung personenbezogener Daten bei der Nutzung von Altfragen.io
           finden Sie in unserer{' '}
-          <a href="/privacy" className="text-blue-600 hover:underline">
+          <a href="/privacy" className="text-primary hover:underline">
             Datenschutzerklärung
           </a>
           . Diese ist nicht Bestandteil dieser Nutzungsbedingungen, ergänzt diese jedoch in
@@ -488,7 +490,7 @@ const Terms = () => {
           <strong>13.3 </strong>
           Laufzeit, Kündigung und Ende kostenpflichtiger Premium-Zugänge (Abonnements und Lifetime
           Premium) regeln die{' '}
-          <a href="/agb" className="text-blue-600 hover:underline">
+          <a href="/agb" className="text-primary hover:underline">
             AGB
           </a>
           .

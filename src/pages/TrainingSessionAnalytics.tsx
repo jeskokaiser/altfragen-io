@@ -1,4 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { EmptyState, LoadingState } from '@/components/ds/States';
+import { Page } from '@/components/ds/PageHeader';
+import { SessionStatusBadge } from '@/components/ds/StatusBadge';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -118,25 +121,19 @@ const TrainingSessionAnalytics: React.FC = () => {
   }, [questions, userProgress]);
 
   if (isSessionLoading || isQuestionsLoading || isProgressLoading) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div>Lade Statistiken...</div>
-      </div>
-    );
+    return <LoadingState label="Statistiken werden geladen …" />;
   }
 
   if (!session) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p>Session nicht gefunden</p>
-            <Button onClick={() => navigate('/training/sessions')} className="mt-4">
-              Zurück zu Sessions
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <Page>
+        <EmptyState
+          title="Session nicht gefunden"
+          action={
+            <Button onClick={() => navigate('/training/sessions')}>Zurück zu Sessions</Button>
+          }
+        />
+      </Page>
     );
   }
 
@@ -144,9 +141,14 @@ const TrainingSessionAnalytics: React.FC = () => {
   const examId = TrainingSessionService.examIdOf(session.filter_settings);
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/training/sessions')}>
+    <Page className="space-y-6">
+      <div className="flex flex-wrap items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/training/sessions')}
+          aria-label="Zurück zu Sessions"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         {examId && (
@@ -155,11 +157,11 @@ const TrainingSessionAnalytics: React.FC = () => {
           </Button>
         )}
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{session.title}</h1>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-            <span>Status: {session.status}</span>
-            <span>
-              • {session.current_index + 1} / {session.total_questions} Fragen
+          <h1 className="text-2xl font-semibold md:text-3xl">{session.title}</h1>
+          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <SessionStatusBadge status={session.status} />
+            <span className="tabular-nums">
+              {session.current_index + 1} / {session.total_questions} Fragen
             </span>
           </div>
         </div>
@@ -178,12 +180,7 @@ const TrainingSessionAnalytics: React.FC = () => {
             <CardTitle className="text-lg font-semibold">Gesamtfortschritt</CardTitle>
           </CardHeader>
           <CardContent>
-            <Progress value={stats.answeredPercentage} className="h-2 mb-2 dark:bg-zinc-800">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${stats.answeredPercentage}%` }}
-              />
-            </Progress>
+            <Progress value={stats.answeredPercentage} className="h-2 mb-2" />
             <p className="text-sm text-muted-foreground">
               {stats.answeredQuestions} von {stats.totalQuestions} Fragen beantwortet (
               {stats.answeredPercentage.toFixed(0)}%)
@@ -193,20 +190,16 @@ const TrainingSessionAnalytics: React.FC = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-green-600">
+            <CardTitle className="text-lg font-semibold text-success-strong">
               Richtige Antworten
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Progress
               value={(stats.correctAnswers / stats.totalQuestions) * 100}
-              className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
-            >
-              <div
-                className="h-full bg-green-600 transition-all"
-                style={{ width: `${(stats.correctAnswers / stats.totalQuestions) * 100}%` }}
-              />
-            </Progress>
+              className="mb-2"
+              indicatorClassName="bg-success"
+            />
             <p className="text-sm text-muted-foreground">
               {stats.correctAnswers} von {stats.totalQuestions} Fragen richtig (
               {((stats.correctAnswers / stats.totalQuestions) * 100).toFixed(0)}%)
@@ -218,18 +211,16 @@ const TrainingSessionAnalytics: React.FC = () => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-red-600">Falsche Antworten</CardTitle>
+            <CardTitle className="text-lg font-semibold text-danger-strong">
+              Falsche Antworten
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Progress
               value={(stats.wrongAnswers / stats.totalQuestions) * 100}
-              className="h-2 mb-2 bg-zinc-100 dark:bg-zinc-800"
-            >
-              <div
-                className="h-full bg-red-600 transition-all"
-                style={{ width: `${(stats.wrongAnswers / stats.totalQuestions) * 100}%` }}
-              />
-            </Progress>
+              className="mb-2"
+              indicatorClassName="bg-danger"
+            />
             <p className="text-sm text-muted-foreground">
               {stats.wrongAnswers} von {stats.totalQuestions} Fragen falsch (
               {((stats.wrongAnswers / stats.totalQuestions) * 100).toFixed(0)}%)
@@ -260,10 +251,9 @@ const TrainingSessionAnalytics: React.FC = () => {
                   <div className="flex gap-2">
                     <Progress
                       value={(subjectStat.correct / subjectStat.total) * 100}
-                      className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800"
-                    >
-                      <div className="h-full bg-green-600 transition-all dark:bg-green-500/70" />
-                    </Progress>
+                      className="flex-1 h-2 bg-muted"
+                      indicatorClassName="bg-success"
+                    />
                     <span className="text-sm text-muted-foreground w-20 text-right">
                       {subjectStat.correct} richtig
                     </span>
@@ -274,7 +264,7 @@ const TrainingSessionAnalytics: React.FC = () => {
           </CollapsibleContent>
         </Collapsible>
       </Card>
-    </div>
+    </Page>
   );
 };
 

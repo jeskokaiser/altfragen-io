@@ -216,7 +216,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between space-x-2">
                   <div className="flex items-center space-x-2">
-                    <Image className="h-4 w-4 text-blue-500" />
+                    <Image className="h-4 w-4 text-primary" />
                     <Label htmlFor="showImageAfterAnswer" className="text-sm font-medium">
                       Bild nach Antwort anzeigen
                     </Label>
@@ -241,7 +241,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="flex items-center gap-2 text-danger hover:text-danger-strong hover:bg-danger-subtle"
                       >
                         <Trash2 className="h-4 w-4" />
                         Bild entfernen
@@ -259,7 +259,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                         <AlertDialogCancel>Abbrechen</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleRemoveImage}
-                          className="bg-red-600 hover:bg-red-700"
+                          className="bg-danger hover:bg-danger/90"
                         >
                           Bild entfernen
                         </AlertDialogAction>
@@ -271,17 +271,17 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
             )}
 
             {imageToRemove && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="p-4 bg-danger-subtle border border-danger-border rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Trash2 className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-600">Bild wird entfernt</span>
+                    <Trash2 className="h-4 w-4 text-danger" />
+                    <span className="text-sm font-medium text-danger">Bild wird entfernt</span>
                   </div>
                   <Button variant="outline" size="sm" onClick={handleCancelRemoveImage}>
                     Rückgängig
                   </Button>
                 </div>
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-xs text-danger mt-1">
                   Das Bild wird beim Speichern der Frage entfernt.
                 </p>
               </div>
@@ -291,12 +291,12 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
               <Label htmlFor="visibility">Sichtbarkeit</Label>
               {question.visibility === 'university' ? (
                 <div className="flex items-center mt-2">
-                  <GraduationCap className="h-5 w-5 text-blue-500 mr-2" />
+                  <GraduationCap className="h-5 w-5 text-primary mr-2" />
                   <span>Mit deiner Universität geteilt (kann nicht geändert werden)</span>
                 </div>
               ) : question.visibility === 'public' ? (
                 <div className="flex items-center mt-2">
-                  <Globe className="h-5 w-5 text-green-500 mr-2" />
+                  <Globe className="h-5 w-5 text-success mr-2" />
                   <span>Öffentlich (kann nicht geändert werden)</span>
                 </div>
               ) : (

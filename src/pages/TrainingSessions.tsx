@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Page, PageHeader } from '@/components/ds/PageHeader';
 import { useLocation, Link } from 'react-router-dom';
 import TrainingSessionsList from '@/components/training/TrainingSessionsList';
 import TrainingSessionCreateDialog from '@/components/training/TrainingSessionCreateDialog';
@@ -33,23 +34,19 @@ const TrainingSessionsPage: React.FC = () => {
   }, [open]);
 
   return (
-    <div className="container mx-auto py-8 max-w-5xl">
-      <div className="mb-6">
-        <div className="mb-4">
-          <Link to={`/dashboard`} className="text-primary hover:underline text-sm font-medium">
+    <Page width="reading">
+      <PageHeader
+        eyebrow={
+          <Link
+            to="/dashboard"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
             ← Dashboard
           </Link>
-        </div>
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Meine Trainings-Sessions</h1>
-            <p className="text-muted-foreground">
-              Verwalte deine Trainingssessions und verfolge deinen Lernfortschritt. Sessions können
-              für spezifische Prüfungen oder zum allgemeinen Training erstellt werden.
-            </p>
-          </div>
-        </div>
-      </div>
+        }
+        title="Meine Trainings-Sessions"
+        description="Verwalte deine Trainingssessions und verfolge deinen Lernfortschritt. Sessions können für spezifische Prüfungen oder zum allgemeinen Training erstellt werden."
+      />
 
       <TrainingSessionsList />
 
@@ -59,7 +56,7 @@ const TrainingSessionsPage: React.FC = () => {
         questions={availableQuestions}
         defaultTitle={defaultTitle}
       />
-    </div>
+    </Page>
   );
 };
 

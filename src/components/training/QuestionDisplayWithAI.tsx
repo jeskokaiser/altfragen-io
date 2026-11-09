@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Question } from '@/types/Question';
 import { AnswerState } from '@/types/Answer';
 import { useAuth } from '@/contexts/AuthContext';
-import QuestionHeader from './QuestionHeader';
-import NavigationButtons from './NavigationButtons';
+import SessionBar from './SessionBar';
+import ActionBar from './ActionBar';
 import EditQuestionModal from './EditQuestionModal';
 import DifficultyControls from './DifficultyControls';
 import QuestionImage from '@/components/questions/QuestionImage';
-import { Pencil, X, Image as ImageIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Brain, MoreHorizontal, Pencil, X, Image as ImageIcon } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AIAnswerCommentaryService } from '@/services/AIAnswerCommentaryService';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
@@ -18,16 +19,28 @@ import { useTrainingKeyboard, TrainingKeyboardActions } from '@/hooks/useTrainin
 import { AmbossAnswer } from './AmbossAnswer';
 import { MultiModelAIComment } from './MultiModelAIComment';
 import { GeneralAIComments } from './GeneralAIComments';
-import { ModelName } from './ModelIcon';
-import { AIModelSelector } from './AIModelSelector';
+import { ModelIcon, ModelName } from './ModelIcon';
+import { AIModelMenuItems, AIModelSelector } from './AIModelSelector';
+import { Badge } from '@/components/ui/badge';
+import { Callout } from '@/components/ds/Callout';
+import { LoadingState } from '@/components/ds/States';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUnclearQuestions } from '@/hooks/useUnclearQuestions';
 import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import CommentsSection from './CommentsSection';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MessageSquare } from 'lucide-react';
-import { Collapsible } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getCommentsForQuestion } from '@/services/CommentService';
 import { recordAnswerAttempt, setUserDifficulty } from '@/services/UserProgressService';
@@ -82,7 +95,10 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   const [sidebarWidth, setSidebarWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
   const [difficultyUpdateKey, setDifficultyUpdateKey] = useState(0);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const panelHeadingRef = useRef<HTMLHeadingElement>(null);
+  const commentsTriggerRef = useRef<Element | null>(null);
   // Refs to store toggle functions for each answer option
   // Create individual refs that persist across renders
   const toggleExpandRefA = useRef<(() => void) | null>(null);
@@ -123,15 +139,33 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     enabled: !!currentQuestion.id,
   });
 
-  // Fetch comments to check if any exist (for red indicator)
+  // Fetch comments to show their number in the SessionBar
   const { data: comments } = useQuery({
     queryKey: ['question-comments', currentQuestion.id, user?.id],
     queryFn: () => getCommentsForQuestion(currentQuestion.id),
     enabled: !!currentQuestion.id && !!user?.id,
   });
 
-  // Check if there are any comments or notes present
-  const hasCommentsOrNotes = comments && comments.length > 0;
+  // After "Weiter", focus moves to the new question so screen readers start there.
+  const previousQuestionId = useRef(questionData.id);
+  useEffect(() => {
+    if (previousQuestionId.current !== questionData.id) {
+      previousQuestionId.current = questionData.id;
+      headingRef.current?.focus({ preventScroll: true });
+    }
+  }, [questionData.id]);
+
+  // The desktop panel takes focus when it opens and hands it back to the trigger when it closes.
+  useEffect(() => {
+    if (isMobile) return;
+    if (isCommentsOpen) {
+      commentsTriggerRef.current = document.activeElement;
+      panelHeadingRef.current?.focus();
+    } else if (commentsTriggerRef.current instanceof HTMLElement) {
+      commentsTriggerRef.current.focus();
+      commentsTriggerRef.current = null;
+    }
+  }, [isCommentsOpen, isMobile]);
 
   // Handle sidebar resizing
   useEffect(() => {
@@ -592,7 +626,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
   };
 
   if (!currentQuestion) {
-    return <div>Loading question...</div>;
+    return <LoadingState label="Frage wird geladen …" />;
   }
 
   // Determine if image should be shown based on show_image_after_answer setting
@@ -676,98 +710,140 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     })
     .filter((option) => option.text);
 
+  const correctLetter = currentQuestion.correctAnswer.charAt(0).toUpperCase();
+  // Said aloud by screen readers after each answer (role="status" below).
+  const announcement = showFeedback
+    ? isCorrect
+      ? 'Richtig.'
+      : `Richtig ist ${correctLetter}.`
+    : wrongAnswers.length > 0
+      ? `${wrongAnswers[wrongAnswers.length - 1]} ist falsch.`
+      : '';
+
+  const canShowSolutionButton = !showFeedback && !preferences?.immediateFeedback;
+
+  const questionActions = isMobile ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Weitere Aktionen zur Frage">
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Brain className="mr-2 h-4 w-4" />
+            KI-Modelle
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-56">
+            <AIModelMenuItems />
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuItem onSelect={() => setIsEditModalOpen(true)}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Bearbeiten
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={handleIgnoreQuestion}
+          disabled={unclearLoading}
+          className="text-danger-strong focus:text-danger-strong"
+        >
+          <X className="mr-2 h-4 w-4" />
+          Frage ignorieren
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : (
+    <div className="flex flex-wrap justify-end gap-1">
+      <AIModelSelector />
+      <Button variant="ghost" size="sm" onClick={() => setIsEditModalOpen(true)}>
+        <Pencil aria-hidden="true" />
+        Bearbeiten
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleIgnoreQuestion}
+        className="text-danger-strong hover:bg-danger-subtle hover:text-danger-strong"
+        disabled={unclearLoading}
+      >
+        <X aria-hidden="true" />
+        Frage ignorieren
+      </Button>
+    </div>
+  );
+
   const questionContent = (
     <>
-      <Card className={`${isMobile ? 'p-3' : 'p-0'}`}>
-        <div className="p-4">
-          <div className="flex flex-row flex-wrap items-start gap-3 mb-4">
-            <div className="flex-grow">
-              <DifficultyControls
-                key={`${currentQuestion.id}-${difficultyUpdateKey}`}
-                questionId={currentQuestion.id}
-                difficulty={currentQuestion.difficulty || 3}
-                disabled={false}
-                semester={currentQuestion.semester}
-                year={currentQuestion.year}
-                subject={currentQuestion.subject}
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <AIModelSelector />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                Bearbeiten
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleIgnoreQuestion}
-                className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 border-red-200"
-                disabled={unclearLoading}
-              >
-                <X className="h-4 w-4" />
-                Frage ignorieren
-              </Button>
-            </div>
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
+      <Card className="overflow-hidden">
+        <div className="p-4 md:p-6">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <DifficultyControls
+              key={`${currentQuestion.id}-${difficultyUpdateKey}`}
+              questionId={currentQuestion.id}
+              difficulty={currentQuestion.difficulty || 3}
+              disabled={false}
+              semester={currentQuestion.semester}
+              year={currentQuestion.year}
+              subject={currentQuestion.subject}
+            />
+            {questionActions}
           </div>
 
           {shouldShowImage && <QuestionImage imageKey={currentQuestion.image_key} />}
 
           {/* Hint when image is hidden due to settings */}
           {currentQuestion.image_key && !shouldShowImage && (
-            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-start gap-2">
-              <ImageIcon className="h-4 w-4 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                Ein Bild ist verfügbar, wird aber erst nach der Beantwortung angezeigt. Diese
-                Einstellung kann in "Bearbeiten" geändert werden.
-              </p>
-            </div>
+            <Callout variant="info" icon={<ImageIcon />} className="mb-4">
+              Ein Bild ist verfügbar, wird aber erst nach der Beantwortung angezeigt. Diese
+              Einstellung kann in „Bearbeiten“ geändert werden.
+            </Callout>
           )}
 
-          <article className="prose max-w-none mb-4">
-            <div className="flex items-start gap-2">
-              {showEnhancedLoading ? (
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-4 w-4/5" />
-                </div>
-              ) : (
-                <>
-                  <p className="flex-1">{displayQuestion}</p>
-                  {(useChatGPT || useGemini) && (
-                    <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-md font-medium shrink-0">
-                      {useChatGPT ? 'ChatGPT' : 'Gemini'}-verbessert
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
+          <article className="mb-2">
+            {showEnhancedLoading ? (
+              <div role="status" aria-label="Verbesserte Frage wird geladen" className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/5" />
+              </div>
+            ) : (
+              <div className="flex items-start gap-3">
+                <p className="max-w-[70ch] flex-1 whitespace-pre-line text-base leading-relaxed md:text-lg md:leading-[1.6]">
+                  {displayQuestion}
+                </p>
+                {(useChatGPT || useGemini || useClaude) && (
+                  <Badge variant="secondary" className="shrink-0 gap-1.5">
+                    <ModelIcon
+                      model={useChatGPT ? 'chatgpt' : useGemini ? 'new-gemini' : 'new-claude'}
+                    />
+                    KI-verbessert
+                  </Badge>
+                )}
+              </div>
+            )}
           </article>
 
           {showFeedback && (
-            <div className="mb-4 space-y-2 text-sm">
-              <div>
+            <div className="mt-4 space-y-1 rounded-md bg-muted px-3 py-2 text-sm">
+              <p>
                 <span className="font-semibold">Protokollierte Antwort:</span>{' '}
                 {currentQuestion.correctAnswer}
-              </div>
+              </p>
               {currentQuestion.comment && (
-                <div>
+                <p>
                   <span className="font-semibold">Kommentar:</span> {currentQuestion.comment}
-                </div>
+                </p>
               )}
             </div>
           )}
-
-          {/* Lösung anzeigen moved below NavigationButtons */}
         </div>
 
-        <div className="rounded-b-lg">
+        <div role="group" aria-label="Antwortmöglichkeiten" className="border-t">
           {showEnhancedLoading
             ? // Show skeleton loaders for all answer options while AI-enhanced content loads
               (['A', 'B', 'C', 'D', 'E'] as const)
@@ -781,27 +857,21 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                   return (
                     <div
                       key={letter}
-                      className="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                      className="flex min-h-12 items-center gap-3 border-b px-5 py-3 last:border-b-0"
                     >
-                      <div className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center font-semibold text-gray-400 dark:text-gray-500">
-                            {letter}
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-5/6" />
-                          </div>
-                        </div>
+                      <span className="w-4 text-center text-lg font-bold text-muted-foreground">
+                        {letter}
+                      </span>
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
                       </div>
                     </div>
                   );
                 })
                 .filter(Boolean)
             : options.map(({ letter, text, isAIGenerated }) => {
-                const isCorrectOption =
-                  letter === currentQuestion.correctAnswer.charAt(0).toUpperCase();
-
+                const isCorrectOption = letter === correctLetter;
                 // Get real statistics from database if available
                 const stats = currentQuestion.first_answer_stats;
                 const percentage = stats
@@ -903,7 +973,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         </div>
       </Card>
 
-      <NavigationButtons
+      <ActionBar
         onPrevious={onPrevious}
         onNext={handleNext}
         isFirstQuestion={currentIndex === 0}
@@ -911,42 +981,38 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         hasUserAnswer={isCorrect}
         wrongAttempts={wrongAnswers.length}
         showSolution={showSolution}
+        onShowSolution={canShowSolutionButton ? handleShowSolution : undefined}
       />
 
       {canShowAIContent && (
         <GeneralAIComments commentaryData={aiCommentary} isRevealed={showFeedback} />
       )}
 
-      {showFeedback && currentQuestion.first_answer_stats && (
-        <div className="mt-3 flex justify-center">
-          <p className="text-xs text-slate-500">
-            Beantwortet von {currentQuestion.first_answer_stats.total} Personen
-          </p>
+      {(showFeedback && currentQuestion.first_answer_stats) ||
+      (isFreeTier && remainingFreeViews !== undefined) ? (
+        <div className="mt-4 space-y-1 text-center text-sm text-muted-foreground">
+          {showFeedback && currentQuestion.first_answer_stats && (
+            <p>Beantwortet von {currentQuestion.first_answer_stats.total} Personen</p>
+          )}
+          {isFreeTier && remainingFreeViews !== undefined && (
+            <p>
+              {remainingFreeViews > 0 ? (
+                `${remainingFreeViews} kostenlose KI-Features heute verfügbar (Kommentare, Modell-Icons, erweiterte Versionen)`
+              ) : (
+                <>
+                  Tägliches Limit erreicht.{' '}
+                  <Link
+                    to="/subscription"
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
+                  >
+                    Upgrade für unbegrenzte KI-Features
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
         </div>
-      )}
-
-      {isFreeTier && remainingFreeViews !== undefined && (
-        <div className="mt-2 flex justify-center">
-          <p className="text-xs text-slate-400">
-            {remainingFreeViews > 0
-              ? `${remainingFreeViews} kostenlose KI-Features heute verfügbar (Kommentare, Modell-Icons, erweiterte Versionen)`
-              : 'Tägliches Limit erreicht. Upgrade für unbegrenzte KI-Features.'}
-          </p>
-        </div>
-      )}
-
-      {!showFeedback && !preferences?.immediateFeedback && (
-        <div className="mt-4 flex justify-center">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={handleShowSolution}
-            className="text-slate-600 hover:text-slate-900"
-          >
-            Lösung anzeigen
-          </Button>
-        </div>
-      )}
+      ) : null}
 
       <EditQuestionModal
         question={currentQuestion}
@@ -957,124 +1023,109 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     </>
   );
 
-  // Mobile: Use Sheet for sidebar
+  const sessionBar = (
+    <SessionBar
+      currentIndex={currentIndex}
+      totalQuestions={totalQuestions}
+      onQuit={onQuit}
+      commentsCount={comments?.length ?? 0}
+      commentsOpen={isCommentsOpen}
+      onToggleComments={() => setIsCommentsOpen(!isCommentsOpen)}
+      headingRef={headingRef}
+    />
+  );
+
+  const commentsBody = (
+    <CommentsSection
+      questionId={currentQuestion.id}
+      questionVisibility={currentQuestion.visibility || 'private'}
+    />
+  );
+
+  // Phones and tablets: comments open as a sheet over the content.
   if (isMobile) {
     return (
-      <div className={`w-full max-w-4xl mx-auto px-2`}>
-        <QuestionHeader
-          currentIndex={currentIndex}
-          totalQuestions={totalQuestions}
-          onQuit={onQuit}
-        />
-
+      <div className="mx-auto w-full max-w-reading px-4 pb-28">
+        {sessionBar}
         <Sheet open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="default"
-              size="icon"
-              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 relative"
-            >
-              <MessageSquare className="h-6 w-6" />
-              {hasCommentsOrNotes && (
-                <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 border-2 border-white dark:border-black rounded-full"></span>
-              )}
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-            <CommentsSection
-              questionId={currentQuestion.id}
-              questionVisibility={currentQuestion.visibility || 'private'}
-            />
+          <SheetContent
+            id="comments-panel"
+            side="right"
+            className="w-full overflow-y-auto sm:max-w-md"
+          >
+            <SheetHeader>
+              <SheetTitle>Kommentare & Notizen</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">{commentsBody}</div>
           </SheetContent>
         </Sheet>
-
         {questionContent}
       </div>
     );
   }
 
-  // Desktop: Use collapsible sidebar
+  // Desktop: resizable side panel; the question column moves aside to make room.
   return (
-    <div className="w-full pt-20">
-      <div className="max-w-7xl mx-auto flex justify-center items-start">
-        <div className="w-full max-w-4xl">
-          <QuestionHeader
-            currentIndex={currentIndex}
-            totalQuestions={totalQuestions}
-            onQuit={onQuit}
-          />
-
+    <div className="w-full px-4 pb-8 md:px-6">
+      <div className="mx-auto flex max-w-page items-start justify-center">
+        <div className="w-full max-w-reading">
+          {sessionBar}
           {questionContent}
         </div>
         {isCommentsOpen && (
           <div
-            className={`flex-shrink ${!isResizing ? 'transition-all duration-300' : ''}`}
+            className={`flex-shrink ${!isResizing ? 'transition-all duration-200' : ''}`}
             style={{ width: `${Math.max(0, sidebarWidth)}px`, minWidth: 0 }}
           />
         )}
       </div>
 
-      {/* Floating comment icon button */}
-      <div className="fixed bottom-8 right-8 flex flex-col items-center z-50 gap-2">
-        <Button
-          variant="default"
-          size="icon"
-          onClick={() => setIsCommentsOpen(!isCommentsOpen)}
-          className={`h-20 w-20 rounded-full shadow-xl border-4 border-blue-500 focus:ring-4 focus:ring-blue-300 group transition-all dark:border-blue-400 dark:focus:ring-blue-900 dark:bg-black relative ${
-            isCommentsOpen ? 'opacity-50' : ''
-          }`}
-          aria-label="Kommentare & Notizen öffnen"
-          tabIndex={0}
-        >
-          <MessageSquare className="h-16 w-16 text-white drop-shadow-lg" />
-          {hasCommentsOrNotes && (
-            <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 border-2 border-white dark:border-black rounded-full"></span>
-          )}
-        </Button>
-        <span className="text-base font-bold drop-shadow-sm bg-white/90 rounded-lg px-2 py-0.5 mt-1 shadow-md select-none pointer-events-none dark:bg-slate-800/90 dark:text-blue-100">
-          Kommentare
-        </span>
-      </div>
-
-      <Collapsible open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
+      <aside
+        id="comments-panel"
+        ref={sidebarRef}
+        aria-label="Kommentare & Notizen"
+        hidden={!isCommentsOpen}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setIsCommentsOpen(false);
+        }}
+        className={`fixed right-0 top-16 z-panel h-[calc(100dvh-4rem)] overflow-hidden border-l bg-card shadow-lg ${
+          !isResizing ? 'transition-transform duration-200' : ''
+        }`}
+        style={{ width: `${sidebarWidth}px` }}
+      >
+        {/* Resize handle */}
         <div
-          ref={sidebarRef}
-          className={`fixed right-0 top-16 h-[calc(100vh-4rem)] bg-background border-l shadow-lg z-40 overflow-hidden ${
-            isCommentsOpen ? 'translate-x-0' : 'translate-x-full'
-          } ${!isResizing ? 'transition-transform duration-300' : ''}`}
-          style={{ width: `${sidebarWidth}px` }}
+          aria-hidden="true"
+          className="group absolute bottom-0 left-0 top-0 z-10 w-2 cursor-col-resize transition-colors hover:bg-primary/40 active:bg-primary"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setIsResizing(true);
+          }}
         >
-          {/* Resize handle */}
-          {isCommentsOpen && (
-            <div
-              className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 transition-colors z-50 group"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setIsResizing(true);
-              }}
-            >
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-16 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          )}
-          <div className="h-full overflow-y-auto">
-            <div className="p-4 border-b flex items-center justify-between bg-background">
-              <h2 className="font-semibold flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Kommentare & Notizen
-              </h2>
-              <Button variant="ghost" size="sm" onClick={() => setIsCommentsOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="p-4">
-              <CommentsSection
-                questionId={currentQuestion.id}
-                questionVisibility={currentQuestion.visibility || 'private'}
-              />
-            </div>
-          </div>
+          <div className="absolute left-1/2 top-1/2 h-16 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/30 opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
-      </Collapsible>
+        <div className="h-full overflow-y-auto">
+          <div className="flex items-center justify-between border-b p-4">
+            <h2
+              ref={panelHeadingRef}
+              tabIndex={-1}
+              className="flex items-center gap-2 font-semibold focus-visible:ring-0 focus-visible:ring-offset-0"
+            >
+              <MessageSquare aria-hidden="true" className="h-5 w-5" />
+              Kommentare & Notizen
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCommentsOpen(false)}
+              aria-label="Kommentare schließen"
+            >
+              <X />
+            </Button>
+          </div>
+          <div className="p-4">{commentsBody}</div>
+        </div>
+      </aside>
     </div>
   );
 };

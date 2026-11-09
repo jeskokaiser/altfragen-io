@@ -1,756 +1,1057 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, Check, Crown, GraduationCap, Minus, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import {
-  GraduationCap,
-  ArrowRight,
-  Star,
-  Users,
-  Award,
-  Search,
-  MessageSquare,
-  Brain,
-  BookOpen,
-  BarChart,
-  Filter,
-  Sparkles,
-  CheckCircle2,
-  Zap,
-  Calendar,
-  Target,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import Footer from '@/components/Footer';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+import { SkipLink } from '@/components/ds/SkipLink';
+import { ModelIcon, type ModelName } from '@/components/training/ModelIcon';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
+import { isLifetimePromotionActive } from '@/services/AICommentarySettingsService';
+import { fetchLandingStats } from '@/services/LandingStatsService';
+import { cn } from '@/lib/utils';
 
-// Self-hosted demo video URL served by backend under /videos
-const DEMO_VIDEO_URL = 'https://api.altfragen.io/videos/landing.mp4';
-// Thumbnail from public folder
-const DEMO_VIDEO_THUMBNAIL_URL = '/thumbnail.png';
+// Example questions written for this page. Distributions and model choices are illustrative,
+// not taken from the database; the page says so next to the quiz.
+const LETTERS = ['A', 'B', 'C', 'D', 'E'] as const;
+type Letter = (typeof LETTERS)[number];
 
-// Testimonials data
-const testimonials = [
+interface DemoQuestion {
+  subject: string;
+  text: string;
+  options: string[];
+  correct: Letter;
+  share: number[];
+  models: [ModelName, string, Letter][];
+  explanation: string;
+}
+
+const QUIZ: DemoQuestion[] = [
   {
-    rating: 5,
-    quote: 'Ich kann die Altfragen jetzt viel schneller durchgehen – das spart enorm Zeit.',
+    subject: 'Innere Medizin',
+    text: 'Ein 58-jähriger Patient kommt mit seit zwei Stunden bestehenden retrosternalen Schmerzen in die Notaufnahme. Im EKG zeigen sich ST-Hebungen in II, III und aVF. Welches Gefäß ist am wahrscheinlichsten verschlossen?',
+    options: [
+      'Ramus interventricularis anterior (RIVA)',
+      'Ramus circumflexus (RCX)',
+      'Arteria coronaria dextra (RCA)',
+      'Hauptstamm der linken Koronararterie',
+      'Ramus marginalis sinister',
+    ],
+    correct: 'C',
+    share: [12, 9, 71, 5, 3],
+    models: [
+      ['chatgpt', 'ChatGPT', 'C'],
+      ['new-claude', 'Claude', 'C'],
+      ['new-gemini', 'Gemini', 'C'],
+      ['mistral', 'Mistral', 'B'],
+      ['perplexity', 'Perplexity', 'C'],
+    ],
+    explanation:
+      'ST-Hebungen in II, III und aVF sprechen für einen inferioren Infarkt; meist ist die rechte Koronararterie verschlossen. Mistral wählt B: Beim Linksversorgungstyp kann auch der RCX die Hinterwand versorgen.',
   },
   {
-    rating: 5,
-    quote: 'Ich liebe, dass ich die Altfragen überall durchgehen kann, sogar im Bus.',
+    subject: 'Pharmakologie',
+    text: 'Eine 19-jährige Patientin hat vor sechs Stunden 15 g Paracetamol eingenommen. Welches Antidot ist angezeigt?',
+    options: ['Naloxon', 'Flumazenil', 'N-Acetylcystein', 'Physostigmin', 'Atropin'],
+    correct: 'C',
+    share: [4, 3, 86, 5, 2],
+    models: [
+      ['chatgpt', 'ChatGPT', 'C'],
+      ['new-claude', 'Claude', 'C'],
+      ['new-gemini', 'Gemini', 'C'],
+      ['mistral', 'Mistral', 'C'],
+      ['perplexity', 'Perplexity', 'C'],
+    ],
+    explanation:
+      'N-Acetylcystein füllt das Glutathion der Leber wieder auf und entgiftet so den toxischen Metaboliten NAPQI. Naloxon hebt Opioide auf, Flumazenil Benzodiazepine.',
   },
   {
-    rating: 4.5,
-    quote: 'Die Aufteilung nach Fächern ist super und ich finde sofort alles.',
+    subject: 'Physiologie',
+    text: 'Nach einem starken Blutverlust sinkt das Plasmavolumen. Welches Hormon steigert daraufhin die Natrium-Rückresorption im Sammelrohr?',
+    options: [
+      'Atriales natriuretisches Peptid (ANP)',
+      'Aldosteron',
+      'Calcitonin',
+      'Parathormon',
+      'Insulin',
+    ],
+    correct: 'B',
+    share: [14, 74, 2, 7, 3],
+    models: [
+      ['chatgpt', 'ChatGPT', 'B'],
+      ['new-claude', 'Claude', 'B'],
+      ['new-gemini', 'Gemini', 'B'],
+      ['mistral', 'Mistral', 'B'],
+      ['perplexity', 'Perplexity', 'B'],
+    ],
+    explanation:
+      'Über das Renin-Angiotensin-Aldosteron-System steigt Aldosteron; es erhöht im Sammelrohr die Zahl der Natriumkanäle (ENaC) und die Aktivität der Na⁺/K⁺-ATPase. ANP wirkt entgegengesetzt und wird bei Volumenüberladung ausgeschüttet.',
   },
   {
-    rating: 4.5,
-    quote: 'Die Vollständigkeit und die Möglichkeit, Fragen selbst zu bearbeiten, sind top.',
+    subject: 'Neurologie',
+    text: 'Nach einem Schlaganfall versteht ein Patient Gesprochenes gut, spricht selbst aber stockend und im Telegrammstil. Wo liegt die Läsion am ehesten?',
+    options: [
+      'Gyrus frontalis inferior der dominanten Hemisphäre',
+      'Gyrus temporalis superior der dominanten Hemisphäre',
+      'Gyrus angularis',
+      'Gyrus praecentralis',
+      'Fasciculus arcuatus',
+    ],
+    correct: 'A',
+    share: [63, 21, 4, 7, 5],
+    models: [
+      ['chatgpt', 'ChatGPT', 'A'],
+      ['new-claude', 'Claude', 'A'],
+      ['new-gemini', 'Gemini', 'A'],
+      ['mistral', 'Mistral', 'A'],
+      ['perplexity', 'Perplexity', 'A'],
+    ],
+    explanation:
+      'Nicht flüssige Sprache im Telegrammstil bei erhaltenem Verständnis spricht für eine Broca-Aphasie; das Broca-Areal liegt im Gyrus frontalis inferior. Bei einer Wernicke-Aphasie wäre das Verständnis gestört.',
   },
   {
-    rating: 5,
-    quote: 'Die Plattform fühlt sich leicht an und funktioniert einfach.',
-  },
-  {
-    rating: 5,
-    quote: 'Altfragen.io ist genau das Tool, das ich für die Examensvorbereitung gebraucht habe.',
+    subject: 'Biochemie',
+    text: 'Ein Neugeborenes fällt im Screening mit stark erhöhtem Phenylalanin im Blut auf. Welches Enzym ist bei der klassischen Phenylketonurie defekt?',
+    options: [
+      'Tyrosinase',
+      'Phenylalaninhydroxylase',
+      'Homogentisat-1,2-Dioxygenase',
+      'Fumarylacetoacetat-Hydrolase',
+      'Tyrosinaminotransferase',
+    ],
+    correct: 'B',
+    share: [6, 81, 6, 4, 3],
+    models: [
+      ['chatgpt', 'ChatGPT', 'B'],
+      ['new-claude', 'Claude', 'B'],
+      ['new-gemini', 'Gemini', 'B'],
+      ['mistral', 'Mistral', 'B'],
+      ['perplexity', 'Perplexity', 'B'],
+    ],
+    explanation:
+      'Ohne Phenylalaninhydroxylase wird Phenylalanin nicht zu Tyrosin umgebaut und reichert sich an. Homogentisat-Dioxygenase fehlt bei der Alkaptonurie, Fumarylacetoacetat-Hydrolase bei der Tyrosinämie Typ I, Tyrosinase beim Albinismus.',
   },
 ];
 
-const Index = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
+/** The answer-sheet box with a cross: the page's one motif. */
+const CrossBox = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" aria-hidden="true" className={className}>
+    <rect
+      x="2.5"
+      y="2.5"
+      width="27"
+      height="27"
+      rx="5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+    />
+    <path
+      d="M9.5 9.5l13 13M22.5 9.5l-13 13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3.6"
+      strokeLinecap="round"
+    />
+  </svg>
+);
 
-  const handleGetStarted = () => {
-    if (user) {
-      navigate('/dashboard');
-    } else {
-      navigate('/auth');
-    }
+const Eyebrow = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <p
+    className={cn(
+      'font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground md:text-sm',
+      className,
+    )}
+  >
+    {children}
+  </p>
+);
+
+const SectionTitle = ({ id, children }: { id?: string; children: React.ReactNode }) => (
+  <h2
+    id={id}
+    className="text-balance text-3xl font-bold leading-tight tracking-tight md:text-5xl md:leading-[1.08]"
+  >
+    {children}
+  </h2>
+);
+
+const Section = ({
+  className,
+  inner,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLElement> & { inner?: string }) => (
+  <section className={cn('border-b', className)} {...props}>
+    <div className={cn('mx-auto max-w-page px-4 py-16 md:px-10 md:py-28', inner)}>{children}</div>
+  </section>
+);
+
+function DemoQuiz() {
+  const [index, setIndex] = useState(0);
+  const [picks, setPicks] = useState<(Letter | null)[]>(QUIZ.map(() => null));
+  const [done, setDone] = useState(false);
+
+  const q = QUIZ[index];
+  const picked = picks[index];
+  const revealed = picked !== null;
+  const score = picks.filter((p, i) => p === QUIZ[i].correct).length;
+
+  const pick = (letter: Letter) => {
+    if (revealed) return;
+    setPicks((prev) => prev.map((p, i) => (i === index ? letter : p)));
+  };
+  const next = () => (index === QUIZ.length - 1 ? setDone(true) : setIndex(index + 1));
+  const restart = () => {
+    setPicks(QUIZ.map(() => null));
+    setIndex(0);
+    setDone(false);
   };
 
+  const agreeing = q.models.filter(([, , l]) => l === q.correct).map(([, name]) => name);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 overflow-x-hidden">
-      {/* Header Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60">
-        <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-          <Link to="/" className="font-bold text-xl flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
+    <div className="overflow-hidden rounded-xl border bg-card shadow-[0_28px_56px_-32px_hsl(var(--foreground)/0.35)]">
+      <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-4 py-3 font-mono text-xs text-muted-foreground md:px-5">
+        <span>Probier’s aus · 5 Beispielfragen</span>
+        <span className="whitespace-nowrap text-foreground">
+          {done ? 'Auswertung' : `${index + 1} / ${QUIZ.length}`}
+        </span>
+      </div>
+      <div aria-hidden="true" className="flex gap-1 px-4 pt-3 md:px-5">
+        {QUIZ.map((item, i) => (
+          <span
+            key={item.subject}
+            className={cn(
+              'h-1.5 flex-1 rounded-full transition-colors',
+              picks[i] === null
+                ? i === index && !done
+                  ? 'bg-foreground'
+                  : 'bg-border'
+                : picks[i] === item.correct
+                  ? 'bg-success'
+                  : 'bg-danger',
+            )}
+          />
+        ))}
+      </div>
+
+      {!done ? (
+        <>
+          <p className="px-4 pt-3 font-mono text-xs text-muted-foreground md:px-5">{q.subject}</p>
+          <p className="px-4 pb-4 pt-2 text-base leading-relaxed md:px-5 md:text-lg">{q.text}</p>
+          <div role="group" aria-label="Antwortmöglichkeiten" className="border-t">
+            {q.options.map((text, i) => {
+              const letter = LETTERS[i];
+              const isCorrect = letter === q.correct;
+              const isMine = picked === letter;
+              const state = !revealed ? 'open' : isCorrect ? 'correct' : isMine ? 'wrong' : 'other';
+              return (
+                <button
+                  key={letter}
+                  type="button"
+                  onClick={() => pick(letter)}
+                  aria-pressed={isMine}
+                  aria-label={`Antwort ${letter}: ${text}${state === 'correct' ? ', richtig' : state === 'wrong' ? ', falsch' : ''}`}
+                  className={cn(
+                    'relative flex min-h-[52px] w-full items-center gap-3.5 overflow-hidden border-b py-3 pl-5 pr-4 text-left transition-colors focus-visible:ring-inset focus-visible:ring-offset-0',
+                    state === 'open' && 'hover:bg-muted',
+                    state === 'correct' &&
+                      'bg-success-subtle shadow-[inset_3px_0_0_hsl(var(--success))]',
+                    state === 'wrong' &&
+                      'bg-danger-subtle shadow-[inset_3px_0_0_hsl(var(--danger))]',
+                    revealed && 'cursor-default',
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 left-0 bg-foreground/[0.06] transition-[width] duration-500"
+                    style={{ width: revealed ? `${q.share[i]}%` : '0%' }}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'relative w-4 text-center text-lg font-bold',
+                      state === 'correct'
+                        ? 'text-success-strong'
+                        : state === 'wrong'
+                          ? 'text-danger-strong'
+                          : 'text-muted-foreground',
+                    )}
+                  >
+                    {letter}
+                  </span>
+                  <span className="relative min-w-0 flex-1 text-base leading-snug">{text}</span>
+                  {!revealed ? (
+                    <kbd
+                      aria-hidden="true"
+                      className="relative hidden rounded border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground sm:inline"
+                    >
+                      {i + 1}
+                    </kbd>
+                  ) : (
+                    <span className="relative whitespace-nowrap font-mono text-sm tabular-nums text-muted-foreground">
+                      {q.share[i]} %
+                    </span>
+                  )}
+                  {state === 'correct' && (
+                    <Check aria-hidden="true" className="relative size-5 shrink-0 text-success" />
+                  )}
+                  {state === 'wrong' && (
+                    <X aria-hidden="true" className="relative size-5 shrink-0 text-danger" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <p role="status" className="sr-only">
+            {revealed
+              ? picked === q.correct
+                ? 'Richtig.'
+                : `Falsch, richtig ist ${q.correct}.`
+              : ''}
+          </p>
+          {!revealed ? (
+            <p className="px-4 py-3.5 text-sm text-muted-foreground md:px-5">
+              Antwort anklicken. In der App kreuzt du mit den Tasten 1 bis 5.
+            </p>
+          ) : (
+            <div className="space-y-4 px-4 py-5 md:px-5">
+              <div className="space-y-1">
+                <p
+                  className={cn(
+                    'text-lg font-bold',
+                    picked === q.correct ? 'text-success-strong' : 'text-danger-strong',
+                  )}
+                >
+                  {picked === q.correct ? 'Richtig.' : `Nicht ganz – richtig ist ${q.correct}.`}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {q.share[LETTERS.indexOf(q.correct)]} % haben beim ersten Versuch {q.correct}{' '}
+                  gewählt.
+                </p>
+              </div>
+              <div className="space-y-2 rounded-lg bg-muted px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                  <span className="rounded-full border border-input bg-card px-2 font-mono text-[11px]">
+                    KI
+                  </span>
+                  <span>
+                    {agreeing.length === q.models.length
+                      ? `Alle ${q.models.length} Modelle wählen ${q.correct}`
+                      : `${agreeing.length} von ${q.models.length} Modellen wählen ${q.correct}`}
+                  </span>
+                  <span className="flex gap-1">
+                    {q.models
+                      .filter(([, , choice]) => choice === q.correct)
+                      .map(([model]) => (
+                        <ModelIcon key={model} model={model} />
+                      ))}
+                  </span>
+                </div>
+                <p className="text-[15px] leading-relaxed">{q.explanation}</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-sm text-muted-foreground">
+                  Beispielfragen und -werte für diese Seite
+                </span>
+                <Button onClick={next}>
+                  {index === QUIZ.length - 1 ? 'Auswertung' : 'Nächste Frage'}
+                  <ArrowRight aria-hidden="true" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="space-y-4 px-4 py-5 md:px-5">
+          <div>
+            <p className="font-mono text-xs text-muted-foreground">Auswertung</p>
+            <p className="text-4xl font-bold tracking-tight">
+              {score} von {QUIZ.length} richtig
+            </p>
+          </div>
+          <ul className="border-t">
+            {QUIZ.map((item, i) => (
+              <li key={item.subject} className="flex items-center gap-3 border-b py-2.5">
+                <span className="w-4 font-mono text-sm text-muted-foreground">{i + 1}</span>
+                <span className="min-w-0 flex-1">{item.subject}</span>
+                <span
+                  className={cn(
+                    'font-semibold',
+                    picks[i] === item.correct ? 'text-success-strong' : 'text-danger-strong',
+                  )}
+                >
+                  {picks[i] === item.correct ? 'richtig' : 'falsch'}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-muted-foreground">
+            In der App kreuzt du so die Altfragen deiner Uni, mit Erklärungen zu jeder Antwort und
+            Statistik pro Klausur.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link to="/auth">Kostenlos starten</Link>
+            </Button>
+            <Button variant="outline" size="lg" onClick={restart}>
+              Nochmal von vorn
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const nf = new Intl.NumberFormat('de-DE');
+
+function StatsBar() {
+  const { data: stats } = useQuery({
+    queryKey: ['landing-stats'],
+    queryFn: fetchLandingStats,
+    staleTime: 10 * 60 * 1000,
+  });
+  const tiles = [
+    { value: stats ? nf.format(stats.users) : '–', label: 'registrierte Studierende' },
+    { value: stats ? nf.format(stats.questions) : '–', label: 'hochgeladene Altfragen' },
+    { value: '5', label: 'KI-Modelle erklären jede Frage' },
+  ];
+  return (
+    <section aria-label="Altfragen.io in Zahlen" className="border-b bg-card">
+      <div className="mx-auto max-w-page px-4 md:px-10">
+        <dl className="grid grid-cols-1 gap-px border-x bg-border sm:grid-cols-3">
+          {tiles.map((t) => (
+            <div key={t.label} className="flex flex-col-reverse gap-1.5 bg-card px-5 py-7">
+              <dt className="text-sm text-muted-foreground">{t.label}</dt>
+              <dd className="text-4xl font-bold tabular-nums tracking-tight md:text-5xl">
+                {t.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="flex min-h-10 items-center gap-2 py-3 font-mono text-xs text-muted-foreground">
+          {stats && (
+            <>
+              <span aria-hidden="true" className="size-2 rounded-full bg-success" />
+              Live aus der Datenbank
+            </>
+          )}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+const STEPS = [
+  {
+    title: 'Mit der Uni-Mail registrieren',
+    text: 'Deine Uni ergibt sich aus der Mail-Adresse. Danach siehst du alle Fragen, die Kommiliton:innen für deine Uni geteilt haben.',
+  },
+  {
+    title: 'Prüfung anlegen, Fragen wählen',
+    text: 'Trag deine Klausur mit Datum ein und filtere, was du kreuzen willst.',
+    chips: ['Fach', 'Jahr', 'Semester', 'Schwierigkeit', 'nur neue', 'nur falsche'],
+  },
+  {
+    title: 'Kreuzen, bis es sitzt',
+    text: 'Session starten, Antwort wählen, Erklärung lesen, weiter. Am Ende siehst du, was sitzt und was du wiederholen solltest.',
+  },
+];
+
+const MORE = [
+  {
+    title: 'Was die anderen gekreuzt haben',
+    text: 'Zu jeder Option der Anteil, den alle anderen beim ersten Versuch gewählt haben.',
+  },
+  {
+    title: 'Kommentare und Notizen',
+    text: 'Hinweise von Kommiliton:innen direkt an der Frage, eigene Notizen nur für dich.',
+  },
+  {
+    title: 'Prüfungen und Statistik',
+    text: 'Pro Klausur siehst du, wie viele Fragen du schon hattest und wie viele richtig waren.',
+  },
+  {
+    title: 'Eigene Fragen hochladen',
+    text: 'Als CSV, PDF oder Scan. Teil sie privat, mit deiner Uni oder mit allen.',
+  },
+  {
+    title: 'Schwierigkeit markieren',
+    text: 'Jede Frage bekommt deine Einschätzung von 1 bis 5, später kreuzt du gezielt die schweren.',
+  },
+  {
+    title: 'Am Handy wie am Laptop',
+    text: 'Läuft im Browser, ohne App. Dein Fortschritt ist überall derselbe.',
+  },
+];
+
+const FAQ = [
+  {
+    q: 'Woher kommen die Fragen?',
+    a: 'Studierende laden Altfragen hoch und teilen sie privat, mit ihrer Uni oder mit allen. Die größte Sammlung hat bisher die Uni Hamburg; für andere Unis wächst sie mit jeder hochgeladenen Klausur.',
+  },
+  {
+    q: 'Gibt es Fragen für meine Uni?',
+    a: 'Deine Uni ergibt sich aus der Domain deiner Uni-Mail. Sind für sie noch keine Fragen geteilt, lädst du eigene hoch: als CSV, PDF oder Scan.',
+  },
+  {
+    q: 'Wie verlässlich sind die KI-Erklärungen?',
+    a: 'Sie sind eine Lernhilfe, keine Lehrmeinung. Deshalb stehen fünf Modelle nebeneinander, dazu die protokollierte Antwort und was die anderen gekreuzt haben.',
+  },
+  {
+    q: 'Wie kündige ich Premium?',
+    a: 'Jederzeit über „Verträge hier kündigen“ unten auf jeder Seite, im Kundenportal unter Premium oder per Mail an premium@altfragen.io.',
+  },
+  {
+    q: 'Was passiert mit meinen Daten?',
+    a: 'Konto und Fragen liegen bei Supabase auf Servern in Frankfurt am Main, Zahlungen laufen über Stripe. Es gibt keine Analyse-, Werbe- oder Tracking-Cookies. Alles Weitere steht in der Datenschutzerklärung.',
+  },
+];
+
+function PriceCard({
+  title,
+  subtitle,
+  price,
+  unit,
+  items,
+  cta,
+  to,
+  featured,
+}: {
+  title: string;
+  subtitle: string;
+  price: string;
+  unit?: string;
+  items: string[];
+  cta: string;
+  to: string;
+  featured?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-5 rounded-xl border bg-card p-7',
+        featured && 'border-2 border-primary p-[27px]',
+      )}
+    >
+      <div className="space-y-1">
+        <h3 className="text-lg font-bold">{title}</h3>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+      <p className="flex items-baseline gap-1.5">
+        <span className="text-5xl font-bold tracking-tight">{price}</span>
+        {unit && <span className="text-muted-foreground">{unit}</span>}
+      </p>
+      <ul className="flex flex-1 flex-col gap-2.5 text-[15px]">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2.5">
+            {featured || price !== '0 €' ? (
+              <Plus aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
+            ) : (
+              <Minus aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            )}
+            {item}
+          </li>
+        ))}
+      </ul>
+      <Button asChild size="lg" variant={featured ? 'default' : 'outline'}>
+        <Link to={to}>{cta}</Link>
+      </Button>
+    </div>
+  );
+}
+
+const Index = () => {
+  const { user } = useAuth();
+  const { settings } = useAICommentarySettings();
+  const showLifetime = isLifetimePromotionActive(settings, new Date());
+  const start = user ? '/dashboard' : '/auth';
+  const startLabel = user ? 'Zum Dashboard' : 'Kostenlos starten';
+
+  return (
+    <div className="min-h-dvh overflow-x-hidden bg-background">
+      <SkipLink />
+      <header className="sticky top-0 z-nav border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4 md:px-10">
+          <Link
+            to="/"
+            className="flex items-center gap-2 rounded-md text-lg font-bold tracking-tight"
+          >
+            <GraduationCap aria-hidden="true" className="h-6 w-6 text-primary" />
             Altfragen.io
           </Link>
-
-          <nav className="flex items-center gap-4">
-            <Button onClick={handleGetStarted}>{user ? 'Dashboard' : 'Anmelden'}</Button>
+          <nav aria-label="Abschnitte" className="hidden gap-7 text-[15px] lg:flex">
+            <a href="#so" className="hover:text-primary">
+              So läuft’s
+            </a>
+            <a href="#ki" className="hover:text-primary">
+              KI-Kommentare
+            </a>
+            <a href="#preise" className="hover:text-primary">
+              Preise
+            </a>
+            <a href="#fragen" className="hover:text-primary">
+              Fragen
+            </a>
           </nav>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {!user && (
+              <Button asChild variant="ghost" className="hidden sm:inline-flex">
+                <Link to="/auth">Anmelden</Link>
+              </Button>
+            )}
+            <Button asChild>
+              <Link to={start}>{startLabel}</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32">
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-200/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-200/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-1/3 w-96 h-96 bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-8">
-              <Star className="w-4 h-4 mr-2" />
-              Die intelligente Lernplattform für Student:innen
+      <main id="main" tabIndex={-1} className="focus:outline-none">
+        {/* Hero with the five-question demo */}
+        <section className="border-b">
+          <div className="mx-auto grid max-w-page items-center gap-10 px-4 py-12 md:px-10 md:py-24 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
+            <div className="flex min-w-0 flex-col gap-6">
+              <Eyebrow className="text-primary">Altfragen für Medizinstudierende</Eyebrow>
+              <h1 className="text-balance text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl">
+                Klausur auswählen,{' '}
+                <CrossBox className="inline-block size-[0.78em] align-[-0.04em] text-primary" />{' '}
+                loskreuzen.
+              </h1>
+              <p className="max-w-[34em] text-lg leading-relaxed text-muted-foreground md:text-xl">
+                Altfragen.io sammelt die Altfragen deiner Uni an einem Ort. Du kreuzt, siehst, was
+                die anderen gekreuzt haben, und liest zu jeder Antwort, was fünf KI-Modelle dazu
+                sagen. Ohne Karteikarten anzulegen.
+              </p>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <Button asChild size="lg" className="h-[52px] px-6 text-base">
+                  <Link to={start}>
+                    {startLabel}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+                <a
+                  href="#preise"
+                  className="font-semibold underline decoration-[1.5px] underline-offset-[5px] hover:text-primary"
+                >
+                  Preise ansehen
+                </a>
+              </div>
+              <p className="max-w-[34em] text-sm text-muted-foreground">
+                Mit deiner Uni-Mail siehst du sofort die Fragen, die an deiner Uni geteilt wurden.
+              </p>
             </div>
+            <div className="min-w-0">
+              <DemoQuiz />
+            </div>
+          </div>
+        </section>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
-              Effizientes Lernen mit{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 dark">
-                Altfragen.io
-              </span>
-            </h1>
+        <StatsBar />
 
-            <p className="text-xl md:text-2xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Die moderne Plattform für deine Klausurvorbereitung. Intelligente Features, die dein
-              Lernen revolutionieren.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <Button
-                onClick={handleGetStarted}
-                size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 group rounded-xl"
+        <Section id="so" aria-labelledby="so-heading">
+          <div className="mb-10 max-w-[720px] space-y-3 md:mb-14">
+            <Eyebrow>So läuft’s</Eyebrow>
+            <SectionTitle id="so-heading">
+              Von der Uni-Mail zur ersten Session in drei Schritten.
+            </SectionTitle>
+          </div>
+          <ol className="grid gap-7 md:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <li
+                key={step.title}
+                className="flex flex-col gap-3 border-t-2 border-foreground pt-5"
               >
-                {user ? 'Zum Dashboard' : 'Kostenlos starten'}
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
+                <p className="font-mono text-sm text-muted-foreground">Schritt {i + 1}</p>
+                <h3 className="text-xl font-bold leading-snug">{step.title}</h3>
+                <p className="text-muted-foreground">{step.text}</p>
+                {step.chips && (
+                  <ul aria-label="Filter" className="flex flex-wrap gap-1.5">
+                    {step.chips.map((c) => (
+                      <li key={c} className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ol>
+        </Section>
 
-            {/* Social Proof */}
-            <div className="flex flex-wrap items-center justify-center gap-6 text-slate-500 text-sm">
-              <div className="flex items-center">
-                <Users className="w-4 h-4 mr-2" />
-                <span>60.000+ Fragen</span>
-              </div>
-              <div className="flex items-center">
-                <Award className="w-4 h-4 mr-2" />
-                <span>1000+ Student:innen</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Key Features Grid */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">
-            Alles, was du brauchst
-          </h2>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Moderne Features für eine effiziente Prüfungsvorbereitung
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          <FeatureCard
-            icon={<Search className="w-6 h-6" />}
-            title="Intelligente Suche"
-            description="Durchsuche tausende Fragen mit erweiterten Filtern nach Fach, Modul, Semester, Jahr, Schwierigkeit und mehr."
-            gradient="from-blue-500 to-cyan-500"
-          />
-          <FeatureCard
-            icon={<MessageSquare className="w-6 h-6" />}
-            title="Kommentare & Notizen"
-            description="Private Notizen für dich und öffentliche Diskussionen mit anderen Student:innen zu jeder Frage."
-            gradient="from-purple-500 to-pink-500"
-          />
-          <FeatureCard
-            icon={<Brain className="w-6 h-6" />}
-            title="Multi-Model KI"
-            description="5 KI-Modelle (ChatGPT, Gemini, Claude, Mistral, Perplexity) für umfassende Erklärungen jeder Frage."
-            gradient="from-emerald-500 to-teal-500"
-          />
-          <FeatureCard
-            icon={<BarChart className="w-6 h-6" />}
-            title="Training & Prüfungen"
-            description="Verbesserte Sessions mit Analytics, bevorstehende Prüfungen und detaillierte Fortschrittsverfolgung."
-            gradient="from-indigo-500 to-purple-500"
-          />
-        </div>
-      </section>
-
-      {/* Question Search Feature */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-3xl p-8 md:p-12 shadow-xl border border-blue-100">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
-                  <Search className="w-4 h-4 mr-2" />
-                  Neue Funktion
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  Finde genau die Fragen, die du brauchst
-                </h2>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Unsere erweiterte Suchfunktion ermöglicht es dir, präzise nach Fragen zu suchen.
-                  Filtere nach Fach, Modul, Semester, Jahr, Schwierigkeit, Sichtbarkeit und
-                  Dateiname. Sortiere und navigiere durch deine Ergebnisse mit Pagination.
-                </p>
-                <div className="space-y-4">
-                  <FeatureItem
-                    icon={<Filter className="w-5 h-5" />}
-                    title="Erweiterte Filter"
-                    description="7 verschiedene Filteroptionen für präzise Suchergebnisse"
-                  />
-                  <FeatureItem
-                    icon={<Zap className="w-5 h-5" />}
-                    title="Schnelle Navigation"
-                    description="Sortierung und Pagination für effizientes Durchsuchen"
-                  />
-                  <FeatureItem
-                    icon={<Target className="w-5 h-5" />}
-                    title="Präzise Ergebnisse"
-                    description="Finde genau die Fragen, die für deine Prüfung relevant sind"
-                  />
-                </div>
-              </div>
-              <div className="relative">
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900">Fragensuche</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                      <span className="text-sm text-slate-600">Aktiv</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-slate-900">Filter anwenden</span>
-                        <Filter className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                          Modul: D1
-                        </span>
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                          Jahr: 2023
-                        </span>
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                          Schwierigkeit: Mittel
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-lg">
-                      <span className="text-sm font-medium text-slate-900">
-                        127 Fragen gefunden
-                      </span>
-                      <p className="text-xs text-slate-500 mt-1">Seite 1 von 13</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Comments & Notes Feature */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-8 md:p-12 shadow-xl border border-purple-100">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="relative order-2 md:order-1">
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900">Kommentare & Notizen</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                      <span className="text-sm text-slate-600">Live</span>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-400">
-                      <div className="flex items-start space-x-3">
-                        <MessageSquare className="w-5 h-5 text-purple-600 mt-1" />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <h5 className="font-medium text-slate-900">Öffentlicher Kommentar</h5>
-                            <span className="text-xs text-slate-500">Max M.</span>
-                          </div>
-                          <p className="text-sm text-slate-600">
-                            Gute Frage! Die Antwort B ist korrekt, weil...
-                          </p>
-                          <div className="mt-2 flex items-center space-x-2">
-                            <button className="text-xs text-purple-600 hover:text-purple-700">
-                              Antworten
-                            </button>
-                            <span className="text-xs text-slate-400">•</span>
-                            <span className="text-xs text-slate-500">2 Antworten</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-lg border-l-4 border-slate-300">
-                      <div className="flex items-start space-x-2">
-                        <span className="text-xs font-medium text-slate-700">📝 Private Notiz</span>
-                        <p className="text-xs text-slate-600">
-                          Wichtig: Diese Frage wiederholen vor der Prüfung
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="order-1 md:order-2">
-                <div className="inline-flex items-center px-4 py-2 bg-purple-100 border border-purple-200 rounded-full text-purple-700 text-sm font-medium mb-6">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Kollaboration
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  Lerne gemeinsam mit anderen
-                </h2>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Nutze private Notizen für deine persönlichen Gedanken und tausche dich mit anderen
-                  Student:innen über öffentliche, verschachtelte Kommentare aus. Diskutiere
-                  Antworten, teile Erklärungen und lerne voneinander.
-                </p>
-                <div className="space-y-4">
-                  <FeatureItem
-                    icon={<MessageSquare className="w-5 h-5" />}
-                    title="Öffentliche Diskussionen"
-                    description="Threaded Comments für strukturierte Gespräche zu jeder Frage"
-                  />
-                  <FeatureItem
-                    icon={<BookOpen className="w-5 h-5" />}
-                    title="Private Notizen"
-                    description="Persönliche Notizen, die nur du sehen kannst"
-                  />
-                  <FeatureItem
-                    icon={<Users className="w-5 h-5" />}
-                    title="Community-Lernen"
-                    description="Profitiere von den Erklärungen und Diskussionen anderer"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Multi-Model AI Feature */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-xl border border-emerald-100">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center px-4 py-2 bg-emerald-100 border border-emerald-200 rounded-full text-emerald-700 text-sm font-medium mb-6">
-                  <Brain className="w-4 h-4 mr-2" />
-                  KI-gestützte Erklärungen
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  5 KI-Modelle für umfassende Erklärungen
-                </h2>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Jede Frage wird von fünf verschiedenen KI-Modellen analysiert: ChatGPT, Gemini,
-                  Claude, Mistral und Perplexity. Vergleiche ihre Erklärungen, wähle dein
-                  bevorzugtes Modell und verstehe jede Antwort im Detail.
-                </p>
-                <div className="space-y-4">
-                  <FeatureItem
-                    icon={<Sparkles className="w-5 h-5" />}
-                    title="5 KI-Modelle"
-                    description="ChatGPT, Gemini, Claude, Mistral und Perplexity im Vergleich"
-                  />
-                  <FeatureItem
-                    icon={<Target className="w-5 h-5" />}
-                    title="Detaillierte Analyse"
-                    description="Jede Antwortoption wird einzeln erklärt - verstehe warum sie richtig oder falsch ist"
-                  />
-                  <FeatureItem
-                    icon={<Zap className="w-5 h-5" />}
-                    title="Modell-Auswahl"
-                    description="Wähle deine bevorzugten Modelle für personalisierte Erklärungen"
-                  />
-                </div>
-              </div>
-              <div className="relative">
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900">KI-Kommentare</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                      <span className="text-sm text-slate-600">5 Modelle aktiv</span>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-emerald-50 rounded-lg border-l-4 border-emerald-400">
-                      <div className="flex items-start space-x-3">
-                        <Brain className="w-5 h-5 text-emerald-600 mt-1" />
-                        <div>
-                          <h5 className="font-medium text-slate-900 mb-1">Allgemeine Erklärung</h5>
-                          <p className="text-sm text-slate-600">
-                            Diese Frage testet das Verständnis der Herzphysiologie...
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                      <div className="flex -space-x-2">
-                        <div className="w-6 h-6 rounded-full bg-emerald-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-emerald-700">
-                          C
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-blue-700">
-                          G
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-purple-700">
-                          M
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-orange-700">
-                          P
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-xs font-semibold text-indigo-700">
-                          D
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-600">
-                        5 Modelle analysieren diese Frage
-                      </span>
-                    </div>
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-700">
-                          Antwort B: Richtig
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600">
-                        Korrekt! Noradrenalin verstärkt die Herzkontraktion über β1-Rezeptoren.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Training & Exams Feature */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 md:p-12 shadow-xl border border-indigo-100">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="relative order-2 md:order-1">
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-slate-900">Training & Prüfungen</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-indigo-400 rounded-full"></div>
-                      <span className="text-sm text-slate-600">Aktiv</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-slate-900">Aktive Session</span>
-                        <Calendar className="w-4 h-4 text-indigo-600" />
-                      </div>
-                      <p className="text-xs text-slate-600">15/30 Fragen beantwortet</p>
-                      <div className="mt-2 w-full bg-slate-200 rounded-full h-2">
-                        <div
-                          className="bg-indigo-600 h-2 rounded-full"
-                          style={{ width: '50%' }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-900">
-                          Bevorstehende Prüfung
-                        </span>
-                        <span className="text-xs text-indigo-600 bg-indigo-100 px-2 py-1 rounded">
-                          In 5 Tagen
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">Anatomie Klausur - Modul D1</p>
-                    </div>
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <BarChart className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-slate-900">Fortschritt: 73%</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Durchschnittliche Schwierigkeit: Mittel
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="order-1 md:order-2">
-                <div className="inline-flex items-center px-4 py-2 bg-indigo-100 border border-indigo-200 rounded-full text-indigo-700 text-sm font-medium mb-6">
-                  <BarChart className="w-4 h-4 mr-2" />
-                  Verbessertes Training
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-900">
-                  Trainiere effizienter mit Analytics
-                </h2>
-                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                  Verbesserte Training-Sessions mit detaillierter Analytics, bevorstehende Prüfungen
-                  mit Bearbeitungsfunktionen und intelligente Filter für optimale Lernfortschritte.
-                  Verfolge deinen Fortschritt präzise und fokussiere dich auf das, was wichtig ist.
-                </p>
-                <div className="space-y-4">
-                  <FeatureItem
-                    icon={<Calendar className="w-5 h-5" />}
-                    title="Bevorstehende Prüfungen"
-                    description="Verwalte deine Prüfungen mit Bearbeitungsfunktionen und Analytics"
-                  />
-                  <FeatureItem
-                    icon={<BarChart className="w-5 h-5" />}
-                    title="Detaillierte Analytics"
-                    description="Umfassende Statistiken zu deinen Training-Sessions"
-                  />
-                  <FeatureItem
-                    icon={<Target className="w-5 h-5" />}
-                    title="Intelligente Filter"
-                    description="Bessere Schwierigkeitsfilter und Fortschrittsverfolgung"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it Works */}
-      <section className="relative py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">
-              So einfach geht's
-            </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              In drei einfachen Schritten zu deiner optimalen Prüfungsvorbereitung
+        <Section
+          id="ki"
+          aria-labelledby="ki-heading"
+          inner="grid items-center gap-10 lg:grid-cols-2 lg:gap-16"
+        >
+          <div className="flex flex-col gap-5">
+            <Eyebrow>KI-Kommentare</Eyebrow>
+            <SectionTitle id="ki-heading">Fünf Modelle kreuzen mit.</SectionTitle>
+            <p className="text-lg leading-relaxed text-muted-foreground">
+              ChatGPT, Claude, Gemini, Mistral und Perplexity beantworten jede Frage und schreiben
+              zu jeder Antwortoption, warum sie stimmt oder nicht. Wo sie sich uneinig sind, siehst
+              du es sofort.
             </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <StepCard number="1" title="Registrieren" description="Erstelle kostenlos dein Konto" />
-            <StepCard
-              number="2"
-              title="Fragen auswählen"
-              description="Lade deine Altfragen hoch oder nutze geteilte Fragen von deiner Universität"
-            />
-            <StepCard
-              number="3"
-              title="Lernen & Verbessern"
-              description="Nutze KI-Features für optimale Prüfungsvorbereitung"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Video Section - self-hosted landing video */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">
-              Plattform-Walkthrough
-            </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Schaue dir durch Features von Altfragen.io an, von der Registrierung bis zu den
-              KI-Funktionen.
-            </p>
-          </div>
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.01] transition-all duration-500">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 rounded-2xl"></div>
-            <div className="relative z-10 w-full bg-black" style={{ paddingBottom: '56.25%' }}>
-              <video
-                className="absolute top-0 left-0 w-full h-full rounded-2xl"
-                src={DEMO_VIDEO_URL}
-                poster={DEMO_VIDEO_THUMBNAIL_URL}
-                controls
-                playsInline
-                preload="metadata"
-              >
-                Dein Browser unterstützt das Abspielen dieses Videos nicht.
-              </video>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Carousel */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">
-              Was unsere Nutzer:innen sagen
-            </h2>
-            <p className="text-lg text-slate-600">
-              Echte Bewertungen von Student:innen, die mit Altfragen.io lernen
-            </p>
-          </div>
-
-          <Carousel
-            opts={{
-              align: 'start',
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {testimonials.map((testimonial, index) => (
-                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                  <div className="relative bg-gradient-to-br from-white to-blue-50/50 rounded-2xl p-6 md:p-8 shadow-lg border border-slate-100 h-full flex flex-col">
-                    <div className="flex flex-col h-full relative z-10">
-                      {/* Rating */}
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2">
-                          <div className="flex space-x-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={cn(
-                                  'w-4 h-4',
-                                  i < Math.floor(testimonial.rating)
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'fill-slate-200 text-slate-200',
-                                )}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quote */}
-                      <blockquote className="text-base md:text-lg font-medium text-slate-700 mb-4 leading-relaxed flex-grow">
-                        {testimonial.quote}
-                      </blockquote>
-
-                      {/* Anonymous badge */}
-                      <div className="mt-auto pt-4 border-t border-slate-200">
-                        <div className="flex items-center text-sm text-slate-500">
-                          <Users className="w-4 h-4 mr-2" />
-                          <span>Anonyme Nutzer:in</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CarouselItem>
+            <ul className="flex flex-col gap-3">
+              {[
+                'Eine Erklärung zu jeder Option, nicht nur zur richtigen',
+                'Perplexity sucht im Netz und nennt seine Quellen',
+                'Daneben die protokollierte Antwort und was die anderen gekreuzt haben',
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <CrossBox className="mt-0.5 size-5 shrink-0 text-primary" />
+                  {item}
+                </li>
               ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-12 lg:-left-16" />
-            <CarouselNext className="hidden md:flex -right-12 lg:-right-16" />
-          </Carousel>
-        </div>
-      </section>
+            </ul>
+            <p className="text-sm text-muted-foreground">
+              Die Modelle sind eine Lernhilfe, keine Lehrmeinung. Gerade wo sie sich widersprechen,
+              lohnt das Nachschlagen.
+            </p>
+          </div>
+          <AnswerSheet />
+        </Section>
 
-      {/* CTA Section */}
-      <section className="relative overflow-hidden py-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900"></div>
-        <div className="absolute inset-0 opacity-20">
-          <div
-            className="w-full h-full bg-repeat"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          ></div>
-        </div>
+        <Section aria-labelledby="more-heading">
+          <div className="mb-10 max-w-[720px] space-y-3 md:mb-14">
+            <Eyebrow>Außerdem drin</Eyebrow>
+            <SectionTitle id="more-heading">Was beim Kreuzen sonst noch hilft.</SectionTitle>
+          </div>
+          <div className="grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+            {MORE.map((m) => (
+              <div key={m.title} className="flex flex-col gap-2 border-t border-input/60 pt-4">
+                <h3 className="text-lg font-bold">{m.title}</h3>
+                <p className="text-muted-foreground">{m.text}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
 
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-            Bereit für effizienteres Lernen?
-          </h2>
-          <p className="text-xl md:text-2xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Starte noch heute und profitiere von allen neuen Features. Kostenlos und ohne
-            Verpflichtungen.
+        {/* Keyboard band: always dark, via the .dark tokens on this section */}
+        <section
+          aria-labelledby="keys-heading"
+          className="dark border-b bg-background text-foreground"
+        >
+          <div className="mx-auto grid max-w-page items-center gap-10 px-4 py-16 md:px-10 md:py-28 lg:grid-cols-2 lg:gap-16">
+            <div className="flex flex-col gap-4">
+              <Eyebrow>Tastatur</Eyebrow>
+              <SectionTitle id="keys-heading">Kreuzen ohne Maus.</SectionTitle>
+              <p className="text-lg leading-relaxed text-muted-foreground">
+                Eine Hand auf der Tastatur reicht: Zahl für die Antwort, Leertaste für die nächste
+                Frage. Die Belegung kannst du in den Einstellungen ändern.
+              </p>
+            </div>
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-wrap gap-2.5">
+                {LETTERS.map((l, i) => (
+                  <Key key={l} label={String(i + 1)} caption={l} active={l === 'C'} />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                <Key label="Leertaste" caption="weiter" wide />
+                <Key label="S" caption="Lösung" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Mit Umschalt und 1 bis 5 setzt du die Schwierigkeit. Am Handy tippst du einfach.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <Section id="preise" aria-labelledby="preise-heading" inner="space-y-10 md:space-y-12">
+          <div className="max-w-[760px] space-y-3">
+            <Eyebrow>Preise</Eyebrow>
+            <SectionTitle id="preise-heading">
+              Kostenlos kreuzen. Premium ab 9 € im Monat.
+            </SectionTitle>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-3">
+            <PriceCard
+              title="Kostenlos"
+              subtitle="Zum Reinkommen"
+              price="0 €"
+              items={[
+                'Altfragen deiner Uni kreuzen',
+                'Eigene Fragen hochladen (CSV, PDF)',
+                'Begrenzte Zahl an Sessions',
+                'Begrenzte KI-Kommentare pro Tag',
+              ]}
+              cta={startLabel}
+              to={start}
+            />
+            <PriceCard
+              featured
+              title="Premium monatlich"
+              subtitle="Für die Wochen vor der Klausur"
+              price="9 €"
+              unit="pro Monat"
+              items={[
+                'Unbegrenzte Sessions',
+                'Alle KI-Kommentare zu geteilten Fragen',
+                'KI-Kommentare zu deinen eigenen Fragen',
+                'Gescannte PDFs per Texterkennung',
+                'Ausführliche Statistik',
+                'Support innerhalb von 24 Stunden',
+              ]}
+              cta="Premium wählen"
+              to="/subscription"
+            />
+            <PriceCard
+              title="Premium pro Semester"
+              subtitle="Für das ganze Semester am Stück"
+              price="29 €"
+              unit="pro Semester"
+              items={['Alles aus Premium monatlich', 'Einmal zahlen, ein Semester Ruhe']}
+              cta="Semester wählen"
+              to="/subscription"
+            />
+          </div>
+          {showLifetime && settings.lifetimePromotionEndDate && (
+            <div className="flex items-center gap-3 rounded-lg border border-premium-border bg-premium-subtle px-4 py-3.5 text-premium-strong">
+              <Crown aria-hidden="true" className="size-5 shrink-0 text-premium" />
+              <span>
+                <strong>
+                  Nur bis{' '}
+                  {new Date(settings.lifetimePromotionEndDate).toLocaleDateString('de-DE', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                  :
+                </strong>{' '}
+                Lifetime-Zugang für 79 € einmalig.
+              </span>
+            </div>
+          )}
+          <p className="max-w-[760px] text-sm text-muted-foreground">
+            Monats- und Semesterabo verlängern sich automatisch und sind kündbar, wie in den{' '}
+            <Link to="/agb" className="underline underline-offset-4 hover:text-foreground">
+              AGB
+            </Link>{' '}
+            beschrieben. Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.
           </p>
-          <Button
-            onClick={handleGetStarted}
-            size="lg"
-            className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 group rounded-xl"
-          >
-            {user ? 'Zum Dashboard' : 'Kostenlos registrieren'}
-            <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
-      </section>
+        </Section>
 
+        <Section
+          id="fragen"
+          aria-labelledby="faq-heading"
+          inner="grid gap-8 lg:grid-cols-[1fr_2fr] lg:gap-16"
+        >
+          <div className="space-y-3">
+            <Eyebrow>Fragen</Eyebrow>
+            <SectionTitle id="faq-heading">Was oft gefragt wird.</SectionTitle>
+            <p className="text-muted-foreground">
+              Sonst schreib an{' '}
+              <a
+                href="mailto:hallo@altfragen.io"
+                className="font-semibold text-foreground underline underline-offset-4"
+              >
+                hallo@altfragen.io
+              </a>
+              .
+            </p>
+          </div>
+          <div className="border-t border-input/60">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group border-b border-input/60">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-lg font-bold [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <Plus
+                    aria-hidden="true"
+                    className="size-5 shrink-0 transition-transform duration-200 group-open:rotate-45"
+                  />
+                </summary>
+                <p className="max-w-[62ch] pb-5 leading-relaxed text-muted-foreground">{f.a}</p>
+              </details>
+            ))}
+            <details className="group border-b border-input/60">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-lg font-bold [&::-webkit-details-marker]:hidden">
+                Ist Altfragen.io Open Source?
+                <Plus
+                  aria-hidden="true"
+                  className="size-5 shrink-0 transition-transform duration-200 group-open:rotate-45"
+                />
+              </summary>
+              <p className="max-w-[62ch] pb-5 leading-relaxed text-muted-foreground">
+                Ja. Der Code steht unter GPL-3.0 auf{' '}
+                <a
+                  href="https://github.com/jeskokaiser/altfragen-io"
+                  className="font-semibold text-foreground underline underline-offset-4"
+                >
+                  GitHub
+                </a>
+                .
+              </p>
+            </details>
+          </div>
+        </Section>
+
+        <section className="bg-primary text-primary-foreground">
+          <div className="mx-auto flex max-w-page flex-wrap items-end justify-between gap-x-12 gap-y-7 px-4 py-14 md:px-10 md:py-24">
+            <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-3.5">
+              <h2 className="text-balance text-3xl font-bold leading-tight tracking-tight md:text-5xl">
+                Leg deine nächste Klausur an und kreuz die ersten zehn Fragen.
+              </h2>
+              <p className="text-lg">Kostenlos, ohne Zahlungsdaten.</p>
+            </div>
+            <Button
+              asChild
+              size="lg"
+              className="h-14 bg-card px-7 text-base text-foreground hover:bg-card/90"
+            >
+              <Link to={start}>
+                {startLabel}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        </section>
+
+        <div className="mx-auto flex max-w-page flex-wrap justify-between gap-6 px-4 pt-12 md:px-10">
+          <div className="max-w-[34ch] space-y-2">
+            <p className="text-lg font-bold">Altfragen.io</p>
+            <p className="text-sm text-muted-foreground">
+              Altfragen kreuzen für Medizinstudierende. Ein Projekt von KSR Labs, Hamburg.
+            </p>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Kontakt:{' '}
+            <a
+              href="mailto:hallo@altfragen.io"
+              className="text-foreground underline underline-offset-4"
+            >
+              hallo@altfragen.io
+            </a>
+          </p>
+        </div>
+      </main>
       <Footer />
     </div>
   );
 };
 
-const FeatureCard = ({
-  icon,
-  title,
-  description,
-  gradient,
+function Key({
+  label,
+  caption,
+  active,
+  wide,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  gradient: string;
-}) => {
+  label: string;
+  caption: string;
+  active?: boolean;
+  wide?: boolean;
+}) {
   return (
-    <div className="group relative p-6 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-lg transition-all duration-300">
-      <div
+    <div className="flex flex-col items-center gap-2">
+      <kbd
         className={cn(
-          'w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300',
-          `bg-gradient-to-br ${gradient}`,
+          'grid h-14 place-items-center rounded-lg border font-mono text-xl',
+          wide ? 'w-[min(250px,62vw)] text-base' : 'w-14',
+          active
+            ? 'mt-[3px] border-primary-strong bg-primary font-semibold text-primary-foreground'
+            : 'border-b-4 border-input/60 bg-muted',
         )}
       >
-        {icon}
-      </div>
-      <h3 className="text-xl font-bold mb-2 text-slate-900">{title}</h3>
-      <p className="text-slate-600 leading-relaxed text-sm">{description}</p>
+        {label}
+      </kbd>
+      <span className={cn('text-sm', active ? 'font-semibold' : 'text-muted-foreground')}>
+        {caption}
+      </span>
     </div>
   );
-};
+}
 
-const FeatureItem = ({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) => (
-  <div className="flex items-start space-x-3">
-    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 mt-1 flex-shrink-0">
-      {icon}
-    </div>
-    <div>
-      <h3 className="font-semibold text-slate-900 mb-1">{title}</h3>
-      <p className="text-slate-600 text-sm">{description}</p>
-    </div>
-  </div>
-);
-
-const StepCard = ({
-  number,
-  title,
-  description,
-}: {
-  number: string;
-  title: string;
-  description: string;
-}) => (
-  <div className="text-center relative group">
-    <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6 shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-110">
-      {number}
-    </div>
-    <h3 className="text-xl font-bold mb-3 text-slate-900">{title}</h3>
-    <p className="text-slate-600 leading-relaxed">{description}</p>
-  </div>
-);
+/** Answer-sheet grid: which option each model ticks for demo question 1. */
+function AnswerSheet() {
+  const q = QUIZ[0];
+  return (
+    <figure className="overflow-hidden rounded-xl border bg-card">
+      <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-4 py-3 font-mono text-xs text-muted-foreground md:px-5">
+        <span>Antwortbogen · Beispielfrage 1</span>
+        <span>protokolliert: {q.correct}</span>
+      </div>
+      <table className="w-full border-collapse text-left">
+        <caption className="sr-only">
+          Welche Antwort jedes KI-Modell bei Beispielfrage 1 wählt
+        </caption>
+        <thead>
+          <tr className="border-b">
+            <th scope="col" className="py-2 pl-4 text-xs font-normal text-muted-foreground md:pl-5">
+              Modell
+            </th>
+            {LETTERS.map((l) => (
+              <th
+                key={l}
+                scope="col"
+                className={cn(
+                  'py-2 text-center font-mono',
+                  l === q.correct
+                    ? 'font-bold text-success-strong'
+                    : 'font-normal text-muted-foreground',
+                )}
+              >
+                {l}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {q.models.map(([model, name, choice]) => (
+            <tr key={model} className="border-b border-border/60">
+              <th scope="row" className="py-2 pl-4 font-semibold md:pl-5">
+                {name}
+              </th>
+              {LETTERS.map((l) => (
+                <td key={l} className="py-2 text-center">
+                  <span
+                    className={cn(
+                      'inline-grid size-7 place-items-center rounded-[5px] border-2',
+                      l === choice ? 'border-primary text-primary' : 'border-border',
+                    )}
+                  >
+                    {l === choice && (
+                      <>
+                        <X aria-hidden="true" className="size-4" strokeWidth={3} />
+                        <span className="sr-only">gewählt</span>
+                      </>
+                    )}
+                  </span>
+                </td>
+              ))}
+            </tr>
+          ))}
+          <tr>
+            <th
+              scope="row"
+              className="py-2.5 pl-4 text-xs font-normal leading-tight text-muted-foreground md:pl-5"
+            >
+              Nutzer:innen, zuerst gekreuzt
+            </th>
+            {q.share.map((v, i) => (
+              <td
+                key={LETTERS[i]}
+                className={cn(
+                  'py-2.5 text-center font-mono text-sm font-semibold tabular-nums',
+                  LETTERS[i] === q.correct ? 'text-success-strong' : 'text-muted-foreground',
+                )}
+              >
+                {v} %
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+      <figcaption className="border-t bg-muted/50 px-4 py-3.5 text-sm leading-relaxed text-muted-foreground md:px-5">
+        Vier Modelle wählen C. Mistral hält den RCX für verschlossen; seine Begründung steht in der
+        App direkt unter Antwort B. Beispielwerte für diese Seite.
+      </figcaption>
+    </figure>
+  );
+}
 
 export default Index;

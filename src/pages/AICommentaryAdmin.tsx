@@ -41,7 +41,7 @@ const AICommentaryAdmin: React.FC = () => {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <h1 className="text-2xl font-semibold md:text-3xl">Admin Panel</h1>
       </div>
 
       <Tabs defaultValue="subjects" className="w-full">

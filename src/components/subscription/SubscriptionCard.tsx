@@ -68,9 +68,12 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
   if (loading) {
     return (
       <Card className="p-6">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="ml-2">Lade Abonnement-Status...</span>
+        <div
+          role="status"
+          className="flex items-center justify-center text-sm text-muted-foreground"
+        >
+          <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+          <span className="ml-2">Abonnement-Status wird geladen …</span>
         </div>
       </Card>
     );
@@ -82,23 +85,19 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
         <h4 className="text-lg font-semibold">
           {subscribed ? 'Premium aktiv - Vielen Dank!' : 'Jetzt durchstarten!'}
         </h4>
-        {subscribed && subscriptionTier === 'Lifetime' && (
-          <Badge className="bg-blue-600 dark:bg-blue-500 text-white flex items-center gap-1">
-            Lifetime
-          </Badge>
-        )}
+        {subscribed && subscriptionTier === 'Lifetime' && <Badge variant="premium">Lifetime</Badge>}
       </div>
 
       {/* Checkout prompt for users who recently purchased */}
       {showCheckoutPrompt && !subscribed && (
-        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20">
+        <div className="mb-4 rounded-lg border border-warning-border bg-warning-subtle p-3">
           <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 text-warning-strong mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <div className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+              <div className="text-sm font-medium text-warning-strong mb-1">
                 Premium-Status wird verarbeitet
               </div>
-              <div className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+              <div className="text-xs text-warning-strong mb-2">
                 Der Status wird automatisch aktualisiert, sobald die Zahlung verarbeitet wurde.
               </div>
               <div className="flex gap-2">
@@ -107,7 +106,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
                   size="sm"
                   variant="outline"
                   disabled={isRefreshing}
-                  className="text-xs h-7 border-amber-300 dark:border-amber-700"
+                  className="text-xs h-7 border-warning-border"
                 >
                   <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
                   Jetzt prüfen
@@ -130,13 +129,13 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
         {subscribed ? (
           <div className="space-y-3">
             {subscriptionTier === 'Lifetime' && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="p-3 bg-primary-subtle border border-primary/40 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                  <span className="text-sm font-semibold text-primary-strong">
                     Lifetime Premium
                   </span>
                 </div>
-                <p className="text-xs text-blue-700 dark:text-blue-300">
+                <p className="text-xs text-primary-strong">
                   Du genießt dauerhaft alle Premium-Features ohne weitere Kosten.
                 </p>
               </div>
@@ -166,7 +165,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ onSubscribeClick })
           <div className="flex flex-col gap-2">
             <Button
               onClick={onSubscribeClick || (() => createCheckoutSession('monthly'))}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 w-full"
+              className="w-full"
             >
               Auf Premium upgraden
             </Button>

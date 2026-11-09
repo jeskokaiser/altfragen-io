@@ -11,7 +11,8 @@ This file is the conventions. `docs/modernisation.md` is the plan: what has been
 cleaned up, what is next, and why. Read it before starting a larger change, and
 update it when you finish one.
 `docs/architecture.md` is the map of the whole system across this repository
-and the backend.
+and the backend. `docs/design-system.md` is how the UI looks: tokens, type,
+building blocks, accessibility rules.
 
 ## Commands
 
@@ -19,7 +20,7 @@ and the backend.
 npm ci               # install (not npm install -- see Lock file below)
 npm run dev          # vite dev server on :8080
 npm run test         # vitest; specs live next to the code as *.test.ts
-npm run verify       # the whole gate: typecheck, test, lint, format, build
+npm run verify       # the whole gate: typecheck, test, lint, colours, format, build
 ```
 
 Run `npm run verify` before proposing a change. It is the same gate as
@@ -37,6 +38,7 @@ TanStack Query, Supabase (Postgres, Auth, Storage, Edge Functions), Stripe.
 src/pages/          route components (one per screen)
 src/components/     feature folders: training/, exams/, admin/, questions/, ...
 src/components/ui/  vendored shadcn primitives -- keep close to upstream
+src/components/ds/  design-system building blocks (Page, Callout, StatTile, states)
 src/services/       where database access belongs (see Rules)
 src/hooks/          data + UI hooks, mostly TanStack Query wrappers
 src/contexts/       Auth, Subscription, Theme, UserPreferences
@@ -225,6 +227,11 @@ and `broadcast_logs` tables.
   they deploy separately from the frontend.
 
 ## Conventions
+
+**Colours come from tokens.** Write `bg-success-subtle`, `text-danger-strong`,
+`bg-primary`, never `bg-green-100` or `bg-[#0b8363]`; `npm run check:colors`
+fails otherwise. Text in warning or premium colour uses the `-strong` step.
+Details and the building blocks in `docs/design-system.md`.
 
 German UI strings, English code and comments. Commit messages: imperative
 subject, and a body explaining _why_ when the reason isn't obvious from the

@@ -53,7 +53,7 @@ const Tutorial = () => {
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <BookOpen className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight">Willkommen bei Altfragen.io!</h1>
+          <h1 className="text-2xl font-semibold md:text-3xl">Willkommen bei Altfragen.io!</h1>
         </div>
         <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -358,7 +358,7 @@ const Tutorial = () => {
         <Button
           size="lg"
           onClick={() => navigate('/dashboard')}
-          className="text-lg px-8 py-6 h-auto flex items-center gap-3 shadow-lg hover:shadow-xl transition-all"
+          className="text-lg px-8 py-6 h-auto flex items-center gap-3"
         >
           Zum Dashboard fortfahren
           <ArrowRight className="h-5 w-5" />
