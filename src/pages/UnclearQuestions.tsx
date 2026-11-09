@@ -64,7 +64,7 @@ const UnclearQuestions = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-page">
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Lädt ignorierte Fragen...</div>
         </div>
@@ -75,13 +75,13 @@ const UnclearQuestions = () => {
   if (error) {
     console.error('Query error:', error);
     return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-page">
         <Button variant="outline" onClick={() => navigate('/dashboard')} className="mb-4">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Zurück
         </Button>
         <div className="text-center py-8">
-          <p className="text-red-500">Fehler beim Laden der ignorierten Fragen</p>
+          <p className="text-danger">Fehler beim Laden der ignorierten Fragen</p>
           <p className="text-sm text-muted-foreground mt-2">
             {error instanceof Error ? error.message : 'Unbekannter Fehler'}
           </p>
@@ -91,13 +91,13 @@ const UnclearQuestions = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-8 max-w-page">
       <div className="mb-6">
         <Button variant="outline" onClick={() => navigate('/dashboard')} className="mb-4">
           <ChevronLeft className="mr-2 h-4 w-4" />
           Zurück
         </Button>
-        <h1 className="text-2xl font-bold mb-2">
+        <h1 className="text-2xl font-semibold md:text-3xl mb-2">
           Ignorierte Fragen - {decodeURIComponent(filename || '')}
         </h1>
         <p className="text-muted-foreground">{questions?.length || 0} ignorierte Fragen gefunden</p>
@@ -121,7 +121,7 @@ const UnclearQuestions = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-slate-800">{question.question}</p>
+                  <p className="text-foreground">{question.question}</p>
                   <div className="grid gap-2">
                     <p>
                       <strong>A:</strong> {question.optionA}

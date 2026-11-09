@@ -71,7 +71,7 @@ const IgnoredQuestionsSection = () => {
             </div>
           ) : error ? (
             <div className="text-center py-8">
-              <p className="text-red-500">Fehler beim Laden der ignorierten Fragen</p>
+              <p className="text-danger">Fehler beim Laden der ignorierten Fragen</p>
               <p className="text-sm text-muted-foreground mt-2">
                 {error instanceof Error ? error.message : 'Unbekannter Fehler'}
               </p>
@@ -105,9 +105,7 @@ const IgnoredQuestionsSection = () => {
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="space-y-3">
-                      <p className="text-sm text-slate-800 dark:text-slate-200 line-clamp-2">
-                        {question.question}
-                      </p>
+                      <p className="text-sm text-foreground line-clamp-2">{question.question}</p>
                       <div className="grid gap-1 text-xs text-muted-foreground">
                         <p>
                           <strong>A:</strong> {question.optionA}

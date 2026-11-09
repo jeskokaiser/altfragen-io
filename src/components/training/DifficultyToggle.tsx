@@ -1,4 +1,5 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from '@/lib/utils';
 
 interface DifficultyToggleProps {
   value: string;
@@ -6,44 +7,38 @@ interface DifficultyToggleProps {
   disabled?: boolean;
 }
 
+// Colour order users know: green, blue, yellow, orange, red (difficulty-1..5 tokens).
+const levelClass: Record<number, string> = {
+  1: 'bg-difficulty-1 text-difficulty-1-foreground data-[state=on]:bg-difficulty-1 data-[state=on]:text-difficulty-1-foreground',
+  2: 'bg-difficulty-2 text-difficulty-2-foreground data-[state=on]:bg-difficulty-2 data-[state=on]:text-difficulty-2-foreground',
+  3: 'bg-difficulty-3 text-difficulty-3-foreground data-[state=on]:bg-difficulty-3 data-[state=on]:text-difficulty-3-foreground',
+  4: 'bg-difficulty-4 text-difficulty-4-foreground data-[state=on]:bg-difficulty-4 data-[state=on]:text-difficulty-4-foreground',
+  5: 'bg-difficulty-5 text-difficulty-5-foreground data-[state=on]:bg-difficulty-5 data-[state=on]:text-difficulty-5-foreground',
+};
+
 const DifficultyToggle: React.FC<DifficultyToggleProps> = ({
   value,
   onValueChange,
   disabled = false,
 }) => {
-  const getDifficultyColor = (difficulty: number) => {
-    switch (difficulty) {
-      case 1:
-        return 'bg-green-100 text-green-800';
-      case 2:
-        return 'bg-blue-100 text-blue-800';
-      case 3:
-        return 'bg-yellow-100 text-yellow-800';
-      case 4:
-        return 'bg-orange-100 text-orange-800';
-      case 5:
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <ToggleGroup
       type="single"
       value={value}
       onValueChange={onValueChange}
-      className="justify-start"
+      className="justify-start gap-1.5"
       disabled={disabled}
+      aria-label="Persönliche Schwierigkeit"
     >
       {[1, 2, 3, 4, 5].map((level) => (
         <ToggleGroupItem
           key={level}
           value={level.toString()}
           aria-label={`Schwierigkeitsgrad ${level}`}
-          className={`${getDifficultyColor(level)} hover:opacity-90 transition-all ${
-            value === level.toString() ? 'ring-2 ring-offset-2 ring-black' : ''
-          }`}
+          className={cn(
+            'h-9 w-9 border-2 border-transparent font-semibold tabular-nums hover:opacity-90 data-[state=on]:border-foreground touch:h-11 touch:w-11',
+            levelClass[level],
+          )}
         >
           {level}
         </ToggleGroupItem>

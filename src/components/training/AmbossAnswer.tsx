@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Check, X, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { ModelIcon, ModelName } from './ModelIcon';
 import { Badge } from '@/components/ui/badge';
@@ -144,87 +144,81 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
     toggleExpand();
     // When revealed and no comments, do nothing.
   };
-  const stateClasses = isRevealed
+  // One visual state per row: open, selected, correct, wrong. See docs/design-system.md, "Antwortzeile".
+  const state: 'open' | 'selected' | 'correct' | 'wrong' | 'neutral' = isRevealed
     ? isCorrect
-      ? 'border-y-[#0b8363] bg-[#d0f1e8] z-10 dark:border-emerald-500 dark:bg-emerald-900/40'
+      ? 'correct'
       : wasAttempted
-        ? 'border-y-red-200 bg-red-50 dark:border-red-500 dark:bg-red-900/40' // Keep highlight but darken in dark mode
-        : 'border-y-slate-200 dark:border-slate-700'
+        ? 'wrong'
+        : 'neutral'
     : wasAttempted
-      ? 'border-y-red-200 bg-red-50 hover:bg-red-100 dark:border-red-500 dark:bg-red-900/40 dark:hover:bg-red-900/60'
-      : 'border-y-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800';
+      ? 'wrong'
+      : isSelected
+        ? 'selected'
+        : 'open';
 
-  const letterClasses = isRevealed
-    ? isCorrect
-      ? 'text-emerald-800 dark:text-emerald-300'
-      : 'text-red-700 dark:text-red-300'
-    : wasAttempted
-      ? 'text-red-700 dark:text-red-300'
-      : 'text-slate-600 dark:text-slate-200';
+  const rowClasses = {
+    open: 'bg-card hover:bg-muted',
+    neutral: 'bg-card hover:bg-muted',
+    selected: 'bg-primary-subtle shadow-[inset_3px_0_0_hsl(var(--primary))]',
+    correct: 'bg-success-subtle shadow-[inset_3px_0_0_hsl(var(--success))]',
+    wrong: 'bg-danger-subtle shadow-[inset_3px_0_0_hsl(var(--danger))]',
+  }[state];
 
-  const icon = isRevealed ? (
-    isCorrect ? (
-      <Check className="h-5 w-5 text-emerald-800 dark:text-emerald-300" />
-    ) : (
-      <X className="h-5 w-5 text-red-700 dark:text-red-300" />
-    )
-  ) : null;
+  const letterClasses = {
+    open: 'text-muted-foreground',
+    neutral: 'text-muted-foreground',
+    selected: 'text-primary-strong',
+    correct: 'text-success-strong',
+    wrong: 'text-danger-strong',
+  }[state];
+
+  const stateLabel = { correct: ', richtig', wrong: ', falsch', selected: ', gewählt' }[
+    state as 'correct' | 'wrong' | 'selected'
+  ];
 
   const hasCommentsContent = Boolean(explanation || children);
   const canExpand = hasCommentsContent || showUpgradePrompt;
-  // Show expand icon if there is expandable content (comments or upgrade prompt)
-  const expandIcon =
-    canExpand &&
-    (isExpanded ? (
-      <ChevronUp className="h-4 w-4 text-slate-600 dark:text-slate-300 ml-2" />
-    ) : (
-      <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-300 ml-2" />
-    ));
 
   return (
-    <div
-      ref={answerContainerRef}
-      className={cn('leading-snug relative cursor-pointer -my-px border-y-[1px]', stateClasses)}
-      onClick={handleClick}
-    >
-      <div className="pl-6 pr-4 py-3 flex items-center cursor-pointer">
-        <div role="button" className="pr-2 grow flex relative items-center cursor-pointer">
-          <div
-            className={cn(
-              'leading-none text-lg shrink-0 flex font-bold uppercase justify-center items-center cursor-pointer',
-              letterClasses,
-            )}
-          >
-            {optionLetter}
-          </div>
-          <div className="pl-4 grow cursor-pointer flex items-center gap-2">
-            <p className="cursor-pointer text-sm">{optionText}</p>
-            {isRevealed && isAIGenerated && (
-              <Badge
-                variant="secondary"
-                className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
-              >
-                <Sparkles className="h-3 w-3 mr-1" />
-                KI
-              </Badge>
-            )}
-          </div>
-        </div>
-        <div className="mr-4 flex justify-center items-center gap-1.5 cursor-pointer">
+    <div ref={answerContainerRef} className={cn('relative border-b last:border-b-0', rowClasses)}>
+      <button
+        type="button"
+        data-training-answer
+        onClick={handleClick}
+        aria-expanded={canExpand ? isExpanded : undefined}
+        aria-label={`Antwort ${optionLetter}: ${optionText}${stateLabel ?? ''}`}
+        className="flex min-h-12 w-full items-center gap-3 py-3 pl-5 pr-4 text-left transition-colors focus-visible:ring-inset focus-visible:ring-offset-0"
+      >
+        <span
+          aria-hidden="true"
+          className={cn('w-4 shrink-0 text-center text-lg font-bold leading-none', letterClasses)}
+        >
+          {optionLetter}
+        </span>
+        <span className="flex min-w-0 grow flex-wrap items-center gap-2">
+          <span className="text-base leading-normal">{optionText}</span>
+          {isRevealed && isAIGenerated && (
+            <Badge variant="secondary" className="px-1.5 py-0 font-mono text-[11px]">
+              KI
+            </Badge>
+          )}
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
           {isRevealed && showPercentage && modelIcons.length > 0 && (
-            <div className="flex items-center gap-1">
+            <span className="flex items-center gap-1">
               {modelIcons.map((model) => (
                 <ModelIcon key={model} model={model} />
               ))}
-            </div>
+            </span>
           )}
           {isRevealed && showPercentage && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="text-slate-500 leading-none text-xs font-sans font-semibold cursor-pointer">
-                    {percentage !== null ? `${Math.round(percentage)}%` : '-'}
-                  </p>
+                  <span className="min-w-[2.5rem] text-right text-sm tabular-nums text-muted-foreground">
+                    {percentage !== null ? `${Math.round(percentage)} %` : '–'}
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
@@ -236,52 +230,46 @@ export const AmbossAnswer: React.FC<AmbossAnswerProps> = ({
               </Tooltip>
             </TooltipProvider>
           )}
-        </div>
-        <div className="h-[38px] flex justify-center items-center cursor-pointer gap-1">
-          {icon}
-          {expandIcon}
-        </div>
-      </div>
+          {state === 'correct' && <Check aria-hidden="true" className="size-5 text-success" />}
+          {state === 'wrong' && <X aria-hidden="true" className="size-5 text-danger" />}
+          {canExpand &&
+            (isExpanded ? (
+              <ChevronUp aria-hidden="true" className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
+            ))}
+        </span>
+      </button>
       {isExpanded && (
-        <div className="cursor-pointer">
-          {hasCommentsContent && !showUpgradePrompt ? (
-            <div
-              className={cn(
-                'border-t-[1px] text-sm',
-                isRevealed && isCorrect
-                  ? 'border-t-[#0b8363] bg-teal-50 dark:border-emerald-500 dark:bg-emerald-900/40'
-                  : 'border-t-slate-200 dark:border-slate-700',
-              )}
-            >
-              <div className="pr-6 pl-12 py-2">
-                <div className="pl-6 space-y-4 prose prose-sm max-w-none">
-                  {explanation && <ReactMarkdown>{explanation}</ReactMarkdown>}
-                  {children}
-                </div>
+        // Clicking the open comments folds them again, as before; the button above is the keyboard path.
+        <div
+          onClick={toggleExpand}
+          className="border-t bg-muted/60 text-sm duration-200 animate-in fade-in-0 slide-in-from-top-1"
+        >
+          <div className="py-3 pl-12 pr-5">
+            {hasCommentsContent && !showUpgradePrompt ? (
+              <div className="space-y-4">
+                {explanation && (
+                  <div className="leading-relaxed [&_li]:mb-1 [&_ol]:ml-5 [&_ol]:list-decimal [&_p]:mb-2 [&_ul]:ml-5 [&_ul]:list-disc">
+                    <ReactMarkdown>{explanation}</ReactMarkdown>
+                  </div>
+                )}
+                {children}
               </div>
-            </div>
-          ) : (
-            <div className="border-t-[1px] border-t-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 text-sm">
-              <div className="pr-6 pl-12 py-2">
-                <div className="pl-6">
-                  {showUpgradePrompt ? (
-                    <div className="space-y-3">
-                      <p className="text-slate-600 dark:text-slate-200">
-                        Tägliches Limit für kostenlose KI-Kommentare erreicht.{' '}
-                        <a href="/subscription" className="text-blue-600 dark:text-blue-400">
-                          Jetzt upgraden
-                        </a>
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-slate-600 dark:text-slate-200">
-                      Keine KI-Kommentare verfügbar
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+            ) : showUpgradePrompt ? (
+              <p className="text-muted-foreground">
+                Tägliches Limit für kostenlose KI-Kommentare erreicht.{' '}
+                <a
+                  href="/subscription"
+                  className="font-semibold text-primary underline-offset-4 hover:underline"
+                >
+                  Jetzt upgraden
+                </a>
+              </p>
+            ) : (
+              <p className="text-muted-foreground">Keine KI-Kommentare verfügbar</p>
+            )}
+          </div>
         </div>
       )}
     </div>

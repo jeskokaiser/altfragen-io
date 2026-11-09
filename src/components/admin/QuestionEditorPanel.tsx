@@ -475,7 +475,7 @@ const QuestionEditorPanel: React.FC = () => {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="text-red-600 hover:text-red-700"
+                          className="text-danger hover:text-danger-strong"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Bild entfernen
@@ -519,7 +519,7 @@ const QuestionEditorPanel: React.FC = () => {
               <div className="flex justify-between items-center pt-4 border-t">
                 <div>
                   {hasUnsavedChanges && (
-                    <span className="text-sm text-amber-600">Ungespeicherte Änderungen</span>
+                    <span className="text-sm text-warning-strong">Ungespeicherte Änderungen</span>
                   )}
                 </div>
                 <Button type="submit" disabled={!hasUnsavedChanges}>

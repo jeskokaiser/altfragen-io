@@ -84,58 +84,50 @@ export const GeneralAIComments: React.FC<GeneralAICommentsProps> = ({
 
   return (
     <div className="mt-4">
-      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-        <Brain className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Brain className="h-4 w-4 text-foreground" />
         Allgemeine KI-Kommentare zur Frage
       </div>
 
-      <div className="border rounded-lg p-4 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 space-y-4">
+      <div className="border rounded-lg p-4 bg-card border-border space-y-4">
         {generalComments.map(({ modelName, comment, sources }) => (
-          <div
-            key={modelName}
-            className="p-3 border rounded-md bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
-          >
+          <div key={modelName} className="p-3 border rounded-md bg-muted border-border">
             <Badge variant="secondary" className="mb-2">
               {modelName}
             </Badge>
             <ReactMarkdown
               components={{
                 p: ({ node, ...props }) => (
-                  <p
-                    {...props}
-                    className="prose prose-sm max-w-none dark:prose-invert text-slate-800 dark:text-slate-200"
-                  />
+                  <p {...props} className="mb-2 leading-relaxed text-foreground last:mb-0" />
                 ),
                 ul: ({ node, ...props }) => (
                   <ul
                     {...props}
-                    className="prose prose-sm max-w-none list-disc ml-5 dark:prose-invert text-slate-800 dark:text-slate-200"
+                    className="mb-2 ml-5 list-disc space-y-1 text-foreground last:mb-0"
                   />
                 ),
                 ol: ({ node, ...props }) => (
                   <ol
                     {...props}
-                    className="prose prose-sm max-w-none list-decimal ml-5 dark:prose-invert text-slate-800 dark:text-slate-200"
+                    className="mb-2 ml-5 list-decimal space-y-1 text-foreground last:mb-0"
                   />
                 ),
                 code: ({ node, ...props }) => (
                   <code
                     {...props}
-                    className={`rounded bg-slate-100 dark:bg-slate-600 text-slate-800 dark:text-slate-200 px-1 py-0.5 ${props.className || ''}`.trim()}
+                    className={`rounded bg-muted text-foreground px-1 py-0.5 ${props.className || ''}`.trim()}
                   />
                 ),
                 strong: ({ node, ...props }) => (
-                  <strong {...props} className="font-semibold text-slate-900 dark:text-slate-100" />
+                  <strong {...props} className="font-semibold text-foreground" />
                 ),
-                em: ({ node, ...props }) => (
-                  <em {...props} className="italic text-slate-800 dark:text-slate-200" />
-                ),
+                em: ({ node, ...props }) => <em {...props} className="italic text-foreground" />,
               }}
             >
               {comment!}
             </ReactMarkdown>
             {sources.length > 0 && (
-              <div className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+              <div className="mt-2 text-xs text-muted-foreground">
                 <span className="font-semibold">Quellen:</span>
                 <ol className="mt-1 space-y-0.5">
                   {sources.map((source, index) => (
@@ -145,7 +137,7 @@ export const GeneralAIComments: React.FC<GeneralAICommentsProps> = ({
                         href={source.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="underline hover:text-blue-600 dark:hover:text-blue-400 break-all"
+                        className="underline hover:text-primary break-all"
                       >
                         {source.title}
                       </a>

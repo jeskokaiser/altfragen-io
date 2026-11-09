@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Page, PageHeader } from '@/components/ds/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { SearchFilters } from '@/components/questions/SearchFilters';
 import { SearchResultsList } from '@/components/questions/SearchResultsList';
 import { searchQuestions, getFilterOptions } from '@/services/QuestionSearchService';
@@ -138,21 +139,20 @@ const QuestionSearch: React.FC = () => {
   const isLoading = isLoadingResults || isLoadingOptions;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <Page className="space-y-6">
+      <PageHeader title="Fragen suchen" className="mb-0 md:mb-0" />
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Fragen suchen
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-6">
           {/* Search Input */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search
+              aria-hidden="true"
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            />
             <Input
               type="text"
-              placeholder="Frage durchsuchen..."
+              placeholder="Frage durchsuchen …"
+              aria-label="Fragen durchsuchen"
               value={searchText}
               onChange={(e) => {
                 setSearchText(e.target.value);
@@ -181,9 +181,12 @@ const QuestionSearch: React.FC = () => {
               </p>
               <div className="flex items-center gap-4">
                 {isLoading && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div
+                    role="status"
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                  >
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Lade Ergebnisse...</span>
+                    <span>Ergebnisse werden geladen …</span>
                   </div>
                 )}
                 {/* Sort Options */}
@@ -313,7 +316,7 @@ const QuestionSearch: React.FC = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </Page>
   );
 };
 

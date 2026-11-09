@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { Toaster } from 'sonner';
+import { ThemeProvider } from 'next-themes';
+import { Toaster } from '@/components/ui/sonner';
 import MainLayout from '@/components/layout/MainLayout';
 
 // Import pages
@@ -39,12 +39,13 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <Router>
-      <ThemeProvider>
+      {/* storageKey 'theme' keeps the choice users made with the old toggle; new users follow the system. */}
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="theme">
         <AuthProvider>
           <SubscriptionProvider>
             <UserPreferencesProvider>
               <QueryClientProvider client={queryClient}>
-                <div className="min-h-screen bg-background">
+                <div className="min-h-dvh bg-background">
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route element={<PublicLayout />}>

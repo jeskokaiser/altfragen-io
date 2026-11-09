@@ -1,12 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const AGB = () => {
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="container mx-auto max-w-4xl space-y-8">
+    <div className="bg-background px-4 py-8 md:px-6 md:py-12">
+      <div className="mx-auto max-w-reading space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Allgemeine Geschäftsbedingungen (AGB)</CardTitle>
+            <h1 className="text-2xl font-semibold leading-tight md:text-3xl">
+              Allgemeine Geschäftsbedingungen (AGB)
+            </h1>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* 1. Geltungsbereich */}
@@ -18,7 +20,7 @@ const AGB = () => {
                 und den Nutzern der Plattform Altfragen.io über die Nutzung der kostenpflichtigen
                 Premium-Dienste (Abonnements, Lifetime Premium und KI-Credits). Für die Nutzung der
                 Plattform im Übrigen gelten die{' '}
-                <a href="/terms" className="text-blue-600 hover:underline">
+                <a href="/terms" className="text-primary hover:underline">
                   Nutzungsbedingungen
                 </a>
                 ; soweit sie sich widersprechen, gehen für Premium-Dienste diese AGB vor.
@@ -255,7 +257,7 @@ const AGB = () => {
               <p>
                 Als Verbraucher haben Sie ein gesetzliches Widerrufsrecht. Die Einzelheiten finden
                 Sie in unserer{' '}
-                <a href="/widerruf" className="text-blue-600 hover:underline">
+                <a href="/widerruf" className="text-primary hover:underline">
                   Widerrufsbelehrung
                 </a>
                 .
@@ -272,7 +274,7 @@ const AGB = () => {
               <h2 className="text-xl font-semibold">§ 10 Datenschutz</h2>
               <p>
                 Informationen zur Verarbeitung personenbezogener Daten finden Sie in unserer{' '}
-                <a href="/privacy" className="text-blue-600 hover:underline">
+                <a href="/privacy" className="text-primary hover:underline">
                   Datenschutzerklärung
                 </a>
                 . Sie ist nicht Bestandteil dieser AGB.
@@ -291,7 +293,7 @@ const AGB = () => {
                 Sofern der Nutzer seine gesonderte Einwilligung erteilt hat, erhält er zudem
                 Marketing-E-Mails mit Informationen zu neuen Produkten, Angeboten und Neuigkeiten.
                 Diese Einwilligung kann jederzeit widerrufen werden. Näheres regelt unsere{' '}
-                <a href="/privacy" className="text-blue-600 hover:underline">
+                <a href="/privacy" className="text-primary hover:underline">
                   Datenschutzerklärung
                 </a>
                 .

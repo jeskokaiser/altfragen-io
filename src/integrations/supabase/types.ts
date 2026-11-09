@@ -689,6 +689,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_cancellations: {
+        Row: {
+          confirmation_sent_at: string | null
+          contract: string
+          email: string
+          end_on: string | null
+          id: string
+          kind: string
+          name: string | null
+          reason: string | null
+          received_at: string
+        }
+        Insert: {
+          confirmation_sent_at?: string | null
+          contract: string
+          email: string
+          end_on?: string | null
+          id?: string
+          kind: string
+          name?: string | null
+          reason?: string | null
+          received_at?: string
+        }
+        Update: {
+          confirmation_sent_at?: string | null
+          contract?: string
+          email?: string
+          end_on?: string | null
+          id?: string
+          kind?: string
+          name?: string | null
+          reason?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       disposable_email_blocklist: {
         Row: {
           created_at: string
@@ -1639,6 +1675,7 @@ export type Database = {
       }
       list_question_exam_names: { Args: never; Returns: string[] }
       list_question_subjects: { Args: never; Returns: string[] }
+      public_landing_stats: { Args: never; Returns: Json }
       update_question_answer_stats: {
         Args: never
         Returns: {

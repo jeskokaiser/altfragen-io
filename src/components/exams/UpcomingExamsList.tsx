@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { EmptyState } from '@/components/ds/States';
+import { DaysUntilBadge, SessionStatusBadge } from '@/components/ds/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +17,6 @@ import {
   BarChart3,
   List,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import type { UpcomingExamWithStats } from '@/types/UpcomingExam';
 import { getExamStatsForUser, type ExamUserStats } from '@/services/UpcomingExamService';
 import { useTrainingSessions } from '@/hooks/useTrainingSessions';
@@ -98,11 +100,11 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
   }, [exams, currentUserId]);
   if (!exams || exams.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          Noch keine bevorstehenden Prüfungen. Lege eine neue an, um zu starten.
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={<ClipboardClock />}
+        title="Noch keine bevorstehenden Prüfungen"
+        description="Lege eine neue an, um zu starten."
+      />
     );
   }
 
@@ -171,7 +173,10 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
             return fs && fs.source === 'exam' && fs.examId === exam.id;
           });
           return (
-            <Card key={exam.id} className={`group flex flex-col transition-all hover:shadow-md`}>
+            <Card
+              key={exam.id}
+              className="group flex flex-col transition-colors hover:border-input"
+            >
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center justify-between">
                   <div className="text-left flex-1">
@@ -182,7 +187,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
                       <ClipboardClock className="h-4 w-4" />
                       <span>Prüfung am {new Date(exam.due_date).toLocaleDateString()}</span>
                     </div>
-                    <Badge variant={days <= 3 ? 'destructive' : 'secondary'}>{days} Tage</Badge>
+                    <DaysUntilBadge days={days} />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="icon" variant="ghost" title="Einstellungen">
@@ -225,38 +230,45 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 text-sm">
-                  <div className="p-2 rounded-md bg-muted/40">
+                  <div className="rounded-md bg-muted p-2">
                     <div className="text-muted-foreground">Beantwortet</div>
-                    <div className="text-lg font-semibold">{st ? st.answered : '—'}</div>
+                    <div className="text-lg font-semibold tabular-nums">
+                      {st ? st.answered : '—'}
+                    </div>
                   </div>
-                  <div className="p-2 rounded-md bg-muted/40">
+                  <div className="rounded-md bg-muted p-2">
                     <div className="text-muted-foreground">Richtig</div>
-                    <div className="text-lg font-semibold">{st ? st.correct : '—'}</div>
+                    <div className="text-lg font-semibold tabular-nums">
+                      {st ? st.correct : '—'}
+                    </div>
                   </div>
-                  <div className="p-2 rounded-md bg-muted/40">
+                  <div className="rounded-md bg-muted p-2">
                     <div className="text-muted-foreground">Quote</div>
-                    <div className="text-lg font-semibold">
+                    <div className="text-lg font-semibold tabular-nums">
                       {st ? `${st.percent_correct}%` : '—'}
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-3 p-3 rounded-md border border-dashed text-sm">
-                  <div
-                    className="font-medium mb-1 cursor-pointer hover:text-primary hover:underline transition-colors inline-block"
-                    onClick={() => navigate('/training/sessions')}
+                  <Link
+                    to="/training/sessions"
+                    className="mb-1 inline-block font-medium underline-offset-4 hover:text-primary hover:underline"
                     title="Alle Trainingssessions anzeigen"
                   >
                     Trainingssessions
-                  </div>
+                  </Link>
                   {sessionsForExam.length > 0 ? (
                     <div className="space-y-2">
                       {sessionsForExam.slice(0, 3).map((s) => (
                         <div key={s.id} className="flex items-center justify-between">
                           <div className="min-w-0">
                             <div className="font-medium truncate">{s.title}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {s.current_index + 1}/{s.total_questions} • {s.status}
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span className="tabular-nums">
+                                {s.current_index + 1}/{s.total_questions}
+                              </span>
+                              <SessionStatusBadge status={s.status} />
                             </div>
                           </div>
                           {s.status === 'completed' ? (

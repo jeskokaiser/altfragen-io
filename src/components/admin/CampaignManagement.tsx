@@ -455,7 +455,7 @@ const CampaignManagement: React.FC = () => {
                             {campaign.show_to_premium ? 'Alle Nutzer' : 'Nur Free-Nutzer'}
                           </span>
                           {campaign.show_to_premium && (
-                            <Crown className="h-3 w-3 text-yellow-500" />
+                            <Crown className="h-3 w-3 text-warning-strong" />
                           )}
                         </div>
                       </TableCell>
@@ -478,23 +478,23 @@ const CampaignManagement: React.FC = () => {
                           style={{
                             backgroundColor: CAMPAIGN_STYLING[
                               (campaign.styling_variant as StylingVariant) || 'default'
-                            ].badgeClass.includes('bg-blue')
+                            ].badgeClass.includes('bg-primary')
                               ? '#3b82f6'
                               : CAMPAIGN_STYLING[
                                     (campaign.styling_variant as StylingVariant) || 'default'
-                                  ].badgeClass.includes('bg-yellow')
+                                  ].badgeClass.includes('bg-warning')
                                 ? '#eab308'
                                 : CAMPAIGN_STYLING[
                                       (campaign.styling_variant as StylingVariant) || 'default'
-                                    ].badgeClass.includes('bg-cyan')
+                                    ].badgeClass.includes('bg-primary')
                                   ? '#06b6d4'
                                   : CAMPAIGN_STYLING[
                                         (campaign.styling_variant as StylingVariant) || 'default'
-                                      ].badgeClass.includes('bg-green')
+                                      ].badgeClass.includes('bg-success')
                                     ? '#10b981'
                                     : CAMPAIGN_STYLING[
                                           (campaign.styling_variant as StylingVariant) || 'default'
-                                        ].badgeClass.includes('bg-red')
+                                        ].badgeClass.includes('bg-danger')
                                       ? '#ef4444'
                                       : '#6b7280',
                             color: 'white',
@@ -679,7 +679,7 @@ const CampaignManagement: React.FC = () => {
                       }
                     />
                     <Label className="flex items-center gap-2">
-                      <Crown className="h-4 w-4 text-yellow-500" />
+                      <Crown className="h-4 w-4 text-warning-strong" />
                       Auch Premium-Nutzern anzeigen
                     </Label>
                   </div>

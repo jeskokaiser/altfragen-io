@@ -4,8 +4,8 @@
   "description": "Die intelligente Plattform für die Klausurvorbereitung mit Altfragen",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#F7F6F3",
+  "theme_color": "#24429F",
   "orientation": "portrait-primary",
   "icons": [
     {

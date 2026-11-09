@@ -56,40 +56,40 @@ const DeleteAccountSection: React.FC = () => {
   const isConfirmValid = confirmText === 'DELETE';
 
   return (
-    <Card className="border-red-200 bg-red-50/50">
+    <Card className="border-danger-border bg-danger-subtle/50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-red-700">
+        <CardTitle className="flex items-center gap-2 text-danger-strong">
           <AlertTriangle className="h-5 w-5" />
           Gefahrenzone
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <h3 className="font-medium text-red-700">Konto löschen</h3>
-          <p className="text-sm text-red-600">
+          <h3 className="font-medium text-danger-strong">Konto löschen</h3>
+          <p className="text-sm text-danger">
             Diese Aktion kann nicht rückgängig gemacht werden. Alle deine privaten Fragen und
             persönlichen Daten werden permanent gelöscht. Geteilte Fragen bleiben erhalten, um die
             Community zu unterstützen.
           </p>
-          <p className="text-sm text-red-600 font-medium">Folgende Daten werden gelöscht:</p>
-          <ul className="text-sm text-red-600 list-disc list-inside space-y-1">
+          <p className="text-sm text-danger font-medium">Folgende Daten werden gelöscht:</p>
+          <ul className="text-sm text-danger list-disc list-inside space-y-1">
             <li>Alle privaten Fragen</li>
             <li>Dein Lernfortschritt und deine Lernsitzungen</li>
             <li>Deine Kommentare und Prüfungstermine</li>
             <li>Deine Einstellungen</li>
             <li>Dein Benutzerprofil</li>
           </ul>
-          <p className="text-sm text-red-600 font-medium">Folgende Daten bleiben erhalten:</p>
-          <ul className="text-sm text-red-600 list-disc list-inside">
+          <p className="text-sm text-danger font-medium">Folgende Daten bleiben erhalten:</p>
+          <ul className="text-sm text-danger list-disc list-inside">
             <li>Mit deiner Universität geteilte und öffentliche Fragen (anonymisiert)</li>
           </ul>
-          <p className="text-sm text-red-600 font-medium">
+          <p className="text-sm text-danger font-medium">
             Ein laufendes Abo endet sofort, ohne Erstattung für den bereits bezahlten Zeitraum (AGB
             § 5). Willst du den Zeitraum noch nutzen, kündige zuerst und lösche das Konto danach.
             Auch der Zugang zu Lifetime Premium endet. Ungenutzte gekaufte KI-Credits erstatten wir
             nur, wenn du das vor der Löschung per E-Mail an premium@altfragen.io verlangst.
           </p>
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-danger">
             Bei Problemen kontaktiere uns unter: hallo@altfragen.io
           </p>
         </div>
@@ -127,7 +127,7 @@ const DeleteAccountSection: React.FC = () => {
               <AlertDialogAction
                 onClick={handleDeleteAccount}
                 disabled={!isConfirmValid || isDeleting}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-danger hover:bg-danger/90"
               >
                 {isDeleting ? 'Lösche...' : 'Konto endgültig löschen'}
               </AlertDialogAction>

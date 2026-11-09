@@ -138,17 +138,15 @@ const KeyboardBindingsSettings: React.FC = () => {
                   onBlur={() => setIsListening(null)}
                   readOnly
                   className={`cursor-pointer ${
-                    isListening === bindingKey
-                      ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950'
-                      : ''
+                    isListening === bindingKey ? 'ring-2 ring-primary bg-primary-subtle ' : ''
                   }`}
                   placeholder={
                     isListening === bindingKey ? 'Taste drücken...' : 'Klicken zum Ändern'
                   }
                 />
                 {isListening === bindingKey && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900 bg-opacity-50 rounded-md">
-                    <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                  <div className="absolute inset-0 flex items-center justify-center bg-primary-subtle bg-opacity-50 rounded-md">
+                    <span className="text-sm text-primary-strong font-medium">
                       Taste drücken...
                     </span>
                   </div>

@@ -1,19 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const Widerruf = () => {
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="container mx-auto max-w-4xl space-y-8">
+    <div className="bg-background px-4 py-8 md:px-6 md:py-12">
+      <div className="mx-auto max-w-reading space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Widerrufsrecht</CardTitle>
+            <h1 className="text-2xl font-semibold leading-tight md:text-3xl">Widerrufsrecht</h1>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Widerrufsbelehrung */}
             <section className="space-y-4">
               <h2 className="text-xl font-semibold">Widerrufsbelehrung</h2>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-muted p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-3">Widerrufsrecht</h3>
                 <p className="mb-3">
                   Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag
@@ -35,7 +35,7 @@ const Widerruf = () => {
                 </p>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-muted p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-3">Folgen des Widerrufs</h3>
                 <p className="mb-3">
                   Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von
@@ -53,7 +53,7 @@ const Widerruf = () => {
                 </p>
               </div>
 
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+              <div className="bg-warning-subtle border-l-4 border-warning-border p-4">
                 <h3 className="text-lg font-semibold mb-3">Wertersatz</h3>
                 <p>
                   Haben Sie verlangt, dass die Dienstleistungen während der Widerrufsfrist beginnen
@@ -74,7 +74,7 @@ const Widerruf = () => {
                 und senden Sie es zurück.)
               </p>
 
-              <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
+              <div className="bg-muted p-6 rounded-lg border-2 border-dashed border-border">
                 <p className="mb-4">An:</p>
                 <p className="mb-4">
                   KSR Labs
@@ -106,7 +106,7 @@ const Widerruf = () => {
 
                 <p>Datum: _________________</p>
 
-                <p className="text-sm text-gray-600 mt-4">(*) Unzutreffendes streichen.</p>
+                <p className="text-sm text-muted-foreground mt-4">(*) Unzutreffendes streichen.</p>
               </div>
             </section>
 
@@ -114,7 +114,7 @@ const Widerruf = () => {
             <section className="space-y-2">
               <h2 className="text-xl font-semibold">Kontakt für Widerruf</h2>
               <p>Für Widerrufe und Fragen zum Widerrufsrecht kontaktieren Sie uns:</p>
-              <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="bg-primary-subtle p-4 rounded-lg">
                 <p>
                   <strong>E-Mail:</strong> hallo@altfragen.io
                 </p>

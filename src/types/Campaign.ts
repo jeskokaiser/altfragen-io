@@ -60,43 +60,37 @@ export interface CampaignStyling {
   iconColor: string;
 }
 
-// Default styling configurations for each variant
+// Styling per variant, from design-system tokens (docs/design-system.md). Class names
+// stay literal so Tailwind finds them.
 export const CAMPAIGN_STYLING: Record<StylingVariant, CampaignStyling> = {
   default: {
-    containerClass:
-      'bg-gradient-to-r from-blue-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 border-blue-200 dark:border-gray-800',
-    badgeClass: 'bg-blue-500 text-white dark:bg-blue-600 dark:text-blue-50',
-    buttonClass: 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800',
-    iconColor: 'text-blue-500 dark:text-blue-300',
+    containerClass: 'bg-primary-subtle border-primary/30 text-primary-strong',
+    badgeClass: 'bg-primary text-primary-foreground',
+    buttonClass: 'bg-primary text-primary-foreground hover:bg-primary-hover',
+    iconColor: 'text-primary',
   },
   warning: {
-    containerClass:
-      'bg-gradient-to-r from-yellow-100 to-orange-200 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-800',
-    badgeClass: 'bg-yellow-500 text-white dark:bg-yellow-600 dark:text-yellow-50',
-    buttonClass:
-      'bg-yellow-600 text-white hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800',
-    iconColor: 'text-yellow-600 dark:text-yellow-400',
+    containerClass: 'bg-warning-subtle border-warning-border text-warning-strong',
+    badgeClass: 'bg-warning text-warning-foreground',
+    buttonClass: 'bg-warning text-warning-foreground hover:bg-warning/90',
+    iconColor: 'text-warning',
   },
   info: {
-    containerClass:
-      'bg-gradient-to-r from-cyan-100 to-blue-200 dark:from-cyan-900/20 dark:to-blue-900/20 border-cyan-200 dark:border-cyan-800',
-    badgeClass: 'bg-cyan-500 text-white dark:bg-cyan-600 dark:text-cyan-50',
-    buttonClass: 'bg-cyan-600 text-white hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-800',
-    iconColor: 'text-cyan-600 dark:text-cyan-400',
+    containerClass: 'bg-primary-subtle border-primary/30 text-primary-strong',
+    badgeClass: 'bg-primary text-primary-foreground',
+    buttonClass: 'bg-primary text-primary-foreground hover:bg-primary-hover',
+    iconColor: 'text-primary',
   },
   success: {
-    containerClass:
-      'bg-gradient-to-r from-green-100 to-emerald-200 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800',
-    badgeClass: 'bg-green-500 text-white dark:bg-green-600 dark:text-green-50',
-    buttonClass:
-      'bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800',
-    iconColor: 'text-green-600 dark:text-green-400',
+    containerClass: 'bg-success-subtle border-success-border text-success-strong',
+    badgeClass: 'bg-success text-success-foreground',
+    buttonClass: 'bg-success text-success-foreground hover:bg-success/90',
+    iconColor: 'text-success',
   },
   error: {
-    containerClass:
-      'bg-gradient-to-r from-red-100 to-pink-200 dark:from-red-900/20 dark:to-pink-900/20 border-red-200 dark:border-red-800',
-    badgeClass: 'bg-red-500 text-white dark:bg-red-600 dark:text-red-50',
-    buttonClass: 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800',
-    iconColor: 'text-red-600 dark:text-red-400',
+    containerClass: 'bg-danger-subtle border-danger-border text-danger-strong',
+    badgeClass: 'bg-danger text-danger-foreground',
+    buttonClass: 'bg-danger text-danger-foreground hover:bg-danger/90',
+    iconColor: 'text-danger',
   },
 };

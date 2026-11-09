@@ -14,6 +14,36 @@ export interface TrainingKeyboardActions {
   canShowSolution: boolean;
 }
 
+type ShortcutEvent = Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey'> & {
+  target: EventTarget | { closest(selector: string): unknown } | null;
+};
+
+/** When a key press is not a training shortcut. Exported for the spec. */
+export const isShortcutBlocked = (event: ShortcutEvent): boolean => {
+  // Ctrl/Cmd/Alt combinations always belong to the browser (copy, paste, tabs).
+  if (event.ctrlKey || event.metaKey || event.altKey) return true;
+  const target =
+    event.target && 'closest' in event.target
+      ? (event.target as { closest(selector: string): unknown })
+      : null;
+  if (!target) return false;
+  // Never while typing, or while a menu, listbox or dialog has focus.
+  if (
+    target.closest(
+      'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="menu"], [role="listbox"], [role="dialog"], [role="alertdialog"]',
+    )
+  ) {
+    return true;
+  }
+  // Space and Enter on a focused button or link do what that control says; answer rows are
+  // the exception, so Space still confirms and moves on after an answer was clicked.
+  return (
+    (event.key === ' ' || event.key === 'Enter') &&
+    Boolean(target.closest('button, a[href]')) &&
+    !target.closest('[data-training-answer]')
+  );
+};
+
 export const useTrainingKeyboard = (
   keyboardBindings: KeyboardBindings,
   actions: TrainingKeyboardActions,
@@ -21,27 +51,13 @@ export const useTrainingKeyboard = (
 ) => {
   const handleKeyPress = useCallback(
     (event: KeyboardEvent) => {
-      // Don't handle keyboard shortcuts if disabled or if user is typing in an input
-      if (
-        !isEnabled ||
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
-      ) {
-        return;
-      }
+      if (!isEnabled || isShortcutBlocked(event)) return;
 
       const key = event.key;
       const { keyboardBindings: bindings } = { keyboardBindings };
 
-      // Check for modifier key combinations (Shift+1, Ctrl+1, etc.)
-      const modifierKey = event.shiftKey
-        ? 'Shift+'
-        : event.ctrlKey
-          ? 'Ctrl+'
-          : event.metaKey
-            ? 'Meta+'
-            : '';
+      // Shift is the only modifier shortcuts use (Shift+1-5 sets the difficulty).
+      const modifierKey = event.shiftKey ? 'Shift+' : '';
       const keyWithModifier = modifierKey ? `${modifierKey}${key}` : key;
 
       // Prevent default for our handled keys

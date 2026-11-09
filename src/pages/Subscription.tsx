@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Page } from '@/components/ds/PageHeader';
 import { Link } from 'react-router-dom';
 import SubscriptionCard from '@/components/subscription/SubscriptionCard';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -27,7 +28,7 @@ import {
   Leaf,
   Bot,
   ReceiptEuro,
-  Sparkles,
+  Crown,
 } from 'lucide-react';
 import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
 import { isLifetimePromotionActive } from '@/services/AICommentarySettingsService';
@@ -166,9 +167,9 @@ const Subscription = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Altfragen.io Premium</h1>
+    <Page className="space-y-8">
+      <div className="space-y-2 text-center">
+        <h1 className="text-2xl font-semibold md:text-3xl">Altfragen.io Premium</h1>
         <p className="text-muted-foreground">
           Verbessere dein Lernen mit KI-gestützten Kommentaren und weiteren Vorteilen
         </p>
@@ -176,90 +177,84 @@ const Subscription = () => {
 
       {/* AI Models Value Proposition */}
       <div className="max-w-4xl mx-auto">
-        <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
+        <Card className="p-6">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2">
-              <h3 className="text-xl font-semibold text-blue-900 dark:text-blue-100">
+              <h2 className="text-xl font-semibold">
                 Bis zu fünf KI-Modelle für maximale Genauigkeit
-              </h3>
+              </h2>
             </div>
-            <p className="text-blue-700 dark:text-blue-300">
+            <p className="text-muted-foreground">
               Wir nutzen die neuesten und leistungsstärksten KI-Modelle mit höchsten
               Benchmark-Ergebnissen:
             </p>
             <div className="grid md:grid-cols-3 gap-4 mt-4">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="bg-card p-4 rounded-lg border">
+                <h4 className="font-semibold text-foreground">
                   <a
                     href="https://openai.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline text-blue-600 dark:hover:text-blue-400"
+                    className="text-primary underline-offset-4 hover:underline"
                   >
                     GPT-6.1 Sol
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Reasoning-Modell von OpenAI (ChatGPT)
                 </p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="bg-card p-4 rounded-lg border">
+                <h4 className="font-semibold text-foreground">
                   <a
                     href="https://gemini.google.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline text-blue-600 dark:hover:text-blue-400"
+                    className="text-primary underline-offset-4 hover:underline"
                   >
                     Gemini 4 Argon
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Reasoning-Modell von Google
-                </p>
+                <p className="text-sm text-muted-foreground">Reasoning-Modell von Google</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="bg-card p-4 rounded-lg border">
+                <h4 className="font-semibold text-foreground">
                   <a
                     href="https://mistral.ai/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline text-blue-600 dark:hover:text-blue-400"
+                    className="text-primary underline-offset-4 hover:underline"
                   >
                     Mistral Large 4
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Führendes KI-Model aus Europa
-                </p>
+                <p className="text-sm text-muted-foreground">Führendes KI-Model aus Europa</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="bg-card p-4 rounded-lg border">
+                <h4 className="font-semibold text-foreground">
                   <a
                     href="https://www.anthropic.com/claude"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline text-blue-600 dark:hover:text-blue-400"
+                    className="text-primary underline-offset-4 hover:underline"
                   >
                     Claude Sonnet 5.5
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Reasoning-Modell von Anthropic
-                </p>
+                <p className="text-sm text-muted-foreground">Reasoning-Modell von Anthropic</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
-                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+              <div className="bg-card p-4 rounded-lg border">
+                <h4 className="font-semibold text-foreground">
                   <a
                     href="https://www.perplexity.ai/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline text-blue-600 dark:hover:text-blue-400"
+                    className="text-primary underline-offset-4 hover:underline"
                   >
                     Perplexity Sonar
                   </a>
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   KI-Model mit Webrecherche, nennt seine Quellen
                 </p>
               </div>
@@ -270,16 +265,21 @@ const Subscription = () => {
 
       {/* Pricing Plans */}
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-center mb-8">Wähle deinen Plan</h2>
+        <h2 className="mb-8 text-center text-xl font-semibold">Wähle deinen Plan</h2>
 
         <div className="flex items-center justify-center mb-8">
-          <div className="inline-flex rounded-full border border-gray-300 dark:border-gray-600 bg-muted p-1 gap-1">
+          <div
+            role="group"
+            aria-label="Abrechnungszeitraum"
+            className="inline-flex gap-1 rounded-full border bg-muted p-1"
+          >
             <button
               type="button"
               onClick={() => setBillingCycle('monthly')}
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              aria-pressed={billingCycle === 'monthly'}
+              className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${
                 billingCycle === 'monthly'
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground'
               }`}
             >
@@ -289,15 +289,16 @@ const Subscription = () => {
               <button
                 type="button"
                 onClick={() => setBillingCycle('semester')}
-                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                aria-pressed={billingCycle === 'semester'}
+                className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${
                   billingCycle === 'semester'
-                    ? 'bg-black text-white dark:bg-white dark:text-black'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground'
                 }`}
               >
                 Semester
               </button>
-              <span className="absolute -top-3 -right-3 bg-green-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md dark:bg-green-500">
+              <span className="absolute -right-3 -top-3 rounded-full bg-premium-subtle px-1.5 py-0.5 text-[11px] font-bold text-premium-strong ring-1 ring-premium-border">
                 -46%
               </span>
             </div>
@@ -306,15 +307,16 @@ const Subscription = () => {
                 <button
                   type="button"
                   onClick={() => setBillingCycle('lifetime')}
-                  className={`px-3 py-1 text-xs rounded-full transition-colors flex items-center gap-1 ${
+                  aria-pressed={billingCycle === 'lifetime'}
+                  className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors flex items-center gap-1 ${
                     billingCycle === 'lifetime'
-                      ? 'bg-black text-white dark:bg-white dark:text-black'
+                      ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground'
                   }`}
                 >
                   Lifetime
                 </button>
-                <span className="absolute -top-3 -right-3 bg-green-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md dark:bg-green-500">
+                <span className="absolute -right-3 -top-3 rounded-full bg-premium-subtle px-1.5 py-0.5 text-[11px] font-bold text-premium-strong ring-1 ring-premium-border">
                   LIMITIERT
                 </span>
               </div>
@@ -326,7 +328,7 @@ const Subscription = () => {
           <Card className="p-6">
             <div className="text-center space-y-4">
               <h3 className="text-xl font-semibold">Kostenlos</h3>
-              <div className="text-3xl font-bold">€0</div>
+              <div className="text-3xl font-bold">0 €</div>
               <p className="text-sm text-muted-foreground">Perfekt für den Einstieg</p>
             </div>
 
@@ -337,16 +339,14 @@ const Subscription = () => {
                 return (
                   <div key={index} className="flex items-center gap-3">
                     {isIncluded ? (
-                      <Check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <Check className="h-4 w-4 text-success flex-shrink-0" />
                     ) : (
-                      <X className="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                      <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                     <Icon
-                      className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}
+                      className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-primary ' : 'text-muted-foreground '}`}
                     />
-                    <span
-                      className={`text-sm ${!isIncluded ? 'text-gray-400 dark:text-gray-500' : ''}`}
-                    >
+                    <span className={`text-sm ${!isIncluded ? 'text-muted-foreground ' : ''}`}>
                       {feature.name}
                     </span>
                   </div>
@@ -356,14 +356,18 @@ const Subscription = () => {
           </Card>
 
           {/* Premium Plan mit Monats-/Semester-/Lifetime-Wahl */}
-          <Card className={`p-6 relative border-2 border-black dark:border-white`}>
+          <Card className="relative border-2 border-primary p-6">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2">
                 <h3 className="text-xl font-semibold">Premium</h3>
               </div>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-black dark:text-white">
-                  {billingCycle === 'monthly' ? '€9' : billingCycle === 'semester' ? '€29' : '€79'}
+                <div className="text-3xl font-bold text-foreground">
+                  {billingCycle === 'monthly'
+                    ? '9 €'
+                    : billingCycle === 'semester'
+                      ? '29 €'
+                      : '79 €'}
                   <span className="text-sm font-normal">
                     {billingCycle === 'monthly'
                       ? '/Monat'
@@ -387,15 +391,15 @@ const Subscription = () => {
                 return (
                   <div key={index} className="flex items-center gap-3">
                     {isIncluded ? (
-                      <Check className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <Check className="h-4 w-4 text-success flex-shrink-0" />
                     ) : (
-                      <X className="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                      <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                     <Icon
-                      className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}
+                      className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-primary ' : 'text-muted-foreground '}`}
                     />
                     <span
-                      className={`text-sm ${!isIncluded ? 'text-gray-400 dark:text-gray-500' : ''} ${feature.name.includes('KI') ? 'font-medium text-blue-700 dark:text-blue-300' : ''}`}
+                      className={`text-sm ${!isIncluded ? 'text-muted-foreground ' : ''} ${feature.name.includes('KI') ? 'font-medium text-primary-strong ' : ''}`}
                     >
                       {feature.name}
                     </span>
@@ -405,10 +409,7 @@ const Subscription = () => {
               <div className="max-w-md mx-auto">
                 {billingCycle === 'lifetime' ? (
                   <div className="space-y-2">
-                    <Button
-                      onClick={handleLifetimeClick}
-                      className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold"
-                    >
+                    <Button onClick={handleLifetimeClick} className="w-full">
                       Lifetime Premium kaufen
                     </Button>
                     <div className="text-center text-[11px] text-muted-foreground">
@@ -436,7 +437,7 @@ const Subscription = () => {
               href="https://www.givingwhatwecan.org/pledge"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-blue-600 dark:hover:text-blue-300"
+              className="underline hover:text-primary"
             >
               🔸10% Pledge
             </a>{' '}
@@ -446,7 +447,7 @@ const Subscription = () => {
               href="https://effektiv-spenden.org/"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-blue-600 dark:hover:text-blue-300"
+              className="underline hover:text-primary"
             >
               effektiv-spenden.org
             </a>
@@ -467,7 +468,7 @@ const Subscription = () => {
               href="https://gi.de/fileadmin/GI/Allgemein/PDF/2025-06_GI_Studie_KI_RZ_Halbleiter_Auswirkungen_Wasser.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-blue-600 dark:hover:text-blue-300"
+              className="underline hover:text-primary"
             >
               Energie und Wasserverbrauch in Rechenzentren
             </a>{' '}
@@ -510,7 +511,7 @@ const Subscription = () => {
 
           <div className="space-y-4">
             <div className="text-center space-y-2">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-2xl font-bold text-primary">
                 {billingCycle === 'monthly' ? '€9' : '€29'}
                 <span className="text-sm font-normal">
                   {billingCycle === 'monthly' ? '/Monat' : '/Semester'}
@@ -523,7 +524,7 @@ const Subscription = () => {
               </div>
             </div>
 
-            <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <div className="bg-warning-subtle border border-warning-border rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <Checkbox
                   id="consent-modal"
@@ -533,7 +534,7 @@ const Subscription = () => {
                 />
                 <label
                   htmlFor="consent-modal"
-                  className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed cursor-pointer"
+                  className="text-sm text-warning-strong leading-relaxed cursor-pointer"
                 >
                   <span className="font-medium">Wichtiger Hinweis:</span>
                   <br />
@@ -543,7 +544,7 @@ const Subscription = () => {
                     to="/widerruf"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     Widerruf
                   </Link>{' '}
@@ -552,7 +553,7 @@ const Subscription = () => {
                     to="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     Datenschutzerklärung
                   </Link>
@@ -561,7 +562,7 @@ const Subscription = () => {
                     to="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     Nutzungsbedingungen
                   </Link>{' '}
@@ -570,7 +571,7 @@ const Subscription = () => {
                     to="/agb"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     AGB
                   </Link>
@@ -587,7 +588,7 @@ const Subscription = () => {
             <Button
               onClick={handleProceedWithSubscription}
               disabled={!consentGiven}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1"
             >
               {billingCycle === 'monthly' ? 'Monatsabo starten' : 'Semesterabo starten'}
             </Button>
@@ -600,14 +601,14 @@ const Subscription = () => {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <Crown aria-hidden="true" className="h-5 w-5 text-premium" />
               Lifetime Premium bestätigen
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="text-center space-y-2">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-2xl font-bold text-primary">
                 €79
                 <span className="text-sm font-normal"> einmalig</span>
               </div>
@@ -616,7 +617,7 @@ const Subscription = () => {
               </div>
             </div>
 
-            <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <div className="bg-warning-subtle border border-warning-border rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <Checkbox
                   id="lifetime-consent-modal"
@@ -626,7 +627,7 @@ const Subscription = () => {
                 />
                 <label
                   htmlFor="lifetime-consent-modal"
-                  className="text-sm text-orange-800 dark:text-orange-200 leading-relaxed cursor-pointer"
+                  className="text-sm text-warning-strong leading-relaxed cursor-pointer"
                 >
                   <span className="font-medium">Wichtiger Hinweis:</span>
                   <br />
@@ -636,7 +637,7 @@ const Subscription = () => {
                     to="/widerruf"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     Widerruf
                   </Link>{' '}
@@ -645,7 +646,7 @@ const Subscription = () => {
                     to="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     Datenschutzerklärung
                   </Link>
@@ -654,7 +655,7 @@ const Subscription = () => {
                     to="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     Nutzungsbedingungen
                   </Link>{' '}
@@ -663,7 +664,7 @@ const Subscription = () => {
                     to="/agb"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 dark:hover:text-orange-300 font-medium"
+                    className="font-semibold underline underline-offset-4"
                   >
                     AGB
                   </Link>
@@ -680,14 +681,14 @@ const Subscription = () => {
             <Button
               onClick={handleProceedWithLifetime}
               disabled={!lifetimeConsentGiven}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1"
             >
               Lifetime Premium kaufen
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Page>
   );
 };
 export default Subscription;

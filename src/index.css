@@ -1,68 +1,145 @@
+/* Design system: token values and their reasons live in docs/design-system.md.
+   Components use token classes (bg-success-subtle), never palette classes
+   (Tailwind's green-100 and friends); scripts/check-colors.mjs enforces that. */
+@import '@fontsource/atkinson-hyperlegible-next/latin-400.css';
+@import '@fontsource/atkinson-hyperlegible-next/latin-600.css';
+@import '@fontsource/atkinson-hyperlegible-next/latin-700.css';
+@import '@fontsource/atkinson-hyperlegible-mono/latin-400.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Metric-adjusted system fallback so the swap to the web font does not shift text. */
+@font-face {
+  font-family: 'Atkinson Fallback';
+  src: local('Arial'), local('Helvetica');
+  size-adjust: 104%;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 45 20% 96.1%; /* #F7F6F3 */
+    --foreground: 221.5 22% 11.6%; /* #171B24 */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 221.5 22% 11.6%; /* #171B24 */
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 221.5 22% 11.6%; /* #171B24 */
+    --primary: 225.4 63.1% 38.2%; /* #24429F */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --primary-hover: 225.6 65.8% 31%; /* #1B3483 */
+    --primary-subtle: 224 51.7% 94.3%; /* #E9EDF8 */
+    --primary-strong: 225 64.4% 34.1%; /* #1F3B8F */
+    --secondary: 42.9 17.9% 92.4%; /* #EFEDE8 */
+    --secondary-foreground: 221.5 22% 11.6%; /* #171B24 */
+    --muted: 42.9 17.9% 92.4%; /* #EFEDE8 */
+    --muted-foreground: 222.9 10.3% 39.8%; /* #5B6170 */
+    --accent: 42.9 17.9% 92.4%; /* #EFEDE8 */
+    --accent-foreground: 221.5 22% 11.6%; /* #171B24 */
+    --destructive: 6.9 72.7% 44.5%; /* #C4321F */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --border: 42.9 11.5% 88%; /* #E4E2DD */
+    --input: 42 4.3% 54.1%; /* #8F8C85 */
+    --ring: 225.4 63.1% 38.2%; /* #24429F */
+    --success: 148.4 59.5% 30%; /* #1F7A4A */
+    --success-foreground: 0 0% 100%; /* #FFFFFF */
+    --success-subtle: 141.4 41.2% 93.3%; /* #E7F5EC */
+    --success-border: 144.2 36.6% 72.2%; /* #9ED2B3 */
+    --success-strong: 148.8 61.3% 23.3%; /* #17603A */
+    --danger: 6.9 72.7% 44.5%; /* #C4321F */
+    --danger-foreground: 0 0% 100%; /* #FFFFFF */
+    --danger-subtle: 9 76.9% 94.9%; /* #FCEBE8 */
+    --danger-border: 8.6 70% 80.4%; /* #F0B4AA */
+    --danger-strong: 5.3 72.5% 37.1%; /* #A3261A */
+    --warning: 30.7 93.5% 36.5%; /* #B45F06 */
+    --warning-foreground: 0 0% 100%; /* #FFFFFF */
+    --warning-subtle: 38.6 87.5% 93.7%; /* #FDF3E1 */
+    --warning-border: 37.1 77.3% 74.1%; /* #F0C98A */
+    --warning-strong: 31.1 93% 28%; /* #8A4A05 */
+    --premium: 42.6 93.9% 38.8%; /* #C08A06 */
+    --premium-foreground: 221.5 22% 11.6%; /* #171B24 */
+    --premium-subtle: 46.5 79.5% 92.4%; /* #FBF4DC */
+    --premium-border: 44.2 60.3% 75.3%; /* #E6D29A */
+    --premium-strong: 42.4 95.3% 25.3%; /* #7E5A03 */
+    --chart-1: 225.4 63.1% 38.2%; /* #24429F */
+    --chart-2: 180 80.4% 30%; /* #0F8A8A */
+    --chart-3: 36.7 86.5% 40.8%; /* #C27C0E */
+    --chart-4: 222.9 10.3% 39.8%; /* #5B6170 */
+    --chart-5: 340.5 51.4% 50.8%; /* #C2416B */
+    --difficulty-1: 141.2 43.6% 92.4%; /* #E3F4E9 */
+    --difficulty-1-foreground: 148.8 61.3% 23.3%; /* #17603A */
+    --difficulty-2: 218.2 78.6% 94.5%; /* #E6EEFC */
+    --difficulty-2-foreground: 223.4 63.7% 37.8%; /* #23459E */
+    --difficulty-3: 48 86.2% 88.6%; /* #FBF1C9 */
+    --difficulty-3-foreground: 44.3 94.7% 22.2%; /* #6E5203 */
+    --difficulty-4: 29.2 90.7% 91.6%; /* #FDE9D6 */
+    --difficulty-4-foreground: 26.2 93% 28%; /* #8A3F05 */
+    --difficulty-5: 6.9 76.5% 93.3%; /* #FBE4E1 */
+    --difficulty-5-foreground: 5.3 72.5% 37.1%; /* #A3261A */
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-
-    --radius: 0.5rem;
+    --radius: 0.625rem;
+    color-scheme: light;
   }
 
   .dark {
-    --background: 240 5% 3.9%;
-    --foreground: 0 0% 98%;
-
-    --card: 240 5% 3.9%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 240 5% 3.9%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --background: 222.9 14.9% 9.2%; /* #14161B */
+    --foreground: 220 15% 92.2%; /* #E8EAEE */
+    --card: 220 14.3% 12.4%; /* #1B1E24 */
+    --card-foreground: 220 15% 92.2%; /* #E8EAEE */
+    --popover: 218.2 14.7% 14.7%; /* #20242B */
+    --popover-foreground: 220 15% 92.2%; /* #E8EAEE */
+    --primary: 226.7 79.2% 75.5%; /* #8FA5F2 */
+    --primary-foreground: 228 41.7% 9.4%; /* #0E1222 */
+    --primary-hover: 228.2 79.2% 81.2%; /* #A9B8F5 */
+    --primary-subtle: 225.5 34.9% 16.3%; /* #1B2238 */
+    --primary-strong: 226.4 78.6% 83.5%; /* #B4C3F6 */
+    --secondary: 220 14.6% 16.1%; /* #23272F */
+    --secondary-foreground: 220 15% 92.2%; /* #E8EAEE */
+    --muted: 220 14.6% 16.1%; /* #23272F */
+    --muted-foreground: 220 10.5% 66.3%; /* #A0A6B2 */
+    --accent: 220 14.6% 16.1%; /* #23272F */
+    --accent-foreground: 220 15% 92.2%; /* #E8EAEE */
+    --destructive: 6.9 85% 66.1%; /* #F2705F */
+    --destructive-foreground: 222.9 14.9% 9.2%; /* #14161B */
+    --border: 218.6 13.5% 20.4%; /* #2D323B */
+    --input: 220 8.9% 46.1%; /* #6B7280 */
+    --ring: 226.7 79.2% 75.5%; /* #8FA5F2 */
+    --success: 148 49.2% 52.9%; /* #4CC283 */
+    --success-foreground: 222.9 14.9% 9.2%; /* #14161B */
+    --success-subtle: 148.7 39% 11.6%; /* #12291D */
+    --success-border: 146.4 40.3% 24.3%; /* #25573B */
+    --success-strong: 145.9 57.6% 67.6%; /* #7DDCA6 */
+    --danger: 6.9 85% 66.1%; /* #F2705F */
+    --danger-foreground: 222.9 14.9% 9.2%; /* #14161B */
+    --danger-subtle: 357.7 34.2% 14.9%; /* #33191A */
+    --danger-border: 4.4 46.6% 28.6%; /* #6B2C27 */
+    --danger-strong: 7.3 100% 77.5%; /* #FF9A8C */
+    --warning: 35.5 79.8% 57.3%; /* #E9A23B */
+    --warning-foreground: 222.9 14.9% 9.2%; /* #14161B */
+    --warning-subtle: 37.8 41.5% 12.7%; /* #2E2413 */
+    --warning-border: 37.5 62.5% 25.1%; /* #684A18 */
+    --warning-strong: 36.6 85.3% 70.6%; /* #F4C274 */
+    --premium: 44.6 76.7% 56.3%; /* #E5B93A */
+    --premium-foreground: 222.9 14.9% 9.2%; /* #14161B */
+    --premium-subtle: 45.6 41% 12%; /* #2B2512 */
+    --premium-border: 44.6 61.4% 22.4%; /* #5C4A16 */
+    --premium-strong: 45.1 81.6% 68%; /* #F0CF6B */
+    --chart-1: 226.7 79.2% 75.5%; /* #8FA5F2 */
+    --chart-2: 178.2 53.5% 50.2%; /* #3CC4C0 */
+    --chart-3: 35.5 79.8% 57.3%; /* #E9A23B */
+    --chart-4: 220 10.5% 66.3%; /* #A0A6B2 */
+    --chart-5: 340.9 79% 72%; /* #F07FA3 */
+    --difficulty-1: 150 41.2% 13.3%; /* #143022 */
+    --difficulty-1-foreground: 145.9 57.6% 67.6%; /* #7DDCA6 */
+    --difficulty-2: 222.7 46.4% 19%; /* #1A2747 */
+    --difficulty-2-foreground: 223 89% 82.2%; /* #A9C0FA */
+    --difficulty-3: 49.7 44.6% 12.7%; /* #2F2A12 */
+    --difficulty-3-foreground: 47.4 81.6% 68%; /* #F0D46B */
+    --difficulty-4: 31.7 54.5% 12.9%; /* #33220F */
+    --difficulty-4-foreground: 26.9 88.7% 72.4%; /* #F7B27A */
+    --difficulty-5: 0 38.1% 16.5%; /* #3A1A1A */
+    --difficulty-5-foreground: 7.3 100% 77.5%; /* #FF9A8C */
+    color-scheme: dark;
   }
 }
 
@@ -71,67 +148,102 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Motion. Everything below runs only when the device allows motion; without support for
+   scroll-driven animations (animation-timeline) content is simply shown, never hidden. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lift {
+  to {
+    box-shadow: 0 8px 24px -16px hsl(var(--foreground) / 0.35);
   }
 }
 
 @layer utilities {
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
+  @media (prefers-reduced-motion: no-preference) {
+    /* Load-in, staggered by --delay (hero only). */
+    .enter {
+      animation: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      animation-delay: var(--delay, 0ms);
+    }
 
-  .animation-delay-4000 {
-    animation-delay: 4s;
-  }
+    /* The cross in a box is drawn stroke by stroke; paths carry pathLength="1". */
+    .draw path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw 420ms ease-out forwards;
+      animation-delay: var(--delay, 0ms);
+    }
+    .draw path + path {
+      animation-delay: calc(var(--delay, 0ms) + 180ms);
+    }
 
-  .shadow-3xl {
-    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
-  }
-}
+    @supports (animation-timeline: view()) {
+      /* Fades up as it scrolls into view; scrolling back reverses it. */
+      .reveal {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 30%;
+      }
+      /* A shadow under a sticky header once the page has scrolled. */
+      .scroll-lift {
+        animation: lift linear both;
+        animation-timeline: scroll();
+        animation-range: 0 120px;
+      }
+    }
 
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
+    /* Children of [data-reveal] appear one after another once the parent is in view
+       (useInView sets the attribute; --i is the child's position). */
+    [data-reveal='out'] .stagger {
+      opacity: 0;
+      transform: translateY(8px) scale(0.92);
+    }
+    [data-reveal='in'] .stagger {
+      transition:
+        opacity 300ms ease-out,
+        transform 300ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      transition-delay: calc(var(--i, 0) * 90ms + 150ms);
+    }
   }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Enhanced gradient text */
-.text-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }

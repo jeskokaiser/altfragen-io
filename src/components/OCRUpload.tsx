@@ -296,18 +296,16 @@ const OCRUpload: React.FC<OCRUploadProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-center py-8 space-y-4">
-            <Crown className="h-16 w-16 mx-auto text-blue-500" />
+            <Crown className="h-16 w-16 mx-auto text-primary" />
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Premium Feature
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Premium Feature</h3>
+              <p className="text-muted-foreground mb-4">
                 Der OCR-Upload ist nur für Premium-Nutzer verfügbar. Upgrade zu Premium, um
                 Dokumente hochzuladen und automatisch Fragen zu extrahieren.
               </p>
               <Button
                 onClick={() => navigate('/subscription')}
-                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center gap-2 mx-auto"
+                className="bg-primary hover:bg-primary-hover flex items-center gap-2 mx-auto"
               >
                 <Crown className="h-4 w-4" />
                 Jetzt upgraden!
@@ -453,7 +451,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({
             {selectedFile ? (
               <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
                 <div className="flex items-center space-x-3">
-                  <FileText className="h-5 w-5 text-blue-500" />
+                  <FileText className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium text-sm">{selectedFile.name}</p>
                     <p className="text-xs text-muted-foreground">

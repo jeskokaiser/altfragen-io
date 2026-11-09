@@ -304,9 +304,9 @@ const SubjectReassignmentPanel: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {result.success ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-success" />
               ) : (
-                <AlertCircle className="h-5 w-5 text-red-600" />
+                <AlertCircle className="h-5 w-5 text-danger" />
               )}
               Processing Results
             </CardTitle>
@@ -319,15 +319,15 @@ const SubjectReassignmentPanel: React.FC = () => {
             {result.stats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{result.stats.total}</div>
+                  <div className="text-2xl font-bold text-primary">{result.stats.total}</div>
                   <div className="text-sm text-muted-foreground">Total Questions</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{result.stats.successful}</div>
+                  <div className="text-2xl font-bold text-success">{result.stats.successful}</div>
                   <div className="text-sm text-muted-foreground">Successful</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{result.stats.errors}</div>
+                  <div className="text-2xl font-bold text-danger">{result.stats.errors}</div>
                   <div className="text-sm text-muted-foreground">Errors</div>
                 </div>
                 <div className="text-center">

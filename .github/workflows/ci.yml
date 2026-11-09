@@ -43,6 +43,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Palette colours (bg-red-500 …) instead of design-system tokens; see docs/design-system.md.
+      - name: Colours
+        run: npm run check:colors
+
       - name: Format
         run: npm run format:check
 

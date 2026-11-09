@@ -99,9 +99,9 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({ questions, onImageRea
                   {/* Adjacent questions context */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                     {previous && (
-                      <div className="p-2 bg-muted/30 rounded border-l-2 border-blue-200">
+                      <div className="p-2 bg-muted/30 rounded border-l-2 border-primary/40">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-blue-600">
+                          <span className="font-medium text-primary">
                             Vorherige Frage ({item.index})
                           </span>
                           <Button
@@ -123,9 +123,9 @@ const ImageAssignment: React.FC<ImageAssignmentProps> = ({ questions, onImageRea
                     )}
 
                     {next && (
-                      <div className="p-2 bg-muted/30 rounded border-l-2 border-green-200">
+                      <div className="p-2 bg-muted/30 rounded border-l-2 border-success-border">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-green-600">
+                          <span className="font-medium text-success">
                             Nächste Frage ({item.index + 2})
                           </span>
                           <Button

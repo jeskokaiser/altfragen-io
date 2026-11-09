@@ -7,10 +7,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import CampaignBanner from '@/components/campaigns/CampaignBanner';
 import CampaignToast from '@/components/campaigns/CampaignToast';
 import CheckoutStatusNotification from '@/components/subscription/CheckoutStatusNotification';
+import { SkipLink } from '@/components/ds/SkipLink';
+import { LoadingState } from '@/components/ds/States';
 
 // Import pages
 import DashboardPage from '@/pages/Dashboard';
-import TrainingPage from '@/pages/Training';
 import SettingsPage from '@/pages/Settings';
 import SubscriptionPage from '@/pages/Subscription';
 import UnclearQuestionsPage from '@/pages/UnclearQuestions';
@@ -42,7 +43,7 @@ const MainLayout: React.FC = () => {
   }, [isAuthenticated, user, navigate, location.pathname]);
 
   if (!isReady) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <LoadingState className="min-h-dvh" />;
   }
 
   if (!isAuthenticated) {
@@ -50,15 +51,16 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-dvh flex-col">
+      <SkipLink />
       <Navbar />
       <CampaignBanner />
       <CampaignToast />
       <CheckoutStatusNotification />
-      <main className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
         <Routes>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/training" element={<TrainingPage />} />
+          <Route path="/training" element={<Navigate to="/training/sessions" replace />} />
           <Route path="/training/sessions" element={<TrainingSessionsPage />} />
           <Route path="/training/session/:sessionId" element={<TrainingSessionRunnerPage />} />
           <Route

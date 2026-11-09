@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { LoadingState } from '@/components/ds/States';
+import { SessionStatusBadge } from '@/components/ds/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -110,7 +112,7 @@ const TrainingSessionsList: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-8">Sessions werden geladen…</div>;
+    return <LoadingState label="Sessions werden geladen …" variant="skeleton" />;
   }
 
   const totalSessions = sessions?.length || 0;
@@ -173,7 +175,7 @@ const TrainingSessionsList: React.FC = () => {
           </div>
           <div className="grid gap-4">
             {examSessions.map(({ session, exam, examDaysLeft }) => (
-              <Card key={session.id} className="hover:shadow-md transition-shadow">
+              <Card key={session.id} className="transition-colors hover:border-input">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -198,7 +200,7 @@ const TrainingSessionsList: React.FC = () => {
                               <span
                                 className={
                                   examDaysLeft <= 3
-                                    ? 'text-destructive font-semibold'
+                                    ? 'font-semibold text-warning-strong'
                                     : 'text-muted-foreground'
                                 }
                               >
@@ -212,25 +214,9 @@ const TrainingSessionsList: React.FC = () => {
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <Badge
-                        variant={
-                          session.status === 'completed'
-                            ? 'secondary'
-                            : session.status === 'active'
-                              ? 'default'
-                              : 'outline'
-                        }
-                      >
-                        {session.status === 'completed'
-                          ? 'Abgeschlossen'
-                          : session.status === 'active'
-                            ? 'Aktiv'
-                            : 'Pausiert'}
-                      </Badge>
+                      <SessionStatusBadge status={session.status} />
                       {examDaysLeft !== undefined && examDaysLeft <= 3 && (
-                        <Badge variant="destructive" className="text-xs">
-                          Dringend
-                        </Badge>
+                        <Badge variant="warning">Dringend</Badge>
                       )}
                     </div>
                   </div>
@@ -290,7 +276,7 @@ const TrainingSessionsList: React.FC = () => {
             {generalSessions.map(({ session }) => {
               const fs = session.filter_settings as any;
               return (
-                <Card key={session.id} className="hover:shadow-md transition-shadow">
+                <Card key={session.id} className="transition-colors hover:border-input">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -340,21 +326,7 @@ const TrainingSessionsList: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <Badge
-                        variant={
-                          session.status === 'completed'
-                            ? 'secondary'
-                            : session.status === 'active'
-                              ? 'default'
-                              : 'outline'
-                        }
-                      >
-                        {session.status === 'completed'
-                          ? 'Abgeschlossen'
-                          : session.status === 'active'
-                            ? 'Aktiv'
-                            : 'Pausiert'}
-                      </Badge>
+                      <SessionStatusBadge status={session.status} />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">

@@ -51,31 +51,32 @@ const CheckoutStatusNotification: React.FC = () => {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-sm">
-      <Card className="p-4 shadow-lg border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-900/20">
+    <div role="status" className="fixed right-4 top-20 z-toast max-w-sm">
+      <Card className="border-warning-border bg-warning-subtle p-4 shadow-lg">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
-            <div className="flex items-center justify-center w-8 h-8 bg-amber-100 dark:bg-amber-800 rounded-full">
-              <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-card">
+              <Clock aria-hidden="true" className="h-4 w-4 text-warning-strong" />
             </div>
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
-              <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              <h4 className="text-sm font-semibold text-warning-strong">
                 Premium wird verarbeitet
               </h4>
               <Button
                 onClick={handleDismiss}
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-800"
+                className="h-8 w-8 p-0 text-warning-strong hover:bg-card"
+                aria-label="Hinweis schließen"
               >
                 <X className="h-3 w-3" />
               </Button>
             </div>
 
-            <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+            <p className="text-xs text-warning-strong mb-2">
               Deine Zahlung wird verarbeitet. Der Status wird automatisch aktualisiert.
             </p>
 
@@ -85,7 +86,7 @@ const CheckoutStatusNotification: React.FC = () => {
                 size="sm"
                 variant="outline"
                 disabled={isRefreshing}
-                className="text-xs h-7 bg-white dark:bg-amber-950 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300"
+                className="h-8 border-warning-border text-xs text-warning-strong"
               >
                 <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Status prüfen

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Page, PageHeader } from '@/components/ds/PageHeader';
+import AppearanceSection from '@/components/settings/AppearanceSection';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import type { EnhancedAIVersion } from '@/services/UserPreferencesService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +23,7 @@ import { updateUsername } from '@/services/AccountService';
 import DeleteAccountSection from '@/components/settings/DeleteAccountSection';
 import KeyboardBindingsSettings from '@/components/settings/KeyboardBindingsSettings';
 import IgnoredQuestionsSection from '@/components/settings/IgnoredQuestionsSection';
+import { LoadingState } from '@/components/ds/States';
 
 const Settings = () => {
   const { preferences, updatePreferences, isLoading } = useUserPreferences();
@@ -97,12 +100,12 @@ const Settings = () => {
   ];
 
   if (isLoading) {
-    return <div className="container mx-auto py-8">Loading...</div>;
+    return <LoadingState />;
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <h1 className="text-3xl font-bold">Einstellungen</h1>
+    <Page width="reading" className="space-y-6">
+      <PageHeader title="Einstellungen" className="mb-0 md:mb-0" />
 
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Profil</h2>
@@ -130,7 +133,7 @@ const Settings = () => {
                 {isSavingUsername ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Speichern...
+                    Speichern …
                   </>
                 ) : (
                   'Speichern'
@@ -215,12 +218,14 @@ const Settings = () => {
         </div>
       </Card>
 
+      <AppearanceSection />
+
       <KeyboardBindingsSettings />
 
       <IgnoredQuestionsSection />
 
       <DeleteAccountSection />
-    </div>
+    </Page>
   );
 };
 

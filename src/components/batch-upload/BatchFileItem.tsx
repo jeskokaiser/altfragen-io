@@ -34,7 +34,7 @@ const BatchFileItem: React.FC<BatchFileItemProps> = ({
 }) => {
   return (
     <Card
-      className={`p-4 ${fileData.isCompleted ? 'bg-green-50' : fileData.error ? 'bg-red-50' : ''}`}
+      className={`p-4 ${fileData.isCompleted ? 'bg-success-subtle' : fileData.error ? 'bg-danger-subtle' : ''}`}
     >
       <div className="space-y-3">
         {/* File Header */}
@@ -42,10 +42,8 @@ const BatchFileItem: React.FC<BatchFileItemProps> = ({
           <div className="flex items-center gap-2">
             <FileUp className="h-4 w-4" />
             <span className="font-medium text-sm truncate max-w-48">{fileData.file.name}</span>
-            {fileData.isProcessing && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
-            {fileData.isCompleted && (
-              <span className="text-green-600 text-xs">✓ Abgeschlossen</span>
-            )}
+            {fileData.isProcessing && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+            {fileData.isCompleted && <span className="text-success text-xs">✓ Abgeschlossen</span>}
           </div>
           {!fileData.isProcessing && !isUploading && (
             <Button variant="ghost" size="sm" onClick={() => onRemove(index)}>

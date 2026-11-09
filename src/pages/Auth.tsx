@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { setEmailVerified, setMarketingConsent } from '@/services/ProfileService';
 import { findUniversityByEmailDomain } from '@/services/UniversityService';
@@ -9,12 +9,11 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info, ArrowLeft, School, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { Info, ArrowLeft, School, Mail, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { NonUniversitySignupDialog } from '@/components/auth/NonUniversitySignupDialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Link } from 'react-router-dom';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -524,22 +523,22 @@ const Auth = () => {
 
   if (isVerificationScreen) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-background px-4 py-10">
         <Card className="w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
             <div className="flex justify-center mb-4">
               {isEmailVerified ? (
-                <CheckCircle className="h-16 w-16 text-green-500" />
+                <CheckCircle className="h-16 w-16 text-success" />
               ) : (
-                <AlertCircle className="h-16 w-16 text-amber-500" />
+                <AlertCircle className="h-16 w-16 text-warning-strong" />
               )}
             </div>
-            <h2 className="text-2xl font-semibold text-slate-800">
+            <h1 className="text-2xl font-semibold">
               {isEmailVerified
                 ? 'E-Mail-Verifizierung abgeschlossen!'
                 : 'E-Mail-Verifizierung ausstehend'}
-            </h2>
-            <p className="text-sm text-slate-600">
+            </h1>
+            <p className="text-sm text-muted-foreground">
               {isEmailVerified
                 ? universityName
                   ? `Du hast jetzt Zugriff auf den Altfragen-Pool der ${universityName}.`
@@ -550,14 +549,14 @@ const Auth = () => {
 
           <div className="space-y-4">
             {!isEmailVerified && (
-              <Alert className="bg-amber-50 border-amber-200">
-                <Info className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-700">
+              <Alert className="bg-warning-subtle border-warning-border">
+                <Info className="h-4 w-4 text-warning-strong" />
+                <AlertDescription className="text-warning-strong">
                   Bitte überprüfe deinen Posteingang und klicke auf den Bestätigungslink. Pei
                   Problemen melde dich unter{' '}
                   <a
                     href={`mailto:hallo@altfragen.io?subject=Problem%20mit%20E-Mail-Verifizierung&body=Hallo%20Altfragen.io-Team%2C%0A%0Aich%20habe%20Probleme%20mit%20der%20E-Mail-Verifizierung%20meines%20Kontos.%0A%0AMeine%20E-Mail-Adresse%3A%20${encodeURIComponent(email || '')}%0AProblembeschreibung%3A%20%0A%0A%0AFreundliche%20Gr%C3%BC%C3%9Fe`}
-                    className="text-blue-600 hover:underline"
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
                   >
                     hallo@altfragen.io
                   </a>
@@ -567,9 +566,9 @@ const Auth = () => {
             )}
 
             {isEmailVerified && universityName && (
-              <Alert className="bg-green-50 border-green-200">
-                <School className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-700">
+              <Alert className="bg-success-subtle border-success-border">
+                <School className="h-4 w-4 text-success" />
+                <AlertDescription className="text-success-strong">
                   Du bist als Student:in der {universityName} verifiziert.
                 </AlertDescription>
               </Alert>
@@ -583,7 +582,7 @@ const Auth = () => {
               ) : (
                 <>
                   <Button className="w-full" onClick={handleResendVerification} disabled={loading}>
-                    {loading ? 'Lädt...' : 'Bestätigungslink erneut senden'}
+                    {loading ? 'Bitte warten …' : 'Bestätigungslink erneut senden'}
                   </Button>
                   <div className="text-center">
                     <button
@@ -592,7 +591,7 @@ const Auth = () => {
                         setIsVerificationScreen(false);
                         navigate('/auth');
                       }}
-                      className="text-sm text-slate-600 hover:text-slate-900 underline"
+                      className="text-sm text-muted-foreground hover:text-foreground underline"
                       disabled={loading}
                     >
                       Zurück zur Anmeldung
@@ -608,11 +607,11 @@ const Auth = () => {
   }
   if (isResetPassword) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-background px-4 py-10">
         <Card className="w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
-            <h2 className="text-2xl font-semibold text-slate-800">Neues Passwort festlegen</h2>
-            <p className="text-sm text-slate-600">Bitte gib dein neues Passwort ein</p>
+            <h1 className="text-2xl font-semibold">Neues Passwort festlegen</h1>
+            <p className="text-sm text-muted-foreground">Bitte gib dein neues Passwort ein</p>
           </div>
 
           <form
@@ -649,7 +648,7 @@ const Auth = () => {
             </Alert>
 
             <Button className="w-full" disabled={loading} type="submit">
-              {loading ? 'Lädt...' : 'Passwort aktualisieren'}
+              {loading ? 'Bitte warten …' : 'Passwort aktualisieren'}
             </Button>
           </form>
         </Card>
@@ -658,17 +657,19 @@ const Auth = () => {
   }
   if (isForgotPassword) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
-        <Card className="w-full max-w-md p-6 space-y-6">
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-background px-4 py-10">
+        <Card className="relative w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
             <button
+              type="button"
               onClick={() => setIsForgotPassword(false)}
-              className="absolute left-6 top-6 text-slate-600 hover:text-slate-900"
+              aria-label="Zurück zur Anmeldung"
+              className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h2 className="text-2xl font-semibold text-slate-800">Passwort zurücksetzen</h2>
-            <p className="text-sm text-slate-600">
+            <h1 className="text-2xl font-semibold">Passwort zurücksetzen</h1>
+            <p className="text-sm text-muted-foreground">
               Gib deine E-Mail-Adresse ein, um dein Passwort zurückzusetzen
             </p>
           </div>
@@ -688,7 +689,7 @@ const Auth = () => {
             </div>
 
             <Button className="w-full" onClick={handleResetPassword} disabled={loading}>
-              {loading ? 'Lädt...' : 'Passwort zurücksetzen'}
+              {loading ? 'Bitte warten …' : 'Passwort zurücksetzen'}
             </Button>
           </div>
         </Card>
@@ -697,11 +698,11 @@ const Auth = () => {
   }
   return (
     <>
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 bg-background px-4 py-10">
         <Card className="w-full max-w-md p-6 space-y-6">
           <div className="space-y-2 text-center">
-            <h2 className="text-2xl font-semibold text-slate-800">Willkommen bei Altfragen.io!</h2>
-            <p className="text-sm text-slate-600">
+            <h1 className="text-2xl font-semibold">Willkommen bei Altfragen.io!</h1>
+            <p className="text-sm text-muted-foreground">
               {isSignUp ? 'Erstelle ein neues Konto' : 'Melde Dich mit deinem Konto an'}
             </p>
           </div>
@@ -722,14 +723,17 @@ const Auth = () => {
                 {isSignUp && email && email.includes('@') && (
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
                     {isCheckingDomain ? (
-                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-400"></div>
+                      <Loader2
+                        aria-label="Uni wird gesucht"
+                        className="h-5 w-5 animate-spin text-muted-foreground"
+                      />
                     ) : universityInfo ? (
-                      <Badge className="flex items-center gap-1 bg-green-50 text-green-800 border-green-200">
+                      <Badge className="flex items-center gap-1 bg-success-subtle text-success-strong border-success-border">
                         <School className="h-3 w-3" />
                         {universityInfo.name}
                       </Badge>
                     ) : (
-                      <Badge className="flex items-center gap-1 bg-blue-50 text-blue-800 border-blue-200">
+                      <Badge className="flex items-center gap-1 bg-primary-subtle text-primary-strong border-primary/40">
                         <Mail className="h-3 w-3" />
                         Standard
                       </Badge>
@@ -738,9 +742,9 @@ const Auth = () => {
                 )}
               </div>
               {isSignUp && email && email.includes('@') && (
-                <div className="text-xs mt-1 text-slate-500">
+                <div className="text-xs mt-1 text-muted-foreground">
                   {universityInfo ? (
-                    <span className="text-green-600">
+                    <span className="text-success">
                       Du registrierst dich mit einer E-Mail von {universityInfo.name}
                     </span>
                   ) : (
@@ -787,18 +791,30 @@ const Auth = () => {
                   />
                   <label
                     htmlFor="terms"
-                    className="text-sm text-slate-600 leading-relaxed cursor-pointer"
+                    className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
                   >
                     Ich akzeptiere die{' '}
-                    <Link to="/agb" className="text-blue-600 hover:underline" target="_blank">
+                    <Link
+                      to="/agb"
+                      className="font-semibold text-primary underline-offset-4 hover:underline"
+                      target="_blank"
+                    >
                       AGB
                     </Link>{' '}
                     und die{' '}
-                    <Link to="/terms" className="text-blue-600 hover:underline" target="_blank">
+                    <Link
+                      to="/terms"
+                      className="font-semibold text-primary underline-offset-4 hover:underline"
+                      target="_blank"
+                    >
                       Nutzungsbedingungen
                     </Link>
                     . Die{' '}
-                    <Link to="/privacy" className="text-blue-600 hover:underline" target="_blank">
+                    <Link
+                      to="/privacy"
+                      className="font-semibold text-primary underline-offset-4 hover:underline"
+                      target="_blank"
+                    >
                       Datenschutzerklärung
                     </Link>{' '}
                     habe ich zur Kenntnis genommen.
@@ -814,7 +830,7 @@ const Auth = () => {
                   />
                   <label
                     htmlFor="marketing"
-                    className="text-sm text-slate-600 leading-relaxed cursor-pointer"
+                    className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
                   >
                     Ich möchte E-Mails mit Neuigkeiten, Angeboten und Produktupdates erhalten. Diese
                     Einwilligung kann jederzeit widerrufen werden.
@@ -829,7 +845,7 @@ const Auth = () => {
                 onClick={() => handleAuth(isSignUp ? 'signup' : 'login')}
                 disabled={loading || isCheckingDomain}
               >
-                {loading ? 'Lädt...' : isSignUp ? 'Registrieren' : 'Anmelden'}
+                {loading ? 'Bitte warten …' : isSignUp ? 'Registrieren' : 'Anmelden'}
               </Button>
 
               <div className="text-center space-y-2">
@@ -842,7 +858,7 @@ const Auth = () => {
                     // FIXED: Clear university info when switching modes
                     setUniversityInfo(null);
                   }}
-                  className="text-sm text-slate-600 hover:text-slate-900 underline"
+                  className="text-sm text-muted-foreground hover:text-foreground underline"
                   disabled={loading}
                 >
                   {isSignUp
@@ -855,7 +871,7 @@ const Auth = () => {
                     <button
                       type="button"
                       onClick={() => setIsForgotPassword(true)}
-                      className="text-sm text-slate-600 hover:text-slate-900 underline"
+                      className="text-sm text-muted-foreground hover:text-foreground underline"
                       disabled={loading}
                     >
                       Passwort vergessen?

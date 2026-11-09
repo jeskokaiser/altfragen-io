@@ -18,6 +18,7 @@ import {
   Shield,
   Bug,
   Search as SearchIcon,
+  ListChecks,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -54,24 +55,35 @@ const Navbar: React.FC = () => {
     }
   };
 
+  // Sessions stays highlighted inside a running session and its analytics.
+  const isActive = (href: string) =>
+    href === '/training/sessions'
+      ? location.pathname.startsWith('/training')
+      : location.pathname === href;
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const mainNavItems = [
     { label: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
+    {
+      label: 'Sessions',
+      href: '/training/sessions',
+      icon: <ListChecks className="h-4 w-4 mr-2" />,
+    },
     { label: 'Suchen', href: '/search', icon: <SearchIcon className="h-4 w-4 mr-2" /> },
     {
       label: 'Premium',
       href: '/subscription',
-      icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-yellow-600' : ''}`} />,
+      icon: <Crown className={`mr-2 h-4 w-4 ${subscribed ? 'text-premium' : ''}`} />,
     },
     ...(isAdmin
       ? [
           {
             label: 'Admin',
             href: '/ai-commentary',
-            icon: <Shield className="mr-2 h-4 w-4 text-red-600" />,
+            icon: <Shield className="mr-2 h-4 w-4" />,
           },
         ]
       : []),
@@ -113,25 +125,29 @@ Vielen Dank!
   const allNavItems = [...mainNavItems, ...userMenuItems];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-nav w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4 md:px-6">
         <div className="flex items-center">
-          <Link to="/" className="font-bold text-xl flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
+          <Link
+            to="/"
+            className="flex items-center gap-2 rounded-md text-lg font-bold tracking-tight"
+          >
+            <GraduationCap aria-hidden="true" className="h-6 w-6 text-primary" />
             Altfragen.io
           </Link>
         </div>
 
         {user && !isMobile && (
-          <nav className="flex items-center gap-6 text-sm">
+          <nav aria-label="Hauptnavigation" className="flex items-center gap-1 text-sm">
             {mainNavItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className={`flex items-center transition-colors hover:text-foreground/80 ${
-                  location.pathname === item.href
-                    ? 'text-foreground font-medium'
-                    : 'text-foreground/60'
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                className={`flex items-center rounded-md px-3 py-2 transition-colors hover:bg-muted hover:text-foreground ${
+                  isActive(item.href)
+                    ? 'bg-muted font-semibold text-foreground'
+                    : 'text-muted-foreground'
                 }`}
               >
                 {item.icon}
@@ -148,7 +164,12 @@ Vielen Dank!
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    aria-label="Konto-Menü"
+                  >
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -171,7 +192,7 @@ Vielen Dank!
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/ai-commentary')}>
-                      <Shield className="mr-2 h-4 w-4 text-red-600" />
+                      <Shield className="mr-2 h-4 w-4" />
                       Admin Panel
                     </DropdownMenuItem>
                   )}
@@ -187,7 +208,9 @@ Vielen Dank!
                   variant="ghost"
                   size="icon"
                   onClick={toggleMenu}
-                  aria-label="Menü öffnen/schließen"
+                  aria-label={isMenuOpen ? 'Menü schließen' : 'Menü öffnen'}
+                  aria-expanded={isMenuOpen}
+                  aria-controls="mobile-nav"
                 >
                   {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
@@ -200,14 +223,14 @@ Vielen Dank!
       </div>
 
       {user && isMobile && isMenuOpen && (
-        <div className="container py-4 border-t bg-background">
-          <nav className="flex flex-col space-y-4">
+        <div id="mobile-nav" className="border-t bg-background px-4 py-3">
+          <nav aria-label="Hauptnavigation" className="flex flex-col">
             {allNavItems.map((item) =>
               'onClick' in item ? (
                 <button
                   key={item.label}
                   onClick={item.onClick}
-                  className="flex items-center py-2 text-left text-foreground/60"
+                  className="flex min-h-11 items-center rounded-md px-2 text-left text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   {item.icon}
                   {item.label}
@@ -216,10 +239,11 @@ Vielen Dank!
                 <Link
                   key={item.href}
                   to={item.href}
-                  className={`flex items-center py-2 ${
-                    location.pathname === item.href
-                      ? 'text-foreground font-medium'
-                      : 'text-foreground/60'
+                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  className={`flex min-h-11 items-center rounded-md px-2 hover:bg-muted ${
+                    isActive(item.href)
+                      ? 'bg-muted font-semibold text-foreground'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   {item.icon}

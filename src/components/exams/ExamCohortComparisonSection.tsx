@@ -133,7 +133,7 @@ export const ExamCohortComparisonSection: React.FC<ExamCohortComparisonSectionPr
                     Basis: {cohortStats.sampleSize} aktive Nutzer in deiner Vergleichsgruppe. Fahre
                     mit der Maus über die Balken im Histogramm, um mehr Informationen zu erhalten.
                   </p>
-                  <div className="flex items-start space-x-2 text-amber-700 text-md">
+                  <div className="flex items-start space-x-2 text-warning-strong text-md">
                     <Info className="h-5 w-5 mt-0.5 min-w-[1rem]" />
                     <span>
                       Hinweis: Übergangsweise sind hier noch Daten aus der Beta-Version vorhanden,
@@ -828,11 +828,11 @@ const BellCurveChart: React.FC<BellCurveChartProps> = ({ cohort }) => {
                         {bucketInfo && Math.abs(bucketInfo.diffFromMean) > 0.1 && (
                           <div className="pt-1 border-t">
                             {bucketInfo.diffFromMean > 0 ? (
-                              <span className="text-emerald-600">
+                              <span className="text-success">
                                 {bucketInfo.diffFromMean.toFixed(0)} Punkte über dem Mittelwert
                               </span>
                             ) : (
-                              <span className="text-red-600">
+                              <span className="text-danger">
                                 {Math.abs(bucketInfo.diffFromMean).toFixed(0)} Punkte unter dem
                                 Mittelwert
                               </span>
@@ -1153,12 +1153,12 @@ const HistogramChart: React.FC<HistogramChartProps> = ({
                       {bucketInfo && Math.abs(bucketInfo.diffFromMean) > 0.1 && (
                         <div className="pt-1 border-t">
                           {bucketInfo.diffFromMean > 0 ? (
-                            <span className="text-emerald-600">
+                            <span className="text-success">
                               {bucketInfo.diffFromMean.toFixed(0)}
                               {unit} über dem Mittelwert
                             </span>
                           ) : (
-                            <span className="text-red-600">
+                            <span className="text-danger">
                               {Math.abs(bucketInfo.diffFromMean).toFixed(0)}
                               {unit} unter dem Mittelwert
                             </span>
