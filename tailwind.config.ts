@@ -28,8 +28,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Atkinson Hyperlegible Next"', '"Atkinson Fallback"', ...fontFamily.sans],
-        mono: ['"Atkinson Hyperlegible Mono"', ...fontFamily.mono],
+        sans: ['"IBM Plex Sans"', '"Plex Fallback"', ...fontFamily.sans],
+        mono: ['"IBM Plex Mono"', ...fontFamily.mono],
       },
       colors: {
         border: token('border'),
