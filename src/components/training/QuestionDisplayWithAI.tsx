@@ -120,7 +120,8 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     [],
   );
   const { user } = useAuth();
-  const isMobile = useIsMobile();
+  // Below 1024 px the side panel would squeeze the question, so comments open as a sheet.
+  const isMobile = useIsMobile(1024);
   const queryClient = useQueryClient();
   const { preferences, updatePreferences } = useUserPreferences();
   const {
@@ -564,6 +565,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     onDifficultyChange: (difficulty: number) => {
       handleDifficultyChange(difficulty);
     },
+    onToggleComments: () => setIsCommentsOpen((open) => !open),
     canConfirm: !showFeedback, // Can "confirm" (i.e., answer) if feedback is not shown yet
     canNavigate: showFeedback, // Can navigate to next/prev when feedback is shown
     canShowSolution: !showFeedback && !preferences?.immediateFeedback, // Can show solution when button is visible

@@ -9,7 +9,8 @@ notes; this page is what the code must follow.
 1. **Habit before novelty.** Where something sits, what it is called and which
    key triggers it stays the same. Change only to remove a detour.
 2. **Colour means something.** Blue = action and brand, green = right, red =
-   wrong or destructive, orange = warning, gold = premium. AI has no colour of
+   wrong or destructive, orange = warning. Premium has no colour of
+   its own: it uses the blue and is marked by the crown. AI has no colour of
    its own: it is marked by the label "KI" and the model icons. Meaning is never
    colour alone — always also a mark (✓, ✗), a number or text.
 3. **Reading first.** The question text is the most important element: 16 px on
@@ -52,11 +53,10 @@ buttons), **subtle** (surface), **border**, **strong** (text on the surface).
 | `success`                  | right, active, done      | `#1F7A4A` `#E7F5EC` `#9ED2B3` `#17603A` | `#4CC283` `#12291D` `#25573B` `#7DDCA6` |
 | `danger` (= `destructive`) | wrong, delete, error     | `#C4321F` `#FCEBE8` `#F0B4AA` `#A3261A` | `#F2705F` `#33191A` `#6B2C27` `#FF9A8C` |
 | `warning`                  | limits, pausing, notices | `#B45F06` `#FDF3E1` `#F0C98A` `#8A4A05` | `#E9A23B` `#2E2413` `#684A18` `#F4C274` |
-| `premium`                  | crown, premium badges    | `#C08A06` `#FBF4DC` `#E6D29A` `#7E5A03` | `#E5B93A` `#2B2512` `#5C4A16` `#F0CF6B` |
+| `premium`                  | crown, premium badges    | = `primary`, border `#B9C5EA` | = `primary`, border `#2D3A66` |
 
-**Text uses `-strong`, not the solid step,** for `warning` and `premium`: their
-solid values fall below 4.5:1 on light surfaces (warning 4.2:1 on paper,
-premium 2.8:1). Solid is for icons, bars and filled buttons. `success` and
+**Text uses `-strong`, not the solid step,** for `warning`: its
+solid value falls below 4.5:1 on light surfaces (4.2:1 on paper). Solid is for icons, bars and filled buttons. `success` and
 `danger` solid pass as text (≥ 4.5:1 on every light surface) but `-strong` is
 the default on their subtle surface.
 

@@ -9,6 +9,7 @@ export interface TrainingKeyboardActions {
   onToggleChatGPT: () => void;
   onToggleGemini: () => void;
   onDifficultyChange: (difficulty: number) => void;
+  onToggleComments?: () => void;
   canConfirm: boolean;
   canNavigate: boolean;
   canShowSolution: boolean;
@@ -72,6 +73,7 @@ export const useTrainingKeyboard = (
         key === bindings.showSolution ||
         key === bindings.toggleChatGPT ||
         key === bindings.toggleGemini ||
+        (!event.shiftKey && key === 'k' && Boolean(actions.onToggleComments)) ||
         keyWithModifier === bindings.difficulty1 ||
         keyWithModifier === bindings.difficulty2 ||
         keyWithModifier === bindings.difficulty3 ||
@@ -122,6 +124,10 @@ export const useTrainingKeyboard = (
       // Handle show solution ('s' key by default)
       else if (key === bindings.showSolution && actions.canShowSolution) {
         actions.onShowSolution();
+      }
+      // K opens and closes the comments (fixed, not rebindable)
+      else if (!modifierKey && key === 'k' && actions.onToggleComments) {
+        actions.onToggleComments();
       }
       // Handle toggle ChatGPT ('c' key by default)
       else if (key === bindings.toggleChatGPT) {

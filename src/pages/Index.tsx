@@ -247,8 +247,10 @@ function DemoQuiz() {
 
       {!done ? (
         <div key={index} className="duration-300 animate-in fade-in-0">
-          <p className="px-4 pt-3 font-mono text-xs text-muted-foreground md:px-5">{q.subject}</p>
-          <p className="px-4 pb-4 pt-2 text-base leading-relaxed md:px-5 md:text-lg">{q.text}</p>
+          <div className="p-4 md:p-6">
+            <p className="mb-4 font-mono text-xs text-muted-foreground">{q.subject}</p>
+            <p className="max-w-[70ch] text-base leading-relaxed md:text-lg md:leading-[1.6]">{q.text}</p>
+          </div>
           <div role="group" aria-label="Antwortmöglichkeiten" className="border-t">
             {q.options.map((text, i) => {
               const letter = LETTERS[i];
@@ -263,7 +265,7 @@ function DemoQuiz() {
                   aria-pressed={isMine}
                   aria-label={`Antwort ${letter}: ${text}${state === 'correct' ? ', richtig' : state === 'wrong' ? ', falsch' : ''}`}
                   className={cn(
-                    'relative flex min-h-[52px] w-full items-center gap-3.5 overflow-hidden border-b py-3 pl-5 pr-4 text-left transition-colors focus-visible:ring-inset focus-visible:ring-offset-0',
+                    'relative flex min-h-12 w-full items-center gap-3 overflow-hidden border-b py-3 pl-5 pr-4 text-left transition-colors focus-visible:ring-inset focus-visible:ring-offset-0',
                     state === 'open' && 'hover:bg-muted',
                     state === 'correct' &&
                       'bg-success-subtle shadow-[inset_3px_0_0_hsl(var(--success))]',
@@ -280,7 +282,7 @@ function DemoQuiz() {
                   <span
                     aria-hidden="true"
                     className={cn(
-                      'relative w-4 text-center text-lg font-bold',
+                      'relative w-4 shrink-0 text-center text-lg font-bold leading-none',
                       state === 'correct'
                         ? 'text-success-strong'
                         : state === 'wrong'
@@ -290,7 +292,7 @@ function DemoQuiz() {
                   >
                     {letter}
                   </span>
-                  <span className="relative min-w-0 flex-1 text-base leading-snug">{text}</span>
+                  <span className="relative min-w-0 flex-1 text-base leading-normal">{text}</span>
                   {!revealed ? (
                     <kbd
                       aria-hidden="true"
@@ -299,7 +301,7 @@ function DemoQuiz() {
                       {i + 1}
                     </kbd>
                   ) : (
-                    <span className="relative whitespace-nowrap font-mono text-sm tabular-nums text-muted-foreground">
+                    <span className="relative min-w-[2.5rem] whitespace-nowrap text-right text-sm tabular-nums text-muted-foreground">
                       {q.share[i]} %
                     </span>
                   )}
