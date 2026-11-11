@@ -437,7 +437,7 @@ export const ExamCohortComparisonSection: React.FC<ExamCohortComparisonSectionPr
                       <div className="pt-2 border-t">
                         <p className="text-xs">
                           <strong>Hinweis:</strong> Die Vergleichsgruppe umfasst alle Nutzer deiner
-                          Hochschule, die Fragen mit dem gleichen Prüfungsnamen (
+                          Hochschule, die Fragen aus demselben Fragensatz (
                           <code className="bg-muted px-1 rounded">{examName}</code>) beantwortet
                           haben. Nur Fragen mit Universitäts-Sichtbarkeit werden berücksichtigt.
                         </p>

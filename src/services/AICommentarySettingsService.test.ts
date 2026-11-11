@@ -58,24 +58,22 @@ describe('toAICommentarySettings', () => {
 });
 
 describe('fetchAICommentarySettings', () => {
-  it('reads the single settings row', async () => {
-    queueResponse('ai_commentary_settings', { data: configuredRow });
+  it('reads the offer values through public_offer_settings(), which visitors may call', async () => {
+    queueResponse('public_offer_settings', { data: configuredRow });
 
     expect((await fetchAICommentarySettings()).maxFreeSessions).toBe(20);
-    expect(queriesFor('ai_commentary_settings')[0].ops).toContainEqual({
-      method: 'limit',
-      args: [1],
-    });
+    expect(queriesFor('public_offer_settings')).toHaveLength(1);
+    expect(queriesFor('ai_commentary_settings')).toHaveLength(0);
   });
 
   it('falls back to the defaults when the table is empty', async () => {
-    queueResponse('ai_commentary_settings', { data: null });
+    queueResponse('public_offer_settings', { data: null });
 
     expect(await fetchAICommentarySettings()).toEqual(DEFAULT_AI_COMMENTARY_SETTINGS);
   });
 
   it('throws on a failed read rather than passing off defaults as the settings', async () => {
-    queueResponse('ai_commentary_settings', { error: { message: 'boom' } });
+    queueResponse('public_offer_settings', { error: { message: 'boom' } });
 
     await expect(fetchAICommentarySettings()).rejects.toEqual({ message: 'boom' });
   });

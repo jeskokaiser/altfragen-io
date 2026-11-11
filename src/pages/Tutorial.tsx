@@ -106,8 +106,8 @@ const Tutorial = () => {
 
             <TutorialStep icon={<ListPlus className="w-5 h-5" />} title="2. Fragen verknüpfen">
               <p>
-                Nachdem du eine Prüfung angelegt hast, kannst du relevante Fragen aus deinen
-                Datensätzen verknüpfen:
+                Nachdem du eine Prüfung angelegt hast, verknüpfst du die passenden Fragensätze (zum
+                Beispiel B1 oder C2):
               </p>
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>
@@ -116,10 +116,11 @@ const Tutorial = () => {
                 </li>
                 <li>Wähle "Fragen verwalten" aus</li>
                 <li>
-                  Wähle Datensätze aus deinen <strong className="font-semibold">eigenen</strong>{' '}
-                  oder <strong className="font-semibold">Uni-Datensätzen</strong>
+                  Wähle Fragensätze deiner <strong className="font-semibold">Uni</strong>, aus
+                  deinen <strong className="font-semibold">eigenen</strong> oder aus{' '}
+                  <strong className="font-semibold">öffentlichen</strong> Fragen
                 </li>
-                <li>Bestätige mit "Verknüpfen" - die Fragen werden der Prüfung zugeordnet</li>
+                <li>Bestätige mit „Speichern“, die Fragen werden der Prüfung zugeordnet</li>
               </ul>
               <p className="mt-2">Du kannst jederzeit weitere Fragen hinzufügen oder entfernen.</p>
             </TutorialStep>
@@ -132,7 +133,7 @@ const Tutorial = () => {
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>
                   <strong className="font-semibold">Neue Session erstellen:</strong> Starte eine
-                  neue Trainingssession mit allen verknüpften Fragen
+                  neue Trainings-Session mit allen verknüpften Fragen
                 </li>
                 <li>
                   <strong className="font-semibold">Sessions verfolgen:</strong> Siehe alle
@@ -255,7 +256,7 @@ const Tutorial = () => {
                 </li>
                 <li>
                   <strong className="font-semibold">Session-Statistiken:</strong> Detaillierte
-                  Auswertung jeder Trainingssession mit Erfolgsquote und Zeitaufwand
+                  Auswertung jeder Trainings-Session mit Erfolgsquote und Zeitaufwand
                 </li>
                 <li>
                   <strong className="font-semibold">Prüfungs-Analytics:</strong> Analysiere deine
@@ -345,8 +346,8 @@ const Tutorial = () => {
               </AccordionTrigger>
               <AccordionContent className="text-sm text-muted-foreground p-4">
                 Die schnellste Methode für viele Dateien. Lade mehrere PDFs auf einmal hoch und
-                weise ihnen direkt Prüfungsname, Semester und Jahr zu. Perfekt, um einen ganzen
-                Ordner alter Klausuren zu verarbeiten.
+                weise ihnen direkt Fragensatz, Semester und Jahr zu. Perfekt, um einen ganzen Ordner
+                alter Klausuren zu verarbeiten.
               </AccordionContent>
             </AccordionItem>
           </Accordion>

@@ -96,7 +96,7 @@ const Settings = () => {
     { key: 'new-claude', label: 'Claude' },
     { key: 'mistral', label: 'Mistral' },
     { key: 'perplexity', label: 'Perplexity' },
-    { key: 'deepseek', label: 'DeepSeek' },
+    { key: 'deepseek', label: 'DeepSeek (ältere Kommentare)' },
   ];
 
   if (isLoading) {
@@ -114,8 +114,8 @@ const Settings = () => {
           <div className="space-y-2">
             <Label htmlFor="username">Benutzername</Label>
             <p className="text-sm text-muted-foreground">
-              Dieser Name wird in öffentlichen Kommentaren angezeigt. Wenn leer, wird deine
-              E-Mail-Adresse verwendet.
+              Dieser Name wird in öffentlichen Kommentaren angezeigt. Ohne Namen steht dort
+              „Unbekannt“; deine E-Mail-Adresse wird nie angezeigt.
             </p>
             <div className="flex gap-2">
               <Input
@@ -149,7 +149,7 @@ const Settings = () => {
 
         <div className="flex items-center justify-between mb-6">
           <div className="space-y-1">
-            <Label htmlFor="immediate-feedback">Immediate Feedback Mode</Label>
+            <Label htmlFor="immediate-feedback">Sofortiges Feedback</Label>
             <p className="text-sm text-muted-foreground">
               Wenn aktiviert, wird die richtige Antwort sofort nach einem falschen Versuch
               angezeigt, ohne erneute Versuche.

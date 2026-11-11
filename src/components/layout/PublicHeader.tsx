@@ -23,7 +23,11 @@ const PublicHeader = () => {
           <ThemeToggle />
           {user ? (
             <Button asChild variant="outline">
-              <Link to="/dashboard">Zum Dashboard</Link>
+              <Link to="/dashboard">
+                {/* short label so logo, theme and button fit on 320 px phones */}
+                <span className="sm:hidden">Dashboard</span>
+                <span className="hidden sm:inline">Zum Dashboard</span>
+              </Link>
             </Button>
           ) : (
             pathname !== '/auth' && (

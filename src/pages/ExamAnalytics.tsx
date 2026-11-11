@@ -440,7 +440,7 @@ const ExamAnalytics: React.FC = () => {
           {sessionStats.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
-                Keine Trainingssessions für diese Prüfung vorhanden.
+                Keine Trainings-Sessions für diese Prüfung vorhanden.
               </CardContent>
             </Card>
           ) : (

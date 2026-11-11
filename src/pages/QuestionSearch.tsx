@@ -177,9 +177,9 @@ const QuestionSearch: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 {searchResults.totalCount === 0
                   ? 'Keine Ergebnisse gefunden'
-                  : `${searchResults.totalCount} Frage${searchResults.totalCount !== 1 ? 'n' : ''} gefunden`}
+                  : `${searchResults.totalCount.toLocaleString('de-DE')} Frage${searchResults.totalCount !== 1 ? 'n' : ''} gefunden`}
               </p>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 {isLoading && (
                   <div
                     role="status"
@@ -190,7 +190,7 @@ const QuestionSearch: React.FC = () => {
                   </div>
                 )}
                 {/* Sort Options */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Label htmlFor="sort-by" className="text-sm whitespace-nowrap">
                     Sortieren nach:
                   </Label>
@@ -205,7 +205,7 @@ const QuestionSearch: React.FC = () => {
                       <SelectItem value="created_at">Erstellungsdatum</SelectItem>
                       <SelectItem value="subject">Fach</SelectItem>
                       <SelectItem value="difficulty">Schwierigkeit</SelectItem>
-                      <SelectItem value="exam_name">Modul/Prüfung</SelectItem>
+                      <SelectItem value="exam_name">Fragensatz</SelectItem>
                       <SelectItem value="exam_year">Jahr</SelectItem>
                     </SelectContent>
                   </Select>

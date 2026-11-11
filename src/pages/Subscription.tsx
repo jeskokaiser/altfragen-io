@@ -13,23 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Check,
-  X,
-  Brain,
-  Shield,
-  Upload,
-  FileText,
-  HatGlasses,
-  ChartBar,
-  Mail,
-  Inbox,
-  HeartHandshake,
-  Leaf,
-  Bot,
-  ReceiptEuro,
-  Crown,
-} from 'lucide-react';
+import { Check, X, HeartHandshake, Leaf, Bot, ReceiptEuro, Crown } from 'lucide-react';
 import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
 import { isLifetimePromotionActive } from '@/services/AICommentarySettingsService';
 
@@ -41,7 +25,11 @@ const Subscription = () => {
   const [showLifetimeConsentModal, setShowLifetimeConsentModal] = useState(false);
   const [lifetimeConsentGiven, setLifetimeConsentGiven] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'semester' | 'lifetime'>('monthly');
-  const { settings: aiSettings, isLoading: promotionLoading } = useAICommentarySettings();
+  const {
+    settings: aiSettings,
+    isLoading: promotionLoading,
+    isLoaded: limitsLoaded,
+  } = useAICommentarySettings();
   const isPromotionActive = isLifetimePromotionActive(aiSettings, new Date());
 
   const features = [
@@ -49,79 +37,76 @@ const Subscription = () => {
       name: 'Werbefrei und ohne Tracking',
       free: true,
       premium: true,
-      icon: HatGlasses,
     },
     {
       name: 'Wir verkaufen deine Daten nicht',
       free: true,
       premium: true,
-      icon: Shield,
     },
     {
-      name: 'Unbegrenzte Fragenerstellung und -beantwortung',
+      name: 'Fragen hochladen und kreuzen',
       free: true,
       premium: true,
-      icon: Upload,
     },
     {
       name: 'Unbegrenzte Standard-PDF-Verarbeitung',
       free: true,
       premium: true,
-      icon: FileText,
     },
     {
       name: 'OCR-PDF-Verarbeitung',
       free: false,
       premium: true,
-      icon: FileText,
     },
     {
-      name: 'Begrenzte KI-Kommentare zu geteilten Fragen',
+      // real limit from the admin table, never the code's fallback value
+      name: limitsLoaded
+        ? `KI-Kommentare zu ${aiSettings.freeAiDailyLimit} geteilten Fragen pro Tag`
+        : 'Begrenzte KI-Kommentare zu geteilten Fragen',
       free: true,
       premium: false,
-      icon: Brain,
     },
     {
       name: 'Unbegrenzte KI-Kommentare zu geteilten Fragen',
       free: false,
       premium: true,
-      icon: Brain,
     },
     {
       name: 'KI-Kommentare zu privaten Fragen',
       free: false,
       premium: true,
-      icon: Brain,
     },
     {
       name: 'KI-Verbesserte Fragen und Antworten',
       free: false,
       premium: true,
-      icon: Brain,
     },
     {
       name: 'Premium Support in 24h',
       free: false,
       premium: true,
-      icon: Mail,
     },
     {
       name: 'Ausführliche Statistiken',
       free: false,
       premium: true,
-      icon: ChartBar,
     },
     {
-      name: 'Unbegrenzte Fragensessions',
+      name: limitsLoaded
+        ? `Bis zu ${aiSettings.maxFreeSessions} Sessions`
+        : 'Begrenzte Zahl an Sessions',
+      free: true,
+      premium: false,
+    },
+    {
+      name: 'Unbegrenzte Sessions',
       free: false,
       premium: true,
-      icon: Inbox,
     },
     {
       name: 'Effektive Organisationen unterstützen',
       free: false,
       premium: true,
-      icon: HeartHandshake,
     },
   ];
 
@@ -228,7 +213,7 @@ const Subscription = () => {
                     Mistral Large 4
                   </a>
                 </h4>
-                <p className="text-sm text-muted-foreground">Führendes KI-Model aus Europa</p>
+                <p className="text-sm text-muted-foreground">Führendes KI-Modell aus Europa</p>
               </div>
               <div className="bg-card p-4 rounded-lg border">
                 <h4 className="font-semibold text-foreground">
@@ -255,7 +240,7 @@ const Subscription = () => {
                   </a>
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  KI-Model mit Webrecherche, nennt seine Quellen
+                  KI-Modell mit Webrecherche, nennt seine Quellen
                 </p>
               </div>
             </div>
@@ -277,7 +262,7 @@ const Subscription = () => {
               type="button"
               onClick={() => setBillingCycle('monthly')}
               aria-pressed={billingCycle === 'monthly'}
-              className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${
+              className={`min-h-9 rounded-full px-3 sm:px-4 text-sm font-semibold transition-colors ${
                 billingCycle === 'monthly'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground'
@@ -290,7 +275,7 @@ const Subscription = () => {
                 type="button"
                 onClick={() => setBillingCycle('semester')}
                 aria-pressed={billingCycle === 'semester'}
-                className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors ${
+                className={`min-h-9 rounded-full px-3 sm:px-4 text-sm font-semibold transition-colors ${
                   billingCycle === 'semester'
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground'
@@ -308,7 +293,7 @@ const Subscription = () => {
                   type="button"
                   onClick={() => setBillingCycle('lifetime')}
                   aria-pressed={billingCycle === 'lifetime'}
-                  className={`min-h-9 rounded-full px-4 text-sm font-semibold transition-colors flex items-center gap-1 ${
+                  className={`min-h-9 rounded-full px-3 sm:px-4 text-sm font-semibold transition-colors flex items-center gap-1 ${
                     billingCycle === 'lifetime'
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground'
@@ -323,7 +308,7 @@ const Subscription = () => {
             )}
           </div>
         </div>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Free Plan */}
           <Card className="p-6">
             <div className="text-center space-y-4">
@@ -334,18 +319,20 @@ const Subscription = () => {
 
             <div className="space-y-3 mt-6">
               {features.map((feature, index) => {
-                const Icon = feature.icon;
                 const isIncluded = feature.free;
                 return (
                   <div key={index} className="flex items-center gap-3">
                     {isIncluded ? (
-                      <Check className="h-4 w-4 text-success flex-shrink-0" />
+                      <Check aria-hidden="true" className="h-4 w-4 text-success flex-shrink-0" />
                     ) : (
-                      <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <X
+                        aria-hidden="true"
+                        className="h-4 w-4 text-muted-foreground flex-shrink-0"
+                      />
                     )}
-                    <Icon
-                      className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-primary ' : 'text-muted-foreground '}`}
-                    />
+                    <span className="sr-only">
+                      {isIncluded ? 'Enthalten:' : 'Nicht enthalten:'}
+                    </span>
                     <span className={`text-sm ${!isIncluded ? 'text-muted-foreground ' : ''}`}>
                       {feature.name}
                     </span>
@@ -358,7 +345,7 @@ const Subscription = () => {
           {/* Premium Plan mit Monats-/Semester-/Lifetime-Wahl */}
           <Card className="relative border-2 border-primary p-6">
             <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <h3 className="text-xl font-semibold">Premium</h3>
               </div>
               <div className="space-y-2">
@@ -386,18 +373,20 @@ const Subscription = () => {
 
             <div className="space-y-3 mt-6">
               {features.map((feature, index) => {
-                const Icon = feature.icon;
                 const isIncluded = feature.premium;
                 return (
                   <div key={index} className="flex items-center gap-3">
                     {isIncluded ? (
-                      <Check className="h-4 w-4 text-success flex-shrink-0" />
+                      <Check aria-hidden="true" className="h-4 w-4 text-success flex-shrink-0" />
                     ) : (
-                      <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <X
+                        aria-hidden="true"
+                        className="h-4 w-4 text-muted-foreground flex-shrink-0"
+                      />
                     )}
-                    <Icon
-                      className={`h-4 w-4 flex-shrink-0 ${isIncluded ? 'text-primary ' : 'text-muted-foreground '}`}
-                    />
+                    <span className="sr-only">
+                      {isIncluded ? 'Enthalten:' : 'Nicht enthalten:'}
+                    </span>
                     <span
                       className={`text-sm ${!isIncluded ? 'text-muted-foreground ' : ''} ${feature.name.includes('KI') ? 'font-medium text-primary-strong ' : ''}`}
                     >

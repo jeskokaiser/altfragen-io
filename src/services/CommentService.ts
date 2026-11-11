@@ -43,7 +43,7 @@ export const getCommentsForQuestion = async (questionId: string): Promise<Commen
   const userIds = [...new Set((comments as any[]).map((c: any) => c.user_id))];
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, email, username')
+    .select('id, username')
     .in('id', userIds);
 
   const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
@@ -53,8 +53,8 @@ export const getCommentsForQuestion = async (questionId: string): Promise<Commen
     const profile = profileMap.get(comment.user_id);
     return {
       ...comment,
-      user_email: profile?.email || null,
-      user_name: profile?.username || profile?.email?.split('@')[0] || undefined,
+      // only the chosen username; the e-mail address is never shown or derived from
+      user_name: profile?.username || undefined,
     };
   });
 

@@ -28,6 +28,11 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
   const [selectedExamNames, setSelectedExamNames] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Most people link their university's sets, so open there; the private tab is usually empty
+  useEffect(() => {
+    if (open) setTab(universityId ? 'university' : 'personal');
+  }, [open, universityId]);
+
   // Fetch current exam's exam_name to pre-select
   const { data: currentExam } = useUpcomingExam(examId, open);
 
@@ -116,7 +121,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Prüfung auswählen</DialogTitle>
+          <DialogTitle>Fragensätze auswählen</DialogTitle>
         </DialogHeader>
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
           <TabsList>
@@ -134,10 +139,12 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
           <TabsContent value="personal">
             <div className="max-h-80 overflow-auto space-y-2">
               {isLoading ? (
-                <div className="text-sm text-muted-foreground py-4">Lade Prüfungen...</div>
+                <div className="text-sm text-muted-foreground py-4">
+                  Fragensätze werden geladen …
+                </div>
               ) : filteredExamNames.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-4">
-                  Keine passenden Prüfungen gefunden.
+                  Keine passenden Fragensätze gefunden.
                 </div>
               ) : (
                 filteredExamNames.map((item) => (
@@ -151,7 +158,9 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
                     />
                     <div className="flex-1">
                       <div className="font-medium">{item.exam_name}</div>
-                      <div className="text-muted-foreground">{item.count} Fragen</div>
+                      <div className="text-muted-foreground">
+                        {item.count} {item.count === 1 ? 'Frage' : 'Fragen'}
+                      </div>
                     </div>
                   </label>
                 ))
@@ -161,10 +170,12 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
           <TabsContent value="university">
             <div className="max-h-80 overflow-auto space-y-2">
               {isLoading ? (
-                <div className="text-sm text-muted-foreground py-4">Lade Prüfungen...</div>
+                <div className="text-sm text-muted-foreground py-4">
+                  Fragensätze werden geladen …
+                </div>
               ) : filteredExamNames.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-4">
-                  Keine passenden Prüfungen gefunden.
+                  Keine passenden Fragensätze gefunden.
                 </div>
               ) : (
                 filteredExamNames.map((item) => (
@@ -178,7 +189,9 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
                     />
                     <div className="flex-1">
                       <div className="font-medium">{item.exam_name}</div>
-                      <div className="text-muted-foreground">{item.count} Fragen</div>
+                      <div className="text-muted-foreground">
+                        {item.count} {item.count === 1 ? 'Frage' : 'Fragen'}
+                      </div>
                     </div>
                   </label>
                 ))
@@ -188,10 +201,12 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
           <TabsContent value="public">
             <div className="max-h-80 overflow-auto space-y-2">
               {isLoading ? (
-                <div className="text-sm text-muted-foreground py-4">Lade Prüfungen...</div>
+                <div className="text-sm text-muted-foreground py-4">
+                  Fragensätze werden geladen …
+                </div>
               ) : filteredExamNames.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-4">
-                  Keine passenden Prüfungen gefunden.
+                  Keine passenden Fragensätze gefunden.
                 </div>
               ) : (
                 filteredExamNames.map((item) => (
@@ -205,7 +220,9 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
                     />
                     <div className="flex-1">
                       <div className="font-medium">{item.exam_name}</div>
-                      <div className="text-muted-foreground">{item.count} Fragen</div>
+                      <div className="text-muted-foreground">
+                        {item.count} {item.count === 1 ? 'Frage' : 'Fragen'}
+                      </div>
                     </div>
                   </label>
                 ))
@@ -215,7 +232,7 @@ const ExamQuestionSelectorDialog: React.FC<ExamQuestionSelectorDialogProps> = ({
         </Tabs>
         <div className="flex justify-between items-center pt-2">
           <div className="text-sm text-muted-foreground">
-            {selectedExamNames.size > 0 && `${selectedExamNames.size} Prüfung(en) ausgewählt`}
+            {selectedExamNames.size > 0 && `${selectedExamNames.size} ausgewählt`}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>

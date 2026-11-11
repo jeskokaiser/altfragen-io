@@ -5,8 +5,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import FileUpload from './FileUpload';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
-import { Calendar, ChevronDown, ListPlus } from 'lucide-react';
+import { Calendar, ChevronDown, ListPlus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useUpcomingExams } from '@/hooks/useUpcomingExams';
 import { useQueryClient } from '@tanstack/react-query';
@@ -59,6 +69,7 @@ const Dashboard = () => {
     `${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} – Training Session`,
   );
   const [createSessionExamId, setCreateSessionExamId] = useState<string | null>(null);
+  const [examToDelete, setExamToDelete] = useState<string | null>(null);
 
   // Private AI commentary quota & credits
   const [aiCreditsConsent, setAiCreditsConsent] = useState(false);
@@ -79,6 +90,7 @@ const Dashboard = () => {
 
   // Fetch all dashboard data
   const {
+    questions,
     isQuestionsLoading,
     questionsError,
     todayNewCount,
@@ -209,9 +221,20 @@ const Dashboard = () => {
 
   // Memoized event handlers
 
+  // New questions change counts all over the dashboard; refetch instead of reloading the page
   const handleQuestionsLoaded = useCallback(() => {
-    window.location.reload();
-  }, []);
+    queryClient.invalidateQueries();
+  }, [queryClient]);
+
+  // A session over all questions the user can see (own and the university's), without an exam
+  const handleOpenNewSession = useCallback(() => {
+    setCreateSessionQuestions(questions || []);
+    setCreateSessionExamId(null);
+    setCreateSessionDefaultTitle(
+      `${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} – Training`,
+    );
+    setIsCreateTrainingSessionOpen(true);
+  }, [questions]);
 
   const handleOpenCreateExam = useCallback(() => {
     setIsCreateExamOpen(true);
@@ -247,9 +270,7 @@ const Dashboard = () => {
         await updateUpcomingExam(examIdForLinking, { exam_name: examNameValue });
 
         if (selectedExamNames.length > 0) {
-          toast.success(
-            `${selectedExamNames.length} Prüfung(en) wurden ausgewählt: ${selectedExamNames.join(', ')}`,
-          );
+          toast.success(`Verknüpft: ${selectedExamNames.join(', ')}`);
         } else {
           toast.success('Prüfungsauswahl wurde entfernt.');
         }
@@ -259,7 +280,7 @@ const Dashboard = () => {
         queryClient.invalidateQueries({ queryKey: ['exam', examIdForLinking] });
       } catch (error) {
         console.error('Error updating exam exam_name:', error);
-        toast.error('Fehler beim Speichern der Prüfungsauswahl');
+        toast.error('Fehler beim Verknüpfen der Fragensätze');
       }
 
       setIsQuestionSelectorOpen(false);
@@ -274,13 +295,13 @@ const Dashboard = () => {
         // Get the exam to find its exam_name(s)
         const exam = (exams || []).find((e) => e.id === examId);
         if (!exam?.exam_name) {
-          toast.error('Prüfung hat keinen exam_name.');
+          toast.error('Mit dieser Prüfung ist noch kein Fragensatz verknüpft.');
           return;
         }
 
         const examNames = splitExamNames(exam.exam_name);
         if (examNames.length === 0) {
-          toast.error('Prüfung hat keine gültigen exam_names.');
+          toast.error('Mit dieser Prüfung ist noch kein Fragensatz verknüpft.');
           return;
         }
 
@@ -326,9 +347,6 @@ const Dashboard = () => {
   const handleDeleteExam = useCallback(
     async (examId: string) => {
       if (!user?.id) return;
-      const exam = (exams || []).find((e) => e.id === examId);
-      const confirmMsg = `Möchtest du die Prüfung "${exam?.title || 'Unbekannt'}" wirklich löschen? Dies löscht auch alle zugehörigen Trainingssessions und den dazugehörigen Lernfortschitt, aber NICHT die Fragen selbst.`;
-      if (!window.confirm(confirmMsg)) return;
 
       try {
         // Delete associated training sessions first
@@ -344,13 +362,14 @@ const Dashboard = () => {
         await deleteUpcomingExam(examId);
 
         toast.success('Prüfung und zugehörige Sessions gelöscht');
-        window.location.reload(); // Refresh to update exam list
+        queryClient.invalidateQueries({ queryKey: ['upcoming-exams', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
       } catch (e) {
         console.error('Failed to delete exam', e);
         toast.error('Fehler beim Löschen der Prüfung');
       }
     },
-    [exams, user?.id],
+    [user?.id, queryClient],
   );
 
   const handleDateRangeChange = useCallback(
@@ -391,7 +410,16 @@ const Dashboard = () => {
 
   return (
     <Page className="space-y-8">
-      <PageHeader title="Dashboard" className="mb-0 md:mb-0" />
+      <PageHeader
+        title="Dashboard"
+        className="mb-0 md:mb-0"
+        actions={
+          <Button onClick={handleOpenNewSession} disabled={isQuestionsLoading}>
+            <Plus aria-hidden="true" className="h-4 w-4" />
+            Neue Session
+          </Button>
+        }
+      />
 
       <ResumeSessionRow userId={user.id} />
 
@@ -439,7 +467,7 @@ const Dashboard = () => {
           exams={exams}
           onAddQuestions={handleOpenQuestionSelector}
           onStartTraining={handleStartTrainingFromExam}
-          onDeleteExam={handleDeleteExam}
+          onDeleteExam={setExamToDelete}
           onEditExam={handleOpenEditExam}
           currentUserId={user.id}
           onOpenAnalytics={(examId) => navigate(`/exam/${examId}/analytics`)}
@@ -615,6 +643,27 @@ const Dashboard = () => {
       </section>
 
       {/* Dialogs */}
+      <AlertDialog open={!!examToDelete} onOpenChange={(open) => !open && setExamToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Prüfung wirklich löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              „{exams?.find((e) => e.id === examToDelete)?.title}“ wird mit allen zugehörigen
+              Sessions und dem Lernfortschritt darin gelöscht. Die Fragen selbst bleiben erhalten.
+              Das lässt sich nicht rückgängig machen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => examToDelete && handleDeleteExam(examToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <UpcomingExamCreateDialog
         open={isCreateExamOpen}
         onOpenChange={setIsCreateExamOpen}
@@ -638,7 +687,7 @@ const Dashboard = () => {
         onOpenChange={setIsCreateTrainingSessionOpen}
         questions={createSessionQuestions}
         defaultTitle={createSessionDefaultTitle}
-        context={{ source: 'exam', examId: createSessionExamId || undefined }}
+        context={createSessionExamId ? { source: 'exam', examId: createSessionExamId } : undefined}
         onCreated={(sessionId) => navigate(`/training/session/${sessionId}`)}
       />
     </Page>

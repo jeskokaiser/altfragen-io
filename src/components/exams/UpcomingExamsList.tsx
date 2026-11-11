@@ -152,7 +152,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
               <div className="space-y-2">
                 <p>
                   Du hast bereits {totalSessions} von {maxFreeSessions} kostenlosen
-                  Trainingssessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.
+                  Trainings-Sessions erstellt. Mit Premium erhältst du unbegrenzte Sessions.
                 </p>
                 <Button size="sm" variant="outline" onClick={() => navigate('/subscription')}>
                   <Crown className="h-4 w-4 mr-2" />
@@ -178,45 +178,51 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
               className="group flex flex-col transition-colors hover:border-input"
             >
               <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center justify-between">
-                  <div className="text-left flex-1">
+                <CardTitle className="text-base flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <div className="text-left min-w-0 flex-1 break-words">
                     <span className="font-medium">{exam.title}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  {/* Phones: date on its own line below title and gear; from sm: one row */}
+                  <div className="order-last flex basis-full flex-wrap items-center gap-2 sm:order-none sm:basis-auto">
                     <div className="flex items-center text-sm text-muted-foreground gap-2">
                       <ClipboardClock className="h-4 w-4" />
                       <span>Prüfung am {new Date(exam.due_date).toLocaleDateString()}</span>
                     </div>
                     <DaysUntilBadge days={days} />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="ghost" title="Einstellungen">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {onEditExam && (
-                          <DropdownMenuItem onClick={() => onEditExam(exam.id)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Bearbeiten
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => onAddQuestions(exam.id)}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Fragen verwalten
-                        </DropdownMenuItem>
-                        {onDeleteExam && (
-                          <DropdownMenuItem
-                            onClick={() => onDeleteExam(exam.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Prüfung löschen
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Einstellungen"
+                        aria-label={`Einstellungen für ${exam.title}`}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {onEditExam && (
+                        <DropdownMenuItem onClick={() => onEditExam(exam.id)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Bearbeiten
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => onAddQuestions(exam.id)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Fragen verwalten
+                      </DropdownMenuItem>
+                      {onDeleteExam && (
+                        <DropdownMenuItem
+                          onClick={() => onDeleteExam(exam.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Prüfung löschen
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-3">
@@ -254,9 +260,9 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
                   <Link
                     to="/training/sessions"
                     className="mb-1 inline-block font-medium underline-offset-4 hover:text-primary hover:underline"
-                    title="Alle Trainingssessions anzeigen"
+                    title="Alle Trainings-Sessions anzeigen"
                   >
-                    Trainingssessions
+                    Trainings-Sessions
                   </Link>
                   {sessionsForExam.length > 0 ? (
                     <div className="space-y-2">
@@ -306,7 +312,7 @@ const UpcomingExamsList: React.FC<UpcomingExamsListProps> = ({
                   )}
                 </div>
 
-                <div className="mt-auto flex gap-2">
+                <div className="mt-auto flex flex-wrap gap-2">
                   {exam.linked_question_count === 0 ? (
                     <Button size="sm" onClick={() => onAddQuestions(exam.id)}>
                       <Plus className="h-4 w-4 mr-1" /> Fragen hinzufügen

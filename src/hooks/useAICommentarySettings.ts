@@ -21,5 +21,7 @@ export const useAICommentarySettings = () => {
   return {
     settings: query.data ?? DEFAULT_AI_COMMENTARY_SETTINGS,
     isLoading: query.isLoading,
+    /** True once the values came from the database; show limits as numbers only then. */
+    isLoaded: query.isSuccess,
   };
 };

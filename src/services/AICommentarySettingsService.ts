@@ -58,19 +58,18 @@ export const toAICommentarySettings = (row: SettingsRow | null): AICommentarySet
 });
 
 /**
- * Reads the settings row. A missing row reads as all defaults; a failed read
- * throws, so a caller can tell the two apart.
+ * Reads the four offer values through `public_offer_settings()`, a SECURITY
+ * DEFINER function that visitors without an account may call too: the table
+ * itself is not readable for them, and it holds pipeline settings besides. A
+ * missing row reads as all defaults; a failed read throws, so a caller can
+ * tell the two apart.
  */
 export const fetchAICommentarySettings = async (): Promise<AICommentarySettings> => {
-  const { data, error } = await supabase
-    .from('ai_commentary_settings')
-    .select('max_free_sessions, free_ai_daily_limit, lifetime_status, lifetime_promotion_end_date')
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('public_offer_settings');
 
   if (error) throw error;
 
-  return toAICommentarySettings(data);
+  return toAICommentarySettings(data as SettingsRow | null);
 };
 
 /**

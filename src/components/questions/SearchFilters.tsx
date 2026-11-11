@@ -115,16 +115,16 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
 
         {/* Exam Name/Module Filter */}
         <div className="space-y-2">
-          <Label htmlFor="exam-name-filter">Modul/Prüfung</Label>
+          <Label htmlFor="exam-name-filter">Fragensatz</Label>
           <Select
             value={filters.examName || 'all'}
             onValueChange={(value) => handleFilterChange('examName', value)}
           >
             <SelectTrigger id="exam-name-filter">
-              <SelectValue placeholder="Alle Module" />
+              <SelectValue placeholder="Alle Fragensätze" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Alle Module</SelectItem>
+              <SelectItem value="all">Alle Fragensätze</SelectItem>
               {filterOptions.examNames
                 .filter((examName) => examName && examName.trim() !== '')
                 .map((examName) => (
@@ -202,7 +202,13 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
                   : [3]
               }
               onValueChange={(value) => handleFilterChange('difficulty', value[0])}
-              className="flex-1"
+              aria-label="Schwierigkeit"
+              // without a chosen difficulty the track stays empty instead of showing "3"
+              className={
+                filters.difficulty === null || filters.difficulty === undefined
+                  ? 'flex-1 opacity-50'
+                  : 'flex-1'
+              }
             />
             <Button
               type="button"
@@ -211,7 +217,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
               onClick={() => handleFilterChange('difficulty', null)}
               className="w-20"
             >
-              Reset
+              Alle
             </Button>
           </div>
         </div>

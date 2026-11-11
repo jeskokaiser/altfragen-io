@@ -39,7 +39,12 @@ interface SessionWithExam {
   examDaysLeft?: number;
 }
 
-const TrainingSessionsList: React.FC = () => {
+interface TrainingSessionsListProps {
+  /** Shown in the empty state, e.g. the page's "Neue Session" button. */
+  emptyAction?: React.ReactNode;
+}
+
+const TrainingSessionsList: React.FC<TrainingSessionsListProps> = ({ emptyAction }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { subscribed } = useSubscription();
@@ -145,7 +150,7 @@ const TrainingSessionsList: React.FC = () => {
             {hasReachedLimit ? (
               <div>
                 <p className="mb-2">
-                  Du hast das kostenlose Limit von {maxFreeSessions} Trainingssessions erreicht.
+                  Du hast das kostenlose Limit von {maxFreeSessions} Trainings-Sessions erreicht.
                   Lösche eine Session oder upgrade zu Premium für unbegrenzte Sessions.
                 </p>
                 <Button size="sm" variant="default" onClick={() => navigate('/subscription')}>
@@ -155,7 +160,7 @@ const TrainingSessionsList: React.FC = () => {
               </div>
             ) : (
               <div>
-                <p className="mb-2">Mit Premium erhältst du unbegrenzte Trainingssessions.</p>
+                <p className="mb-2">Mit Premium erhältst du unbegrenzte Trainings-Sessions.</p>
                 <Button size="sm" variant="outline" onClick={() => navigate('/subscription')}>
                   <Crown className="h-4 w-4 mr-2" />
                   Mehr erfahren
@@ -252,6 +257,7 @@ const TrainingSessionsList: React.FC = () => {
                         size="sm"
                         variant="ghost"
                         disabled={deletingId === session.id}
+                        aria-label={`Session ${session.title} löschen`}
                         onClick={() => setSessionToDelete({ id: session.id, title: session.title })}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -360,6 +366,7 @@ const TrainingSessionsList: React.FC = () => {
                           size="sm"
                           variant="ghost"
                           disabled={deletingId === session.id}
+                          aria-label={`Session ${session.title} löschen`}
                           onClick={() =>
                             setSessionToDelete({ id: session.id, title: session.title })
                           }
@@ -384,6 +391,7 @@ const TrainingSessionsList: React.FC = () => {
             <p className="text-xs text-muted-foreground mt-1">
               Erstelle eine neue Session, um zu starten.
             </p>
+            {emptyAction && <div className="mt-4">{emptyAction}</div>}
           </CardContent>
         </Card>
       )}
@@ -399,7 +407,7 @@ const TrainingSessionsList: React.FC = () => {
             <AlertDialogDescription>
               Möchtest du die Session "
               <span className="font-semibold">{sessionToDelete?.title}</span>" wirklich löschen?
-              Dadurch wird auch der dazugehörige Lernfortschitt gelöscht. Diese Aktion kann nicht
+              Dadurch wird auch der dazugehörige Lernfortschritt gelöscht. Diese Aktion kann nicht
               rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>

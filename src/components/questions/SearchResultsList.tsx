@@ -136,7 +136,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
               <Card key={question.id}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1 break-words">
                       <p className="font-medium text-sm">
                         {isExpanded ? question.question : truncateText(question.question, 80)}
                       </p>
@@ -151,7 +151,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
                         </Button>
                       )}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex shrink-0 items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -289,7 +289,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
             <TableRow>
               <TableHead className="w-[40%]">Frage</TableHead>
               <TableHead>Fach</TableHead>
-              <TableHead>Modul/Prüfung</TableHead>
+              <TableHead>Fragensatz</TableHead>
               <TableHead>Semester/Jahr</TableHead>
               <TableHead>Schwierigkeit</TableHead>
               <TableHead>Sichtbarkeit</TableHead>

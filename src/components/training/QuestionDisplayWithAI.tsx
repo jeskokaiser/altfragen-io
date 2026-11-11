@@ -19,6 +19,7 @@ import { useTrainingKeyboard, TrainingKeyboardActions } from '@/hooks/useTrainin
 import { AmbossAnswer } from './AmbossAnswer';
 import { MultiModelAIComment } from './MultiModelAIComment';
 import { GeneralAIComments } from './GeneralAIComments';
+import { formatModelConsensus, modelConsensus } from './modelConsensus';
 import { ModelIcon, ModelName } from './ModelIcon';
 import { AIModelMenuItems, AIModelSelector } from './AIModelSelector';
 import { Badge } from '@/components/ui/badge';
@@ -138,6 +139,12 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
     queryFn: () => AIAnswerCommentaryService.getCommentaryForQuestion(currentQuestion.id),
     enabled: !!currentQuestion.id,
   });
+
+  const aiConsensus = useMemo(
+    () =>
+      aiCommentary ? modelConsensus(aiCommentary.models, preferences?.selectedAIModels) : null,
+    [aiCommentary, preferences?.selectedAIModels],
+  );
 
   // Fetch comments to show their number in the SessionBar
   const { data: comments } = useQuery({
@@ -834,6 +841,20 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                 <span className="font-semibold">Protokollierte Antwort:</span>{' '}
                 {currentQuestion.correctAnswer}
               </p>
+              {aiCommentary && canShowAIContent && aiConsensus && (
+                <p>
+                  <span className="font-semibold">KI-Modelle:</span>{' '}
+                  {formatModelConsensus(aiConsensus)}
+                </p>
+              )}
+              {currentQuestion.first_answer_stats && (subscribed || canShowAIContent) && (
+                <p>
+                  {/* the percentages on the answer rows mean little without their base */}
+                  <span className="font-semibold">Andere:</span> Prozentwerte aus dem ersten Versuch
+                  von {currentQuestion.first_answer_stats.total}{' '}
+                  {currentQuestion.first_answer_stats.total === 1 ? 'Person' : 'Personen'}
+                </p>
+              )}
               {currentQuestion.comment && (
                 <p>
                   <span className="font-semibold">Kommentar:</span> {currentQuestion.comment}
@@ -988,13 +1009,9 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
         <GeneralAIComments commentaryData={aiCommentary} isRevealed={showFeedback} />
       )}
 
-      {(showFeedback && currentQuestion.first_answer_stats) ||
-      (isFreeTier && remainingFreeViews !== undefined) ? (
+      {isFreeTier && remainingFreeViews !== undefined ? (
         <div className="mt-4 space-y-1 text-center text-sm text-muted-foreground">
-          {showFeedback && currentQuestion.first_answer_stats && (
-            <p>Beantwortet von {currentQuestion.first_answer_stats.total} Personen</p>
-          )}
-          {isFreeTier && remainingFreeViews !== undefined && (
+          {
             <p>
               {remainingFreeViews > 0 ? (
                 `${remainingFreeViews} kostenlose KI-Features heute verfügbar (Kommentare, Modell-Icons, erweiterte Versionen)`
@@ -1010,7 +1027,7 @@ const QuestionDisplayWithAI: React.FC<QuestionDisplayWithAIProps> = ({
                 </>
               )}
             </p>
-          )}
+          }
         </div>
       ) : null}
 
