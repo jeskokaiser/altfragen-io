@@ -70,7 +70,7 @@ text ≥ 5.3:1; white on primary 8.9:1; strong text on every subtle surface
 
 ## Type
 
-Atkinson Hyperlegible Next (400, 600, 700) and Atkinson Hyperlegible Mono (400),
+IBM Plex Sans (400, 600, 700) and IBM Plex Mono (400),
 self-hosted through `@fontsource` (no request to Google), Latin subset including
 umlauts, `font-display: swap` and a size-adjusted Arial fallback. Licence (OFL
 1.1) in `public/fonts/`.

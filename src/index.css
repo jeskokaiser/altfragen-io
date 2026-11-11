@@ -1,10 +1,10 @@
 /* Design system: token values and their reasons live in docs/design-system.md.
    Components use token classes (bg-success-subtle), never palette classes
    (Tailwind's green-100 and friends); scripts/check-colors.mjs enforces that. */
-@import '@fontsource/atkinson-hyperlegible-next/latin-400.css';
-@import '@fontsource/atkinson-hyperlegible-next/latin-600.css';
-@import '@fontsource/atkinson-hyperlegible-next/latin-700.css';
-@import '@fontsource/atkinson-hyperlegible-mono/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+@import '@fontsource/ibm-plex-sans/latin-700.css';
+@import '@fontsource/ibm-plex-mono/latin-400.css';
 
 @tailwind base;
 @tailwind components;
@@ -12,7 +12,7 @@
 
 /* Metric-adjusted system fallback so the swap to the web font does not shift text. */
 @font-face {
-  font-family: 'Atkinson Fallback';
+  font-family: 'Plex Fallback';
   src: local('Arial'), local('Helvetica');
   size-adjust: 104%;
 }
