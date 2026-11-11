@@ -205,7 +205,7 @@ const QuestionSearch: React.FC = () => {
                       <SelectItem value="created_at">Erstellungsdatum</SelectItem>
                       <SelectItem value="subject">Fach</SelectItem>
                       <SelectItem value="difficulty">Schwierigkeit</SelectItem>
-                      <SelectItem value="exam_name">Modul/Prüfung</SelectItem>
+                      <SelectItem value="exam_name">Fragensatz</SelectItem>
                       <SelectItem value="exam_year">Jahr</SelectItem>
                     </SelectContent>
                   </Select>

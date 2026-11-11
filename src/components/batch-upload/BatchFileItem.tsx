@@ -64,7 +64,7 @@ const BatchFileItem: React.FC<BatchFileItemProps> = ({
           <div className="space-y-3">
             {/* Exam Name */}
             <div className="space-y-1">
-              <Label className="text-xs">Prüfungsname</Label>
+              <Label className="text-xs">Fragensatz</Label>
               <Input
                 value={fileData.examName}
                 onChange={(e) => onUpdate(index, 'examName', e.target.value)}

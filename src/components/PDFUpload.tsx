@@ -517,7 +517,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({
                       name="examName"
                       render={({ field }) => (
                         <FormItem className="relative">
-                          <FormLabel>Prüfungsname *</FormLabel>
+                          <FormLabel>Fragensatz *</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <PopoverAnchor>
@@ -621,7 +621,7 @@ const PDFUpload: React.FC<PDFUploadProps> = ({
             ) : (
               <>
                 <div className="bg-muted/20 p-3 rounded-md mb-4">
-                  <h3 className="font-medium mb-1">Prüfungsdaten:</h3>
+                  <h3 className="font-medium mb-1">Fragensatz:</h3>
                   <p className="text-sm text-muted-foreground">
                     <strong>Name:</strong> {form.getValues().examName}
                   </p>

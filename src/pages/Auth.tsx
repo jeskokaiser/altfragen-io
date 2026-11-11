@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { NonUniversitySignupDialog } from '@/components/auth/NonUniversitySignupDialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { PasswordChecklist } from '@/components/auth/PasswordChecklist';
+import { missingPasswordRules } from '@/lib/passwordRules';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -149,22 +151,7 @@ const Auth = () => {
     return () => clearTimeout(debounceTimer);
   }, [email, isSignUp]);
 
-  const validatePassword = (password: string) => {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    // Require at least one symbol to align with strong Supabase password policy
-    const hasSymbol = /[!@#$%^&*()_+\-=[\]{};':"\\|<>?,./`~]/.test(password);
-
-    const errors = [];
-    if (password.length < minLength) errors.push(`mindestens ${minLength} Zeichen`);
-    if (!hasUpperCase) errors.push('einen Großbuchstaben');
-    if (!hasLowerCase) errors.push('einen Kleinbuchstaben');
-    if (!hasNumbers) errors.push('eine Zahl');
-    if (!hasSymbol) errors.push('ein Sonderzeichen');
-    return errors;
-  };
+  const validatePassword = missingPasswordRules;
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -632,6 +619,7 @@ const Auth = () => {
                 id="new-password"
                 type="password"
                 autoComplete="new-password"
+                aria-describedby="new-password-rules"
                 placeholder="Neues Passwort eingeben"
                 value={password}
                 onChange={(e) => {
@@ -644,13 +632,7 @@ const Auth = () => {
               />
             </div>
 
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, einen
-                Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
-              </AlertDescription>
-            </Alert>
+            <PasswordChecklist id="new-password-rules" password={password} />
 
             <Button className="w-full" disabled={loading} type="submit">
               {loading ? 'Bitte warten …' : 'Passwort aktualisieren'}
@@ -786,6 +768,7 @@ const Auth = () => {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                aria-describedby={isSignUp ? 'password-rules' : undefined}
                 placeholder="Passwort eingeben"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -794,15 +777,7 @@ const Auth = () => {
               />
             </div>
 
-            {isSignUp && (
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription>
-                  Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, einen
-                  Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
-                </AlertDescription>
-              </Alert>
-            )}
+            {isSignUp && <PasswordChecklist id="password-rules" password={password} />}
 
             {isSignUp && (
               <>

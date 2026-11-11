@@ -96,7 +96,7 @@ const Settings = () => {
     { key: 'new-claude', label: 'Claude' },
     { key: 'mistral', label: 'Mistral' },
     { key: 'perplexity', label: 'Perplexity' },
-    { key: 'deepseek', label: 'DeepSeek' },
+    { key: 'deepseek', label: 'DeepSeek (ältere Kommentare)' },
   ];
 
   if (isLoading) {

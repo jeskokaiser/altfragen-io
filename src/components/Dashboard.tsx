@@ -221,9 +221,10 @@ const Dashboard = () => {
 
   // Memoized event handlers
 
+  // New questions change counts all over the dashboard; refetch instead of reloading the page
   const handleQuestionsLoaded = useCallback(() => {
-    window.location.reload();
-  }, []);
+    queryClient.invalidateQueries();
+  }, [queryClient]);
 
   // A session over all questions the user can see (own and the university's), without an exam
   const handleOpenNewSession = useCallback(() => {
@@ -279,7 +280,7 @@ const Dashboard = () => {
         queryClient.invalidateQueries({ queryKey: ['exam', examIdForLinking] });
       } catch (error) {
         console.error('Error updating exam exam_name:', error);
-        toast.error('Fehler beim Speichern der Prüfungsauswahl');
+        toast.error('Fehler beim Verknüpfen der Fragensätze');
       }
 
       setIsQuestionSelectorOpen(false);
@@ -294,13 +295,13 @@ const Dashboard = () => {
         // Get the exam to find its exam_name(s)
         const exam = (exams || []).find((e) => e.id === examId);
         if (!exam?.exam_name) {
-          toast.error('Prüfung hat keinen exam_name.');
+          toast.error('Mit dieser Prüfung ist noch kein Fragensatz verknüpft.');
           return;
         }
 
         const examNames = splitExamNames(exam.exam_name);
         if (examNames.length === 0) {
-          toast.error('Prüfung hat keine gültigen exam_names.');
+          toast.error('Mit dieser Prüfung ist noch kein Fragensatz verknüpft.');
           return;
         }
 
@@ -361,13 +362,14 @@ const Dashboard = () => {
         await deleteUpcomingExam(examId);
 
         toast.success('Prüfung und zugehörige Sessions gelöscht');
-        window.location.reload(); // Refresh to update exam list
+        queryClient.invalidateQueries({ queryKey: ['upcoming-exams', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['training-sessions'] });
       } catch (e) {
         console.error('Failed to delete exam', e);
         toast.error('Fehler beim Löschen der Prüfung');
       }
     },
-    [user?.id],
+    [user?.id, queryClient],
   );
 
   const handleDateRangeChange = useCallback(

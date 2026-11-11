@@ -289,7 +289,7 @@ export const SearchResultsList: React.FC<SearchResultsListProps> = ({
             <TableRow>
               <TableHead className="w-[40%]">Frage</TableHead>
               <TableHead>Fach</TableHead>
-              <TableHead>Modul/Prüfung</TableHead>
+              <TableHead>Fragensatz</TableHead>
               <TableHead>Semester/Jahr</TableHead>
               <TableHead>Schwierigkeit</TableHead>
               <TableHead>Sichtbarkeit</TableHead>

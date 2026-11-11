@@ -28,7 +28,7 @@ const BulkExamNameAssignment: React.FC<BulkExamNameAssignmentProps> = ({
       <CardContent className="p-4">
         <div className="space-y-3">
           <Label className="text-sm font-medium text-primary-strong">
-            Prüfungsname für alle Dateien festlegen
+            Fragensatz für alle Dateien festlegen
           </Label>
           <div className="flex gap-2">
             <Input

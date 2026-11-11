@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import Footer from '@/components/Footer';
 import { SkipLink } from '@/components/ds/SkipLink';
-import { ModelIcon, type ModelName } from '@/components/training/ModelIcon';
+import { type ModelName } from '@/components/training/ModelIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAICommentarySettings } from '@/hooks/useAICommentarySettings';
 import { isLifetimePromotionActive } from '@/services/AICommentarySettingsService';
@@ -350,12 +350,12 @@ function DemoQuiz() {
                       ? `Alle ${q.models.length} Modelle wählen ${q.correct}`
                       : `${agreeing.length} von ${q.models.length} Modellen wählen ${q.correct}`}
                   </span>
-                  <span className="flex gap-1">
+                  {/* names, not letters: "C" and "A" were read as ChatGPT/Claude the wrong way round */}
+                  <span className="font-normal text-muted-foreground">
                     {q.models
                       .filter(([, , choice]) => choice === q.correct)
-                      .map(([model]) => (
-                        <ModelIcon key={model} model={model} />
-                      ))}
+                      .map(([, name]) => name)
+                      .join(', ')}
                   </span>
                 </div>
                 <p className="text-[15px] leading-relaxed">{q.explanation}</p>
@@ -580,7 +580,7 @@ function PriceCard({
 
 const Index = () => {
   const { user } = useAuth();
-  const { settings } = useAICommentarySettings();
+  const { settings, isLoaded: limitsLoaded } = useAICommentarySettings();
   const showLifetime = isLifetimePromotionActive(settings, new Date());
   const start = user ? '/dashboard' : '/auth?mode=signup';
   const startLabel = user ? 'Zum Dashboard' : 'Kostenlos starten';
@@ -786,7 +786,8 @@ const Index = () => {
               <SectionTitle id="keys-heading">Kreuzen ohne Maus.</SectionTitle>
               <p className="text-lg leading-relaxed text-muted-foreground">
                 Eine Hand auf der Tastatur reicht: Zahl für die Antwort, Leertaste für die nächste
-                Frage. Die Belegung kannst du in den Einstellungen ändern.
+                Frage. Lag die Antwort daneben, kreuzt du weiter oder holst dir mit S die Lösung.
+                Die Belegung kannst du in den Einstellungen ändern.
               </p>
             </div>
             <KeyRows />
@@ -808,8 +809,13 @@ const Index = () => {
               items={[
                 'Altfragen deiner Uni kreuzen',
                 'Eigene Fragen hochladen (CSV, PDF)',
-                'Begrenzte Zahl an Sessions',
-                'Begrenzte KI-Kommentare pro Tag',
+                // real limits from the admin table, never the code's fallback values
+                limitsLoaded
+                  ? `Bis zu ${settings.maxFreeSessions} Sessions`
+                  : 'Begrenzte Zahl an Sessions',
+                limitsLoaded
+                  ? `KI-Kommentare zu ${settings.freeAiDailyLimit} Fragen pro Tag`
+                  : 'Begrenzte KI-Kommentare pro Tag',
               ]}
               cta={startLabel}
               to={start}
@@ -836,7 +842,11 @@ const Index = () => {
               subtitle="Für das ganze Semester am Stück"
               price="29 €"
               unit="pro Semester"
-              items={['Alles aus Premium monatlich', 'Einmal zahlen, ein Semester Ruhe']}
+              items={[
+                'Alles aus Premium monatlich',
+                'Einmal zahlen, ein Semester Ruhe',
+                '46 % günstiger als sechs Monate einzeln',
+              ]}
               cta="Semester wählen"
               to="/subscription"
             />

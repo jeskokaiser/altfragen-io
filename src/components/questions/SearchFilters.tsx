@@ -115,16 +115,16 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
 
         {/* Exam Name/Module Filter */}
         <div className="space-y-2">
-          <Label htmlFor="exam-name-filter">Modul/Prüfung</Label>
+          <Label htmlFor="exam-name-filter">Fragensatz</Label>
           <Select
             value={filters.examName || 'all'}
             onValueChange={(value) => handleFilterChange('examName', value)}
           >
             <SelectTrigger id="exam-name-filter">
-              <SelectValue placeholder="Alle Module" />
+              <SelectValue placeholder="Alle Fragensätze" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Alle Module</SelectItem>
+              <SelectItem value="all">Alle Fragensätze</SelectItem>
               {filterOptions.examNames
                 .filter((examName) => examName && examName.trim() !== '')
                 .map((examName) => (

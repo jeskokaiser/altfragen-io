@@ -1676,6 +1676,7 @@ export type Database = {
       list_question_exam_names: { Args: never; Returns: string[] }
       list_question_subjects: { Args: never; Returns: string[] }
       public_landing_stats: { Args: never; Returns: Json }
+      public_offer_settings: { Args: never; Returns: Json }
       update_question_answer_stats: {
         Args: never
         Returns: {

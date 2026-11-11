@@ -134,7 +134,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({
 
   const handleApplyExamNameToAll = (examName: string) => {
     setFiles((prev) => prev.map((file) => ({ ...file, examName })));
-    showToast.success('Prüfungsname angewendet', {
+    showToast.success('Fragensatz übernommen', {
       description: `"${examName}" wurde für alle ${files.length} Dateien festgelegt`,
     });
   };
@@ -227,7 +227,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({
     const validFiles = files.filter((file) => file.examName && file.semester && file.year);
     if (validFiles.length === 0) {
       showToast.error('Fehler', {
-        description: 'Bitte fülle Prüfungsname, Semester und Jahr für alle Dateien aus',
+        description: 'Bitte fülle Fragensatz, Semester und Jahr für alle Dateien aus',
       });
       return;
     }
@@ -461,7 +461,7 @@ const BatchPDFUpload: React.FC<BatchPDFUploadProps> = ({
           Batch Dokument Upload
         </CardTitle>
         <CardDescription>
-          Lade mehrere PDF- oder DOCX-Dateien gleichzeitig hoch und weise jeweils Prüfungsname,
+          Lade mehrere PDF- oder DOCX-Dateien gleichzeitig hoch und weise jeweils Fragensatz,
           Semester und Jahr zu. Es ist erforderlich, dass die Dateien wie in{' '}
           <a
             href="https://www.altfragen.io/images/example-batch-upload.png"

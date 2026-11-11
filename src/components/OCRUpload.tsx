@@ -235,7 +235,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({
               });
             } else {
               showToast.success('Fragen erfolgreich extrahiert', {
-                description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert. Erstelle eine Prüfung mit exam_name "${formValues.examName.trim()}" um sie zu verknüpfen.`,
+                description: `${data.questions_extracted} Fragen wurden aus der Datei extrahiert und gespeichert. Verknüpfe den Fragensatz „${formValues.examName.trim()}“ mit einer Prüfung, um damit zu trainieren.`,
               });
             }
           } catch (linkError) {
@@ -338,7 +338,7 @@ const OCRUpload: React.FC<OCRUploadProps> = ({
               name="examName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Prüfungsname (optional)</FormLabel>
+                  <FormLabel>Fragensatz (optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="z.B. Anatomie Klausur" {...field} />
                   </FormControl>
