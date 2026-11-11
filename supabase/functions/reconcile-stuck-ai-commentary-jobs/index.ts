@@ -77,51 +77,53 @@ serve(async (req) => {
 
   const nowIso = new Date().toISOString();
 
-  if (toDead.length) {
-    await supabase
+  // Re-check status and lease on the update itself: a worker may have finished
+  // or re-leased a job since the select above, and that job must stay as it is.
+  const release = (ids: string[], status: 'dead' | 'pending', lastError: string) =>
+    supabase
       .from('ai_commentary_job_queue')
       .update({
-        status: 'dead',
+        status,
         claimed_by: null,
         claimed_at: null,
         lease_expires_at: null,
-        last_error: 'stuck_processing_dead_letter',
+        last_error: lastError,
         updated_at: nowIso,
       })
-      .in('id', toDead);
+      .in('id', ids)
+      .eq('status', 'processing')
+      .lt('lease_expires_at', nowIso)
+      .select('id,question_id');
+
+  let dead: Array<{ id: string; question_id: string }> = [];
+  if (toDead.length) {
+    const { data, error } = await release(toDead, 'dead', 'stuck_processing_dead_letter');
+    if (error) return json({ error: 'Failed to dead-letter jobs', details: error.message }, 500);
+    dead = data ?? [];
   }
 
+  let reset: Array<{ id: string; question_id: string }> = [];
   if (toReset.length) {
-    await supabase
-      .from('ai_commentary_job_queue')
-      .update({
-        status: 'pending',
-        claimed_by: null,
-        claimed_at: null,
-        lease_expires_at: null,
-        last_error: 'stuck_processing_reset',
-        updated_at: nowIso,
-      })
-      .in('id', toReset);
+    const { data, error } = await release(toReset, 'pending', 'stuck_processing_reset');
+    if (error) return json({ error: 'Failed to reset jobs', details: error.message }, 500);
+    reset = data ?? [];
+  }
 
-    // Optional: reset legacy question state too (best-effort).
-    const questionIds = stuckJobs
-      .filter((j) => (j.attempts ?? 0) < maxAttempts)
-      .map((j) => j.question_id);
-
-    if (questionIds.length) {
-      await supabase
-        .from('questions')
-        .update({ ai_commentary_status: 'pending' })
-        .in('id', questionIds)
-        .eq('ai_commentary_status', 'processing');
-    }
+  // Legacy question state follows only the jobs that were actually reset.
+  const questionIds = reset.map((j) => j.question_id).filter(Boolean);
+  if (questionIds.length) {
+    const { error } = await supabase
+      .from('questions')
+      .update({ ai_commentary_status: 'pending' })
+      .in('id', questionIds)
+      .eq('ai_commentary_status', 'processing');
+    if (error) return json({ error: 'Failed to reset questions', details: error.message }, 500);
   }
 
   return json({
     status: 'ok',
     found: stuckJobs.length,
-    reset: toReset.length,
-    dead: toDead.length,
+    reset: reset.length,
+    dead: dead.length,
   });
 });
